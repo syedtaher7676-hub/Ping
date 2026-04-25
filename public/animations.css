@@ -1,0 +1,758 @@
+/* =====================================================
+   PING — ANIMATION LAYER  ·  animations.css
+   Pure keyframes + animation overrides. No layout here.
+   ===================================================== */
+
+/* ── SPLASH ── */
+.splash-screen {
+  animation: splash-exit .55s var(--ease) 1.9s both;
+  pointer-events: none;
+}
+
+@keyframes splash-exit {
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+
+.splash-logo {
+  animation: splash-logo-in .65s var(--spring) both;
+}
+
+@keyframes splash-logo-in {
+  from {
+    opacity: 0;
+    transform: scale(.3) rotate(-30deg)
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0)
+  }
+}
+
+.splash-logo-ring {
+  animation: splash-pulse 1s ease-in-out infinite;
+}
+
+@keyframes splash-pulse {
+
+  0%,
+  100% {
+    transform: scale(1)
+  }
+
+  50% {
+    transform: scale(1.07);
+    filter: brightness(1.2)
+  }
+}
+
+.splash-wordmark {
+  animation: splash-word-in .5s var(--ease) .3s both;
+}
+
+.splash-bar-wrap {
+  animation: splash-word-in .4s var(--ease) .5s both;
+}
+
+@keyframes splash-word-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+  }
+}
+
+.splash-bar-fill {
+  animation: splash-bar 1.3s var(--ease) .6s both;
+}
+
+@keyframes splash-bar {
+  from {
+    width: 0
+  }
+
+  to {
+    width: 100%
+  }
+}
+
+/* ── VORTEX ── */
+.vortex-wheel {
+  animation: vortex-spin 22s linear infinite, vortex-hue 18s ease-in-out infinite;
+}
+
+@keyframes vortex-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes vortex-hue {
+
+  0%,
+  100% {
+    filter: hue-rotate(0deg) brightness(1)
+  }
+
+  33% {
+    filter: hue-rotate(40deg) brightness(1.15)
+  }
+
+  66% {
+    filter: hue-rotate(-25deg) brightness(.9)
+  }
+}
+
+.vortex-wheel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from 180deg at 50% 50%, rgba(219, 39, 119, .09) 0deg, transparent 60deg, rgba(6, 182, 212, .08) 120deg, transparent 180deg, rgba(124, 58, 237, .09) 240deg, transparent 300deg, rgba(219, 39, 119, .09) 360deg);
+  filter: blur(60px);
+  animation: vortex-counter 35s linear infinite;
+}
+
+@keyframes vortex-counter {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* ── LOGO ── */
+@keyframes logo-ring-hue {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, .6), 0 0 36px rgba(124, 58, 237, .45);
+    filter: hue-rotate(0deg)
+  }
+
+  50% {
+    box-shadow: 0 0 0 12px rgba(124, 58, 237, 0), 0 0 60px rgba(219, 39, 119, .6);
+    filter: hue-rotate(60deg)
+  }
+}
+
+.logo-mark-ring {
+  animation: logo-ring-hue 2.8s ease-in-out infinite !important;
+}
+
+/* Letter cascade */
+.lw-char {
+  animation: lw-cascade .65s var(--spring) calc(var(--i)*.08s + 2.0s) both;
+}
+
+@keyframes lw-cascade {
+  from {
+    opacity: 0;
+    transform: translateY(-22px) rotateX(90deg)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0deg)
+  }
+}
+
+/* ── LANDING ENTRANCE stagger ── */
+.logo-lockup {
+  animation: section-rise .7s var(--ease) 2.0s both;
+}
+
+.hero-tagline {
+  animation: section-rise .7s var(--ease) 2.15s both;
+}
+
+.live-count-row {
+  animation: section-rise .7s var(--ease) 2.28s both;
+}
+
+.cta-btn {
+  animation: section-rise .7s var(--ease) 2.38s both, btn-breathe 2.8s ease-in-out 3s infinite;
+}
+
+.trust-line {
+  animation: section-rise .7s var(--ease) 2.5s both;
+}
+
+@keyframes section-rise {
+  from {
+    opacity: 0;
+    transform: translateY(34px)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+  }
+}
+
+/* ── LIVE DOT rainbow ── */
+@keyframes live-rainbow {
+
+  0%,
+  100% {
+    background: var(--green);
+    box-shadow: 0 0 12px rgba(34, 197, 94, .9)
+  }
+
+  33% {
+    background: var(--cyan);
+    box-shadow: 0 0 12px rgba(6, 182, 212, .9)
+  }
+
+  66% {
+    background: #a78bfa;
+    box-shadow: 0 0 12px rgba(167, 139, 250, .9)
+  }
+}
+
+.live-dot,
+.online-dot,
+.h-online-dot,
+.ab-dot {
+  animation: live-rainbow 4s linear infinite !important;
+}
+
+/* ── CTA button ── */
+.cta-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .22), transparent);
+  animation: btn-shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes btn-shimmer {
+  0% {
+    left: -100%
+  }
+
+  100% {
+    left: 200%
+  }
+}
+
+@keyframes btn-breathe {
+
+  0%,
+  100% {
+    box-shadow: var(--sh-btn)
+  }
+
+  50% {
+    box-shadow: 0 8px 56px rgba(124, 58, 237, .85), 0 0 0 6px rgba(124, 58, 237, .1)
+  }
+}
+
+.cta-btn:hover {
+  animation: none;
+}
+
+/* ── SCAN LINE ── */
+.scan-line.fire {
+  animation: scan-sweep 1.5s var(--ease) forwards;
+}
+
+@keyframes scan-sweep {
+  0% {
+    top: -4px;
+    opacity: 0
+  }
+
+  4% {
+    opacity: 1
+  }
+
+  96% {
+    opacity: 1
+  }
+
+  100% {
+    top: 100vh;
+    opacity: 0
+  }
+}
+
+/* ── SCREEN INDICATOR - active dot pulse ── */
+@keyframes si-dot-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(157, 95, 250, .7), 0 0 0 0 rgba(157, 95, 250, .4)
+  }
+
+  50% {
+    box-shadow: 0 0 16px rgba(157, 95, 250, 1), 0 0 0 5px rgba(157, 95, 250, 0)
+  }
+}
+
+.si-step.si-active .si-dot {
+  animation: si-dot-pulse 2s ease-in-out infinite;
+}
+
+/* ── HEADER ONLINE PILL ── */
+@keyframes pill-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0)
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, .12)
+  }
+}
+
+.header-online-pill {
+  animation: pill-glow 3s ease-in-out infinite;
+}
+
+/* ── CONN BADGE shimmer while connecting ── */
+@keyframes conn-shimmer {
+
+  0%,
+  100% {
+    border-color: rgba(245, 158, 11, .2)
+  }
+
+  50% {
+    border-color: rgba(245, 158, 11, .6);
+    box-shadow: 0 0 12px rgba(245, 158, 11, .18)
+  }
+}
+
+.conn-badge:not(.connected):not(.disconnected) {
+  animation: conn-shimmer 1.9s ease-in-out infinite;
+}
+
+/* ── PRECHAT CARD ── */
+@keyframes card-glow {
+
+  0%,
+  100% {
+    box-shadow: var(--sh-card)
+  }
+
+  50% {
+    box-shadow: var(--sh-card), 0 0 80px rgba(124, 58, 237, .18), 0 0 160px rgba(219, 39, 119, .07)
+  }
+}
+
+.prechat-card {
+  animation: card-glow 4.5s ease-in-out infinite, view-in .3s var(--ease) both;
+}
+
+/* ── RADAR ── */
+@keyframes radar-expand {
+  0% {
+    transform: scale(.25);
+    opacity: .95
+  }
+
+  100% {
+    transform: scale(1.6);
+    opacity: 0
+  }
+}
+
+.rr-1 {
+  animation: radar-expand 3.2s ease-out 0s infinite;
+}
+
+.rr-2 {
+  animation: radar-expand 3.2s ease-out .65s infinite;
+}
+
+.rr-3 {
+  animation: radar-expand 3.2s ease-out 1.3s infinite;
+}
+
+.rr-4 {
+  animation: radar-expand 3.2s ease-out 1.95s infinite;
+}
+
+@keyframes radar-rotate {
+  from {
+    transform: rotate(0)
+  }
+
+  to {
+    transform: rotate(360deg)
+  }
+}
+
+.radar-sweep {
+  background: conic-gradient(from 0deg, rgba(124, 58, 237, .9) 0deg, rgba(124, 58, 237, .4) 35deg, transparent 75deg, transparent 360deg);
+  animation: radar-rotate 2.2s linear infinite;
+  will-change: transform;
+}
+
+@keyframes blip-appear {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0)
+  }
+
+  8% {
+    opacity: 1;
+    transform: scale(1.6)
+  }
+
+  25% {
+    opacity: .9;
+    transform: scale(1)
+  }
+
+  55% {
+    opacity: 0
+  }
+}
+
+.rb-1 {
+  animation: blip-appear 3.2s ease-in-out .9s infinite;
+}
+
+.rb-2 {
+  animation: blip-appear 3.2s ease-in-out 2.1s infinite;
+}
+
+.rb-3 {
+  animation: blip-appear 3.2s ease-in-out .4s infinite;
+}
+
+.rb-4 {
+  animation: blip-appear 3.2s ease-in-out 3.0s infinite;
+}
+
+@keyframes core-hue {
+
+  0%,
+  100% {
+    filter: hue-rotate(0deg);
+    box-shadow: 0 0 30px rgba(124, 58, 237, .8), 0 0 70px rgba(219, 39, 119, .4)
+  }
+
+  33% {
+    filter: hue-rotate(50deg);
+    box-shadow: 0 0 40px rgba(219, 39, 119, .9), 0 0 90px rgba(6, 182, 212, .3)
+  }
+
+  66% {
+    filter: hue-rotate(90deg);
+    box-shadow: 0 0 30px rgba(6, 182, 212, .8), 0 0 70px rgba(124, 58, 237, .4)
+  }
+}
+
+.radar-core {
+  animation: core-hue 4.5s ease-in-out infinite !important;
+}
+
+@keyframes core-spin {
+  from {
+    transform: rotate(0)
+  }
+
+  to {
+    transform: rotate(360deg)
+  }
+}
+
+.radar-core-inner {
+  animation: core-spin 10s linear infinite;
+}
+
+@keyframes wsb-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1)
+  }
+
+  50% {
+    opacity: .35;
+    transform: scale(.6)
+  }
+}
+
+.wsb-dot {
+  animation: wsb-blink 1.3s ease-in-out infinite;
+}
+
+/* Waiting title gradient */
+@keyframes title-grad-shift {
+
+  0%,
+  100% {
+    background-position: 0% 50%
+  }
+
+  50% {
+    background-position: 100% 50%
+  }
+}
+
+.waiting-title {
+  background: linear-gradient(135deg, #9d5ffa, #ec4899, #06b6d4, #22c55e, #9d5ffa);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-grad-shift 5s linear infinite;
+}
+
+/* ── PARTNER STRIP ── */
+@keyframes partner-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, .8)
+  }
+
+  70% {
+    box-shadow: 0 0 0 9px rgba(34, 197, 94, 0)
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0)
+  }
+}
+
+.partner-online-dot {
+  animation: partner-ping 1.6s ease-out infinite !important;
+}
+
+/* ── CHAT TIMER ── heartbeat when < 30s */
+@keyframes timer-danger {
+
+  0%,
+  100% {
+    color: var(--cyan)
+  }
+
+  50% {
+    color: var(--red);
+    text-shadow: 0 0 10px rgba(239, 68, 68, .6)
+  }
+}
+
+.chat-timer.danger {
+  animation: timer-danger .9s ease-in-out infinite;
+}
+
+/* ── MESSAGES ── */
+@keyframes bubble-self {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(.9)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1)
+  }
+}
+
+@keyframes bubble-partner {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) scale(.9)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1)
+  }
+}
+
+@keyframes bubble-system {
+  from {
+    opacity: 0;
+    transform: scale(.85)
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1)
+  }
+}
+
+.msg.self {
+  animation: bubble-self .28s var(--spring) both !important;
+}
+
+.msg.partner {
+  animation: bubble-partner .28s var(--spring) both !important;
+}
+
+.msg.system {
+  animation: bubble-system .22s var(--ease) both !important;
+}
+
+@keyframes match-pop {
+  0% {
+    opacity: 0;
+    transform: scale(.5) rotate(-5deg)
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg)
+  }
+
+  80% {
+    transform: scale(.97)
+  }
+
+  100% {
+    transform: scale(1)
+  }
+}
+
+.msg.system.success {
+  animation: match-pop .55s var(--spring) both !important;
+}
+
+/* ── INPUT ── */
+@keyframes focus-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, .14), 0 0 22px rgba(124, 58, 237, .1)
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, .28), 0 0 40px rgba(124, 58, 237, .2)
+  }
+}
+
+.input-pill:focus-within {
+  animation: focus-pulse 2.2s ease-in-out infinite !important;
+}
+
+/* ── SEND BUTTON ── */
+@keyframes send-idle {
+
+  0%,
+  100% {
+    filter: hue-rotate(0deg);
+    box-shadow: 0 2px 14px rgba(124, 58, 237, .35)
+  }
+
+  50% {
+    filter: hue-rotate(50deg);
+    box-shadow: 0 2px 24px rgba(219, 39, 119, .5)
+  }
+}
+
+.send-btn:not(:disabled) {
+  animation: send-idle 4.5s ease-in-out infinite;
+}
+
+.send-btn:not(:disabled):hover {
+  animation: none;
+}
+
+/* ── ACTION CHIPS ── */
+.action-chip:hover:not(:disabled) {
+  animation: chip-up .15s var(--spring) both;
+}
+
+@keyframes chip-up {
+  from {
+    transform: translateY(0)
+  }
+
+  to {
+    transform: translateY(-3px) scale(1.04)
+  }
+}
+
+/* ── TOAST ── */
+@keyframes toast-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(.9)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1)
+  }
+}
+
+.toast {
+  animation: toast-up .3s var(--spring) both !important;
+}
+
+/* ── TYPING BAR ── */
+@keyframes typing-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px)
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0)
+  }
+}
+
+.typing-bar.visible {
+  animation: typing-in .2s var(--ease) both;
+}
+
+/* ── CURSOR TRAIL ── */
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* ── EMPTY STATE ── */
+@keyframes empty-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, .3);
+    transform: scale(1)
+  }
+
+  50% {
+    box-shadow: 0 0 0 18px rgba(124, 58, 237, 0);
+    transform: scale(1.06)
+  }
+}
+
+.msgs-empty-pulse {
+  animation: empty-glow 2.8s ease-in-out infinite !important;
+}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion:reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

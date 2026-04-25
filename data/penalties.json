@@ -1,0 +1,190 @@
+{
+  "penalties": {
+    "13a0bd7d-36e2-4079-bd8e-7ed8ed7f292a": {
+      "type": "warning",
+      "startTime": 1776683516557,
+      "duration": 30000,
+      "expiresAt": 1776683546557
+    },
+    "6d5c0bb4-c08b-4008-b1e5-396b34ced21a": {
+      "type": "warning",
+      "startTime": 1776683589382,
+      "duration": 30000,
+      "expiresAt": 1776683619382
+    },
+    "a4a99b72-f4ca-43bc-8e0e-b8f58bc04d1e": {
+      "type": "warning",
+      "startTime": 1776683747916,
+      "duration": 30000,
+      "expiresAt": 1776683777916
+    },
+    "0ef26700-5542-46e1-8728-c665dd39e83d": {
+      "type": "warning",
+      "startTime": 1776683783337,
+      "duration": 30000,
+      "expiresAt": 1776683813337
+    },
+    "21c7e02e-c6c8-4680-8ff3-da71abad5af1": {
+      "type": "warning",
+      "startTime": 1776683975899,
+      "duration": 30000,
+      "expiresAt": 1776684005899
+    },
+    "65725518-5d5f-40d4-bd2a-bd00a6649798": {
+      "type": "warning",
+      "startTime": 1776684216922,
+      "duration": 30000,
+      "expiresAt": 1776684246922
+    },
+    "8d804ecb-6f6e-49f3-bb75-19f3a803036b": {
+      "type": "warning",
+      "startTime": 1776684239348,
+      "duration": 30000,
+      "expiresAt": 1776684269348
+    },
+    "6f795767-f411-4a0c-a3f5-aabf717dadba": {
+      "type": "warning",
+      "startTime": 1776684535116,
+      "duration": 30000,
+      "expiresAt": 1776684565116
+    },
+    "d920ab0b-ffdf-45ed-ba84-961cd0c71485": {
+      "type": "warning",
+      "startTime": 1776686452288,
+      "duration": 30000,
+      "expiresAt": 1776686482288
+    },
+    "7beaa937-18c9-4f36-925a-97dfa4584c24": {
+      "type": "warning",
+      "startTime": 1776687017124,
+      "duration": 30000,
+      "expiresAt": 1776687047124
+    },
+    "22bbd507-466f-400b-819a-6813ce73bbae": {
+      "type": "warning",
+      "startTime": 1776687540421,
+      "duration": 30000,
+      "expiresAt": 1776687570421
+    },
+    "62041ae9-117a-4fea-9b42-e9592273af60": {
+      "type": "warning",
+      "startTime": 1776687710722,
+      "duration": 30000,
+      "expiresAt": 1776687740722
+    },
+    "28e92cc4-c318-43c7-ab55-30bf4365f040": {
+      "type": "warning",
+      "startTime": 1776687855830,
+      "duration": 30000,
+      "expiresAt": 1776687885830
+    },
+    "60fa36ef-2cf1-41ac-bd48-54d2aac8a47b": {
+      "type": "warning",
+      "startTime": 1776687970293,
+      "duration": 30000,
+      "expiresAt": 1776688000293
+    },
+    "bf705525-e8ea-4966-91e6-5a7ace8149bd": {
+      "type": "warning",
+      "startTime": 1776688214234,
+      "duration": 30000,
+      "expiresAt": 1776688244234
+    },
+    "24e0c96d-737b-42cd-b22a-af62df3a3044": {
+      "type": "warning",
+      "startTime": 1776688393676,
+      "duration": 30000,
+      "expiresAt": 1776688423676
+    },
+    "48e71bb8-443a-4027-b8f1-7af04c56cefa": {
+      "type": "warning",
+      "startTime": 1776688472354,
+      "duration": 30000,
+      "expiresAt": 1776688502354
+    },
+    "af2ead45-fbf0-4e68-91ed-d05ee5088d9b": {
+      "type": "warning",
+      "startTime": 1776688984070,
+      "duration": 30000,
+      "expiresAt": 1776689014070
+    },
+    "c2ba29cd-bc4c-4977-8b2a-d8101b8d5081": {
+      "type": "warning",
+      "startTime": 1776689266498,
+      "duration": 0,
+      "expiresAt": 1776689266498
+    },
+    "a53eb8b4-3ddb-46a1-bf61-7f04e8ec6580": {
+      "type": "warning",
+      "startTime": 1776689482387,
+      "duration": 30000,
+      "expiresAt": 1776689512387
+    },
+    "54abb5d0-acd9-4500-80a2-7949f90caa29": {
+      "type": "warning",
+      "startTime": 1776689574411,
+      "duration": 30000,
+      "expiresAt": 1776689604411
+    },
+    "1d6e490e-5a0e-4265-8927-e12feb6f6985": {
+      "type": "warning",
+      "startTime": 1776689627828,
+      "duration": 30000,
+      "expiresAt": 1776689657828
+    },
+    "0a0b6efc-6d4e-411f-96f0-d79698e25c9a": {
+      "type": "warning",
+      "startTime": 1776689726103,
+      "duration": 30000,
+      "expiresAt": 1776689756103
+    },
+    "44e1bdb1-2e04-4d51-bb39-0d68f9666496": {
+      "type": "warning",
+      "startTime": 1776690007531,
+      "duration": 30000,
+      "expiresAt": 1776690037531
+    },
+    "fcadd5b6-183e-44a9-bd50-2b16a64f2a7d": {
+      "type": "warning",
+      "startTime": 1776690145883,
+      "duration": 30000,
+      "expiresAt": 1776690175883
+    },
+    "3d5ac57d-885c-436b-b1ba-d88c69658e74": {
+      "type": "warning",
+      "startTime": 1776690299431,
+      "duration": 30000,
+      "expiresAt": 1776690329431
+    },
+    "03f6c5cc-9698-47b3-a982-e24027e49343": {
+      "type": "warning",
+      "startTime": 1776690686188,
+      "duration": 30000,
+      "expiresAt": 1776690716188
+    },
+    "3780b9a4-e813-48e1-bf01-7f79e60dccc4": {
+      "type": "warning",
+      "startTime": 1776690827430,
+      "duration": 30000,
+      "expiresAt": 1776690857430
+    },
+    "866b560a-16ae-49fc-9fcd-315e35b8a6df": {
+      "type": "mute",
+      "startTime": 1776691031651,
+      "duration": 120000,
+      "expiresAt": 1776691151651
+    },
+    "4b7be3ca-196b-4dae-b27d-52f9cb7e9b7a": {
+      "type": "warning",
+      "startTime": 1776691204161,
+      "duration": 0,
+      "expiresAt": 1776691204161
+    },
+    "363e3f16-2f10-477f-8fdb-a8d105d095b9": {
+      "type": "mute",
+      "startTime": 1776691270538,
+      "duration": 120000,
+      "expiresAt": 1776691390538
+    }
+  }
+}

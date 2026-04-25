@@ -1,0 +1,1385 @@
+[
+  {
+    "id": "spm_1776342347620_xrpb6n",
+    "userId": "user_v706ysjcfmo1bbful",
+    "type": "rate_limit_matchmaking",
+    "message": "Exceeded matchmaking rate limit",
+    "createdAt": 1776342347621
+  },
+  {
+    "id": "spm_1776343322298_oscia4",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "yooooo",
+    "createdAt": 1776343322298
+  },
+  {
+    "id": "spm_1776343337622_kf0qpo",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "yooooo",
+    "createdAt": 1776343337622
+  },
+  {
+    "id": "spm_1776343441417_o1tob3",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776343441417
+  },
+  {
+    "id": "spm_1776343442953_hvczvf",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776343442953
+  },
+  {
+    "id": "spm_1776343444120_ppsciy",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776343444120
+  },
+  {
+    "id": "spm_1776343446240_171p9v",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776343446240
+  },
+  {
+    "id": "spm_1776345874815_1efzh8",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776345874815
+  },
+  {
+    "id": "spm_1776345899518_65qdqv",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776345899518
+  },
+  {
+    "id": "spm_1776345917001_1si7q5",
+    "userId": "0b14e56f-b402-4ce0-b3d5-9f811dc77153",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776345917001
+  },
+  {
+    "id": "spm_1776345920773_dgg5fc",
+    "userId": "b7c6cd3a-522e-4b28-8203-d57f6e7a3dde",
+    "type": "duplicate",
+    "message": "hi",
+    "createdAt": 1776345920773
+  },
+  {
+    "id": "spm_1776347112008_orvpmh",
+    "userId": "eaaed2ad-596c-4d25-b205-e95cff355818",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776347112009
+  },
+  {
+    "id": "spm_1776347112267_0odzh7",
+    "userId": "eaaed2ad-596c-4d25-b205-e95cff355818",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776347112267
+  },
+  {
+    "id": "spm_1776347131116_ardw8w",
+    "userId": "eaaed2ad-596c-4d25-b205-e95cff355818",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776347131116
+  },
+  {
+    "id": "spm_1776347154722_ofnie5",
+    "userId": "eaaed2ad-596c-4d25-b205-e95cff355818",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776347154722
+  },
+  {
+    "id": "spm_1776362883602_znc0uk",
+    "userId": "a795e532-d3b9-4152-a6ce-164f9ee87606",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776362883602
+  },
+  {
+    "id": "spm_1776362883883_6mbc0o",
+    "userId": "a795e532-d3b9-4152-a6ce-164f9ee87606",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776362883883
+  },
+  {
+    "id": "spm_1776364126773_tvj6qp",
+    "userId": "6169ef87-8460-41bb-8a55-5420e40dee62",
+    "type": "rapid_duplicates",
+    "message": "o",
+    "count": 6,
+    "createdAt": 1776364126773
+  },
+  {
+    "id": "spm_1776364126971_m4d5ck",
+    "userId": "6169ef87-8460-41bb-8a55-5420e40dee62",
+    "type": "rapid_duplicates",
+    "message": "o",
+    "count": 7,
+    "createdAt": 1776364126971
+  },
+  {
+    "id": "spm_1776364138104_wtf7fz",
+    "userId": "6169ef87-8460-41bb-8a55-5420e40dee62",
+    "type": "rapid_duplicates",
+    "message": "o",
+    "count": 6,
+    "createdAt": 1776364138104
+  },
+  {
+    "id": "spm_1776365099662_rtx12j",
+    "userId": "029594db-97e2-4c0f-ab87-16f2ec62a580",
+    "type": "rapid_duplicates",
+    "message": "hi",
+    "count": 6,
+    "createdAt": 1776365099662
+  },
+  {
+    "id": "spm_1776468865683_mhpvbr",
+    "userId": "f48b1940-38d4-43f7-a5cd-423728bae6f6",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776468865683
+  },
+  {
+    "id": "spm_1776469043691_4vbjml",
+    "userId": "f48b1940-38d4-43f7-a5cd-423728bae6f6",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776469043691
+  },
+  {
+    "id": "spm_1776469228008_67z6vw",
+    "userId": "e228fa27-9a9a-471f-bf16-57531d863432",
+    "type": "slur_blocked",
+    "message": "slut",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "slut"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776469228008
+  },
+  {
+    "id": "spm_1776469232850_713ra7",
+    "userId": "e228fa27-9a9a-471f-bf16-57531d863432",
+    "type": "slur_blocked",
+    "message": "slut",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "slut"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776469232850
+  },
+  {
+    "id": "spm_1776469236274_lbstpc",
+    "userId": "e228fa27-9a9a-471f-bf16-57531d863432",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 3,
+    "createdAt": 1776469236274
+  },
+  {
+    "id": "spm_1776470875371_xg6if5",
+    "userId": "b2968579-e4fa-4bdd-ab37-e1e2747e8af5",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776470875371
+  },
+  {
+    "id": "spm_1776470991555_3n099e",
+    "userId": "b5ead0bf-07a7-455d-a93c-3d2fe1b8d345",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776470991556
+  },
+  {
+    "id": "spm_1776471313878_nl0h1d",
+    "userId": "c8c667ad-28c0-4632-bb38-e2debdeb6266",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776471313878
+  },
+  {
+    "id": "spm_1776471327907_d3o0zv",
+    "userId": "c8c667ad-28c0-4632-bb38-e2debdeb6266",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776471327907
+  },
+  {
+    "id": "spm_1776471509509_egnnju",
+    "userId": "c37a678b-9496-436f-87ce-45755ee61e35",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776471509509
+  },
+  {
+    "id": "spm_1776471537610_nn4vdw",
+    "userId": "c37a678b-9496-436f-87ce-45755ee61e35",
+    "type": "slur_blocked",
+    "message": "madarchod",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "madarchod"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776471537610
+  },
+  {
+    "id": "spm_1776472260942_7wwi7s",
+    "userId": "d10d0ffb-3344-49d0-8eaa-7e284d3062ad",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776472260942
+  },
+  {
+    "id": "spm_1776472413132_wwgku5",
+    "userId": "d10d0ffb-3344-49d0-8eaa-7e284d3062ad",
+    "type": "slur_blocked",
+    "message": "madar chod",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "chod"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776472413132
+  },
+  {
+    "id": "spm_1776472541363_73k6q7",
+    "userId": "be2463f8-9dba-4dac-99d5-22afce898ca7",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776472541363
+  },
+  {
+    "id": "spm_1776473600772_dr7cxf",
+    "userId": "8d16f3bd-85bf-4ae7-9733-48f2bf084b1f",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776473600772
+  },
+  {
+    "id": "spm_1776475608229_lg9r0c",
+    "userId": "919cc83c-c0e5-4141-872d-2f612da5dc07",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776475608229
+  },
+  {
+    "id": "spm_1776475709334_e7xui4",
+    "userId": "61971e9f-7b2a-4005-869b-ec5564e2ac9d",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776475709334
+  },
+  {
+    "id": "spm_1776476589193_7a39bb",
+    "userId": "8d246e69-aa59-46ea-acc3-b4572f29b508",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776476589193
+  },
+  {
+    "id": "spm_1776476595284_7jvdh5",
+    "userId": "8d246e69-aa59-46ea-acc3-b4572f29b508",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776476595284
+  },
+  {
+    "id": "spm_1776479263083_0tjtfq",
+    "userId": "f5965a18-b803-4d2c-af14-831f43896262",
+    "type": "slur_blocked",
+    "message": "slut",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "slut"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776479263083
+  },
+  {
+    "id": "spm_1776583567530_twna2t",
+    "userId": "e5e4911f-3e8e-41cc-b7c4-144a6c46bb45",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776583567530
+  },
+  {
+    "id": "spm_1776585681378_2240ah",
+    "userId": "dafa8295-844c-4d1a-aac9-4d78e0d8400b",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776585681378
+  },
+  {
+    "id": "spm_1776586419288_3onqtv",
+    "userId": "186c2748-969f-46d6-a49b-ccae0b5f9ac6",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776586419288
+  },
+  {
+    "id": "spm_1776587901831_rw2hno",
+    "userId": "0f52d3bc-6489-4257-a955-4014251696ff",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776587901831
+  },
+  {
+    "id": "spm_1776588261311_9v2766",
+    "userId": "cbefb1e6-d1b4-48fa-90db-17176ea2c14c",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776588261311
+  },
+  {
+    "id": "spm_1776588269068_zco8p3",
+    "userId": "cbefb1e6-d1b4-48fa-90db-17176ea2c14c",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776588269069
+  },
+  {
+    "id": "spm_1776588408287_c91568",
+    "userId": "1fbf3747-e15f-4dc2-a1a7-6b807c730272",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776588408287
+  },
+  {
+    "id": "spm_1776588766178_k0mugs",
+    "userId": "3ae7d75b-c474-47de-a09a-725f29315948",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776588766178
+  },
+  {
+    "id": "spm_1776589102055_1993zo",
+    "userId": "84ccad5c-5091-46a8-a103-a77df15223d6",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776589102055
+  },
+  {
+    "id": "spm_1776589448094_vmwbi9",
+    "userId": "123b8a73-078b-4280-96a5-51dec76d39c2",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776589448094
+  },
+  {
+    "id": "spm_1776590003283_jf9klj",
+    "userId": "17db24bc-a52b-46a0-9e89-f207c466fc8f",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776590003283
+  },
+  {
+    "id": "spm_1776590163009_8byj79",
+    "userId": "e8c77dc0-4adb-46ee-9b55-fc85de25fcb8",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776590163009
+  },
+  {
+    "id": "spm_1776590165055_7hcoli",
+    "userId": "e8c77dc0-4adb-46ee-9b55-fc85de25fcb8",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776590165055
+  },
+  {
+    "id": "spm_1776590507519_0gumos",
+    "userId": "fb9266fd-c0aa-4e77-a95c-e2120d545109",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776590507520
+  },
+  {
+    "id": "spm_1776590741292_ucn80q",
+    "userId": "f60751ea-fb3c-4537-b8d9-1c67bba50fe5",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776590741292
+  },
+  {
+    "id": "spm_1776590751577_5z1m47",
+    "userId": "f60751ea-fb3c-4537-b8d9-1c67bba50fe5",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "cooldown",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776590751577
+  },
+  {
+    "id": "spm_1776590774683_nk512y",
+    "userId": "9f0e34a6-83c5-49cb-97bf-18bbf31a0ee0",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776590774683
+  },
+  {
+    "id": "spm_1776590989436_yfelll",
+    "userId": "098850c0-5026-4c89-aedb-b3f879c37e56",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776590989436
+  },
+  {
+    "id": "spm_1776591377752_nwnd64",
+    "userId": "2a939850-b056-45b7-90d9-398e2871bfd4",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776591377752
+  },
+  {
+    "id": "spm_1776591981161_39un5n",
+    "userId": "9aba7e5f-2644-4454-8b2a-962ce14acd9d",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776591981161
+  },
+  {
+    "id": "spm_1776593586332_dmn7xx",
+    "userId": "ac3f6999-bdf9-4665-9272-e21ce961365d",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776593586332
+  },
+  {
+    "id": "spm_1776610126794_zlsm3j",
+    "userId": "9e83d077-60a9-4c25-8170-6b8484ed9caa",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776610126794
+  },
+  {
+    "id": "spm_1776610137885_oct3ih",
+    "userId": "62980350-0ccf-4ffa-b5fc-722ccd67b07d",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776610137885
+  },
+  {
+    "id": "spm_1776610201762_uqoiu3",
+    "userId": "4c74cde6-c4e1-48da-a739-e25d3dbd2773",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776610201762
+  },
+  {
+    "id": "spm_1776610693348_01nrqv",
+    "userId": "b16662f0-9db5-44d0-867f-78c75df2a9f5",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776610693348
+  },
+  {
+    "id": "spm_1776610708332_87i1rh",
+    "userId": "4843f24c-1faf-4a65-8fd9-b0338b550e10",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776610708332
+  },
+  {
+    "id": "spm_1776610828764_clo9kw",
+    "userId": "610199c4-f682-473c-897f-b4d9516bbf9d",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776610828764
+  },
+  {
+    "id": "spm_1776611188450_u5lj49",
+    "userId": "f76488b0-1805-409e-8314-1420746d685e",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776611188450
+  },
+  {
+    "id": "spm_1776612001700_rqvkqz",
+    "userId": "24377394-866c-4351-81a8-8ef7dc8f29b5",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776612001700
+  },
+  {
+    "id": "spm_1776612690335_nw7dys",
+    "userId": "b8c44287-257c-4c67-b30f-304b6f995b7e",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776612690335
+  },
+  {
+    "id": "spm_1776612779517_9nqo98",
+    "userId": "fc87722b-9402-4041-b262-a4dec8d18a1a",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776612779517
+  },
+  {
+    "id": "spm_1776670761689_ktl62v",
+    "userId": "b95e736d-45d7-4177-a6a6-de2bae7b4531",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776670761689
+  },
+  {
+    "id": "spm_1776682271408_bzpfd7",
+    "userId": "8b0a2678-cc82-4307-b67d-472f38a73e0b",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776682271408
+  },
+  {
+    "id": "spm_1776682296011_pifo1q",
+    "userId": "cbba0a94-6da3-451a-b6dc-316bbaccfdae",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776682296011
+  },
+  {
+    "id": "spm_1776682554848_2pj29f",
+    "userId": "fca1d07f-07ca-4605-80ab-db2918b4a9ad",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776682554848
+  },
+  {
+    "id": "spm_1776683516570_sc1iip",
+    "userId": "13a0bd7d-36e2-4079-bd8e-7ed8ed7f292a",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776683516570
+  },
+  {
+    "id": "spm_1776683589387_xj5ve0",
+    "userId": "6d5c0bb4-c08b-4008-b1e5-396b34ced21a",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776683589387
+  },
+  {
+    "id": "spm_1776683648654_0xf142",
+    "userId": "1d494b51-b12f-4ffb-873b-fb803f0fc99b",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 6,
+    "createdAt": 1776683648654
+  },
+  {
+    "id": "spm_1776683648896_gr5ui5",
+    "userId": "1d494b51-b12f-4ffb-873b-fb803f0fc99b",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 7,
+    "createdAt": 1776683648896
+  },
+  {
+    "id": "spm_1776683649148_oqe736",
+    "userId": "1d494b51-b12f-4ffb-873b-fb803f0fc99b",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 8,
+    "createdAt": 1776683649148
+  },
+  {
+    "id": "spm_1776683649538_jve065",
+    "userId": "1d494b51-b12f-4ffb-873b-fb803f0fc99b",
+    "type": "rapid_duplicates",
+    "message": "i",
+    "count": 8,
+    "createdAt": 1776683649538
+  },
+  {
+    "id": "spm_1776683747932_b18mbi",
+    "userId": "a4a99b72-f4ca-43bc-8e0e-b8f58bc04d1e",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776683747932
+  },
+  {
+    "id": "spm_1776683783352_fmtldv",
+    "userId": "0ef26700-5542-46e1-8728-c665dd39e83d",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776683783352
+  },
+  {
+    "id": "spm_1776683975916_b9xf72",
+    "userId": "21c7e02e-c6c8-4680-8ff3-da71abad5af1",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776683975916
+  },
+  {
+    "id": "spm_1776684216927_cluxw6",
+    "userId": "65725518-5d5f-40d4-bd2a-bd00a6649798",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776684216927
+  },
+  {
+    "id": "spm_1776684239351_d122s5",
+    "userId": "8d804ecb-6f6e-49f3-bb75-19f3a803036b",
+    "type": "slur_blocked",
+    "message": "slut",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "slut"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776684239351
+  },
+  {
+    "id": "spm_1776684535122_95nsz1",
+    "userId": "6f795767-f411-4a0c-a3f5-aabf717dadba",
+    "type": "slur_blocked",
+    "message": "hi bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776684535123
+  },
+  {
+    "id": "spm_1776685637129_nqhadl",
+    "userId": "920a3c1f-8737-4bc7-bc9b-d0814bce26de",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776685637129
+  },
+  {
+    "id": "spm_1776686452533_lww8i0",
+    "userId": "d920ab0b-ffdf-45ed-ba84-961cd0c71485",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776686452533
+  },
+  {
+    "id": "spm_1776687017299_dux19y",
+    "userId": "7beaa937-18c9-4f36-925a-97dfa4584c24",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776687017299
+  },
+  {
+    "id": "spm_1776687540435_285rxv",
+    "userId": "22bbd507-466f-400b-819a-6813ce73bbae",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776687540435
+  },
+  {
+    "id": "spm_1776687710918_vnd9zz",
+    "userId": "62041ae9-117a-4fea-9b42-e9592273af60",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776687710918
+  },
+  {
+    "id": "spm_1776687855836_8ztl5r",
+    "userId": "28e92cc4-c318-43c7-ab55-30bf4365f040",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776687855836
+  },
+  {
+    "id": "spm_1776687970308_inel1p",
+    "userId": "60fa36ef-2cf1-41ac-bd48-54d2aac8a47b",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776687970308
+  },
+  {
+    "id": "spm_1776688214245_wrj1k0",
+    "userId": "bf705525-e8ea-4966-91e6-5a7ace8149bd",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776688214245
+  },
+  {
+    "id": "spm_1776688393692_vgfnxq",
+    "userId": "24e0c96d-737b-42cd-b22a-af62df3a3044",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776688393692
+  },
+  {
+    "id": "spm_1776688474101_jl04mn",
+    "userId": "48e71bb8-443a-4027-b8f1-7af04c56cefa",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776688474101
+  },
+  {
+    "id": "spm_1776688984084_66i4k4",
+    "userId": "af2ead45-fbf0-4e68-91ed-d05ee5088d9b",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776688984084
+  },
+  {
+    "id": "spm_1776689241877_pxl35g",
+    "userId": "0a82da90-898b-448b-a524-64d13bdf5f5c",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776689241878
+  },
+  {
+    "id": "spm_1776689264704_xcz306",
+    "userId": "c2ba29cd-bc4c-4977-8b2a-d8101b8d5081",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776689264704
+  },
+  {
+    "id": "spm_1776689482524_eo2948",
+    "userId": "a53eb8b4-3ddb-46a1-bf61-7f04e8ec6580",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776689482524
+  },
+  {
+    "id": "spm_1776689574525_ni10x0",
+    "userId": "54abb5d0-acd9-4500-80a2-7949f90caa29",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776689574525
+  },
+  {
+    "id": "spm_1776689628326_vpogew",
+    "userId": "1d6e490e-5a0e-4265-8927-e12feb6f6985",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776689628326
+  },
+  {
+    "id": "spm_1776689726167_kt9s7k",
+    "userId": "0a0b6efc-6d4e-411f-96f0-d79698e25c9a",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776689726167
+  },
+  {
+    "id": "spm_1776689982443_0jkkyk",
+    "userId": "de89adc3-0dd2-4c3a-9dc0-3c947e881f7f",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776689982443
+  },
+  {
+    "id": "spm_1776690008110_uoe4go",
+    "userId": "44e1bdb1-2e04-4d51-bb39-0d68f9666496",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690008110
+  },
+  {
+    "id": "spm_1776690132952_1loimw",
+    "userId": "fcadd5b6-183e-44a9-bd50-2b16a64f2a7d",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776690132952
+  },
+  {
+    "id": "spm_1776690145887_9rffu3",
+    "userId": "fcadd5b6-183e-44a9-bd50-2b16a64f2a7d",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690145887
+  },
+  {
+    "id": "spm_1776690299468_3f1dt4",
+    "userId": "3d5ac57d-885c-436b-b1ba-d88c69658e74",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690299468
+  },
+  {
+    "id": "spm_1776690686235_27fq1m",
+    "userId": "03f6c5cc-9698-47b3-a982-e24027e49343",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690686235
+  },
+  {
+    "id": "spm_1776690731402_82iyr1",
+    "userId": "9a4b7b4f-04a7-49b8-a017-49f42f6d377b",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690731402
+  },
+  {
+    "id": "spm_1776690827458_6nqvdr",
+    "userId": "3780b9a4-e813-48e1-bf01-7f79e60dccc4",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690827458
+  },
+  {
+    "id": "spm_1776690958051_6obxkh",
+    "userId": "866b560a-16ae-49fc-9fcd-315e35b8a6df",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776690958051
+  },
+  {
+    "id": "spm_1776691019312_bzpmle",
+    "userId": "866b560a-16ae-49fc-9fcd-315e35b8a6df",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776691019312
+  },
+  {
+    "id": "spm_1776691032902_g0kwgf",
+    "userId": "866b560a-16ae-49fc-9fcd-315e35b8a6df",
+    "type": "slur_blocked",
+    "message": "bitch",
+    "action": "mute",
+    "isTargeting": false,
+    "matchedWords": [
+      "bitch"
+    ],
+    "violationCount": 3,
+    "createdAt": 1776691032902
+  },
+  {
+    "id": "spm_1776691202535_r9tnqf",
+    "userId": "4b7be3ca-196b-4dae-b27d-52f9cb7e9b7a",
+    "type": "moderation_blocked",
+    "message": "age",
+    "action": "warning",
+    "violationCount": 1,
+    "createdAt": 1776691202535
+  },
+  {
+    "id": "spm_1776691228915_tzdh6p",
+    "userId": "363e3f16-2f10-477f-8fdb-a8d105d095b9",
+    "type": "slur_blocked",
+    "message": "slut",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "slut"
+    ],
+    "violationCount": 1,
+    "createdAt": 1776691228915
+  },
+  {
+    "id": "spm_1776691251329_1l54om",
+    "userId": "363e3f16-2f10-477f-8fdb-a8d105d095b9",
+    "type": "slur_blocked",
+    "message": "gandu",
+    "action": "warning",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "violationCount": 2,
+    "createdAt": 1776691251329
+  },
+  {
+    "id": "spm_1776691272911_weu8pd",
+    "userId": "363e3f16-2f10-477f-8fdb-a8d105d095b9",
+    "type": "slur_blocked",
+    "message": "madarchod",
+    "action": "mute",
+    "isTargeting": false,
+    "matchedWords": [
+      "madarchod"
+    ],
+    "violationCount": 3,
+    "createdAt": 1776691272911
+  }
+]

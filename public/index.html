@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Ping – anonymous chat. No login, no data stored, instant connection." />
+  <meta name="ping-backend-url" content="" />
+  <title>Ping — Anonymous Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=1.1.1" />
+  <link rel="stylesheet" href="/animations.css?v=1.1.1" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+  <style>
+    .emoji-picker-popup {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      right: 12px;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      overflow: hidden;
+      animation: pop-up 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .emoji-picker-popup.visible {
+      display: block;
+    }
+
+    @keyframes pop-up {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    emoji-picker {
+      --background: #0a0a1c;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --num-columns: 8;
+      --category-font-color: var(--purple-l);
+    }
+
+    .eq-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 0 4px;
+    }
+
+    .eq-more-btn {
+      background: transparent;
+      border: none;
+      color: var(--t-hi);
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+      opacity: .7;
+    }
+
+    .eq-more-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, .05);
+      opacity: 1;
+    }
+
+    .reply-preview-bar {
+      position: absolute;
+      bottom: calc(100% + 40px);
+      left: 14px;
+      right: 14px;
+      z-index: 9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: rgba(124, 58, 237, .1);
+      border: 1px solid rgba(124, 58, 237, .3);
+      border-radius: 14px;
+      color: #fff;
+      font-size: .85rem;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, .3);
+      animation: rp-pop .2s var(--spring) both;
+      backdrop-filter: blur(10px);
+    }
+
+    .rp-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .rp-left span:first-of-type {
+      color: var(--purple-l);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .rp-text {
+      color: var(--t-med);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-style: italic;
+      border-left: 2px solid rgba(255, 255, 255, .2);
+      padding-left: 8px;
+    }
+
+    .rp-close {
+      background: transparent;
+      border: none;
+      color: var(--t-ghost);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      transition: color .15s;
+    }
+
+    .rp-close:hover {
+      color: var(--red);
+    }
+
+    @keyframes rp-pop {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .msg-reply-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, .2);
+      border-left: 3px solid var(--purple-l);
+      border-radius: 4px 8px 8px 4px;
+      font-size: .8rem;
+      opacity: .9;
+      cursor: pointer;
+    }
+
+    .msg-reply-block strong {
+      color: var(--purple-l);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .msg-reply-block span {
+      color: var(--t-med);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.3;
+    }
+
+    .msg.self .msg-reply-block strong {
+      color: #fff;
+    }
+
+    .msg.self .msg-reply-block span {
+      color: rgba(255, 255, 255, .8);
+    }
+
+    .msg-reply-trigger {
+      position: absolute;
+      right: -36px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--t-med);
+      cursor: pointer;
+      opacity: 0;
+      transition: all .2s;
+      backdrop-filter: blur(5px);
+    }
+
+    .msg:hover .msg-reply-trigger {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+      right: -36px;
+    }
+
+    .msg-reply-trigger:hover {
+      background: rgba(255, 255, 255, .1);
+      color: #fff;
+    }
+
+    .msg.self .msg-reply-trigger {
+      right: auto;
+      left: -36px;
+    }
+
+    .msg.self:hover .msg-reply-trigger {
+      opacity: 1;
+      left: -36px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══ SPLASH ═══ -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-logo">
+      <div class="splash-logo-ring"></div>
+      <span class="splash-logo-icon">⚡</span>
+    </div>
+    <p class="splash-wordmark">Ping</p>
+    <div class="splash-bar-wrap">
+      <div class="splash-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ LANDING PAGE ═══════════════════ -->
+  <div id="landingPage" class="landing" style="opacity:0;">
+    <!-- BACKGROUND STACK -->
+    <canvas id="particleCanvas" aria-hidden="true"></canvas>
+    <div class="vortex-wheel" aria-hidden="true"></div>
+    <div class="nebula-field" aria-hidden="true">
+      <div class="neb neb-1"></div>
+      <div class="neb neb-2"></div>
+      <div class="neb neb-3"></div>
+      <div class="neb neb-4"></div>
+      <div class="neb neb-5"></div>
+    </div>
+    <div class="aurora-canvas" aria-hidden="true">
+      <div class="aurora-band"></div>
+      <div class="aurora-band"></div>
+      <div class="aurora-band"></div>
+    </div>
+    <div class="mesh-grid" aria-hidden="true"></div>
+    <div class="scan-line" id="scanLine" aria-hidden="true"></div>
+
+    <!-- CONTENT -->
+    <div class="landing-content">
+      <div class="logo-lockup">
+        <div class="logo-mark">
+          <div class="logo-mark-ring"></div>
+          <span class="logo-mark-icon">⚡</span>
+        </div>
+        <h1 class="logo-wordmark">
+          <span class="lw-char" style="--i:0">P</span><span class="lw-char" style="--i:1">i</span><span class="lw-char"
+            style="--i:2">n</span><span class="lw-char" style="--i:3">g</span>
+        </h1>
+      </div>
+
+      <p class="hero-tagline">Talk to strangers.<br><strong>Stay anonymous.</strong></p>
+
+      <!-- REAL-TIME online count -->
+      <div class="live-count-row">
+        <span class="live-dot"></span>
+        <span class="live-num" id="liveUsers">0</span>
+        <span class="live-label">online now</span>
+      </div>
+
+      <button id="startLandingBtn" class="cta-btn">
+        <span class="cta-label">Login</span>
+        <span class="cta-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </span>
+        <span class="cta-glow"></span>
+      </button>
+
+      <p class="trust-line">
+        <span>🔒 No account</span>
+        <span class="tl-sep">·</span>
+        <span>👻 Zero data stored</span>
+        <span class="tl-sep">·</span>
+        <span>⚡ Instant</span>
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════ CHAT APP ═══════════════════ -->
+  <div id="chatApp" class="chat-app" style="display:none;">
+
+    <!-- BACKGROUND LAYERS (all three views share these) -->
+    <canvas id="appCanvas" aria-hidden="true"></canvas>
+    <div class="app-nebula" aria-hidden="true">
+      <div class="app-neb an-1"></div>
+      <div class="app-neb an-2"></div>
+      <div class="app-neb an-3"></div>
+      <div class="app-neb an-4"></div>
+    </div>
+    <div class="app-vortex" aria-hidden="true"></div>
+
+    <!-- ── HEADER ── -->
+    <header class="app-header">
+      <button id="backBtn" class="icon-btn" title="Back to home" aria-label="Back to home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="header-center">
+        <span class="header-logo-mark">⚡</span>
+        <span class="header-wordmark">Ping</span>
+      </div>
+
+      <!-- Real-time online count in header -->
+      <div class="header-right">
+        <div class="header-online-pill" id="headerOnlinePill">
+          <span class="h-online-dot"></span>
+          <span id="headerOnlineCount">—</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Home Tabs Bar -->
+    <div class="home-tabs" id="homeTabs" style="display:none;">
+      <button class="home-tab active" data-tab="random" id="tabRandom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M16 8l-4 4-4-4" />
+        </svg>
+        <span>Explore</span>
+      </button>
+      <button class="home-tab" data-tab="friends" id="tabFriends">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span>Friends</span>
+      </button>
+    </div>
+
+    <main class="app-main">
+
+      <!-- PRE-CHAT VIEW -->
+      <div id="preChatView" class="view view-prechat">
+        <div class="prechat-card glass-card">
+
+          <div class="prechat-anon-badge">
+            <span>👻</span><span>You're anonymous</span>
+          </div>
+
+          <div class="prechat-orb-wrap" aria-hidden="true">
+            <div class="prechat-orb-ring po-r1"></div>
+            <div class="prechat-orb-ring po-r2"></div>
+            <div class="prechat-orb-ring po-r3"></div>
+            <div class="prechat-orb-core">💬</div>
+          </div>
+
+          <h2 class="prechat-title">Explore random chats</h2>
+          <p class="prechat-sub">Match instantly with someone new.</p>
+
+          <div class="prechat-online">
+            <span class="online-dot"></span>
+            <span id="headerActiveUsers" class="online-count">—</span>
+            <span class="online-label">people online right now</span>
+          </div>
+
+          <button id="startBtn" class="btn-primary btn-lg btn-full">
+            <span class="btn-label">Start Chat</span>
+            <span class="btn-arrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
+            <span class="btn-ripple"></span>
+          </button>
+
+          <p class="prechat-trust">🔒 No personal info · 🛡️ Moderated by AI</p>
+        </div>
+      </div>
+
+
+      <!-- WAITING / SEARCHING VIEW -->
+      <div id="waitingView" class="view view-waiting" style="display:none;">
+        <div class="waiting-shell">
+
+          <!-- Top status bar -->
+          <div class="ws-topbar">
+            <div class="ws-status-pill">
+              <span class="wh-pulse"></span>
+              <span class="ws-status-text">Searching</span>
+            </div>
+            <div class="ws-elapsed-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span id="waitTimer">0s</span>
+            </div>
+          </div>
+
+          <!-- Content Container: Radar Left, Info Right -->
+          <div class="waiting-content-row">
+            <!-- Radar Left -->
+            <div class="radar-pane">
+              <div class="radar-wrap">
+                <div class="radar-ring rr-1"></div>
+                <div class="radar-ring rr-2"></div>
+                <div class="radar-ring rr-3"></div>
+                <div class="radar-ring rr-4"></div>
+                <div class="radar-sweep"></div>
+                <div class="radar-blip rb-1"></div>
+                <div class="radar-blip rb-2"></div>
+                <div class="radar-blip rb-3"></div>
+                <div class="radar-blip rb-4"></div>
+                <div class="radar-core">
+                  <div class="radar-core-inner">⚡</div>
+                </div>
+                <span class="radar-label rl-n">N</span>
+                <span class="radar-label rl-e">E</span>
+                <span class="radar-label rl-s">S</span>
+                <span class="radar-label rl-w">W</span>
+              </div>
+            </div>
+
+            <!-- Info Right -->
+            <div class="waiting-info">
+
+              <h2 class="waiting-title">Finding your match</h2>
+              <p class="waiting-sub">
+                <span id="waitingSubText">Searching across the globe</span>
+                <span class="dot-trail"><span>.</span><span>.</span><span>.</span></span>
+              </p>
+
+              <div class="ws-stats-row">
+                <div class="ws-stat-item">
+                  <span class="ws-stat-icon">🌍</span>
+                  <div class="ws-stat-info">
+                    <span class="ws-stat-val" id="wsCount">—</span>
+                    <span class="ws-stat-lbl">online now</span>
+                  </div>
+                </div>
+                <div class="ws-stat-divider"></div>
+                <div class="ws-stat-item">
+                  <span class="ws-stat-icon">⚡</span>
+                  <div class="ws-stat-info">
+                    <span class="ws-stat-val">~10s</span>
+                    <span class="ws-stat-lbl">avg match</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ws-fun-fact">
+                <span class="ff-icon" id="ffIcon">💡</span>
+                <span class="ff-text" id="funFactText">Average match time is under 10 seconds</span>
+              </div>
+
+              <div class="ws-trust-row">
+                <span class="ws-trust-chip">👻 Anonymous</span>
+                <span class="ws-trust-chip">🔒 Private</span>
+                <span class="ws-trust-chip">🤝 Safe</span>
+              </div>
+
+              <button id="cancelWaitBtn" class="ws-cancel-btn">✕ Cancel Search</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ACTIVE CHAT VIEW -->
+      <div id="activeChatView" class="view view-chat" style="display:none;">
+
+        <!-- Enhanced Chat Background -->
+        <div class="chat-glow-orb cgo-1"></div>
+        <div class="chat-glow-orb cgo-2"></div>
+        <div class="chat-glow-orb cgo-3"></div>
+        <div class="chat-grid-overlay"></div>
+
+        <!-- Enhanced Chat Header -->
+        <div class="chat-header">
+          <div class="ch-left">
+            <div class="partner-avatar-wrap">
+              <span class="partner-emoji">👤</span>
+              <span class="partner-online-dot"></span>
+            </div>
+            <div class="ch-info">
+              <span class="ch-label">Chatting with</span>
+              <span class="ch-name" id="partnerCountryMeta">Stranger</span>
+            </div>
+          </div>
+
+          <div class="ch-center">
+            <div class="chat-timer-wrap">
+              <svg class="timer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span class="chat-timer" id="timerMeta">--:--</span>
+            </div>
+          </div>
+
+          <div class="ch-actions">
+            <button id="extendTimeBtn" class="top-icon-btn action-extend" disabled aria-label="Extend Time"
+              title="Extend time (mutual agreement)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path
+                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+              </svg>
+            </button>
+            <button id="friendBtn" class="top-icon-btn action-friend" disabled aria-label="Add Friend"
+              title="Add as friend">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+                <path d="M16 11h6m-3-3v6" />
+              </svg>
+            </button>
+            <button id="reportBtn" class="top-icon-btn action-report" disabled aria-label="Report Partner"
+              title="Report">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" />
+              </svg>
+            </button>
+            <button id="endChatBtn" class="top-icon-btn action-end" aria-label="End Chat" title="End Chat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Auto Search Bar -->
+        <div id="autoSearchBar" class="auto-search-bar" style="display:none;">
+          <span class="asb-icon">🔍</span>
+          <span id="autoSearchStatus">Stranger left. Auto-searching in 30s...</span>
+          <button id="autoSearchNowBtn" class="btn-xs btn-primary">Search Now</button>
+        </div>
+
+        <!-- Messages area -->
+        <div class="messages-area" id="chatBox">
+          <div class="msgs-empty">
+            <div class="msgs-empty-pulse" aria-hidden="true"></div>
+            <span class="msgs-empty-icon">💭</span>
+            <p>Say hi — they're waiting!</p>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="typing-bar" id="partnerTypingMeta" aria-live="polite">
+          <div class="typing-bubble">
+            <span class="typing-avatar">👤</span>
+            <span class="typing-dots"><span></span><span></span><span></span></span>
+            <span class="typing-label">Stranger is typing…</span>
+          </div>
+        </div>
+
+        <!-- Input & Emojis -->
+        <div class="chat-bottom-wrapper" style="position:relative;">
+
+          <div class="emoji-picker-popup" id="emojiPickerPopup">
+            <emoji-picker id="fullEmojiPicker"></emoji-picker>
+          </div>
+
+          <!-- Reply Preview Bar -->
+          <div id="replyPreview" class="reply-preview-bar" style="display:none;">
+            <div class="rp-left">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 11l5-5-5-5M21 11H3" />
+              </svg>
+              <span>Replying to:</span>
+              <span class="rp-text">...</span>
+            </div>
+            <button type="button" id="cancelReplyBtn" class="rp-close"><svg width="14" height="14" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg></button>
+          </div>
+
+          <form id="messageForm" class="input-row" autocomplete="off">
+            <button type="button" id="nextBtn" class="skip-pill-btn" disabled title="Skip to Next">
+              Skip <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+            <div class="input-wrap">
+              <div class="input-pill">
+                <textarea id="messageInput" class="message-input" placeholder="Type a message…" autocomplete="off"
+                  maxlength="500" rows="1" disabled></textarea>
+                <!-- All Emojis Button - circular, right side inside input -->
+                <button type="button" class="eq-all-btn inside-input" id="emojiAllBtn" title="All Emojis"
+                  aria-label="All Emojis">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" />
+                  </svg>
+                </button>
+              </div>
+              <div class="char-counter-wrap">
+                <span class="char-counter" id="charCounter"></span>
+              </div>
+            </div>
+            <button type="button" id="flashToggleBtn" class="flash-toggle-btn"
+              title="Toggle Flash Mode (Auto-delete in 10s)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </button>
+            <button type="button" id="pingBtn" class="ping-action-btn" title="Send a Ping nudge">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            </button>
+            <button type="submit" id="sendBtn" class="send-btn" disabled aria-label="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+
+      </div><!-- /activeChatView -->
+
+      <!-- FRIENDS VIEW -->
+      <div id="friendsView" class="view view-friends" style="display:none;">
+
+        <!-- Glow effects -->
+        <div class="friends-glow-orb fgo-1"></div>
+        <div class="friends-glow-orb fgo-2"></div>
+
+        <!-- Friends Header -->
+        <div class="friends-header">
+          <div class="fh-top">
+            <h2 class="friends-title">Your Friends</h2>
+            <div class="privacy-controls">
+              <span class="privacy-label">Invisible Mode</span>
+              <label class="switch-toggle">
+                <input type="checkbox" id="invisibleToggle">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+          </div>
+          <p class="friends-subtitle">Continue chatting or start a new conversation</p>
+        </div>
+
+        <!-- Friends List -->
+        <div class="friends-list" id="friendsList">
+          <div class="friends-empty">
+            <span class="friends-empty-icon">👥</span>
+            <p>No connections yet</p>
+            <p class="friends-empty-sub">Make friends during a chat to message them later</p>
+            <button class="btn-primary btn-sm" id="findChatBtn">Start Chat</button>
+          </div>
+        </div>
+
+      </div><!-- /friendsView -->
+
+      <!-- FRIENDS DM CHAT VIEW -->
+      <div id="friendDMView" class="view view-chat view-friend-dm" style="display:none;">
+
+        <!-- Enhanced Chat Background -->
+        <div class="chat-glow-orb cgo-1"></div>
+        <div class="chat-glow-orb cgo-2"></div>
+        <div class="chat-glow-orb cgo-3"></div>
+        <div class="chat-grid-overlay"></div>
+
+        <!-- Friends DM Header -->
+        <div class="chat-header friend-dm-header">
+          <div class="ch-left">
+            <button class="back-to-friends-btn" id="backToFriendsBtn" aria-label="Back to friends list" title="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div class="partner-avatar-wrap">
+              <span class="partner-emoji">👤</span>
+              <span class="partner-online-dot"></span>
+            </div>
+            <div class="ch-info">
+              <span class="ch-label">Messaging</span>
+              <span class="ch-name" id="friendDMNameMeta">Friend</span>
+            </div>
+          </div>
+
+          <div class="ch-actions">
+            <button id="friendReportBtn" class="top-icon-btn action-report" aria-label="Report Friend" title="Report">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" />
+              </svg>
+            </button>
+            <button id="endFriendDMBtn" class="top-icon-btn action-end" aria-label="Close Chat" title="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages area -->
+        <div class="messages-area" id="friendChatBox">
+          <div class="msgs-empty">
+            <div class="msgs-empty-pulse" aria-hidden="true"></div>
+            <span class="msgs-empty-icon">💭</span>
+            <p>Start a conversation!</p>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="typing-bar" id="friendTypingMeta" aria-live="polite" style="display:none;">
+          <div class="typing-bubble">
+            <span class="typing-avatar">👤</span>
+            <span class="typing-dots"><span></span><span></span><span></span></span>
+            <span class="typing-label">typing…</span>
+          </div>
+        </div>
+
+        <!-- Input & Emojis -->
+        <div class="chat-bottom-wrapper" style="position:relative;">
+
+          <!-- REPLIES -->
+          <div id="friendReplyPreview" class="reply-preview-bar" style="display:none;">
+            <div class="rp-content">
+              <div class="rp-info">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M3 11l5-5-5-5M21 11H3" />
+                </svg>
+                <span>Replying to:</span>
+              </div>
+              <div class="rp-text"></div>
+            </div>
+            <button type="button" id="cancelFriendReplyBtn" class="rp-close" title="Cancel Reply">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="emoji-picker-popup" id="friendEmojiPickerPopup">
+            <emoji-picker id="friendFullEmojiPicker"></emoji-picker>
+          </div>
+
+          <form id="friendMessageForm" class="input-row" autocomplete="off">
+            <div class="input-wrap">
+              <div class="input-pill">
+                <textarea id="friendMessageInput" class="message-input" placeholder="Message your friend..." rows="1"
+                  spellcheck="true" maxlength="500"></textarea>
+                <!-- All Emojis Button - circular, right side inside input -->
+                <button type="button" class="eq-all-btn inside-input" id="friendEmojiBtn" title="All Emojis"
+                  aria-label="All Emojis">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" />
+                  </svg>
+                </button>
+              </div>
+              <div class="char-counter-wrap">
+                <span class="char-counter" id="friendCharCounter"></span>
+              </div>
+            </div>
+            <button type="button" id="friendFlashToggleBtn" class="flash-toggle-btn"
+              title="Toggle Flash Mode (Auto-delete in 10s)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+            </button>
+            <button type="button" id="friendPingBtn" class="ping-action-btn" title="Send a Ping nudge">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            </button>
+            <button type="submit" id="friendSendBtn" class="send-btn" aria-label="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+      </div><!-- /friendDMView -->
+
+    </main>
+
+    <!-- MODAL -->
+    <div id="confirmModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-glass">
+        <div class="modal-icon" id="modalIcon">⚠️</div>
+        <h3 id="confirmTitle">Confirm</h3>
+        <p id="confirmMessage">Are you sure?</p>
+        <div class="modal-btns">
+          <button id="confirmNo" class="btn-ghost">Cancel</button>
+          <button id="confirmYes" class="btn-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
+
+  </div><!-- /chatApp -->
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js?v=1.1.1"></script>
+  <script src="/animations.js?v=1.1.1"></script>
+</body>
+
+</html>

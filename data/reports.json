@@ -1,0 +1,52 @@
+[
+  {
+    "id": "rpt_1776346953939_mkewgm",
+    "reporterId": "a434c86b-0f0d-4955-a0d4-59637efc8e60",
+    "reporterCountry": "Local",
+    "reportedUserId": "6acfc7ca-e56a-46ae-8238-58964785cb03",
+    "reportedUserCountry": "Local",
+    "roomId": "room_37e5a4cb-a018-48c5-b432-d5d336d6a1ee",
+    "reason": "user_reported",
+    "createdAt": 1776346953939
+  },
+  {
+    "id": "rpt_1776474654088_osn6yc",
+    "reporterId": "eb6d82c4-3a58-4434-9072-b0bb2668ef2b",
+    "reporterCountry": "Unknown",
+    "reportedUserId": "a0d75287-40d8-4943-83dd-797e3a9942cc",
+    "reportedUserCountry": "Unknown",
+    "roomId": "room_020012d7-b602-4c78-83aa-89cd13ae8657",
+    "reason": "user_reported",
+    "createdAt": 1776474654088
+  },
+  {
+    "id": "rpt_1776589452473_t6f2vz",
+    "reporterId": "123b8a73-078b-4280-96a5-51dec76d39c2",
+    "reporterCountry": "📍 Nearby",
+    "reportedUserId": "bc7fd2de-249e-42bf-81d9-31d69061f8a7",
+    "reportedUserCountry": "📍 Nearby",
+    "roomId": "room_68ffc046-72ad-461b-9211-6c8f454cbfd3",
+    "reason": "user_reported",
+    "createdAt": 1776589452473
+  },
+  {
+    "id": "rpt_1776592000332_5bzybr",
+    "reporterId": "9aba7e5f-2644-4454-8b2a-962ce14acd9d",
+    "reporterCountry": "📍 Nearby",
+    "reportedUserId": "293636f2-2f2e-4001-a75c-81b615d00c2c",
+    "reportedUserCountry": "📍 Nearby",
+    "roomId": "room_041dfa2e-7543-4905-990d-75ec3c7bb223",
+    "reason": "user_reported",
+    "createdAt": 1776592000332
+  },
+  {
+    "id": "rpt_1776687988827_l42bb9",
+    "reporterId": "60fa36ef-2cf1-41ac-bd48-54d2aac8a47b",
+    "reporterCountry": "📍 Nearby",
+    "reportedUserId": "ee1e5c3f-c57f-4178-92c3-4180eb5e8bf4",
+    "reportedUserCountry": "📍 Nearby",
+    "roomId": "room_4ee0e7c8-0688-4755-a471-c8a3167735a6",
+    "reason": "user_reported",
+    "createdAt": 1776687988827
+  }
+]

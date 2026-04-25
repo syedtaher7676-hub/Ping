@@ -1,0 +1,24 @@
+{
+  "name": "ping",
+  "version": "1.0.0",
+  "description": "Real-time anonymous 1-on-1 chat app (Ping)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "smoke": "node scripts/smoke-test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1",
+    "geoip-lite": "^2.0.1",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "socket.io-client": "^4.8.1"
+  }
+}
