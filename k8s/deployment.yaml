@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ping-app
+  labels:
+    app.kubernetes.io/name: ping
+    app.kubernetes.io/component: app
+    app.kubernetes.io/part-of: ping-chat
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ping
+      app.kubernetes.io/component: app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ping
+        app.kubernetes.io/component: app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: ping-server
+          image: ping:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: REDIS_URL
+              value: "redis://redis-service:6379"
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: MATCHMAKING_INTERVAL_MS
+              value: "150"
+            - name: START_CHAT_COOLDOWN_MS
+              value: "600"
+            - name: FIREBASE_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: ping-secrets
+                  key: FIREBASE_PROJECT_ID
+                  optional: true
+            - name: FIREBASE_CLIENT_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: ping-secrets
+                  key: FIREBASE_CLIENT_EMAIL
+                  optional: true
+            - name: FIREBASE_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ping-secrets
+                  key: FIREBASE_PRIVATE_KEY
+                  optional: true
+            - name: FIREBASE_SERVICE_ACCOUNT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ping-secrets
+                  key: FIREBASE_SERVICE_ACCOUNT_KEY
+                  optional: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ping-service
+  labels:
+    app.kubernetes.io/name: ping
+    app.kubernetes.io/component: app
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: ping
+    app.kubernetes.io/component: app

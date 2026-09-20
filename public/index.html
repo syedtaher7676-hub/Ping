@@ -340,6 +340,15 @@
       </div>
     </header>
 
+    <!-- Persistent Network Recovery Banner -->
+    <div id="networkStatusBar" class="network-status-bar" style="display:none;" role="status">
+      <div class="nsb-content">
+        <span class="nsb-pulse"></span>
+        <span id="networkStatusText" class="nsb-text">Connection lost. Reconnecting…</span>
+      </div>
+      <button id="reconnectNowBtn" class="nsb-retry-btn" type="button">Reconnect</button>
+    </div>
+
     <!-- Home Tabs Bar -->
     <div class="home-tabs" id="homeTabs" style="display:none;">
       <button class="home-tab active" data-tab="random" id="tabRandom">
@@ -837,8 +846,8 @@
   </div><!-- /chatApp -->
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/app.js?v=1.1.1"></script>
-  <script src="/animations.js?v=1.1.1"></script>
+  <script src="/app.js?v=1.1.2"></script>
+  <script src="/animations.js?v=1.1.2"></script>
 </body>
 
 </html>

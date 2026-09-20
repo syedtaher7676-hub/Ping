@@ -2401,6 +2401,100 @@ input:checked+.slider-round:before {
   }
 }
 
+/* ── PERSISTENT NETWORK STATUS BAR ── */
+.network-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px;
+  background: rgba(239, 68, 68, 0.16);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 100;
+  animation: nsb-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.network-status-bar.connected {
+  background: rgba(34, 197, 94, 0.16);
+  border-bottom-color: rgba(34, 197, 94, 0.3);
+}
+
+.network-status-bar.warning {
+  background: rgba(234, 179, 8, 0.16);
+  border-bottom-color: rgba(234, 179, 8, 0.3);
+}
+
+.nsb-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nsb-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: pulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.network-status-bar.connected .nsb-pulse {
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+}
+
+.network-status-bar.warning .nsb-pulse {
+  background: #eab308;
+  box-shadow: 0 0 10px #eab308;
+}
+
+.nsb-text {
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nsb-retry-btn {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.nsb-retry-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes nsb-slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* ── AUTO SEARCH BAR ── */
 .auto-search-bar {
   display: flex;

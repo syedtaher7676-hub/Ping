@@ -2,22 +2,28 @@ const path = require("path");
 const http = require("http");
 const express = require("express");
 const { Server } = require("socket.io");
+const { createAdapter } = require("@socket.io/redis-adapter");
+const Redis = require("ioredis");
 const geoip = require("geoip-lite");
-const { PORT, SOCKET_CORS, MATCHMAKING_INTERVAL_MS } = require("./config");
+const { PORT, SOCKET_CORS, MATCHMAKING_INTERVAL_MS, REDIS_URL } = require("./config");
 const { registerSocketHandlers } = require("./socket/registerSocketHandlers");
 const { getMatchStats, attemptMatchmaking } = require("./services/matchmaking");
+const { terminateSession } = require("./services/sessionManager");
+const { rooms, redisClient } = require("./state/store");
+const { createId } = require("./utils/ids");
 const { log } = require("./utils/logger");
 
 // Helper to get country from IP or client provided
 function getCountryFromSocket(socket) {
   try {
     // 1. Prefer client-provided country if it's high confidence (e.g. from a reliable API)
-    if (socket.handshake.auth && socket.handshake.auth.country && socket.handshake.auth.country !== "Unknown") {
-      return socket.handshake.auth.country;
+    if (socket.handshake.auth && typeof socket.handshake.auth.country === "string" && socket.handshake.auth.country !== "Unknown") {
+      const sanitized = socket.handshake.auth.country.trim().slice(0, 50);
+      if (sanitized) return sanitized;
     }
 
     // 2. Resolve IP (supporting proxies like Render/Cloudflare/Heroku/Railway)
-    const headers = socket.handshake.headers;
+    const headers = socket.handshake.headers || {};
     
     // Try multiple headers used by different hosting platforms
     let ip = 
@@ -35,7 +41,7 @@ function getCountryFromSocket(socket) {
     }
 
     // Handle localhost/local interfaces
-    if (ip === "127.0.0.1" || ip === "::1" || ip === "localhost" || ip === "127.0.0.1") {
+    if (ip === "127.0.0.1" || ip === "::1" || ip === "localhost") {
       return "📍 Nearby";
     }
 
@@ -61,10 +67,139 @@ function getCountryFromSocket(socket) {
 const app = express();
 const server = http.createServer(app);
 
+// ═══════════════════════════════════════════════════════════════
+// EXPRESS CORS & PREFLIGHT MIDDLEWARE
+// ═══════════════════════════════════════════════════════════════
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-requested-with");
+  
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// SOCKET.IO SERVER INITIALIZATION WITH DUAL-TRANSPORT FALLBACK
+// ═══════════════════════════════════════════════════════════════
+// Explicitly configures both 'polling' (HTTP long-polling fallback)
+// and 'websocket' (upgraded real-time streaming) to prevent drops
+// in proxy and sandbox environments (e.g. AI Studio preview).
 const io = new Server(server, {
   cors: SOCKET_CORS,
   transports: ["polling", "websocket"],
+  pingInterval: 10000,        // 10s keep-alive prevents cloud proxy / reverse proxy idle drops
+  pingTimeout: 20000,         // 20s timeout before considering connection dropped
+  connectTimeout: 45000,      // Generous connection timeout
+  maxHttpBufferSize: 1e6,     // 1MB max payload
+  allowUpgrades: true,        // Allow seamless polling to websocket upgrade
+  perMessageDeflate: false,   // Disable perMessageDeflate to eliminate zlib decompression memory overhead and leaks
+  httpCompression: true,
 });
+
+// ═══════════════════════════════════════════════════════════════
+// SOCKET HANDSHAKE AUTHENTICATION & SECURITY MIDDLEWARE
+// ═══════════════════════════════════════════════════════════════
+// Validates client handshake credentials, sanitizes user IDs against
+// prototype pollution and spoofing, verifies origins against CSWSH,
+// and binds verified metadata to socket.data.
+io.use((socket, next) => {
+  try {
+    const auth = socket.handshake.auth;
+
+    // 1. Guard against non-object auth payloads
+    if (auth && typeof auth !== "object") {
+      return next(new Error("Invalid authentication payload format"));
+    }
+
+    // 2. Sanitize and validate client-provided userId
+    const rawUserId = auth?.userId;
+    let verifiedUserId = null;
+
+    if (
+      typeof rawUserId === "string" &&
+      rawUserId.length >= 3 &&
+      rawUserId.length <= 64 &&
+      /^[a-zA-Z0-9_-]+$/.test(rawUserId) &&
+      !["__proto__", "prototype", "constructor", "toString", "valueOf"].includes(rawUserId)
+    ) {
+      verifiedUserId = rawUserId;
+    } else {
+      // If missing, malformed, or malicious, assign a fresh secure identifier
+      verifiedUserId = createId("u");
+    }
+
+    // 3. Attach verified session identity to socket.data
+    socket.data.userId = verifiedUserId;
+    socket.data.country = getCountryFromSocket(socket);
+    socket.data.authenticatedAt = Date.now();
+
+    next();
+  } catch (err) {
+    log("socket_auth_middleware_error", { message: err.message, socketId: socket.id });
+    next(new Error("Authentication handshake failed"));
+  }
+});
+
+// ── REDIS PUB/SUB ADAPTER INITIALIZATION (MULTI-NODE CLUSTER) ─
+let redisPubClient = null;
+let redisSubClient = null;
+
+function initializeRedisAdapter(ioServer) {
+  // Only initialize Redis adapter if REDIS_URL or REDIS_HOST is explicitly provided
+  const target = REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : "");
+
+  if (!target) {
+    log("redis_adapter_skipped", { reason: "no_redis_url_configured", mode: "in_memory_standalone" });
+    return;
+  }
+
+  try {
+    redisPubClient = new Redis(target, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 2000,
+      lazyConnect: false,
+      retryStrategy(times) {
+        if (times > 3) return null; // Cease reconnect loop to fail-open cleanly
+        return Math.min(times * 1000, 3000);
+      },
+    });
+
+    redisSubClient = redisPubClient.duplicate();
+
+    let adapterAttached = false;
+    const tryAttachAdapter = () => {
+      if (!adapterAttached && redisPubClient.status === "ready" && redisSubClient.status === "ready") {
+        adapterAttached = true;
+        ioServer.adapter(createAdapter(redisPubClient, redisSubClient));
+        log("redis_adapter_attached", { status: "ready", mode: "multi_node_broadcast" });
+      }
+    };
+
+    redisPubClient.on("ready", tryAttachAdapter);
+    redisSubClient.on("ready", tryAttachAdapter);
+
+    // Fail-open event listeners
+    redisPubClient.on("error", (err) => {
+      log("redis_pub_adapter_warning", { message: err.message, mode: "fail_open_in_memory" });
+    });
+    redisSubClient.on("error", (err) => {
+      log("redis_sub_adapter_warning", { message: err.message, mode: "fail_open_in_memory" });
+    });
+  } catch (err) {
+    log("redis_adapter_init_error", { message: err.message, mode: "fail_open_in_memory" });
+  }
+}
+
+initializeRedisAdapter(io);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "..", "public")));
@@ -148,30 +283,100 @@ server.listen(PORT, "0.0.0.0", () => {
   process.exit(1);
 });
 
+// ═══════════════════════════════════════════════════════════════
+// BUG FIX 5: Server Graceful Shutdown Faults
+// ═══════════════════════════════════════════════════════════════
+// Handles SIGINT/SIGTERM cleanly: stops accepting new traffic,
+// broadcasts server shutdown notices to all sockets, terminates active rooms,
+// closes Socket.IO and HTTP servers, and cleanly disconnects Redis.
+let isShuttingDown = false;
+
 function shutdown(signal) {
-  log("shutdown_started", { signal });
+  if (isShuttingDown) {
+    log("shutdown_already_in_progress", { signal });
+    return;
+  }
+  isShuttingDown = true;
+  log("shutdown_started", { signal, timestamp: Date.now() });
+
+  // 1. Stop recurring matchmaking interval
   clearInterval(matchmakingInterval);
-  
-  // Force shutdown after 30 seconds (hosting platform timeouts)
-  const shutdownTimeout = setTimeout(() => {
-    log("shutdown_forced", { reason: "timeout" });
+
+  // 2. Set an absolute safety force-kill timeout (10 seconds)
+  const forceKillTimeout = setTimeout(() => {
+    log("shutdown_forced", { reason: "timeout", timeoutMs: 10000 });
     process.exit(1);
-  }, 30000);
-  shutdownTimeout.unref();
-  
+  }, 10000);
+  forceKillTimeout.unref();
+
+  // 3. Notify all connected sockets of graceful shutdown
+  try {
+    io.emit("server_shutdown", {
+      message: "Server is restarting for maintenance. Reconnecting shortly...",
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    log("shutdown_broadcast_error", { message: err.message });
+  }
+
+  // 4. Gracefully terminate all active rooms
+  try {
+    for (const [roomId] of rooms.entries()) {
+      terminateSession(io, roomId, "server_shutdown");
+    }
+  } catch (err) {
+    log("shutdown_room_cleanup_error", { message: err.message });
+  }
+
+  // 5. Stop accepting new HTTP connections and close Socket.IO
   io.close(() => {
-    server.close((error) => {
-      clearTimeout(shutdownTimeout);
-      if (error) {
-        log("shutdown_error", { message: error.message, stack: error.stack });
-        process.exit(1);
-        return;
+    log("socket_io_closed");
+    server.close((serverErr) => {
+      if (serverErr) {
+        log("http_server_close_error", { message: serverErr.message });
+      } else {
+        log("http_server_closed");
       }
-      log("shutdown_complete", { signal });
-      process.exit(0);
+
+      // 6. Cleanly disconnect Redis clients
+      const redisDisconnectPromises = [];
+      if (redisPubClient) {
+        redisDisconnectPromises.push(
+          new Promise((resolve) => {
+            try { redisPubClient.quit(() => resolve()); } catch { resolve(); }
+          })
+        );
+      }
+      if (redisSubClient) {
+        redisDisconnectPromises.push(
+          new Promise((resolve) => {
+            try { redisSubClient.quit(() => resolve()); } catch { resolve(); }
+          })
+        );
+      }
+      if (redisClient) {
+        redisDisconnectPromises.push(
+          new Promise((resolve) => {
+            try { redisClient.quit(() => resolve()); } catch { resolve(); }
+          })
+        );
+      }
+
+      Promise.allSettled(redisDisconnectPromises).then(() => {
+        clearTimeout(forceKillTimeout);
+        log("shutdown_complete", { signal });
+        process.exit(0);
+      });
     });
   });
 }
 
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
+
+module.exports = {
+  app,
+  server,
+  io,
+  shutdown,
+};

@@ -59,6 +59,32 @@ const blockedWords = {
 const slurViolations = {};
 const penalties = {};
 
+// Periodic cleanup of expired violations and penalties
+setInterval(() => {
+  const now = Date.now();
+  const windowStart = now - (SLUR_CONFIG?.VIOLATION_WINDOW_MS || 300000);
+  for (const userId of Object.keys(slurViolations)) {
+    const list = slurViolations[userId];
+    if (!list || list.length === 0) {
+      delete slurViolations[userId];
+      continue;
+    }
+    const active = list.filter(v => v.timestamp > windowStart);
+    if (active.length === 0) {
+      delete slurViolations[userId];
+    } else {
+      slurViolations[userId] = active;
+    }
+  }
+
+  for (const userId of Object.keys(penalties)) {
+    const penalty = penalties[userId];
+    if (!penalty || now > penalty.expiresAt) {
+      delete penalties[userId];
+    }
+  }
+}, 60000).unref();
+
 // === CONFIGURATION ===
 const SLUR_CONFIG = {
   // Minimum word length to check (avoid blocking short common words)

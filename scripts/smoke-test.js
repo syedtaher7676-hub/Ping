@@ -4,12 +4,8 @@ const path = require('path');
 
 console.log('🚀 Starting smoke test...');
 
-const serverPath = path.join(__dirname, '..', 'src', 'server.js');
-const server = spawn('node', [serverPath], {
-  env: { ...process.env, PORT: 3001, NODE_ENV: 'test' },
-  stdio: 'inherit'
-});
-
+const PORT = 3000;
+let server = null;
 let testPassed = false;
 let attempts = 0;
 const maxAttempts = 10;
@@ -18,7 +14,7 @@ const checkHealth = () => {
   attempts++;
   console.log(`🔍 Checking health (attempt ${attempts}/${maxAttempts})...`);
   
-  http.get('http://localhost:3001/health', (res) => {
+  http.get(`http://localhost:${PORT}/health`, (res) => {
     let data = '';
     res.on('data', (chunk) => { data += chunk; });
     res.on('end', () => {
@@ -51,12 +47,25 @@ const retry = () => {
 
 const cleanup = () => {
   console.log('🧹 Cleaning up...');
-  server.kill();
+  if (server) {
+    server.kill();
+  }
   process.exit(testPassed ? 0 : 1);
 };
 
-// Start checking after a short delay
-setTimeout(checkHealth, 2000);
+// Check if server is already running, else spawn
+http.get(`http://localhost:${PORT}/health`, (res) => {
+  console.log('Server is already running, testing directly...');
+  checkHealth();
+}).on('error', () => {
+  console.log('Starting server for smoke test...');
+  const serverPath = path.join(__dirname, '..', 'src', 'server.js');
+  server = spawn('node', [serverPath], {
+    env: { ...process.env, NODE_ENV: 'test' },
+    stdio: 'inherit'
+  });
+  setTimeout(checkHealth, 2000);
+});
 
 // Safety timeout
 setTimeout(() => {

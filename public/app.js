@@ -17,16 +17,20 @@ if (!persistentUserId) {
 }
 
 // ── SOCKET ───────────────────────────────────────────────────
-// We no longer fetch location on frontend to avoid rate-limits.
-// The backend uses geoip-lite + headers to resolve this.
+// Configured with dual transport fallback (polling -> websocket)
+// to ensure rock-solid stability in proxy and iframe environments.
 const socket = io(backendUrl, {
   transports: ['polling', 'websocket'],
-  timeout: 7000,
+  upgrade: true,
+  rememberUpgrade: true,
+  timeout: 20000,
   reconnection: true,
-  reconnectionAttempts: 12,
-  reconnectionDelay: 1200,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
+  randomizationFactor: 0.3,
   auth: { userId: persistentUserId },
+  autoConnect: true,
 });
 window.socket = socket;
 
@@ -102,6 +106,9 @@ const friendPresenceDot = $('friendPresenceDot');
 const autoSearchBar = $('autoSearchBar');
 const autoSearchStatus = $('autoSearchStatus');
 const autoSearchNowBtn = $('autoSearchNowBtn');
+const networkStatusBar = $('networkStatusBar');
+const networkStatusText = $('networkStatusText');
+const reconnectNowBtn = $('reconnectNowBtn');
 const partnerCountryLabel = $('partnerCountryLabel'); // Ensure this is also present
 let selfUserId = null;
 let currentChatType = 'stranger'; // 'stranger' or 'friend'
@@ -254,7 +261,36 @@ function closeModal() {
   if (confirmModal) confirmModal.style.display = 'none';
 }
 
-// ── CONNECTION BADGE ──────────────────────────────────────────
+// ── CONNECTION BADGE & NETWORK STATUS ─────────────────────────
+let networkStatusTimeout = null;
+
+function showNetworkStatus(text, type = 'error') {
+  if (networkStatusTimeout) {
+    clearTimeout(networkStatusTimeout);
+    networkStatusTimeout = null;
+  }
+  if (!networkStatusBar) return;
+  networkStatusBar.className = `network-status-bar ${type}`;
+  if (networkStatusText) networkStatusText.textContent = text;
+  networkStatusBar.style.display = 'flex';
+}
+
+function hideNetworkStatus(delay = 0) {
+  if (networkStatusTimeout) {
+    clearTimeout(networkStatusTimeout);
+    networkStatusTimeout = null;
+  }
+  if (!networkStatusBar) return;
+  if (delay > 0) {
+    networkStatusTimeout = setTimeout(() => {
+      if (networkStatusBar) networkStatusBar.style.display = 'none';
+      networkStatusTimeout = null;
+    }, delay);
+  } else {
+    networkStatusBar.style.display = 'none';
+  }
+}
+
 function setConnStatus(state) {
   if (!connectionStatus) return;
   connectionStatus.className = `conn-badge ${state}`;
@@ -263,6 +299,13 @@ function setConnStatus(state) {
     state === 'connected' ? '●' :
       state === 'disconnected' ? '✗' : '…';
 }
+
+reconnectNowBtn?.addEventListener('click', () => {
+  if (!socket.connected) {
+    showNetworkStatus('Attempting to reconnect now…', 'warning');
+    socket.connect();
+  }
+});
 
 // ── SCREEN INDICATOR ──────────────────────────────────────────
 function setScreenIndicator(step) {
@@ -1003,11 +1046,19 @@ function startWaitingScreen() {
 
 // ── APPLY STATE ───────────────────────────────────────────────
 function applyState(status, roomId = null) {
+  if (currentChatType === 'friend' && (!status || status === 'idle')) {
+    return;
+  }
+
   isWaiting = status === 'waiting';
   inChat = status === 'matched';
-  activeRoomId = inChat ? roomId : null;
-  if (inChat) currentChatType = 'stranger';  // Reset to stranger when starting new chat
-  if (!inChat) stopTimer();
+  if (inChat) {
+    if (roomId) activeRoomId = roomId;
+    currentChatType = 'stranger';
+  } else {
+    activeRoomId = null;
+    stopTimer();
+  }
 
   if (isWaiting) startWaitingScreen();
   else stopWaitingScreen();
@@ -1020,7 +1071,9 @@ function applyState(status, roomId = null) {
     if (autoSearchBar) autoSearchBar.style.display = 'none';
     stopAutoSearch();
   }
-  else showView('prechat');
+  else if (activeHomeTab === 'random' && currentChatType !== 'friend') {
+    showView('prechat');
+  }
 }
 
 // ── END CHAT ─────────────────────────────────────────────────
@@ -1053,6 +1106,21 @@ function loadAndShowFriendsView() {
   });
 }
 
+function updateFriendsTabBadge() {
+  const unreadCount = document.querySelectorAll('.friend-item.unread').length;
+  let badge = tabFriends?.querySelector('.tab-badge');
+  if (unreadCount > 0) {
+    if (!badge && tabFriends) {
+      badge = document.createElement('span');
+      badge.className = 'tab-badge';
+      tabFriends.appendChild(badge);
+    }
+    if (badge) badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+  } else if (badge) {
+    badge.remove();
+  }
+}
+
 function renderFriendsList(friends) {
   if (!friendsList) return;
 
@@ -1071,6 +1139,7 @@ function renderFriendsList(friends) {
         switchHomeTab('random');
       });
     }
+    updateFriendsTabBadge();
     return;
   }
 
@@ -1084,8 +1153,10 @@ function renderFriendsList(friends) {
       else longevity = `Friend for ${Math.floor(days / 30)} months`;
     }
 
+    const deterministicRoomId = ['friend_chat', ...[selfUserId || persistentUserId || '', friend.friendId].sort()].join('_');
+
     return `
-      <div class="friend-item ${friend.isTopFriend ? 'top-friend' : ''}" data-friend-id="${friend.friendId}" data-room-id="${friend.dmRoomId}">
+      <div class="friend-item ${friend.isTopFriend ? 'top-friend' : ''}" data-friend-id="${friend.friendId}" data-room-id="${friend.dmRoomId || deterministicRoomId}">
         <div class="friend-info">
           <div class="friend-avatar">
             👤
@@ -1116,25 +1187,29 @@ function renderFriendsList(friends) {
     `;
   }).join('');
 
-  // Add event listeners to friend items
+  // Add event listeners to friend items to immediately open friend DM on click
   document.querySelectorAll('.friend-item').forEach(item => {
     const friendId = item.dataset.friendId;
     const msgBtn = item.querySelector('.friend-msg-btn');
-    const openFriendDM = () => socket.emit('open_friend_dm', { friendId });
+    const openFriendDM = () => {
+      item.classList.remove('unread');
+      updateFriendsTabBadge();
+      socket.emit('open_friend_dm', { friendId });
+    };
 
     if (msgBtn) {
       msgBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        item.classList.remove('unread');
         openFriendDM();
       });
     }
 
     item.addEventListener('click', () => {
-      item.classList.remove('unread');
       openFriendDM();
     });
   });
+
+  updateFriendsTabBadge();
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -1185,22 +1260,122 @@ tabRandom?.addEventListener('click', () => switchHomeTab('random'));
 tabFriends?.addEventListener('click', () => switchHomeTab('friends'));
 
 // ═══════════════════════════════════════════════
-//  SOCKET EVENTS
+//  SOCKET LIFECYCLE & EVENT HANDLERS
 // ═══════════════════════════════════════════════
 
-socket.on('connect', () => {
+function handleSuccessfulConnection() {
+  const wasReconnecting = isReconnecting || !isConnected;
   isConnected = true;
+  isReconnecting = false;
   hasErrShown = false;
+
+  // 1. Immediately update connection state badge and hide offline status
   setConnStatus('connected');
+  hideNetworkStatus(0);
+
+  // 2. Synchronize interactive button states (enables Start Chat immediately)
   syncButtons();
-  socket.emit('get_status');
-  socket.emit('get_stats', s => { if (s) applyState(s.status || 'idle'); });
+
+  if (wasReconnecting) {
+    showNetworkStatus('⚡ Connected! Everything is in sync.', 'connected');
+    hideNetworkStatus(2000);
+  }
+
+  // 3. Auto-rejoin active friend chat room on page load/reconnection if previously open
+  const activeFriendId = localStorage.getItem('ping_active_friend_id') || currentFriendId;
+  socket.emit('authenticate', { userId: persistentUserId, activeFriendId }, (authRes) => {
+    if (activeFriendId) {
+      socket.emit('open_friend_dm', { friendId: activeFriendId });
+    }
+  });
+
+  if (activeFriendId) {
+    currentFriendId = activeFriendId;
+    socket.emit('open_friend_dm', { friendId: activeFriendId });
+  }
+
+  // 4. Request authoritative status from server
+  socket.emit('get_status', (state) => {
+    if (state && state.status) {
+      if (state.status === 'matched' && state.roomId) {
+        if (!activeFriendId) {
+          activeRoomId = state.roomId;
+          inChat = true;
+          isWaiting = false;
+          showView('chat');
+          if (wasReconnecting && lastKnownRoomId) {
+            appendMsg('⚡ Connection restored! You are back in the chat.', { isSystem: true, variant: 'success' });
+          }
+        }
+      } else if (state.status === 'waiting') {
+        if (!activeFriendId) applyState('waiting');
+      } else if (state.status === 'idle') {
+        if (wasReconnecting && lastKnownRoomId && inChat && !activeFriendId) {
+          endCurrentChat();
+          appendMsg('Chat ended while connection was lost ✌️', { isSystem: true });
+        }
+      }
+    }
+    lastKnownRoomId = null;
+    syncButtons();
+  });
+
+  // 5. Fetch metrics without overriding user room state
+  socket.emit('get_stats', (s) => {
+    if (s && typeof s.activeUsers === 'number') {
+      setOnlineCount(s.activeUsers);
+    }
+  });
+
   startHeartbeat();
+}
+
+socket.on('connect', () => {
+  console.log('[Ping] Socket connected successfully, id:', socket.id, 'transport:', socket.io?.engine?.transport?.name);
+  handleSuccessfulConnection();
 });
 
+// In Socket.IO v4, reconnection lifecycle is managed by socket.io
+if (socket.io) {
+  socket.io.on('reconnect', (attemptNumber) => {
+    console.log('[Ping] Reconnected successfully after attempt:', attemptNumber);
+    handleSuccessfulConnection();
+  });
+
+  socket.io.on('reconnect_attempt', (attemptNumber) => {
+    console.log('[Ping] Reconnection attempt:', attemptNumber);
+    isReconnecting = true;
+    setConnStatus('disconnected');
+    syncButtons();
+    showNetworkStatus(`Connection lost. Reconnecting (attempt ${attemptNumber})…`, 'warning');
+  });
+
+  socket.io.on('reconnect_error', (err) => {
+    console.error('[Ping] Socket reconnection error:', err?.message || err);
+    isReconnecting = true;
+    setConnStatus('disconnected');
+    syncButtons();
+    showNetworkStatus('Connection lost. Still trying to reconnect…', 'error');
+  });
+
+  socket.io.on('reconnect_failed', () => {
+    console.error('[Ping] Socket reconnection failed');
+    isReconnecting = false;
+    setConnStatus('disconnected');
+    syncButtons();
+    showNetworkStatus('Unable to reach server. Please check your connection.', 'error');
+    if (inChat) {
+      endCurrentChat();
+      showToast('Could not reconnect. Chat ended.', 'error');
+    }
+  });
+}
+
 socket.on('disconnect', (reason) => {
+  console.warn('[Ping] Socket disconnected. Reason:', reason);
   isConnected = false;
   isReconnecting = true;
+  stopHeartbeat();
 
   // Store the current room ID in case we reconnect to the same session
   if (inChat && activeRoomId) {
@@ -1209,70 +1384,32 @@ socket.on('disconnect', (reason) => {
   }
 
   setConnStatus('disconnected');
-  // Only show error if it's not a normal disconnect
+  syncButtons();
+  
   if (reason !== 'io client namespace disconnect' && reason !== 'io server namespace disconnect') {
-    showToast('Connection lost. Reconnecting…', 'error', 5000);
-  }
-});
-
-// Handle reconnection - restore chat state if we were in a session
-socket.on('reconnect', (attemptNumber) => {
-  console.log('[Ping] Reconnected after', attemptNumber, 'attempts. Last room:', lastKnownRoomId);
-  isReconnecting = false;
-  hasErrShown = false;
-
-  // Request current state from server - if we're still matched, restore chat
-  socket.emit('get_status', (state) => {
-    if (state && state.status === 'matched' && state.roomId) {
-      // Still in the same chat session!
-      activeRoomId = state.roomId;
-      inChat = true;
-      console.log('[Ping] Restored chat session:', activeRoomId);
-      showView('chat');
-      appendMsg('🔄 Connection restored! Keep chatting ✨', { isSystem: true, variant: 'success' });
-    } else {
-      // Session was terminated during disconnect
-      console.log('[Ping] Chat session ended during disconnect');
-      if (inChat) {
-        endCurrentChat();
-        appendMsg('Chat ended due to connection loss ✌️', { isSystem: true });
-      }
-    }
-    lastKnownRoomId = null;
-    syncButtons();
-  });
-});
-
-socket.on('reconnect_attempt', (attemptNumber) => {
-  console.log('[Ping] Reconnection attempt:', attemptNumber);
-});
-
-socket.on('reconnect_error', (err) => {
-  console.log('[Ping] Reconnection error:', err.message);
-});
-
-socket.on('reconnect_failed', () => {
-  console.log('[Ping] Reconnection failed');
-  isReconnecting = false;
-  if (inChat) {
-    endCurrentChat();
-    showToast('Could not reconnect. Chat ended.', 'error');
+    showNetworkStatus('Connection lost. Reconnecting to server…', 'error');
   }
 });
 
 socket.on('connect_error', (error) => {
+  console.error('[Ping] Socket connection error:', error?.message || error);
   isConnected = false;
+  isReconnecting = true;
   setConnStatus('disconnected');
-  // Only show error once per session and only if not in chat or already reconnecting
-  if (!hasErrShown && !isReconnecting && !inChat && !isWaiting) {
-    hasErrShown = true;
-    console.log('[Ping] Connection error:', error?.message);
-    showToast("Connection issue. Reconnecting...", "warning", 3000);
+  syncButtons();
+  if (!navigator.onLine) {
+    showNetworkStatus('You are currently offline. Check your internet connection.', 'error');
+  } else {
+    showNetworkStatus('Connection issue. Reconnecting to server…', 'warning');
   }
 });
 
 socket.on('self', ({ userId }) => {
   selfUserId = userId;
+  const activeFriendId = localStorage.getItem('ping_active_friend_id') || currentFriendId;
+  if (activeFriendId) {
+    socket.emit('open_friend_dm', { friendId: activeFriendId });
+  }
 });
 
 socket.on('state_update', ({ status, roomId }) => applyState(status, roomId));
@@ -1334,27 +1471,31 @@ socket.on('message_seen', () => {
   // Checkmarks removed
 });
 
-socket.on('dm_message', (payload) => {
-  const { from, message, roomId, replyTo } = payload;
-  const isMe = (from === socket.id || from === persistentUserId || from === selfUserId);
+function handleIncomingDm(payload) {
+  const { from, fromUserId, message, roomId, replyTo } = payload;
+  const senderId = fromUserId || from;
+  const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId);
 
   // 1. Update friends list preview if visible
   const item = document.querySelector(`.friend-item[data-room-id="${roomId}"]`) ||
+    document.querySelector(`.friend-item[data-friend-id="${senderId}"]`) ||
     document.querySelector(`.friend-item[data-friend-id="${from}"]`);
+
   if (item) {
     const meta = item.querySelector('.friend-meta');
-    if (meta) meta.textContent = message.slice(0, 44) + (message.length > 44 ? '...' : '');
+    if (meta && message) meta.textContent = message.slice(0, 44) + (message.length > 44 ? '...' : '');
 
-    // Add unread indicator if not in this room
-    if (roomId !== friendRoomId) {
+    // Add unread indicator if not currently inside this friend DM
+    if (currentChatType !== 'friend' || roomId !== friendRoomId) {
       item.classList.add('unread');
+      updateFriendsTabBadge();
     }
   }
 
   if (isMe) return;
 
-  // 2. If in active DM view, append message
-  if (roomId === friendRoomId) {
+  // 2. If currently in this active DM view, append message directly
+  if (currentChatType === 'friend' && roomId === friendRoomId) {
     let processedReplyTo = null;
     if (replyTo) {
       processedReplyTo = {
@@ -1371,9 +1512,37 @@ socket.on('dm_message', (payload) => {
       sentAt: payload.sentAt,
       isEdited: payload.isEdited
     });
-  } else {
-    // 3. Otherwise show a toast notification
-    showToast(`Friend: ${message.slice(0, 30)}...`, 'info', 3000);
+  }
+}
+
+socket.on('new_dm', handleIncomingDm);
+socket.on('dm_message', handleIncomingDm);
+
+socket.on('friend_dm_notification', (payload) => {
+  const { from, fromUserId, message, roomId, friendCountry } = payload;
+  const senderId = fromUserId || from;
+  const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId);
+  if (isMe) return;
+
+  // 1. Update friends list item preview and unread status if present
+  const item = document.querySelector(`.friend-item[data-room-id="${roomId}"]`) ||
+    document.querySelector(`.friend-item[data-friend-id="${senderId}"]`) ||
+    document.querySelector(`.friend-item[data-friend-id="${payload.friendId}"]`);
+
+  if (item) {
+    const meta = item.querySelector('.friend-meta');
+    if (meta && message) meta.textContent = message.slice(0, 44) + (message.length > 44 ? '...' : '');
+    if (currentChatType !== 'friend' || roomId !== friendRoomId) {
+      item.classList.add('unread');
+    }
+  }
+
+  // 2. If not currently chatting with this friend, show badge and notification toast
+  if (currentChatType !== 'friend' || roomId !== friendRoomId) {
+    updateFriendsTabBadge();
+    const senderTitle = friendCountry ? `Friend (${friendCountry})` : 'Friend';
+    const preview = message && message.length > 35 ? `${message.slice(0, 35)}...` : message;
+    showToast(`💬 ${senderTitle}: ${preview}`, 'info', 4000);
   }
 });
 
@@ -1471,21 +1640,26 @@ socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
 
   stopAutoSearch();
   let remaining = Math.round((reconnectTimeoutMs || 30000) / 1000);
+  const targetRoomId = roomId || activeRoomId;
 
-  inChat = false;
   if (autoSearchBar) autoSearchBar.style.display = 'flex';
-  if (autoSearchStatus) autoSearchStatus.textContent = `Frequency lost. Waiting for reconnection (${remaining}s)...`;
+  if (autoSearchStatus) autoSearchStatus.textContent = `Partner disconnected. Waiting for recovery (${remaining}s)...`;
 
-  syncButtons();
+  if (messageInput) {
+    messageInput.disabled = true;
+    messageInput.placeholder = `Partner disconnected (${remaining}s)...`;
+  }
+  if (sendBtn) sendBtn.disabled = true;
 
   autoSearchInterval = setInterval(() => {
     remaining--;
-    if (autoSearchStatus) autoSearchStatus.textContent = `Frequency lost. Waiting for reconnection (${remaining}s)...`;
+    if (autoSearchStatus) autoSearchStatus.textContent = `Partner disconnected. Waiting for recovery (${remaining}s)...`;
+    if (messageInput && messageInput.disabled) messageInput.placeholder = `Partner disconnected (${remaining}s)...`;
 
     if (remaining <= 0) {
       stopAutoSearch();
-      if (inChat && activeRoomId === roomId) {
-        appendMsg('Neural link failed. Finding a new frequency... 🔍', { isSystem: true });
+      if (activeRoomId === targetRoomId || lastKnownRoomId === targetRoomId) {
+        appendMsg('Partner did not reconnect. Finding someone new... 🔍', { isSystem: true });
         socket.emit('next_chat', { autoStart: true });
       }
     }
@@ -1497,7 +1671,11 @@ socket.on('partner_reconnected', () => {
   inChat = true;
   syncButtons();
   if (autoSearchBar) autoSearchBar.style.display = 'none';
-  appendMsg('Partner reconnected! Keep chatting ✨', { isSystem: true, variant: 'success' });
+  if (messageInput) {
+    messageInput.disabled = false;
+    messageInput.placeholder = 'Type a message…';
+  }
+  appendMsg('⚡ Partner reconnected! Keep chatting ✨', { isSystem: true, variant: 'success' });
 });
 
 socket.on('warning_message', ({ message }) => {
@@ -1583,6 +1761,17 @@ socket.on('friend_dm_opened', ({ roomId, friendId, friendCountry, friendOnline, 
   currentFriendId = friendId;
   currentChatType = 'friend';
   inChat = true;
+
+  // Persist active friend ID so page refresh or tab reopening auto-reconnects
+  try {
+    localStorage.setItem('ping_active_friend_id', friendId);
+  } catch (e) {}
+
+  goToChat();
+  if (homeTabs) homeTabs.style.display = 'flex';
+  if (tabFriends) tabFriends.classList.add('active');
+  if (tabRandom) tabRandom.classList.remove('active');
+  activeHomeTab = 'friends';
 
   showView('friendDM');
   clearFriendChat();
@@ -1762,10 +1951,10 @@ function sendFriendMessage(overrideText = null) {
 
   window.cancelReply();
 
-  socket.emit('send_dm', { roomId: friendRoomId, message: text, replyTo: replyTarget, msgId, isFlash }, (ack) => {
-    if (ack && ack.ok) {
+  socket.emit('send_dm', { roomId: friendRoomId, friendId: currentFriendId, message: text, replyTo: replyTarget, msgId, isFlash }, (ack) => {
+    const el = friendChatBox.querySelector(`[data-msg-id="${msgId}"]`);
+    if (ack && (ack.ok || ack.success)) {
       // Use helper to update status to sent
-      const el = friendChatBox.querySelector(`[data-msg-id="${msgId}"]`);
       if (el) {
         const statusEl = el.querySelector('.msg-status');
         if (statusEl) {
@@ -1775,7 +1964,14 @@ function sendFriendMessage(overrideText = null) {
         }
       }
     } else {
-      showToast('Failed to send message', 'error', 3000);
+      if (el) {
+        const statusEl = el.querySelector('.msg-status');
+        if (statusEl) {
+          statusEl.className = 'msg-status msg-status--failed';
+          statusEl.textContent = '❌ msg failed to send';
+        }
+      }
+      showToast(ack?.reason || 'Failed to send message', 'error', 3000);
     }
   });
 }
@@ -1883,6 +2079,7 @@ endChatBtn?.addEventListener('click', () => {
 // Friend DM button listeners
 backToFriendsBtn?.addEventListener('click', () => {
   // Go back to friends view
+  try { localStorage.removeItem('ping_active_friend_id'); } catch (e) {}
   friendRoomId = null;
   currentChatType = 'stranger';
   currentFriendId = null;
@@ -1892,6 +2089,7 @@ backToFriendsBtn?.addEventListener('click', () => {
 
 friendReportBtn?.addEventListener('click', () => {
   showConfirm('Report?', "Block and report this user?", () => {
+    try { localStorage.removeItem('ping_active_friend_id'); } catch (e) {}
     socket.emit('report_user', { reason: 'friend_report' });
     showToast('Reported.', 'success', 2000);
     showView('friends');
@@ -1900,6 +2098,7 @@ friendReportBtn?.addEventListener('click', () => {
 });
 
 endFriendDMBtn?.addEventListener('click', () => {
+  try { localStorage.removeItem('ping_active_friend_id'); } catch (e) {}
   inChat = false;
   activeRoomId = null;
   currentChatType = 'stranger';
@@ -1916,9 +2115,51 @@ confirmNo?.addEventListener('click', () => {
   closeModal();
 });
 
+let clientHeartbeatTimer = null;
+
 function startHeartbeat() {
-  setInterval(() => { if (isConnected) socket.emit('heartbeat'); }, 15000);
+  stopHeartbeat();
+  clientHeartbeatTimer = setInterval(() => {
+    if (socket && socket.connected) {
+      socket.emit('heartbeat');
+    }
+  }, 15000);
 }
+
+function stopHeartbeat() {
+  if (clientHeartbeatTimer) {
+    clearInterval(clientHeartbeatTimer);
+    clientHeartbeatTimer = null;
+  }
+}
+
+// Automatic network recovery when device regains connectivity or wakes up
+window.addEventListener('online', () => {
+  showNetworkStatus('Internet connection detected. Reconnecting…', 'warning');
+  if (!socket.connected) {
+    socket.connect();
+  } else {
+    handleSuccessfulConnection();
+  }
+});
+
+window.addEventListener('offline', () => {
+  isConnected = false;
+  isReconnecting = true;
+  setConnStatus('disconnected');
+  showNetworkStatus('You are currently offline. Check your internet connection.', 'error');
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    if (!socket.connected) {
+      socket.connect();
+    } else {
+      socket.emit('heartbeat');
+      socket.emit('get_status');
+    }
+  }
+});
 
 // ── THEME SWITCHER ──────────────────────────────────────────
 function setTheme(name) {

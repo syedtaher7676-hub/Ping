@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and statistics in Ping",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "country": { "type": "string", "maxLength": 64 },
+        "totalMatches": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastSeenAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "profile": { "type": "object" }
+      },
+      "required": ["userId"]
+    },
+    "Friendship": {
+      "title": "Friendship",
+      "description": "Active friendship between two users identified by canonical pair ID",
+      "type": "object",
+      "properties": {
+        "pairId": { "type": "string", "maxLength": 128 },
+        "userAId": { "type": "string", "maxLength": 128 },
+        "userBId": { "type": "string", "maxLength": 128 },
+        "users": { "type": "array" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["pairId", "userAId", "userBId", "users", "status"]
+    },
+    "FriendRequest": {
+      "title": "FriendRequest",
+      "description": "Friend request sent from one user to another",
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string", "maxLength": 128 },
+        "fromUserId": { "type": "string", "maxLength": 128 },
+        "toUserId": { "type": "string", "maxLength": 128 },
+        "roomId": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["requestId", "fromUserId", "toUserId", "status"]
+    },
+    "FriendChat": {
+      "title": "FriendChat",
+      "description": "Direct message chat session between friends",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string", "maxLength": 128 },
+        "participants": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "lastMessage": { "type": "string", "maxLength": 2000 }
+      },
+      "required": ["chatId", "participants"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Individual message inside a friend chat",
+      "type": "object",
+      "properties": {
+        "messageId": { "type": "string", "maxLength": 128 },
+        "chatId": { "type": "string", "maxLength": 128 },
+        "fromUserId": { "type": "string", "maxLength": 128 },
+        "message": { "type": "string", "maxLength": 2000 },
+        "isFlash": { "type": "boolean" },
+        "isEdited": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "replyTo": { "type": "object" }
+      },
+      "required": ["messageId", "chatId", "fromUserId", "message"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "User moderation report",
+      "type": "object",
+      "properties": {
+        "reportId": { "type": "string", "maxLength": 128 },
+        "reporterId": { "type": "string", "maxLength": 128 },
+        "reportedUserId": { "type": "string", "maxLength": 128 },
+        "reason": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending_review", "reviewed", "dismissed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reportId", "reporterId", "reportedUserId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and match statistics"
+    },
+    "/friendships/{pairId}": {
+      "schema": "Friendship",
+      "description": "Canonical friendship records between connected pairs"
+    },
+    "/friend_requests/{requestId}": {
+      "schema": "FriendRequest",
+      "description": "Pending and resolved friend requests"
+    },
+    "/friend_chats/{chatId}": {
+      "schema": "FriendChat",
+      "description": "Friend chat conversation records"
+    },
+    "/friend_chats/{chatId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Persistent chat messages between friends"
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "User moderation and behavior reports"
+    }
+  }
+}

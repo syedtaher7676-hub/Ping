@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── GLOBAL DEFAULT DENY ─────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ── GLOBAL HELPERS ──────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ── ENTITY VALIDATORS ───────────────────────────────────────
+    function isValidUser(data) {
+      return data.userId is string && data.userId.size() <= 128 &&
+        (!('country' in data) || (data.country is string && data.country.size() <= 64)) &&
+        (!('totalMatches' in data) || (data.totalMatches is number && data.totalMatches >= 0));
+    }
+
+    function isValidFriendship(data) {
+      return data.pairId is string && data.pairId.size() <= 128 &&
+        data.userAId is string && data.userAId.size() <= 128 &&
+        data.userBId is string && data.userBId.size() <= 128 &&
+        data.users is list && data.users.size() == 2 &&
+        data.status in ['active', 'inactive'];
+    }
+
+    function isValidFriendRequest(data) {
+      return data.requestId is string && data.requestId.size() <= 128 &&
+        data.fromUserId is string && data.fromUserId.size() <= 128 &&
+        data.toUserId is string && data.toUserId.size() <= 128 &&
+        data.status in ['pending', 'accepted', 'rejected'];
+    }
+
+    function isValidFriendChat(data) {
+      return data.chatId is string && data.chatId.size() <= 128 &&
+        data.participants is list && data.participants.size() == 2;
+    }
+
+    function isValidChatMessage(data) {
+      return data.messageId is string && data.messageId.size() <= 128 &&
+        data.chatId is string && data.chatId.size() <= 128 &&
+        data.fromUserId is string && data.fromUserId.size() <= 128 &&
+        data.message is string && data.message.size() > 0 && data.message.size() <= 2000;
+    }
+
+    function isValidReport(data) {
+      return data.reportId is string && data.reportId.size() <= 128 &&
+        data.reporterId is string && data.reporterId.size() <= 128 &&
+        data.reportedUserId is string && data.reportedUserId.size() <= 128 &&
+        data.reason is string && data.reason.size() <= 500;
+    }
+
+    // ── USERS COLLECTION ────────────────────────────────────────
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if isSignedIn();
+      allow create, update: if isValidId(userId) && isValidUser(incoming());
+      allow delete: if false;
+    }
+
+    // ── FRIENDSHIPS COLLECTION ──────────────────────────────────
+    match /friendships/{pairId} {
+      allow get: if isValidId(pairId);
+      allow list: if isSignedIn() && (resource.data.userAId == request.auth.uid || resource.data.userBId == request.auth.uid || resource.data.users.hasAny([request.auth.uid]));
+      allow create, update: if isValidId(pairId) && isValidFriendship(incoming());
+      allow delete: if false;
+    }
+
+    // ── FRIEND REQUESTS COLLECTION ──────────────────────────────
+    match /friend_requests/{requestId} {
+      allow get: if isValidId(requestId);
+      allow list: if isSignedIn() && (resource.data.toUserId == request.auth.uid || resource.data.fromUserId == request.auth.uid);
+      allow create: if isValidId(requestId) && isValidFriendRequest(incoming());
+      allow update: if isValidId(requestId) && isValidFriendRequest(incoming());
+      allow delete: if false;
+    }
+
+    // ── FRIEND CHATS & MESSAGES ─────────────────────────────────
+    match /friend_chats/{chatId} {
+      allow get: if isValidId(chatId);
+      allow list: if isSignedIn() && resource.data.participants.hasAny([request.auth.uid]);
+      allow create, update: if isValidId(chatId) && isValidFriendChat(incoming());
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow get: if isValidId(messageId);
+        allow list: if isSignedIn();
+        allow create: if isValidId(messageId) && isValidChatMessage(incoming());
+        allow update: if isValidId(messageId) && isValidChatMessage(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['message', 'isEdited', 'updatedAt']);
+        allow delete: if false;
+      }
+    }
+
+    // ── REPORTS COLLECTION ──────────────────────────────────────
+    match /reports/{reportId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if isValidId(reportId) && isValidReport(incoming());
+      allow update, delete: if false;
+    }
+  }
+}

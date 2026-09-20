@@ -84,6 +84,25 @@ const MODERATION_CONFIG = {
 // === IN-MEMORY VIOLATION STORAGE ===
 const violations = {};
 
+// Periodic cleanup of expired user violations to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  const windowStart = now - MODERATION_CONFIG.VIOLATION_WINDOW_MS;
+  for (const userId of Object.keys(violations)) {
+    const list = violations[userId];
+    if (!list || list.length === 0) {
+      delete violations[userId];
+      continue;
+    }
+    const active = list.filter(v => v.timestamp > windowStart);
+    if (active.length === 0) {
+      delete violations[userId];
+    } else {
+      violations[userId] = active;
+    }
+  }
+}, 60000).unref();
+
 // === CORE DETECTION FUNCTIONS ===
 
 /**

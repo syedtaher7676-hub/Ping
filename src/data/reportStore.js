@@ -1,5 +1,6 @@
 // Report storage - IN-MEMORY (for ephemeral file systems like Render free tier)
 const reports = [];
+const MAX_REPORTS = 1000;
 
 function addReport(report) {
   const newReport = {
@@ -8,6 +9,12 @@ function addReport(report) {
     createdAt: Date.now(),
   };
   reports.push(newReport);
+
+  // Keep only last 1000 reports to prevent unbounded memory growth
+  if (reports.length > MAX_REPORTS) {
+    reports.splice(0, reports.length - MAX_REPORTS);
+  }
+
   return newReport;
 }
 
