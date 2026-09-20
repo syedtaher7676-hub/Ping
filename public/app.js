@@ -521,9 +521,9 @@ function formatTime(ms) {
   return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
 }
 
-function formatTimestamp() {
-  const now = new Date();
-  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+function formatTimestamp(timestamp) {
+  const date = timestamp ? new Date(timestamp) : new Date();
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 // Smooth scroll to bottom using requestAnimationFrame
@@ -566,7 +566,7 @@ function showToast(msg, type = 'info', duration = 3800) {
 function showConfirm(title, message, onYes, onNo) {
   if (!confirmModal) { onYes?.(); return; }
   if (confirmTitle) confirmTitle.textContent = title;
-  if (confirmMessage) confirmMessage.textContent = message;
+  if (confirmMessage) confirmMessage.innerHTML = message;
   confirmCb = onYes;
   confirmModal.dataset.onNo = typeof onNo === 'function' ? true : false;
   confirmModal.confirmNoFn = onNo;
@@ -760,7 +760,7 @@ function appendMsg(text, opts = {}) {
 
   const time = document.createElement('span');
   time.className = 'msg-time';
-  time.textContent = formatTimestamp();
+  time.textContent = formatTimestamp(opts.sentAt);
   footer.appendChild(time);
 
   if (isSelf && !isSystem) {
@@ -774,6 +774,71 @@ function appendMsg(text, opts = {}) {
 
   contentWrap.appendChild(footer);
   el.appendChild(contentWrap);
+
+  // Slide timestamp for Pull-Left gesture
+  if (!isSystem) {
+    const slideTime = document.createElement('span');
+    slideTime.className = 'msg-slide-timestamp';
+    slideTime.textContent = formatTimestamp(opts.sentAt);
+    el.appendChild(slideTime);
+
+    // Long press / Press event listener for advanced options
+    let pressTimer = null;
+    let touchStartX = 0, touchStartY = 0;
+
+    const handlePressStart = (e) => {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+      
+      // Clear any existing timer to prevent double-firing
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+
+      if (e.type === 'touchstart') {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      } else {
+        touchStartX = e.clientX;
+        touchStartY = e.clientY;
+      }
+
+      pressTimer = setTimeout(() => {
+        const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
+        showAdvancedMsgOptions(e, msgId, currentText, isPartner, false, isSelf, opts.sentAt);
+        pressTimer = null;
+      }, 450); // Slightly longer for better UX
+    };
+
+    const handlePressMove = (e) => {
+      if (pressTimer) {
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = Math.abs(touch.clientX - touchStartX);
+        const dy = Math.abs(touch.clientY - touchStartY);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }
+    };
+
+    const handlePressEnd = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    };
+
+    el.addEventListener('touchstart', handlePressStart, { passive: true });
+    el.addEventListener('touchmove', handlePressMove, { passive: true });
+    el.addEventListener('touchend', handlePressEnd);
+    el.addEventListener('touchcancel', handlePressEnd);
+    el.addEventListener('mousedown', handlePressStart);
+    el.addEventListener('mousemove', handlePressMove);
+    el.addEventListener('mouseup', handlePressEnd);
+    el.addEventListener('mouseleave', handlePressEnd);
+    el.addEventListener('mouseleave', handlePressEnd);
+  }
 
   // Double tap to heart
   el.ondblclick = (e) => {
@@ -794,7 +859,6 @@ function appendMsg(text, opts = {}) {
       b.textContent = emo;
       b.onclick = (e) => {
         e.stopPropagation();
-        // Instant emoji reply
         window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
         if (currentChatType === 'friend') {
           sendFriendMessage(emo);
@@ -815,23 +879,10 @@ function appendMsg(text, opts = {}) {
     el.appendChild(rTrig);
   }
 
-  if (isSelf && !isSystem) {
-    const optsTrig = document.createElement('div');
-    optsTrig.className = 'msg-options-trigger';
-    optsTrig.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
-    optsTrig.onclick = (e) => {
-      e.stopPropagation();
-      const currentText = textNode.firstChild.textContent; // Get latest text (excluding edited tag)
-      showMsgOptions(e, msgId, currentText, false);
-    };
-    el.appendChild(optsTrig);
-  }
-
   chatBox.appendChild(el);
   scrollToBottom(chatBox);
 
   if (isPartner) {
-    // If window is focused and we aren't invisible, send read receipt
     if (document.hasFocus() && !invisibleToggle?.checked) {
       socket.emit('message_read', { roomId: activeRoomId, msgId });
     }
@@ -840,44 +891,122 @@ function appendMsg(text, opts = {}) {
   if (!isSystem) checkKeywordEffects(text);
 }
 
-function showMsgOptions(e, msgId, text, isFriend) {
-  // Remove existing menu
+function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sentAt) {
   const old = document.querySelector('.msg-context-menu');
   if (old) old.remove();
 
   const menu = document.createElement('div');
   menu.className = 'msg-context-menu';
-  menu.style.top = `${e.pageY}px`;
-  menu.style.left = `${e.pageX}px`;
 
-  const editBtn = document.createElement('div');
-  editBtn.className = 'menu-item';
-  editBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit';
-  editBtn.onclick = () => {
+  // 1. Quick Emoji Reactions
+  const rxnRow = document.createElement('div');
+  rxnRow.className = 'menu-rxn-row';
+  const emojis = ['😂', '❤️', '🔥', '💀', '🥺', '✨', '👍', '⚡'];
+  emojis.forEach(emo => {
+    const btn = document.createElement('button');
+    btn.className = 'menu-rxn-btn';
+    btn.textContent = emo;
+    btn.onclick = (evt) => {
+      evt.stopPropagation();
+      menu.remove();
+      window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
+      if (isFriend) sendFriendMessage(emo);
+      else sendMessage(emo);
+    };
+    rxnRow.appendChild(btn);
+  });
+  menu.appendChild(rxnRow);
+
+  const divider = document.createElement('div');
+  divider.className = 'menu-divider';
+  menu.appendChild(divider);
+
+  // 2. Reply
+  const replyBtn = document.createElement('div');
+  replyBtn.className = 'menu-item';
+  replyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l5-5-5-5M21 11H3"/></svg> Reply';
+  replyBtn.onclick = (evt) => {
+    evt.stopPropagation();
     menu.remove();
-    const newText = prompt("Edit your message:", text);
-    if (newText && newText.trim() !== text) {
-      if (isFriend) socket.emit('edit_dm', { roomId: friendRoomId, msgId, newMessage: newText.trim() });
-      else socket.emit('edit_message', { roomId: activeRoomId, msgId, newMessage: newText.trim() });
+    window.startReply(text, isPartner, msgId);
+  };
+  menu.appendChild(replyBtn);
+
+  // 3. Copy Text
+  const copyBtn = document.createElement('div');
+  copyBtn.className = 'menu-item';
+  copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Text';
+  copyBtn.onclick = (evt) => {
+    evt.stopPropagation();
+    menu.remove();
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard!', 'info', 1500);
     }
   };
+  menu.appendChild(copyBtn);
 
-  const deleteBtn = document.createElement('div');
-  deleteBtn.className = 'menu-item danger';
-  deleteBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete';
-  deleteBtn.onclick = () => {
-    menu.remove();
-    if (confirm("Delete this message?")) {
-      if (isFriend) socket.emit('delete_dm', { roomId: friendRoomId, msgId });
-      else socket.emit('delete_message', { roomId: activeRoomId, msgId });
-    }
-  };
+  // 4. Edit / Delete (for own messages)
+  if (isSelf && msgId) {
+    const editBtn = document.createElement('div');
+    editBtn.className = 'menu-item';
+    editBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Message';
+    editBtn.onclick = (evt) => {
+      evt.stopPropagation();
+      menu.remove();
+      openEditModal(msgId, text, isFriend);
+    };
+    menu.appendChild(editBtn);
 
-  menu.appendChild(editBtn);
-  menu.appendChild(deleteBtn);
+    const deleteBtn = document.createElement('div');
+    deleteBtn.className = 'menu-item danger';
+    deleteBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete Message';
+    deleteBtn.onclick = (evt) => {
+      evt.stopPropagation();
+      menu.remove();
+      openDeleteModal(msgId, isFriend);
+    };
+    menu.appendChild(deleteBtn);
+  }
+
+  const menuWidth = 230;
+  const menuHeight = isSelf ? 230 : 150;
+  const clickX = e.touches ? e.touches[0].clientX : (e.clientX || e.pageX || 100);
+  const clickY = e.touches ? e.touches[0].clientY : (e.clientY || e.pageY || 100);
+
+  const left = Math.min(Math.max(16, clickX - 40), window.innerWidth - menuWidth - 16);
+  const top = Math.min(Math.max(16, clickY - 40), window.innerHeight - menuHeight - 16);
+
+  menu.style.top = `${top}px`;
+  menu.style.left = `${left}px`;
+
   document.body.appendChild(menu);
 
-  document.addEventListener('click', () => menu.remove(), { once: true });
+  setTimeout(() => {
+    document.addEventListener('click', () => menu.remove(), { once: true });
+    document.addEventListener('touchstart', () => menu.remove(), { once: true });
+  }, 50);
+}
+
+function openEditModal(msgId, currentText, isFriend) {
+  showConfirm('Edit Message', 
+    `<textarea id="editInput" style="width:100%; height:80px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); padding:10px; border-radius:12px; font-family:inherit; font-size:14px; outline:none; focus:border-purple;">${currentText}</textarea>`,
+    () => {
+      const newText = document.getElementById('editInput').value.trim();
+      if (newText && newText !== currentText) {
+        if (isFriend) socket.emit('edit_dm', { roomId: friendRoomId, msgId, newMessage: newText });
+        else socket.emit('edit_message', { roomId: activeRoomId, msgId, newMessage: newText });
+      }
+    }
+  );
+  setTimeout(() => document.getElementById('editInput')?.focus(), 100);
+}
+
+function openDeleteModal(msgId, isFriend) {
+  showConfirm('Delete Message', 'Are you sure you want to delete this message? This action cannot be undone.', () => {
+    if (isFriend) socket.emit('delete_dm', { roomId: friendRoomId, msgId });
+    else socket.emit('delete_message', { roomId: activeRoomId, msgId });
+  });
 }
 
 function updateMsgStatus(msgId, newStatus) {
@@ -1024,7 +1153,7 @@ function appendFriendMsg(text, opts = {}) {
   footer.className = 'msg-footer';
   const time = document.createElement('span');
   time.className = 'msg-time';
-  time.textContent = formatTimestamp();
+  time.textContent = formatTimestamp(opts.sentAt);
   footer.appendChild(time);
 
   if (isSelf && !isSystem) {
@@ -1037,8 +1166,67 @@ function appendFriendMsg(text, opts = {}) {
   }
 
   contentWrap.appendChild(footer);
-
   el.appendChild(contentWrap);
+
+  // Slide timestamp for Pull-Left gesture
+  if (!isSystem) {
+    const slideTime = document.createElement('span');
+    slideTime.className = 'msg-slide-timestamp';
+    slideTime.textContent = formatTimestamp(opts.sentAt);
+    el.appendChild(slideTime);
+
+    // Long press / Press event listener for advanced options
+    let pressTimer = null;
+    let touchStartX = 0, touchStartY = 0;
+
+    const handlePressStart = (e) => {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      if (e.type === 'touchstart') {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      } else {
+        touchStartX = e.clientX;
+        touchStartY = e.clientY;
+      }
+      pressTimer = setTimeout(() => {
+        const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
+        showAdvancedMsgOptions(e, msgId, currentText, isPartner, true, isSelf, opts.sentAt);
+        pressTimer = null;
+      }, 450);
+    };
+
+    const handlePressMove = (e) => {
+      if (pressTimer) {
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = Math.abs(touch.clientX - touchStartX);
+        const dy = Math.abs(touch.clientY - touchStartY);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }
+    };
+
+    const handlePressEnd = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    };
+
+    el.addEventListener('touchstart', handlePressStart, { passive: true });
+    el.addEventListener('touchmove', handlePressMove, { passive: true });
+    el.addEventListener('touchend', handlePressEnd);
+    el.addEventListener('touchcancel', handlePressEnd);
+    el.addEventListener('mousedown', handlePressStart);
+    el.addEventListener('mousemove', handlePressMove);
+    el.addEventListener('mouseup', handlePressEnd);
+    el.addEventListener('mouseleave', handlePressEnd);
+  }
 
   // Double tap to heart
   el.ondblclick = (e) => {
@@ -1071,18 +1259,6 @@ function appendFriendMsg(text, opts = {}) {
     rTrig.title = "Reply";
     rTrig.setAttribute('aria-label', "Reply");
     el.appendChild(rTrig);
-  }
-
-  if (isSelf && !isSystem) {
-    const optsTrig = document.createElement('div');
-    optsTrig.className = 'msg-options-trigger';
-    optsTrig.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>';
-    optsTrig.onclick = (e) => {
-      e.stopPropagation();
-      const currentText = textNode.firstChild.textContent;
-      showMsgOptions(e, msgId, currentText, true);
-    };
-    el.appendChild(optsTrig);
   }
 
   friendChatBox.appendChild(el);
@@ -1214,16 +1390,6 @@ if (emojiAllBtn && emojiPickerPopup) {
     e.stopPropagation();
     if (!inChat || messageInput.disabled) return;
     emojiPickerPopup.classList.toggle('visible');
-    if (emojiPickerPopup.classList.contains('visible')) {
-      // Focus the emoji picker search
-      setTimeout(() => {
-        const picker = emojiPickerPopup.querySelector('emoji-picker');
-        if (picker?.shadowRoot) {
-          const search = picker.shadowRoot.querySelector('input[type="search"]');
-          search?.focus();
-        }
-      }, 100);
-    }
   });
 }
 if (fullEmojiPicker && messageInput) {
@@ -1231,8 +1397,6 @@ if (fullEmojiPicker && messageInput) {
     if (!inChat || messageInput.disabled) return;
     messageInput.value += event.detail.unicode;
     messageInput.dispatchEvent(new Event('input')); // trigger char counter & sync
-    emojiPickerPopup.classList.remove('visible');
-    messageInput.focus();
     if (sendBtn) sendBtn.disabled = false;
   });
 }
@@ -1244,14 +1408,6 @@ if (friendEmojiBtn && friendEmojiPickerPopup) {
     e.stopPropagation();
     if (currentChatType !== 'friend') return;
     friendEmojiPickerPopup.classList.toggle('visible');
-    if (friendEmojiPickerPopup.classList.contains('visible')) {
-      setTimeout(() => {
-        if (friendFullEmojiPicker?.shadowRoot) {
-          const search = friendFullEmojiPicker.shadowRoot.querySelector('input[type="search"]');
-          search?.focus();
-        }
-      }, 100);
-    }
   });
 
   document.addEventListener('click', (e) => {
@@ -1266,8 +1422,6 @@ if (friendFullEmojiPicker && friendMessageInput) {
     if (currentChatType !== 'friend') return;
     friendMessageInput.value += event.detail.unicode;
     friendMessageInput.dispatchEvent(new Event('input'));
-    friendEmojiPickerPopup.classList.remove('visible');
-    friendMessageInput.focus();
   });
 }
 
@@ -1276,8 +1430,17 @@ if (friendFullEmojiPicker && friendMessageInput) {
 // ── REPLIES ──────────────────────────────────────────────────
 window.currentReplyTarget = null;
 window.startReply = (text, isPartner, msgId) => {
-  window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, msgId };
   const isFriend = currentChatType === 'friend';
+  const fromLabel = isPartner ? (isFriend ? 'Friend' : 'Stranger') : 'You';
+  const isFlash = isFriend ? isFriendFlashMode : isFlashMode;
+  
+  window.currentReplyTarget = { 
+    text: text.slice(0, 100), 
+    from: fromLabel,
+    msgId: msgId,
+    isFlash: isFlash
+  };
+
   const rp = $(isFriend ? 'friendReplyPreview' : 'replyPreview');
 
   if (rp) {
@@ -1288,6 +1451,13 @@ window.startReply = (text, isPartner, msgId) => {
         ? (isPartner ? 'Replying to Friend:' : 'Replying to You:')
         : (isPartner ? 'Replying to Stranger:' : 'Replying to You:');
     }
+    
+    // Add flash icon if reply target is a flash message or flash mode is active
+    const flashIcon = rp.querySelector('.rp-flash-icon');
+    if (flashIcon) {
+      flashIcon.style.display = isFlash ? 'inline-block' : 'none';
+    }
+
     rp.style.display = 'flex';
   }
 
@@ -2320,7 +2490,7 @@ reportSkipBtn?.addEventListener('click', () => {
 
   clearTimeout(reportSkipConfirmTimer);
   reportSkipBtn.dataset.confirming = 'false';
-  reportSkipBtn.innerHTML = 'Report & Skip <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" /></svg>';
+  reportSkipBtn.innerHTML = '⚑ Report User';
   reportSkipBtn.classList.remove('confirming-skip');
 
   stopAutoSearch();
@@ -2356,6 +2526,7 @@ function sendMessage(overrideText = null) {
   if (!overrideText) {
     messageInput.value = '';
     messageInput.style.height = 'auto';
+    messageInput?.focus();
   }
   syncButtons();
   const cc = document.getElementById('charCounter');
@@ -2389,6 +2560,7 @@ function sendFriendMessage(overrideText = null) {
     if (friendSendBtn) friendSendBtn.disabled = true;
     const fcc = document.getElementById('friendCharCounter');
     if (fcc) { fcc.textContent = ''; fcc.className = 'char-counter'; }
+    friendMessageInput?.focus();
   }
 
   window.cancelReply();
@@ -2421,12 +2593,19 @@ function sendFriendMessage(overrideText = null) {
 messageForm?.addEventListener('submit', e => {
   e.preventDefault();
   sendMessage();
+  messageInput?.focus();
+});
+
+sendBtn?.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  messageInput?.focus();
 });
 
 messageInput?.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
+    messageInput?.focus();
   }
 });
 
@@ -2459,12 +2638,19 @@ messageInput?.addEventListener('input', function () {
 friendMessageForm?.addEventListener('submit', e => {
   e.preventDefault();
   sendFriendMessage();
+  friendMessageInput?.focus();
+});
+
+friendSendBtn?.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  friendMessageInput?.focus();
 });
 
 friendMessageInput?.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendFriendMessage();
+    friendMessageInput?.focus();
   }
 });
 
@@ -2669,7 +2855,9 @@ function triggerFlash(isFriend = false) {
   }
 }
 
-flashToggleBtn?.addEventListener('click', (e) => {
+flashToggleBtn?.addEventListener('click', toggleFlash);
+
+function toggleFlash(e) {
   e.preventDefault();
   isFlashMode = !isFlashMode;
   flashToggleBtn.classList.toggle('active', isFlashMode);
@@ -2677,8 +2865,7 @@ flashToggleBtn?.addEventListener('click', (e) => {
   if (inChat && activeRoomId) {
     triggerFlash(false);
   }
-  showToast(isFlashMode ? 'Flash mode ON ⚡ (Auto-delete in 10s)' : 'Flash mode OFF', 'info', 1500);
-});
+}
 
 friendFlashToggleBtn?.addEventListener('click', (e) => {
   e.preventDefault();
@@ -2688,7 +2875,6 @@ friendFlashToggleBtn?.addEventListener('click', (e) => {
   if (currentChatType === 'friend' && friendRoomId) {
     triggerFlash(true);
   }
-  showToast(isFriendFlashMode ? 'Flash mode ON ⚡ (Auto-delete in 10s)' : 'Flash mode OFF', 'info', 1500);
 });
 
 function triggerPing(isFriend = false) {
@@ -2761,6 +2947,129 @@ socket.on('flash_received', ({ senderId }) => {
   }
   document.body.classList.add('screen-flash-active');
   setTimeout(() => document.body.classList.remove('screen-flash-active'), 500);
-  showToast('⚡ Flash received!', 'info', 1500);
 });
+
+// ── COMPACT CHAT UI & 3-DOT MENU BINDINGS ───────────────────
+function setupCompactChatUI() {
+  const threeDotsBtn = $('threeDotsBtn');
+  const threeDotsMenu = $('threeDotsMenu');
+
+  if (threeDotsBtn && threeDotsMenu) {
+    threeDotsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      threeDotsMenu.classList.toggle('hidden');
+    });
+
+    threeDotsMenu.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        threeDotsMenu.classList.add('hidden');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!threeDotsMenu.contains(e.target) && e.target !== threeDotsBtn) {
+        threeDotsMenu.classList.add('hidden');
+      }
+    });
+  }
+}
+
+// ── SWIPE / PULL LEFT TO REVEAL TIMESTAMPS ───────────────────
+function initSwipeToRevealTimestamps(container) {
+  if (!container) return;
+  let startX = 0;
+  let startY = 0;
+  let isSwiping = false;
+
+  const resetAllMsgs = () => {
+    startX = 0;
+    startY = 0;
+    isSwiping = false;
+    const msgs = container.querySelectorAll('.msg:not(.system)');
+    msgs.forEach(m => {
+      m.style.transition = 'transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      m.style.transform = 'translateX(0px)';
+      const timeEl = m.querySelector('.msg-slide-timestamp');
+      if (timeEl) {
+        timeEl.style.transition = 'opacity 0.22s ease, right 0.22s ease';
+        timeEl.style.opacity = '0';
+        timeEl.style.right = '-80px';
+      }
+    });
+  };
+
+  const onStart = (e) => {
+    const touch = e.touches ? e.touches[0] : e;
+    startX = touch.clientX;
+    startY = touch.clientY;
+    isSwiping = false;
+  };
+
+  const onMove = (e) => {
+    if (!startX) return;
+    const touch = e.touches ? e.touches[0] : e;
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+
+    // Trigger when pulling towards the left side
+    if (deltaX < -10 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+      isSwiping = true;
+      const currentDeltaX = Math.max(-75, deltaX);
+      const msgs = container.querySelectorAll('.msg:not(.system)');
+      msgs.forEach(m => {
+        m.style.transition = 'none';
+        m.style.transform = `translateX(${currentDeltaX}px)`;
+        const timeEl = m.querySelector('.msg-slide-timestamp');
+        if (timeEl) {
+          const progress = Math.min(1, Math.abs(currentDeltaX) / 50);
+          timeEl.style.opacity = progress;
+          timeEl.style.right = `${-80 + (progress * 20)}px`;
+        }
+      });
+    } else if (deltaX >= 0 && isSwiping) {
+      resetAllMsgs();
+    }
+  };
+
+  const onEnd = () => {
+    if (isSwiping || startX) {
+      // Ensure a smooth return with transition
+      const msgs = container.querySelectorAll('.msg:not(.system)');
+      msgs.forEach(m => {
+        m.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        m.style.transform = 'translateX(0px)';
+        const timeEl = m.querySelector('.msg-slide-timestamp');
+        if (timeEl) {
+          timeEl.style.transition = 'opacity 0.2s ease, right 0.2s ease';
+          timeEl.style.opacity = '0';
+          timeEl.style.right = '-80px';
+        }
+      });
+      
+      // Reset state after transition starts
+      setTimeout(() => {
+        isSwiping = false;
+        startX = 0;
+        startY = 0;
+      }, 50);
+    }
+  };
+
+  container.addEventListener('touchstart', onStart, { passive: true });
+  container.addEventListener('touchmove', onMove, { passive: true });
+  container.addEventListener('touchend', onEnd);
+  container.addEventListener('touchcancel', onEnd);
+
+  container.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', (e) => { if (startX && (e.buttons === 1 || e.buttons === 0)) onMove(e); });
+  window.addEventListener('mouseup', onEnd);
+  container.addEventListener('mouseleave', onEnd);
+}
+
+// Initialize swipe gestures on chat containers
+if (chatBox) initSwipeToRevealTimestamps(chatBox);
+if (friendChatBox) initSwipeToRevealTimestamps(friendChatBox);
+
+setupCompactChatUI();
+
 
