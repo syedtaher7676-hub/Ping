@@ -39,6 +39,7 @@ const $ = id => document.getElementById(id);
 
 const startBtn = $('startBtn');
 const nextBtn = $('nextBtn');
+const reportSkipBtn = $('reportSkipBtn');
 const chatBox = $('chatBox');
 const messageForm = $('messageForm');
 const messageInput = $('messageInput');
@@ -110,23 +111,337 @@ const networkStatusBar = $('networkStatusBar');
 const networkStatusText = $('networkStatusText');
 const reconnectNowBtn = $('reconnectNowBtn');
 const partnerCountryLabel = $('partnerCountryLabel'); // Ensure this is also present
-let selfUserId = null;
-let currentChatType = 'stranger'; // 'stranger' or 'friend'
-let inChat = false;
+const homeAuthBtn = $('homeAuthBtn');
+const exploreAuthBtn = $('exploreAuthBtn');
+const landingAuthBtn = $('landingAuthBtn');
+
+// ── APPSTATE CONTROLLER ──────────────────────────────────────
+const AppState = {
+  activeTab: 'EXPLORE', // 'EXPLORE' | 'FRIENDS'
+  explore: { 
+    roomId: null, 
+    partnerId: null, 
+    inChat: false, 
+    isWaiting: false, 
+    history: [] // Client-side message deduplication buffer
+  },
+  friends: { 
+    activeFriendId: null, 
+    activeRoomId: null, 
+    inChat: false, 
+    history: [] // Client-side message deduplication buffer
+  },
+  user: {
+    id: persistentUserId,
+    isAuthenticated: false, // Tracks guest vs authenticated status
+    country: null,
+    profile: null
+  }
+};
+
+// Map old global variables to AppState via window properties for backwards compatibility
+Object.defineProperty(window, 'selfUserId', {
+  get() { return AppState.user.id; },
+  set(val) { AppState.user.id = val; }
+});
+
+Object.defineProperty(window, 'currentChatType', {
+  get() { return AppState.activeTab === 'EXPLORE' ? 'stranger' : 'friend'; },
+  set(val) {
+    if (val === 'stranger') AppState.activeTab = 'EXPLORE';
+    else if (val === 'friend') AppState.activeTab = 'FRIENDS';
+  }
+});
+
+Object.defineProperty(window, 'inChat', {
+  get() { return AppState.activeTab === 'EXPLORE' ? AppState.explore.inChat : AppState.friends.inChat; },
+  set(val) {
+    if (AppState.activeTab === 'EXPLORE') AppState.explore.inChat = val;
+    else AppState.friends.inChat = val;
+  }
+});
+
+Object.defineProperty(window, 'isWaiting', {
+  get() { return AppState.activeTab === 'EXPLORE' ? AppState.explore.isWaiting : false; },
+  set(val) {
+    if (AppState.activeTab === 'EXPLORE') AppState.explore.isWaiting = val;
+  }
+});
+
+Object.defineProperty(window, 'activeRoomId', {
+  get() { return AppState.activeTab === 'EXPLORE' ? AppState.explore.roomId : AppState.friends.activeRoomId; },
+  set(val) {
+    if (AppState.activeTab === 'EXPLORE') AppState.explore.roomId = val;
+    else AppState.friends.activeRoomId = val;
+  }
+});
+
+Object.defineProperty(window, 'currentFriendId', {
+  get() { return AppState.friends.activeFriendId; },
+  set(val) { AppState.friends.activeFriendId = val; }
+});
+
+Object.defineProperty(window, 'friendRoomId', {
+  get() { return AppState.friends.activeRoomId; },
+  set(val) { AppState.friends.activeRoomId = val; }
+});
+
 let isConnected = false;
 let isReconnecting = false;  // Track reconnection state
-let isWaiting = false;
-let activeRoomId = null;
-let currentFriendId = null;        // ID of friend if in friend DM
-let friendRoomId = null;        // Store friend room ID separately
 let typingTimeout = null;
 let confirmCb = null;
 let hasErrShown = false;
 let pendingStart = false;
 let lastKnownRoomId = null;    // Store room ID during disconnect
+let isFlashMode = false;       // Track active Flash mode state for stranger chat
+let isFriendFlashMode = false; // Track active Flash mode state for friend DM
 
-let isFlashMode = false;
-let isFriendFlashMode = false;
+// ── BOOT UI & STATE RESET (Bug 2 Fix) ────────────────────────
+// Force complete UI state reset on application boot / page load
+AppState.explore.roomId = null;
+AppState.friends.activeRoomId = null;
+AppState.friends.activeFriendId = null;
+AppState.activeTab = 'EXPLORE';
+AppState.explore.inChat = false;
+AppState.explore.isWaiting = false;
+isReconnecting = false;
+pendingStart = false;
+
+// ── FIREBASE CLIENT INITIALIZATION ───────────────────────────
+let authInstance = null;
+let dbInstance = null;
+
+async function initFirebaseClient() {
+  if (typeof firebase === 'undefined') {
+    console.log("Firebase CDN scripts are not loaded, running in Guest Mode only.");
+    return;
+  }
+
+  // Robust default fallback matching the actual Cloud project credentials
+  const firebaseConfig = {
+    apiKey: "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY",
+    authDomain: "impressive-atlas-4ggh3.firebaseapp.com",
+    projectId: "impressive-atlas-4ggh3",
+    storageBucket: "impressive-atlas-4ggh3.firebasestorage.app",
+    messagingSenderId: "237904937112",
+    appId: "1:237904937112:web:42917cae7c903634dc50ed"
+  };
+
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    authInstance = firebase.auth();
+    dbInstance = firebase.firestore();
+
+    authInstance.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log("Authenticated User:", user.uid);
+        AppState.user.id = user.uid;
+        AppState.user.isAuthenticated = true;
+        AppState.user.profile = user;
+
+        // Manage dynamic UI buttons
+        const eAuth = document.getElementById('exploreAuthBtn');
+        if (eAuth) eAuth.style.display = 'none';
+
+        const hAuth = document.getElementById('homeAuthBtn');
+        if (hAuth) {
+          hAuth.innerHTML = `<span>👤 Profile</span>`;
+          hAuth.title = `Signed in as ${user.displayName || user.email}`;
+        }
+
+        const lAuth = document.getElementById('landingAuthBtn');
+        if (lAuth) {
+          lAuth.innerHTML = `<span class="cta-label">👤 Profile</span>`;
+          lAuth.title = `Signed in as ${user.displayName || user.email}`;
+        }
+        
+        // Asynchronously save user data to Firestore
+        try {
+          const userRef = dbInstance.collection('users').doc(user.uid);
+          await userRef.set({
+            userId: user.uid,
+            country: AppState.user.country || 'Global',
+            lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          console.log("Successfully synchronized user profile in Firestore directly from client.");
+        } catch (dbErr) {
+          console.error("Firestore sync error:", dbErr);
+        }
+        
+        // Seamlessly authenticate active socket session
+        socket.emit('authenticate', { userId: user.uid }, (ack) => {
+          if (ack && ack.success) {
+            console.log("Socket authenticated with user:", user.uid);
+            showToast(`Logged in as ${user.displayName || 'user'}! ✨`, 'success', 3000);
+          }
+        });
+
+        // Intent-driven Friend Request Gate: Send deferred request now!
+        if (AppState.deferredFriendRequest) {
+          AppState.deferredFriendRequest = false;
+          showToast("Successfully authenticated. Sending friend request now... 👫", "success", 2000);
+          socket.emit('send_friend_request');
+        }
+        
+        // Hide soft auth banner if active
+        const banner = document.getElementById('softAuthBanner');
+        if (banner) banner.remove();
+        
+      } else {
+        AppState.user.isAuthenticated = false;
+        AppState.user.id = persistentUserId;
+        AppState.user.profile = null;
+
+        // Show "Sign In" during active stranger chat if user is guest
+        const eAuth = document.getElementById('exploreAuthBtn');
+        if (eAuth && currentChatType === 'stranger' && inChat) {
+          eAuth.style.display = 'block';
+        } else if (eAuth) {
+          eAuth.style.display = 'none';
+        }
+
+        const hAuth = document.getElementById('homeAuthBtn');
+        if (hAuth) {
+          hAuth.innerHTML = `<span>🔑 Sign In</span>`;
+          hAuth.title = "Sign in to persist your connections";
+        }
+
+        const lAuth = document.getElementById('landingAuthBtn');
+        if (lAuth) {
+          lAuth.innerHTML = `<span class="cta-label">🔑 Account</span>`;
+          lAuth.title = "Sign in to persist your connections";
+        }
+      }
+    });
+  } catch (err) {
+    console.warn("Client-side Firebase failed to initialize:", err);
+  }
+}
+
+async function triggerGoogleLogin() {
+  if (typeof firebase === 'undefined' || !firebase.apps.length) {
+    showToast("Firebase Auth is not initialized or configured on this project.", "error", 3000);
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    showToast("Opening Google Sign-in...", "info", 1500);
+    await firebase.auth().signInWithPopup(provider);
+  } catch (err) {
+    console.error("Sign up popup error:", err);
+    showToast(`Auth error: ${err.message}`, "error", 4000);
+  }
+}
+
+function triggerSoftAuthBanner() {
+  if (AppState.user.isAuthenticated) return;
+  if (document.getElementById('softAuthBanner')) return;
+  
+  const banner = document.createElement('div');
+  banner.id = 'softAuthBanner';
+  banner.className = 'soft-auth-banner glass-card';
+  banner.innerHTML = `
+    <div class="sab-content">
+      <span class="sab-icon">⚡</span>
+      <div class="sab-text">
+        <strong>Save your connections!</strong>
+        <p>Sign up now to persist your friends list across devices and sessions.</p>
+      </div>
+      <div class="sab-buttons">
+        <button id="sabCloseBtn" class="btn-ghost btn-xs" style="background: rgba(255,255,255,0.08); border: none; border-radius: 6px; color: white; cursor: pointer; padding: 4px 10px; font-size: 0.75rem;">Dismiss</button>
+        <button id="sabSignUpBtn" class="btn-primary btn-xs" style="background: #7c3aed; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600; padding: 4px 12px; font-size: 0.75rem;">Sign Up</button>
+      </div>
+    </div>
+  `;
+  
+  const style = document.createElement('style');
+  style.textContent = `
+    .soft-auth-banner {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 1000;
+      padding: 12px 16px;
+      background: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      animation: bannerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes bannerSlideIn {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .sab-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sab-icon {
+      font-size: 1.5rem;
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .sab-text {
+      flex: 1;
+      font-size: 0.85rem;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+    .sab-text strong {
+      color: #a78bfa;
+      font-weight: 600;
+    }
+    .sab-text p {
+      margin: 2px 0 0 0;
+      color: rgba(255, 255, 255, 0.8);
+    }
+    .sab-buttons {
+      display: flex;
+      gap: 8px;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  if (chatApp) {
+    chatApp.appendChild(banner);
+  }
+  
+  document.getElementById('sabCloseBtn')?.addEventListener('click', () => {
+    banner.style.animation = 'bannerSlideOut 0.2s ease forwards';
+    setTimeout(() => banner.remove(), 200);
+  });
+  
+  document.getElementById('sabSignUpBtn')?.addEventListener('click', async () => {
+    triggerGoogleLogin();
+  });
+}
+
+// Start Firebase client initialization and set a 2-minute soft auth banner trigger
+initFirebaseClient();
+setTimeout(() => {
+  triggerSoftAuthBanner();
+}, 120000);
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#start-chat-btn, #startBtn, #startLandingBtn, #findChatBtn').forEach(btn => {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+      }
+    });
+    if (confirmModal) confirmModal.style.display = 'none';
+  });
+}
 
 socket.on('friend_status_change', ({ friendId, online }) => {
   const item = document.querySelector(`.friend-item[data-friend-id="${friendId}"]`);
@@ -339,6 +654,11 @@ function appendMsg(text, opts = {}) {
   const { isSelf = false, isPartner = false, isSystem = false, isHTML = false, variant = '', status = 'sending', msgId = '' } = opts;
   if (!chatBox) return;
 
+  // Client-Side Deduplication (Bug 1 Fix)
+  if (msgId && chatBox.querySelector(`[data-msg-id="${msgId}"]`)) {
+    return;
+  }
+
   // Deduplicate system messages
   if (isSystem) {
     const now = Date.now();
@@ -446,6 +766,8 @@ function appendMsg(text, opts = {}) {
   if (isSelf && !isSystem) {
     const statusEl = document.createElement('div');
     statusEl.className = `msg-status msg-status--${status}`;
+    statusEl.setAttribute('data-status', status);
+    statusEl.setAttribute('data-msg-status', status);
     statusEl.innerHTML = `<svg class="status-icon" viewBox="0 0 20 12" fill="none"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10l8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/></svg>`;
     footer.appendChild(statusEl);
   }
@@ -559,8 +881,9 @@ function showMsgOptions(e, msgId, text, isFriend) {
 }
 
 function updateMsgStatus(msgId, newStatus) {
-  if (!msgId || !chatBox) return;
-  const el = chatBox.querySelector(`[data-msg-id="${msgId}"]`);
+  if (!msgId) return;
+  const el = (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
+             (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`));
   if (!el) return;
   const statusEl = el.querySelector('.msg-status');
   if (!statusEl) return;
@@ -600,6 +923,11 @@ let lastFriendSystemMsgTime = 0;
 function appendFriendMsg(text, opts = {}) {
   const { isSelf = false, isPartner = false, isSystem = false, isHTML = false, variant = '', status = 'sending', msgId = '' } = opts;
   if (!friendChatBox) return;
+
+  // Client-Side Deduplication (Bug 1 Fix)
+  if (msgId && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`)) {
+    return;
+  }
 
   if (isSystem) {
     const now = Date.now();
@@ -702,6 +1030,8 @@ function appendFriendMsg(text, opts = {}) {
   if (isSelf && !isSystem) {
     const statusEl = document.createElement('div');
     statusEl.className = `msg-status msg-status--${status}`;
+    statusEl.setAttribute('data-status', status);
+    statusEl.setAttribute('data-msg-status', status);
     statusEl.innerHTML = `<svg class="status-icon" viewBox="0 0 20 12" fill="none"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10l8-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/></svg>`;
     footer.appendChild(statusEl);
   }
@@ -834,6 +1164,7 @@ function syncButtons() {
   if (sendBtn) sendBtn.disabled = (!inChat && !autoSearchInterval) || !messageInput?.value.trim();
   if (startBtn) startBtn.disabled = inChat || isWaiting || !isConnected;
   if (nextBtn) nextBtn.disabled = !inChat && !isWaiting;
+  if (reportSkipBtn) reportSkipBtn.disabled = !inChat;
   if (reportBtn) reportBtn.disabled = !inChat;
   if (endChatBtn) endChatBtn.disabled = !inChat;
   if (extendTimeBtn) extendTimeBtn.disabled = !inChat;
@@ -1229,12 +1560,25 @@ function goToLanding() {
 function switchHomeTab(tab) {
   // Update active tab state
   activeHomeTab = tab;
+  AppState.activeTab = tab === 'random' ? 'EXPLORE' : 'FRIENDS';
 
   // Update tab visual state
   if (tabRandom) tabRandom.classList.toggle('active', tab === 'random');
   if (tabFriends) tabFriends.classList.toggle('active', tab === 'friends');
 
   if (tab === 'friends') {
+    // ── Switch to Friends context ──
+    // Terminate or skip any active Explore stranger session and clear stranger message containers
+    if (inChat && currentChatType === 'stranger') {
+      socket.emit('end_chat', { roomId: activeRoomId });
+    } else if (isWaiting) {
+      socket.emit('cancel_search');
+    }
+    endCurrentChat();
+
+    // Stop matchmaking timers
+    stopAutoSearch();
+
     // Show friends list
     socket.emit('get_friends', (data) => {
       renderFriendsList(data?.friends || []);
@@ -1245,14 +1589,42 @@ function switchHomeTab(tab) {
       }
     });
   } else {
-    // Show random/Explore tab
-    if (inChat && currentChatType === 'stranger') {
-      showView('chat');
-    } else if (isWaiting) {
-      showView('waiting');
-    } else {
-      showView('prechat');
+    // ── Switch to Explore (random) context ──
+    // Leave any active friend_chat_ROOMID Socket.io room on the server
+    if (friendRoomId) {
+      socket.emit('leave_friend_dm', { roomId: friendRoomId });
     }
+
+    // Reset Friend DM states
+    friendRoomId = null;
+    currentFriendId = null;
+    try {
+      localStorage.removeItem('ping_active_friend_id');
+    } catch (e) {}
+
+    // Clear Friends DM UI containers and clear preview replies
+    clearFriendChat();
+    window.cancelReply();
+
+    // Force-reset Explore state to ensure start chat button is fully enabled and ready
+    AppState.explore.roomId = null;
+    AppState.explore.partnerId = null;
+    AppState.explore.isSearching = false;
+    pendingStart = false;
+    isWaiting = false;
+    inChat = false;
+
+    // Ensure Start Chat buttons are fully enabled and ready
+    document.querySelectorAll('#start-chat-btn, #startBtn, #startLandingBtn, #findChatBtn').forEach(btn => {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('disabled');
+      }
+    });
+
+    // Show appropriate view
+    showView('prechat');
+    syncButtons();
   }
 }
 
@@ -1283,7 +1655,7 @@ function handleSuccessfulConnection() {
 
   // 3. Auto-rejoin active friend chat room on page load/reconnection if previously open
   const activeFriendId = localStorage.getItem('ping_active_friend_id') || currentFriendId;
-  socket.emit('authenticate', { userId: persistentUserId, activeFriendId }, (authRes) => {
+  socket.emit('authenticate', { userId: AppState.user.id, activeFriendId }, (authRes) => {
     if (activeFriendId) {
       socket.emit('open_friend_dm', { friendId: activeFriendId });
     }
@@ -1351,7 +1723,12 @@ if (socket.io) {
   });
 
   socket.io.on('reconnect_error', (err) => {
-    console.error('[Ping] Socket reconnection error:', err?.message || err);
+    const msg = err?.message || err;
+    if (msg === 'websocket error') {
+      console.warn('[Ping] Socket transport notice (polling fallback active):', msg);
+    } else {
+      console.error('[Ping] Socket reconnection error:', msg);
+    }
     isReconnecting = true;
     setConnStatus('disconnected');
     syncButtons();
@@ -1392,7 +1769,12 @@ socket.on('disconnect', (reason) => {
 });
 
 socket.on('connect_error', (error) => {
-  console.error('[Ping] Socket connection error:', error?.message || error);
+  const msg = error?.message || error;
+  if (msg === 'websocket error') {
+    console.warn('[Ping] Socket connection notice (polling fallback active):', msg);
+  } else {
+    console.error('[Ping] Socket connection error:', msg);
+  }
   isConnected = false;
   isReconnecting = true;
   setConnStatus('disconnected');
@@ -1419,6 +1801,7 @@ socket.on('system_metrics', m => {
   setOnlineCount(u);
 });
 
+socket.off('matched');
 socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc }) => {
   pendingStart = false;
   clearChat();
@@ -1436,6 +1819,7 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc }) => {
 });
 
 socket.on('new_message', (payload) => {
+  if (AppState.activeTab !== 'EXPLORE') return;
   const { from, message, roomId } = payload;
   const isMe = (from === socket.id || from === persistentUserId || from === selfUserId);
   if (isMe) return; // Optimistically rendered.
@@ -1515,10 +1899,10 @@ function handleIncomingDm(payload) {
   }
 }
 
-socket.on('new_dm', handleIncomingDm);
-socket.on('dm_message', handleIncomingDm);
+socket.off('new_dm').on('new_dm', handleIncomingDm);
+socket.off('dm_message').on('dm_message', handleIncomingDm);
 
-socket.on('friend_dm_notification', (payload) => {
+socket.off('friend_dm_notification').on('friend_dm_notification', (payload) => {
   const { from, fromUserId, message, roomId, friendCountry } = payload;
   const senderId = fromUserId || from;
   const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId);
@@ -1546,7 +1930,7 @@ socket.on('friend_dm_notification', (payload) => {
   }
 });
 
-socket.on('dm_partner_typing', ({ roomId, isTyping, fromUserId }) => {
+socket.off('dm_partner_typing').on('dm_partner_typing', ({ roomId, isTyping, fromUserId }) => {
   // 1. Update active DM view if open
   if (friendTypingMeta && roomId === friendRoomId) {
     const show = Boolean(isTyping);
@@ -1575,6 +1959,7 @@ socket.on('dm_partner_typing', ({ roomId, isTyping, fromUserId }) => {
 });
 
 socket.on('partner_typing', ({ isTyping }) => {
+  if (AppState.activeTab !== 'EXPLORE') return;
   if (!typingIndicator) return;
   const show = Boolean(isTyping && inChat);
   typingIndicator.classList.toggle('visible', show);
@@ -1632,10 +2017,12 @@ function handleChatEnd(reason) {
 }
 
 socket.on('chat_end', ({ reason }) => {
+  if (AppState.activeTab !== 'EXPLORE') return;
   handleChatEnd(reason);
 });
 
 socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
+  if (AppState.activeTab !== 'EXPLORE') return;
   console.log('[Ping] Partner disconnected, waiting for reconnect...', { roomId, timeout: reconnectTimeoutMs });
 
   stopAutoSearch();
@@ -1667,6 +2054,7 @@ socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
 });
 
 socket.on('partner_reconnected', () => {
+  if (AppState.activeTab !== 'EXPLORE') return;
   stopAutoSearch();
   inChat = true;
   syncButtons();
@@ -1678,17 +2066,45 @@ socket.on('partner_reconnected', () => {
   appendMsg('⚡ Partner reconnected! Keep chatting ✨', { isSystem: true, variant: 'success' });
 });
 
+socket.off('warning_message');
 socket.on('warning_message', ({ message }) => {
   if (!message) return;
   // Backend already formats the message with emoji prefix — display as-is
   appendMsg(message, { isSystem: true, variant: 'warn' });
 });
 
+socket.off('error_message');
 socket.on('error_message', ({ message, action, duration }) => {
   if (!message) return;
 
   // Backend already formats the message with emoji prefix — display as-is
   appendMsg(message, { isSystem: true, variant: 'error' });
+});
+
+socket.off('message_rejected');
+socket.on('message_rejected', ({ message, reason }) => {
+  if (!message) return;
+  appendMsg(message, { isSystem: true, variant: 'error' });
+});
+
+socket.off('chat_ended_banned');
+socket.on('chat_ended_banned', ({ reason, message, autoRequeue }) => {
+  stopAutoSearch();
+  stopTimer();
+  endCurrentChat();
+
+  const formattedMsg = message || '🚫 Chat ended due to a safety rule violation.';
+  appendMsg(formattedMsg, { isSystem: true, variant: 'error' });
+  showToast(formattedMsg, 'error', 4000);
+
+  if (autoRequeue) {
+    appendMsg('⚡ Re-queuing for a fresh match...', { isSystem: true, variant: 'success' });
+    setTimeout(() => {
+      if (socket && socket.connected) {
+        socket.emit('start_chat');
+      }
+    }, 1200);
+  }
 });
 
 // ═══════════════════════════════════════════════
@@ -1886,6 +2302,32 @@ nextBtn?.addEventListener('click', () => {
   if (inChat) appendMsg('Searching...', { isSystem: true });
 });
 
+let reportSkipConfirmTimer = null;
+reportSkipBtn?.addEventListener('click', () => {
+  if (reportSkipBtn.dataset.confirming !== 'true') {
+    reportSkipBtn.dataset.confirming = 'true';
+    const originalHTML = reportSkipBtn.innerHTML;
+    reportSkipBtn.innerHTML = 'Sure? ⚠️';
+    reportSkipBtn.classList.add('confirming-skip');
+
+    reportSkipConfirmTimer = setTimeout(() => {
+      reportSkipBtn.dataset.confirming = 'false';
+      reportSkipBtn.innerHTML = originalHTML;
+      reportSkipBtn.classList.remove('confirming-skip');
+    }, 3000); // 3 seconds to confirm
+    return;
+  }
+
+  clearTimeout(reportSkipConfirmTimer);
+  reportSkipBtn.dataset.confirming = 'false';
+  reportSkipBtn.innerHTML = 'Report & Skip <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" /></svg>';
+  reportSkipBtn.classList.remove('confirming-skip');
+
+  stopAutoSearch();
+  socket.emit('report_user', { roomId: AppState.explore.roomId, reason: 'inappropriate' });
+  if (inChat) appendMsg('Reporting & Skipping...', { isSystem: true });
+});
+
 cancelWaitBtn?.addEventListener('click', () => {
   socket.emit('cancel_search');
   applyState('idle');
@@ -2066,7 +2508,43 @@ extendTimeBtn?.addEventListener('click', () => {
 });
 
 friendBtn?.addEventListener('click', () => {
-  socket.emit('send_friend_request');
+  if (!AppState.user.isAuthenticated) {
+    AppState.deferredFriendRequest = true;
+    showToast("Please sign in to add friends! Deferring your request until signed in. 👫", "info", 3000);
+    triggerGoogleLogin();
+  } else {
+    socket.emit('send_friend_request');
+  }
+});
+
+homeAuthBtn?.addEventListener('click', () => {
+  if (AppState.user.isAuthenticated) {
+    showConfirm('Sign Out?', 'Would you like to sign out of your account?', async () => {
+      if (authInstance) {
+        await authInstance.signOut();
+        showToast("Signed out successfully! 👋", "info", 3000);
+      }
+    });
+  } else {
+    triggerGoogleLogin();
+  }
+});
+
+landingAuthBtn?.addEventListener('click', () => {
+  if (AppState.user.isAuthenticated) {
+    showConfirm('Sign Out?', 'Would you like to sign out of your account?', async () => {
+      if (authInstance) {
+        await authInstance.signOut();
+        showToast("Signed out successfully! 👋", "info", 3000);
+      }
+    });
+  } else {
+    triggerGoogleLogin();
+  }
+});
+
+exploreAuthBtn?.addEventListener('click', () => {
+  triggerGoogleLogin();
 });
 
 endChatBtn?.addEventListener('click', () => {
@@ -2184,28 +2662,53 @@ window.addEventListener('focus', () => {
   document.body.classList.remove('privacy-blur');
 });
 // ── FLASH & PING LISTENERS ───────────────────────────────────
-flashToggleBtn?.addEventListener('click', () => {
+function triggerFlash(isFriend = false) {
+  const targetRoom = isFriend ? friendRoomId : activeRoomId;
+  if (targetRoom) {
+    socket.emit('send_flash', { roomId: targetRoom });
+  }
+}
+
+flashToggleBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
   isFlashMode = !isFlashMode;
   flashToggleBtn.classList.toggle('active', isFlashMode);
-  showToast(isFlashMode ? 'Flash mode ON ⚡' : 'Flash mode OFF', 'info', 1500);
+  messageInput?.classList.toggle('flash-active', isFlashMode);
+  if (inChat && activeRoomId) {
+    triggerFlash(false);
+  }
+  showToast(isFlashMode ? 'Flash mode ON ⚡ (Auto-delete in 10s)' : 'Flash mode OFF', 'info', 1500);
 });
 
-friendFlashToggleBtn?.addEventListener('click', () => {
+friendFlashToggleBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
   isFriendFlashMode = !isFriendFlashMode;
   friendFlashToggleBtn.classList.toggle('active', isFriendFlashMode);
-  showToast(isFriendFlashMode ? 'Flash mode ON ⚡' : 'Flash mode OFF', 'info', 1500);
+  friendMessageInput?.classList.toggle('flash-active', isFriendFlashMode);
+  if (currentChatType === 'friend' && friendRoomId) {
+    triggerFlash(true);
+  }
+  showToast(isFriendFlashMode ? 'Flash mode ON ⚡ (Auto-delete in 10s)' : 'Flash mode OFF', 'info', 1500);
 });
 
 function triggerPing(isFriend = false) {
-  if (!inChat) return;
   const rid = isFriend ? friendRoomId : activeRoomId;
+  if (!rid) return;
   socket.emit('send_ping', { roomId: rid });
   showToast('Sent a Ping! ⚡', 'info', 1000);
 }
 
-pingBtn?.addEventListener('click', () => triggerPing(false));
-friendPingBtn?.addEventListener('click', () => triggerPing(true));
+pingBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  triggerPing(false);
+});
 
+friendPingBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  triggerPing(true);
+});
+
+socket.off('incoming_ping');
 socket.on('incoming_ping', () => {
   const container = (currentChatType === 'friend') ? friendChatBox : chatBox;
   if (container) {
@@ -2247,5 +2750,17 @@ invisibleToggle?.addEventListener('change', () => {
 // Privacy Shield Click
 document.querySelectorAll('.privacy-shield').forEach(el => {
   el.onclick = () => showToast('🛡️ E2EE Active. Connection is private.', 'success', 3000);
+});
+
+socket.off('flash_received');
+socket.on('flash_received', ({ senderId }) => {
+  const container = (currentChatType === 'friend') ? friendChatBox : chatBox;
+  if (container) {
+    container.classList.add('ping-shake', 'screen-flash');
+    setTimeout(() => container.classList.remove('ping-shake', 'screen-flash'), 600);
+  }
+  document.body.classList.add('screen-flash-active');
+  setTimeout(() => document.body.classList.remove('screen-flash-active'), 500);
+  showToast('⚡ Flash received!', 'info', 1500);
 });
 

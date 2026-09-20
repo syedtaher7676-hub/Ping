@@ -284,15 +284,17 @@
         <span class="live-label">online now</span>
       </div>
 
-      <button id="startLandingBtn" class="cta-btn">
-        <span class="cta-label">Login</span>
-        <span class="cta-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </span>
-        <span class="cta-glow"></span>
-      </button>
+      <div style="display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 10px; width: 100%; max-width: 480px;">
+        <button id="startLandingBtn" class="cta-btn" style="justify-content: center; min-width: 220px;">
+          <span class="cta-label">Start Chat</span>
+          <span class="cta-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </span>
+          <span class="cta-glow"></span>
+        </button>
+      </div>
 
       <p class="trust-line">
         <span>🔒 No account</span>
@@ -396,15 +398,14 @@
             <span class="online-label">people online right now</span>
           </div>
 
-          <button id="startBtn" class="btn-primary btn-lg btn-full">
-            <span class="btn-label">Start Chat</span>
-            <span class="btn-arrow">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
+          <div class="hero-actions">
+            <button id="startBtn" class="btn btn-primary btn-lg">
+              <span>Start Chat</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
-            </span>
-            <span class="btn-ripple"></span>
-          </button>
+            </button>
+          </div>
 
           <p class="prechat-trust">🔒 No personal info · 🛡️ Moderated by AI</p>
         </div>
@@ -534,6 +535,9 @@
           </div>
 
           <div class="ch-actions">
+            <button id="exploreAuthBtn" class="top-icon-btn" style="background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(124, 58, 237, 0.4); padding: 4px 10px; height: auto; width: auto; font-size: 0.75rem; font-weight: 600; border-radius: 8px; color: #a78bfa; margin-right: 8px; display: none;" title="Sign in to save this connection">
+              Sign In
+            </button>
             <button id="extendTimeBtn" class="top-icon-btn action-extend" disabled aria-label="Extend Time"
               title="Extend time (mutual agreement)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -614,12 +618,21 @@
               </svg></button>
           </div>
 
-          <form id="messageForm" class="input-row" autocomplete="off">
+          <!-- Top Action Toolbar for Skip & Report & Skip -->
+          <div class="chat-toolbar">
             <button type="button" id="nextBtn" class="skip-pill-btn" disabled title="Skip to Next">
               Skip <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </button>
+            <button type="button" id="reportSkipBtn" class="report-skip-pill-btn" disabled title="Report & Skip Stranger">
+              Report & Skip <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" />
+              </svg>
+            </button>
+          </div>
+
+          <form id="messageForm" class="input-row" autocomplete="off">
             <div class="input-wrap">
               <div class="input-pill">
                 <textarea id="messageInput" class="message-input" placeholder="Type a message…" autocomplete="off"
@@ -844,6 +857,10 @@
     <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
 
   </div><!-- /chatApp -->
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/app.js?v=1.1.2"></script>

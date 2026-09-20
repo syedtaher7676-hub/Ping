@@ -3363,6 +3363,46 @@ input:checked+.slider-round:before {
   color: #fff;
 }
 
+.report-skip-pill-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.25));
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fff;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 44px;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, .2), inset 0 1px 1px rgba(255, 255, 255, .1);
+  cursor: pointer;
+  transition: all .2s var(--spring);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.report-skip-pill-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.5), rgba(185, 28, 28, 0.5));
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, .35);
+}
+
+.report-skip-pill-btn:active:not(:disabled) {
+  transform: scale(.94);
+}
+
+.report-skip-pill-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+  box-shadow: none;
+}
+
 /* Input Area Styles */
 .chat-bottom-wrapper {
   position: relative;
@@ -3486,6 +3526,27 @@ input:checked+.slider-round:before {
 
 .eq-all-btn:active:not(:disabled) {
   transform: scale(.95);
+}
+
+.chat-toolbar {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px 2px;
+  width: 100%;
+}
+
+.chat-toolbar .skip-pill-btn,
+.chat-toolbar .report-skip-pill-btn {
+  flex: 1;
+  height: 38px;
+  padding: 0 12px;
+  font-size: .78rem;
+  justify-content: center;
 }
 
 .input-row {
@@ -5033,4 +5094,49 @@ body.privacy-blur #chatApp {
   background: var(--purple) !important;
   color: #fff !important;
   box-shadow: 0 0 15px rgba(124, 58, 237, 0.6);
+}
+
+/* ── HERO ACTIONS LAYOUT ── */
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.btn-primary.btn-lg {
+  width: 100%;
+  max-width: 280px;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #ff416c, #ff4b2b);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Clear hover visibility fix */
+.btn-primary.btn-lg:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ff4b2b, #ff416c);
+  color: #ffffff !important;
+  box-shadow: 0 8px 25px rgba(255, 65, 108, 0.6);
+}
+
+.btn-primary.btn-lg:hover svg {
+  transform: translateX(4px);
+  transition: transform 0.2s ease;
+}
+
+.btn-primary.btn-lg:active {
+  transform: translateY(1px);
 }

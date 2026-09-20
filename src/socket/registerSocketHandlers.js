@@ -2,7 +2,7 @@ const { users, rooms, getUserBySocketId, getUserById, recordMatchmakingTime, get
   pendingFriendRequests, timeExtensionRequests, addFriendship, areFriends, getFriends, getFriendRoom, getCanonicalPairId, friendRooms,
   appendFriendRoomMessage, getFriendRoomMessages, createFriendRequest, acceptFriendRequest, rejectFriendRequest,
   getPendingRequestsFor, getExistingRequest, removeFriendRequest,
-  checkSlidingWindowRateLimit, redisSetUser, redisDeleteUser, purgeUserFromAllState,
+  checkSlidingWindowRateLimit, redisSetUser, redisDeleteUser, purgeUserFromAllState, createFriendRoomEntry,
 } = require("../state/store");
 const { createId } = require("../utils/ids");
 const {
@@ -34,6 +34,46 @@ const {
 const { log } = require("../utils/logger");
 const { userStore, reportStore, spamStore, slurFilter, securityStore, moderation } = require("../data");
 const dbService = require("../services/dbService");
+const { validateMessage } = require("../utils/moderation");
+
+// ═══════════════════════════════════════════════════════════════
+// MULTI-TIER REAL-TIME MODERATION & FLOOD STATE STORES
+// ═══════════════════════════════════════════════════════════════
+const messageTimestamps = new Map();     // socketId -> array of message timestamps
+const silencedSockets = new Map();       // socketId -> silence expiry timestamp (Date.now() + 10s)
+const silenceViolationCounts = new Map(); // socketId -> continuous violation frequency
+const recentReports = new Map();         // reporterId_reportedUserId -> timestamp of report
+const temporaryBans = new Map();         // userId/IP -> ban expiry timestamp (Date.now() + 1 hour)
+
+function isUserBanned(socket, userId) {
+  const now = Date.now();
+
+  // Housekeep expired bans
+  for (const [id, expiry] of temporaryBans.entries()) {
+    if (now >= expiry) {
+      temporaryBans.delete(id);
+    }
+  }
+
+  // Check user ID ban
+  if (temporaryBans.has(userId)) {
+    const expiry = temporaryBans.get(userId);
+    if (now < expiry) {
+      return { banned: true, remaining: expiry - now };
+    }
+  }
+
+  // Check IP ban
+  const ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+  if (ip && temporaryBans.has(ip)) {
+    const expiry = temporaryBans.get(ip);
+    if (now < expiry) {
+      return { banned: true, remaining: expiry - now };
+    }
+  }
+
+  return { banned: false };
+}
 
 // ═══════════════════════════════════════════════════════════════
 // BUG FIX 3: Robust Payload Validation & Sanitization Helpers
@@ -93,6 +133,14 @@ function emitState(socket, user) {
 }
 
 function queueUserForMatch(socket, io, userId) {
+  const banStatus = isUserBanned(socket, userId);
+  if (banStatus.banned) {
+    const mins = Math.ceil(banStatus.remaining / 60000);
+    socket.emit("queue_rejected", { reason: "banned", message: `🚫 You are temporarily suspended from matchmaking for another ${mins} minutes.` });
+    socket.emit("error_message", { message: `🚫 Matchmaking disabled: Suspended for another ${mins} mins.` });
+    return { ok: false };
+  }
+
   const currentUser = users.get(userId);
   if (!currentUser) {
     socket.emit("queue_rejected", { reason: "user_not_found" });
@@ -263,7 +311,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     // event can execute, eliminating race conditions on immediate start_chat.
     const verifiedUserId = socket.data.userId || createId("u");
     const verifiedCountry = socket.data.country || (getCountryFromSocket ? getCountryFromSocket(socket) : "Someone nearby");
-    const userId = verifiedUserId;
+    let userId = verifiedUserId;
 
     let isNewUser = !users.has(userId);
     let user = users.get(userId);
@@ -332,6 +380,24 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const authUserId = safeId(payload.userId) || userId;
         const activeFriendId = safeId(payload.activeFriendId);
 
+        const oldUserId = userId;
+        if (authUserId !== oldUserId) {
+          log("session_upgrade", { oldUserId, authUserId });
+          const oldUser = users.get(oldUserId);
+          if (oldUser) {
+            users.delete(oldUserId);
+            oldUser.id = authUserId;
+            users.set(authUserId, oldUser);
+            if (typeof redisDeleteUser === "function") {
+              redisDeleteUser(oldUserId).catch(() => {});
+            }
+            if (typeof redisSetUser === "function") {
+              redisSetUser(authUserId, oldUser).catch(() => {});
+            }
+          }
+          userId = authUserId;
+        }
+
         // Ensure socket is subscribed to personal room
         socket.join(`user_${authUserId}`);
 
@@ -340,6 +406,17 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           const roomId = ['friend_chat', ...[authUserId, activeFriendId].sort()].join('_');
           socket.join(roomId);
         }
+
+        // Trigger immediate DB Sync for the newly authenticated user
+        dbService.syncUserOnAuth(authUserId, { country: user.country }).then(async (profile) => {
+          if (profile) {
+            user.profile = profile;
+            if (typeof profile.totalMatches === "number") {
+              user.totalMatches = profile.totalMatches;
+            }
+            userStore.setUserData(authUserId, profile);
+          }
+        }).catch(() => {});
 
         if (typeof ack === "function") {
           ack({ success: true, ok: true, userId: authUserId });
@@ -497,6 +574,38 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         }
 
         const now = Date.now();
+
+        // Check if silenced due to spam
+        const silenceEndTime = silencedSockets.get(socket.id);
+        if (silenceEndTime && now < silenceEndTime) {
+          const remaining = Math.ceil((silenceEndTime - now) / 1000);
+          socket.emit("error_message", { message: `⏳ You are silenced! Please wait ${remaining}s before sending messages.` });
+          if (typeof ack === "function") ack({ ok: false, reason: "silenced" });
+          return;
+        }
+
+        // Track and check message rate (< 1000ms window)
+        let userTimes = messageTimestamps.get(socket.id) || [];
+        userTimes = userTimes.filter(t => now - t < 1000);
+        userTimes.push(now);
+        messageTimestamps.set(socket.id, userTimes);
+
+        if (userTimes.length > 3) {
+          silencedSockets.set(socket.id, now + 10000);
+          const vCount = (silenceViolationCounts.get(socket.id) || 0) + 1;
+          silenceViolationCounts.set(socket.id, vCount);
+          log("socket_rate_limited_and_silenced", { userId, socketId: socket.id, vCount });
+
+          if (vCount >= 3) {
+            socket.emit("error_message", { message: "🚫 Terminating session due to repeated spamming." });
+            terminateSession(io, currentUser.roomId, "system_rate_limit_exceeded");
+          } else {
+            socket.emit("error_message", { message: "⏳ Slow down! Sending messages too fast. You have been silenced for 10 seconds." });
+          }
+          if (typeof ack === "function") ack({ ok: false, reason: "rate_limited" });
+          return;
+        }
+
         const text = safeString(payload.message, MAX_MESSAGE_LENGTH + 50);
         const replyToContext = safeReplyTo(payload.replyTo);
         const msgId = safeId(payload.msgId) || safeString(payload.msgId, 64) || createId("m");
@@ -504,6 +613,54 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         if (!text) {
           if (typeof ack === "function") ack({ ok: false, reason: "empty_message" });
+          return;
+        }
+
+        // ═══════════════════════════════════════════════
+        // TIER 2: Real-time Regex, ASL & Handle Filter
+        // ═══════════════════════════════════════════════
+        const customMod = await validateMessage(text);
+        if (!customMod.valid) {
+          log("message_rejected_custom_mod", { userId, reason: customMod.reason, text: text.slice(0, 100) });
+          if (customMod.action === 'ban_15min' || customMod.action === 'ban_1hour') {
+            const banExpiry = Date.now() + 900000; // 15 minutes ban
+            temporaryBans.set(userId, banExpiry);
+            const ip = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
+            if (ip) temporaryBans.set(ip, banExpiry);
+
+            const offenderMsg = "You have been banned for 15 minutes due to inappropriate behavior, slurs, or restricted tags (e.g. M18).";
+            socket.emit("chat_ended_banned", { message: offenderMsg, remainingMs: 900000 });
+            socket.emit("error_message", { message: offenderMsg });
+
+            if (currentUser.roomId) {
+              const room = rooms.get(currentUser.roomId);
+              if (room && room.users) {
+                const partnerId = room.users.find(id => id !== userId);
+                if (partnerId) {
+                  const partner = users.get(partnerId);
+                  if (partner && partner.socketId) {
+                    const partnerSocket = io.sockets.sockets.get(partner.socketId);
+                    if (partnerSocket) {
+                      const victimMsg = "The stranger used slurs/inappropriate language and has been banned for 15 minutes.";
+                      partnerSocket.emit("chat_ended_banned", { message: victimMsg, isVictim: true });
+                      partnerSocket.emit("error_message", { message: victimMsg });
+                      setTimeout(() => {
+                        queueUserForMatch(partnerSocket, io, partnerId);
+                      }, 1500);
+                    }
+                  }
+                }
+              }
+              terminateSession(io, currentUser.roomId, "banned_violation");
+            }
+
+            try { socket.disconnect(true); } catch (e) {}
+            if (typeof ack === "function") ack({ ok: false, reason: "banned_15min" });
+            return;
+          }
+          socket.emit("message_rejected", { message: "⚠️ Message blocked: Keep chats safe and respectful.", reason: customMod.reason });
+          socket.emit("error_message", { message: "⚠️ Message blocked: Keep chats safe and respectful." });
+          if (typeof ack === "function") ack({ ok: false, reason: "custom_moderation_blocked" });
           return;
         }
 
@@ -626,10 +783,12 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // Auto re-verify that socket is joined to canonical room
+        // Fallback Guard: Auto re-verify and join canonical room on the fly if not joined
         const roomId = ['friend_chat', ...[userId, partnerId].sort()].join('_');
-        socket.join(roomId);
-        socket.join(`user_${userId}`);
+        if (!socket.rooms.has(roomId)) {
+          log("fallback_join_friend_dm", { userId, roomId });
+          socket.join(roomId);
+        }
 
         let room = rooms.get(roomId);
         if (!room) {
@@ -658,6 +817,26 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (text.length > MAX_MESSAGE_LENGTH) {
           socket.emit("error_message", { message: `✂️ message too long! keep it under ${MAX_MESSAGE_LENGTH} chars bestie` });
           if (typeof ack === "function") ack({ ok: false, success: false, reason: "message_too_long" });
+          return;
+        }
+
+        const customMod = await validateMessage(text);
+        if (!customMod.valid) {
+          log("dm_rejected_custom_mod", { userId, reason: customMod.reason, text: text.slice(0, 100) });
+          if (customMod.action === 'ban_15min' || customMod.action === 'ban_1hour') {
+            const banExpiry = Date.now() + 900000; // 15 minutes ban
+            temporaryBans.set(userId, banExpiry);
+            const ip = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
+            if (ip) temporaryBans.set(ip, banExpiry);
+            const offenderMsg = "You have been banned for 15 minutes due to inappropriate behavior, slurs, or restricted tags (e.g. M18).";
+            socket.emit("chat_ended_banned", { message: offenderMsg, remainingMs: 900000 });
+            socket.emit("error_message", { message: offenderMsg });
+            try { socket.disconnect(true); } catch (e) {}
+            if (typeof ack === "function") ack({ ok: false, success: false, reason: "banned_15min" });
+            return;
+          }
+          socket.emit("message_rejected", { message: "⚠️ Message blocked: Keep chats safe and respectful.", reason: customMod.reason });
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: "custom_moderation_blocked" });
           return;
         }
 
@@ -747,6 +926,25 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         }
       } catch (err) {
         log("send_ping_error", { userId, message: err.message });
+      }
+    });
+
+    // BUG FIX 3: Flash Feature Backend Handler
+    socket.on("send_flash", (rawPayload) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const roomId = safeId(payload.roomId);
+        if (!roomId) return;
+
+        const room = rooms.get(roomId) || Array.from(friendRooms.values()).find(r => r.roomId === roomId);
+        if (!room) return;
+
+        const members = room.users || room.userIds || [];
+        if (members.includes(userId)) {
+          io.to(roomId).emit("flash_received", { senderId: userId });
+        }
+      } catch (err) {
+        log("send_flash_error", { userId, message: err.message });
       }
     });
 
@@ -1169,6 +1367,26 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    socket.on("leave_friend_dm", (rawPayload) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const rId = safeId(payload.roomId);
+        if (rId) {
+          socket.leave(rId);
+        }
+        const currentUser = users.get(userId);
+        if (currentUser && currentUser.roomId === rId) {
+          currentUser.roomId = null;
+          currentUser.status = "idle";
+          if (typeof redisSetUser === "function") {
+            redisSetUser(userId, currentUser).catch(() => {});
+          }
+        }
+      } catch (err) {
+        log("leave_friend_dm_error", { userId, message: err.message });
+      }
+    });
+
     socket.on("get_pending_requests", (rawPayload, ack) => {
       try {
         const pendingRequests = getPendingRequestsFor(userId);
@@ -1337,6 +1555,24 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    socket.on("send_flash", (rawPayload) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const roomId = safeId(payload.roomId);
+        if (!roomId) return;
+
+        const room = rooms.get(roomId);
+        if (!room || room.status !== "active") return;
+        if (!room.users.includes(userId)) return;
+
+        // Broadcast to other users in the room
+        socket.to(roomId).emit("flash_received", { senderId: userId });
+        log("send_flash_success", { roomId, userId });
+      } catch (err) {
+        log("send_flash_error", { userId, message: err.message });
+      }
+    });
+
     // ═══════════════════════════════════════════════
     //  TYPING
     // ═══════════════════════════════════════════════
@@ -1419,6 +1655,63 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         terminateSession(io, currentUser.roomId, "user_reported");
         socket.emit("chat_end", { reason: "user_reported" });
+
+        // Increment partner's report score and apply temporary ban if necessary (2 reports in 10 minutes)
+        if (partnerId && partnerId !== "unknown") {
+          const now = Date.now();
+          const reportKey = `${userId}_${partnerId}`;
+
+          if (!recentReports.has(reportKey)) {
+            recentReports.set(reportKey, now);
+
+            // Clean stale reports (>10 mins)
+            for (const [key, value] of recentReports.entries()) {
+              if (now - value > 600000) {
+                recentReports.delete(key);
+              }
+            }
+
+            // Count reports on this partner
+            let reportCount = 0;
+            for (const [key, valTime] of recentReports.entries()) {
+              if (key.endsWith(`_${partnerId}`) && (now - valTime <= 600000)) {
+                reportCount++;
+              }
+            }
+
+            log("report_score_incremented", { partnerId, reportCount });
+
+            if (reportCount >= 2) {
+              const banExpiry = now + 900000; // 15 minutes ban
+              temporaryBans.set(partnerId, banExpiry);
+
+              if (partner && partner.socketId) {
+                const partnerSocket = io.sockets.sockets.get(partner.socketId);
+                if (partnerSocket) {
+                  const ip = partnerSocket.handshake.headers["x-forwarded-for"] || partnerSocket.handshake.address;
+                  if (ip) {
+                    temporaryBans.set(ip, banExpiry);
+                    log("ip_banned_via_reports", { ip, partnerId });
+                  }
+                  const banMsg = "You have been banned for 15 minutes due to multiple user reports.";
+                  partnerSocket.emit("chat_ended_banned", { message: banMsg, remainingMs: 900000 });
+                  partnerSocket.emit("error_message", { message: banMsg });
+                  try { partnerSocket.disconnect(true); } catch (e) {}
+                }
+              }
+              log("temporary_ban_applied", { partnerId });
+            }
+          }
+        }
+
+        // Cleanly auto-requeue reporting user if it's an Explore chat
+        const isFriendDm = targetRoomId && targetRoomId.startsWith("friend_chat_");
+        if (!isFriendDm) {
+          log("auto_requeue_after_report", { userId });
+          setTimeout(() => {
+            queueUserForMatch(socket, io, userId);
+          }, 500);
+        }
       } catch (err) {
         log("report_user_error", { userId, message: err.message });
       }
@@ -1475,11 +1768,11 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (disconnectedUser.status === "matched" && disconnectedUser.roomId) {
           const room = rooms.get(disconnectedUser.roomId);
           if (room && room.type !== "friend_dm") {
-            log("user_disconnected_while_matched", {
+            log("user_disconnected_while_matched_explore_instant_purge", {
               userId: disconnectedUser.id, socketId: socket.id,
-              roomId: disconnectedUser.roomId, reason: "socket_disconnect_allowing_reconnect",
+              roomId: disconnectedUser.roomId, reason: "explore_instant_purge",
             });
-            handlePartnerDisconnect(io, disconnectedUser.roomId, disconnectedUser.id);
+            terminateSession(io, disconnectedUser.roomId, "user_ended");
           }
         }
 
