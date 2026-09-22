@@ -163,10 +163,13 @@ function queueUserForMatch(socket, io, userId) {
 // Helper: deliver a message to a room (shared between stranger chat and friend DM)
 function deliverMessage(io, socket, userId, roomId, finalMessage, replyToContext, throttleDelay, ack, msgId, isFlash) {
   const deliverFn = () => {
+    if (socket && !socket.rooms.has(roomId)) {
+      socket.join(roomId);
+    }
     const room = rooms.get(roomId);
     if (!room || room.status !== "active") {
       log("message_rejected", { userId, reason: "room_inactive" });
-      if (typeof ack === "function" && throttleDelay === 0) {
+      if (typeof ack === "function") {
         ack({ ok: false, reason: "room_inactive" });
       }
       return;
@@ -187,6 +190,10 @@ function deliverMessage(io, socket, userId, roomId, finalMessage, replyToContext
       isFlash,
     });
 
+    if (typeof ack === "function" && throttleDelay === 0) {
+      ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now() });
+    }
+
     log("message_delivered", {
       userId, roomId,
       deliveredTo: room.users.length,
@@ -198,13 +205,10 @@ function deliverMessage(io, socket, userId, roomId, finalMessage, replyToContext
   if (throttleDelay > 0) {
     setTimeout(deliverFn, throttleDelay);
     if (typeof ack === "function") {
-      ack({ ok: true, roomId, sentAt: Date.now(), throttled: true });
+      ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now(), throttled: true });
     }
   } else {
     deliverFn();
-    if (typeof ack === "function") {
-      ack({ ok: true, roomId, sentAt: Date.now() });
-    }
   }
 }
 
@@ -523,30 +527,20 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const currentUser = users.get(userId);
         if (!currentUser) return;
 
+        // Verify if user or IP is currently in a 15-minute ban cooldown
+        const banCheck = isUserBanned(socket, userId);
+        if (banCheck.banned) {
+          const banExpiresAt = Date.now() + banCheck.remaining;
+          socket.emit("chat_ended_banned", {
+            isOffender: true,
+            message: "⚠️ You are banned for bad behavior. Please wait before chatting again.",
+            banExpiresAt,
+            remainingMs: banCheck.remaining
+          });
+          return;
+        }
+
         const now = Date.now();
-
-        // Check Redis sliding window rate limit
-        if (typeof checkSlidingWindowRateLimit === "function") {
-          const rateLimit = await checkSlidingWindowRateLimit(`start_chat:${userId}`, START_CHAT_COOLDOWN_MS, 1);
-          if (!rateLimit.allowed) {
-            socket.emit("queue_rejected", {
-              reason: "start_chat_rate_limited",
-              retryAfter: rateLimit.retryAfter || (START_CHAT_COOLDOWN_MS - (now - currentUser.lastStartChatAt)),
-            });
-            emitState(socket, currentUser);
-            return;
-          }
-        } else if (now - currentUser.lastStartChatAt < START_CHAT_COOLDOWN_MS) {
-          socket.emit("queue_rejected", { reason: "start_chat_rate_limited", retryAfter: START_CHAT_COOLDOWN_MS - (now - currentUser.lastStartChatAt) });
-          emitState(socket, currentUser);
-          return;
-        }
-
-        if (now - currentUser.lastActionAt < NEXT_BUTTON_COOLDOWN_MS) {
-          socket.emit("queue_rejected", { reason: "action_rate_limited" });
-          return;
-        }
-
         currentUser.lastStartChatAt = now;
         currentUser.lastActionAt = now;
         currentUser.isActive = true;
@@ -628,8 +622,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             const ip = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
             if (ip) temporaryBans.set(ip, banExpiry);
 
-            const offenderMsg = "You have been banned for 15 minutes due to inappropriate behavior, slurs, or restricted tags (e.g. M18).";
-            socket.emit("chat_ended_banned", { message: offenderMsg, remainingMs: 900000 });
+            const offenderMsg = "⚠️ You have been banned for 15 minutes due to inappropriate behavior, slurs, or restricted tags (e.g. M18).";
+            socket.emit("chat_ended_banned", {
+              isOffender: true,
+              message: offenderMsg,
+              banExpiresAt: banExpiry,
+              remainingMs: 900000
+            });
             socket.emit("error_message", { message: offenderMsg });
 
             if (currentUser.roomId) {
@@ -641,8 +640,12 @@ function registerSocketHandlers(io, getCountryFromSocket) {
                   if (partner && partner.socketId) {
                     const partnerSocket = io.sockets.sockets.get(partner.socketId);
                     if (partnerSocket) {
-                      const victimMsg = "The stranger used slurs/inappropriate language and has been banned for 15 minutes.";
-                      partnerSocket.emit("chat_ended_banned", { message: victimMsg, isVictim: true });
+                      const victimMsg = "🛡️ The stranger attempted to use restricted content/slurs and has been banned for 15 minutes.";
+                      partnerSocket.emit("chat_ended_banned", {
+                        isOffender: false,
+                        message: victimMsg,
+                        autoRequeue: true
+                      });
                       partnerSocket.emit("error_message", { message: victimMsg });
                       setTimeout(() => {
                         queueUserForMatch(partnerSocket, io, partnerId);
@@ -884,22 +887,16 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           isFlash,
         };
 
-        // 3. Emit 'new_dm' and 'dm_message' to shared conversation room
+        // 3. Emit 'new_dm' to shared conversation room
         io.to(roomId).emit("new_dm", dmPayload);
-        io.to(roomId).emit("dm_message", dmPayload);
 
-        // 4. Emit 'friend_dm_notification' directly to friend's personal socket room (even if friend is not in room)
+        // 4. Emit 'friend_dm_notification' to friend's personal socket room
         const notificationPayload = {
           ...dmPayload,
           friendId: userId,
           friendCountry: currentUser.country || "Someone nearby",
         };
         io.to(`user_${partnerId}`).emit("friend_dm_notification", notificationPayload);
-
-        const partnerUser = users.get(partnerId);
-        if (partnerUser?.socketId) {
-          io.to(partnerUser.socketId).emit("friend_dm_notification", notificationPayload);
-        }
 
         // 5. Positive confirmation callback ack({ success: true, message: dmPayload })
         if (typeof ack === "function") {
@@ -1439,13 +1436,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const currentUser = users.get(userId);
         if (!currentUser) return;
 
-        const now = Date.now();
-        if (now - currentUser.lastActionAt < NEXT_BUTTON_COOLDOWN_MS) {
-          socket.emit("error_message", { message: "⏳ slow down! wait a sec before your next move ✌️" });
-          return;
-        }
-
-        currentUser.lastActionAt = now;
+        currentUser.lastActionAt = Date.now();
 
         if (currentUser.status === "matched" && currentUser.roomId) {
           terminateSession(io, currentUser.roomId, "next_clicked");
@@ -1693,8 +1684,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
                     temporaryBans.set(ip, banExpiry);
                     log("ip_banned_via_reports", { ip, partnerId });
                   }
-                  const banMsg = "You have been banned for 15 minutes due to multiple user reports.";
-                  partnerSocket.emit("chat_ended_banned", { message: banMsg, remainingMs: 900000 });
+                  const banMsg = "⚠️ You have been banned for 15 minutes due to multiple user reports.";
+                  partnerSocket.emit("chat_ended_banned", {
+                    isOffender: true,
+                    message: banMsg,
+                    banExpiresAt: banExpiry,
+                    remainingMs: 900000
+                  });
                   partnerSocket.emit("error_message", { message: banMsg });
                   try { partnerSocket.disconnect(true); } catch (e) {}
                 }
@@ -1768,11 +1764,11 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (disconnectedUser.status === "matched" && disconnectedUser.roomId) {
           const room = rooms.get(disconnectedUser.roomId);
           if (room && room.type !== "friend_dm") {
-            log("user_disconnected_while_matched_explore_instant_purge", {
+            log("user_disconnected_while_matched_explore_partner_disconnect", {
               userId: disconnectedUser.id, socketId: socket.id,
-              roomId: disconnectedUser.roomId, reason: "explore_instant_purge",
+              roomId: disconnectedUser.roomId, reason: "explore_partner_disconnect",
             });
-            terminateSession(io, disconnectedUser.roomId, "user_ended");
+            handlePartnerDisconnect(io, disconnectedUser.roomId, disconnectedUser.id);
           }
         }
 

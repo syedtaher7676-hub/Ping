@@ -614,6 +614,18 @@ input {
 /* ================================================================
    SHARED BUTTONS
    ================================================================ */
+.btn, .btn-primary, .btn-ghost, .cta-btn, .send-circle-btn, #startBtn, #startLandingBtn, #findChatBtn {
+  transition: background-color 0.2s ease, opacity 0.2s ease, transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform, opacity;
+  backface-visibility: hidden; /* Prevents webkit subpixel flicker */
+}
+
+.btn:disabled, button:disabled, .cta-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -631,7 +643,8 @@ input {
   position: relative;
   overflow: hidden;
   box-shadow: var(--sh-btn);
-  transition: transform .15s var(--ease), box-shadow .15s var(--ease);
+  min-height: 48px;
+  box-sizing: border-box;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -3647,6 +3660,13 @@ input:checked+.slider-round:before {
   color: #fff;
 }
 
+.dropdown-item.confirming-skip {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+  font-weight: 700 !important;
+  border-radius: 8px;
+}
+
 .dropdown-item:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -5011,6 +5031,11 @@ input:checked+.slider-round:before {
 }
 
 .menu-item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: inherit;
   padding: 10px 14px;
   font-size: 0.9rem;
   font-weight: 600;
@@ -5041,36 +5066,6 @@ input:checked+.slider-round:before {
 .menu-item.danger:hover {
   background: rgba(244, 63, 94, 0.25);
   color: #fda4af;
-}
-
-/* Slide Timestamps on Pull Left */
-.msg {
-  position: relative;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-
-.msg-slide-timestamp {
-  position: absolute;
-  right: -80px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.68rem;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
-  color: rgba(241, 245, 249, 0.9);
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 4px 9px;
-  border-radius: 12px;
-  border: 1px solid rgba(139, 92, 246, 0.35);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  white-space: nowrap;
-  pointer-events: none;
-  transition: opacity 0.25s ease, right 0.25s ease;
-  z-index: 5;
 }
 
 /* ── FULLSCREEN EFFECTS ── */
@@ -5347,15 +5342,18 @@ body.privacy-blur #chatApp {
 
 /* ── MESSAGE CONTEXT MENU ── */
 .msg-context-menu {
-  position: absolute;
-  z-index: 1000;
-  background: var(--bg-3);
-  border: 1px solid var(--glass-brd);
+  position: fixed;
+  z-index: 999;
+  background: rgba(22, 27, 34, 0.95);
+  border: 1px solid rgba(139, 92, 246, 0.35);
   border-radius: var(--r-md);
-  box-shadow: var(--sh-card);
-  padding: 4px;
-  min-width: 160px;
-  animation: pop-up 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 6px;
+  min-width: 200px;
+  max-width: 280px;
+  animation: pop-up 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .menu-item {
@@ -5363,47 +5361,224 @@ body.privacy-blur #chatApp {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  gap: 10px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
   color: var(--t-med);
-  transition: background 0.15s;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .menu-item:hover {
-  background: var(--glass-hov);
-  color: var(--t-hi);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .menu-item.danger {
-  color: var(--red);
+  color: #f87171;
 }
 
 .menu-item.danger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--red);
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
 }
 
 .menu-rxn-row {
   display: flex;
-  gap: 2px;
-  padding: 4px;
+  gap: 4px;
+  padding: 4px 6px;
+  justify-content: space-between;
 }
 
 .menu-rxn-btn {
+  background: transparent;
+  border: none;
   padding: 6px;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.15s;
+  border-radius: 6px;
+  transition: transform 0.15s ease, background 0.15s ease;
 }
 
 .menu-rxn-btn:hover {
-  background: var(--glass-hov);
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.2);
 }
 
 .menu-divider {
   height: 1px;
-  background: var(--glass-brd);
+  background: rgba(255, 255, 255, 0.1);
   margin: 4px 0;
+}
+
+/* ── 2-MINUTE SOFT AUTH GLASS BANNER ── */
+.soft-auth-banner {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: calc(100% - 32px);
+  max-width: 480px;
+  padding: 14px 18px;
+  background: rgba(18, 14, 34, 0.85);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.25);
+  animation: bannerSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bannerSlideUp {
+  from { transform: translate(-50%, 40px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@keyframes bannerSlideOut {
+  from { transform: translate(-50%, 0); opacity: 1; }
+  to { transform: translate(-50%, 40px); opacity: 0; }
+}
+
+.sab-content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sab-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.18); }
+}
+
+.sab-text {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #f8fafc;
+  line-height: 1.35;
+}
+
+.sab-text strong {
+  color: #c4b5fd;
+  font-weight: 700;
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+.sab-text p {
+  margin: 0;
+  color: rgba(241, 245, 249, 0.85);
+  font-size: 0.82rem;
+}
+
+.sab-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── POST-FRIENDSHIP & IN-CHAT GLASS MODAL ── */
+.glass-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10, 8, 20, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: fadeIn 0.25s ease both;
+}
+
+.glass-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  background: rgba(22, 18, 42, 0.92);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  border-radius: 20px;
+  padding: 30px 24px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(139, 92, 246, 0.25);
+  animation: pop-up 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.glass-modal-card .gmc-icon {
+  font-size: 2.8rem;
+  margin-bottom: 12px;
+  display: inline-block;
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+.glass-modal-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.glass-modal-card p {
+  font-size: 0.92rem;
+  color: rgba(241, 245, 249, 0.82);
+  line-height: 1.5;
+  margin-bottom: 22px;
+}
+
+.glass-modal-card .gmc-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.glass-modal-card .gmc-actions .btn-primary {
+  width: 100%;
+  padding: 13px 20px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.glass-modal-card .gmc-actions .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+.glass-modal-card .gmc-actions .btn-ghost {
+  width: 100%;
+  padding: 11px 20px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.glass-modal-card .gmc-actions .btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }

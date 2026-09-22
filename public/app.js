@@ -121,8 +121,10 @@ const AppState = {
   explore: { 
     roomId: null, 
     partnerId: null, 
+    partnerCountry: null,
     inChat: false, 
     isWaiting: false, 
+    timerEndMs: 0,
     history: [] // Client-side message deduplication buffer
   },
   friends: { 
@@ -136,7 +138,8 @@ const AppState = {
     isAuthenticated: false, // Tracks guest vs authenticated status
     country: null,
     profile: null
-  }
+  },
+  deferredFriendRequest: false
 };
 
 // Map old global variables to AppState via window properties for backwards compatibility
@@ -196,9 +199,10 @@ let lastKnownRoomId = null;    // Store room ID during disconnect
 let isFlashMode = false;       // Track active Flash mode state for stranger chat
 let isFriendFlashMode = false; // Track active Flash mode state for friend DM
 
-// ── BOOT UI & STATE RESET (Bug 2 Fix) ────────────────────────
+// ── BOOT UI & STATE RESET ────────────────────────────────────
 // Force complete UI state reset on application boot / page load
 AppState.explore.roomId = null;
+AppState.explore.timerEndMs = 0;
 AppState.friends.activeRoomId = null;
 AppState.friends.activeFriendId = null;
 AppState.activeTab = 'EXPLORE';
@@ -263,6 +267,7 @@ async function initFirebaseClient() {
           await userRef.set({
             userId: user.uid,
             country: AppState.user.country || 'Global',
+            displayName: user.displayName || 'Anonymous',
             lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
@@ -282,13 +287,14 @@ async function initFirebaseClient() {
         // Intent-driven Friend Request Gate: Send deferred request now!
         if (AppState.deferredFriendRequest) {
           AppState.deferredFriendRequest = false;
-          showToast("Successfully authenticated. Sending friend request now... 👫", "success", 2000);
+          showToast("Signed in! Sending friend request now... 👫", "success", 2000);
           socket.emit('send_friend_request');
         }
         
-        // Hide soft auth banner if active
+        // Hide soft auth banner & close modal if open
         const banner = document.getElementById('softAuthBanner');
         if (banner) banner.remove();
+        closeModal();
         
       } else {
         AppState.user.isAuthenticated = false;
@@ -336,10 +342,52 @@ async function triggerGoogleLogin() {
   }
 }
 
-function triggerSoftAuthBanner() {
+function showInChatAuthModal(onDismiss = null) {
   if (AppState.user.isAuthenticated) return;
-  if (document.getElementById('softAuthBanner')) return;
-  
+  showConfirm(
+    'Save your connections & chats!',
+    '<div style="line-height:1.5; margin-top:4px;"><p style="color:var(--t-med); font-size:0.95rem;">Sign in with Google to save friends, restore chats, and continue conversations seamlessly across all your devices.</p></div>',
+    () => {
+      triggerGoogleLogin();
+    },
+    () => {
+      if (typeof onDismiss === 'function') onDismiss();
+    },
+    'Sign In with Google',
+    'Keep Chatting',
+    '🔐'
+  );
+}
+
+function showPostFriendAuthModal() {
+  if (AppState.user.isAuthenticated || document.getElementById('postFriendAuthModal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'postFriendAuthModal';
+  modal.className = 'glass-modal-overlay';
+  modal.innerHTML = `
+    <div class="glass-modal-card">
+      <div class="gmc-icon">💾</div>
+      <h3>Save Your Chats & Friends!</h3>
+      <p>You just made a connection! Sign in with Google to save your friends list and chat history permanently across devices.</p>
+      <div class="gmc-actions">
+        <button id="pfGoogleBtn" class="btn-primary" type="button">🔑 Sign In with Google</button>
+        <button id="pfDismissBtn" class="btn-ghost" type="button">Keep Chatting</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById('pfDismissBtn').onclick = () => modal.remove();
+  document.getElementById('pfGoogleBtn').onclick = async () => {
+    modal.remove();
+    triggerGoogleLogin();
+  };
+}
+
+function triggerSoftAuthBanner() {
+  if (AppState.user.isAuthenticated || document.getElementById('softAuthBanner')) return;
+
   const banner = document.createElement('div');
   banner.id = 'softAuthBanner';
   banner.className = 'soft-auth-banner glass-card';
@@ -351,78 +399,19 @@ function triggerSoftAuthBanner() {
         <p>Sign up now to persist your friends list across devices and sessions.</p>
       </div>
       <div class="sab-buttons">
-        <button id="sabCloseBtn" class="btn-ghost btn-xs" style="background: rgba(255,255,255,0.08); border: none; border-radius: 6px; color: white; cursor: pointer; padding: 4px 10px; font-size: 0.75rem;">Dismiss</button>
-        <button id="sabSignUpBtn" class="btn-primary btn-xs" style="background: #7c3aed; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600; padding: 4px 12px; font-size: 0.75rem;">Sign Up</button>
+        <button id="sabCloseBtn" class="btn-ghost btn-xs" type="button">Dismiss</button>
+        <button id="sabSignUpBtn" class="btn-primary btn-xs" type="button">Sign Up</button>
       </div>
     </div>
   `;
-  
-  const style = document.createElement('style');
-  style.textContent = `
-    .soft-auth-banner {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      right: 16px;
-      z-index: 1000;
-      padding: 12px 16px;
-      background: rgba(124, 58, 237, 0.15);
-      border: 1px solid rgba(124, 58, 237, 0.4);
-      border-radius: 12px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      animation: bannerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-    @keyframes bannerSlideIn {
-      from { transform: translateY(-30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .sab-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .sab-icon {
-      font-size: 1.5rem;
-      animation: pulseGlow 2s infinite ease-in-out;
-    }
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.7; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.15); }
-    }
-    .sab-text {
-      flex: 1;
-      font-size: 0.85rem;
-      color: #ffffff;
-      line-height: 1.3;
-    }
-    .sab-text strong {
-      color: #a78bfa;
-      font-weight: 600;
-    }
-    .sab-text p {
-      margin: 2px 0 0 0;
-      color: rgba(255, 255, 255, 0.8);
-    }
-    .sab-buttons {
-      display: flex;
-      gap: 8px;
-    }
-  `;
-  document.head.appendChild(style);
-  
-  if (chatApp) {
-    chatApp.appendChild(banner);
-  }
-  
+
+  document.body.appendChild(banner);
+
   document.getElementById('sabCloseBtn')?.addEventListener('click', () => {
     banner.style.animation = 'bannerSlideOut 0.2s ease forwards';
     setTimeout(() => banner.remove(), 200);
   });
-  
-  document.getElementById('sabSignUpBtn')?.addEventListener('click', async () => {
-    triggerGoogleLogin();
-  });
+  document.getElementById('sabSignUpBtn')?.addEventListener('click', () => triggerGoogleLogin());
 }
 
 // Start Firebase client initialization and set a 2-minute soft auth banner trigger
@@ -443,6 +432,7 @@ if (typeof document !== 'undefined') {
   });
 }
 
+socket.off('friend_status_change');
 socket.on('friend_status_change', ({ friendId, online }) => {
   const item = document.querySelector(`.friend-item[data-friend-id="${friendId}"]`);
   if (!item) return;
@@ -459,6 +449,7 @@ socket.on('friend_status_change', ({ friendId, online }) => {
   }
 });
 
+socket.off('message_edited');
 socket.on('message_edited', ({ msgId, newMessage }) => {
   const el = chatBox.querySelector(`[data-msg-id="${msgId}"]`);
   if (!el) return;
@@ -474,6 +465,7 @@ socket.on('message_edited', ({ msgId, newMessage }) => {
   }
 });
 
+socket.off('message_deleted');
 socket.on('message_deleted', ({ msgId }) => {
   const el = chatBox.querySelector(`[data-msg-id="${msgId}"]`);
   if (!el) return;
@@ -482,6 +474,7 @@ socket.on('message_deleted', ({ msgId }) => {
   if (textNode) textNode.textContent = 'Message deleted 🗑️';
 });
 
+socket.off('dm_edited');
 socket.on('dm_edited', ({ msgId, newMessage }) => {
   const el = friendChatBox.querySelector(`[data-msg-id="${msgId}"]`);
   if (!el) return;
@@ -495,6 +488,7 @@ socket.on('dm_edited', ({ msgId, newMessage }) => {
   }
 });
 
+socket.off('dm_deleted');
 socket.on('dm_deleted', ({ msgId }) => {
   const el = friendChatBox.querySelector(`[data-msg-id="${msgId}"]`);
   if (!el) return;
@@ -563,10 +557,14 @@ function showToast(msg, type = 'info', duration = 3800) {
 }
 
 // ── MODAL ────────────────────────────────────────────────────
-function showConfirm(title, message, onYes, onNo) {
+function showConfirm(title, message, onYes, onNo, yesText = 'Confirm', noText = 'Cancel', icon = '⚠️') {
   if (!confirmModal) { onYes?.(); return; }
   if (confirmTitle) confirmTitle.textContent = title;
   if (confirmMessage) confirmMessage.innerHTML = message;
+  const modalIcon = $('modalIcon');
+  if (modalIcon) modalIcon.textContent = icon;
+  if (confirmYes) confirmYes.textContent = yesText;
+  if (confirmNo) confirmNo.textContent = noText;
   confirmCb = onYes;
   confirmModal.dataset.onNo = typeof onNo === 'function' ? true : false;
   confirmModal.confirmNoFn = onNo;
@@ -574,6 +572,8 @@ function showConfirm(title, message, onYes, onNo) {
 }
 function closeModal() {
   if (confirmModal) confirmModal.style.display = 'none';
+  if (confirmYes) confirmYes.textContent = 'Confirm';
+  if (confirmNo) confirmNo.textContent = 'Cancel';
 }
 
 // ── CONNECTION BADGE & NETWORK STATUS ─────────────────────────
@@ -775,19 +775,13 @@ function appendMsg(text, opts = {}) {
   contentWrap.appendChild(footer);
   el.appendChild(contentWrap);
 
-  // Slide timestamp for Pull-Left gesture
+  // Context Menu & Long press event listener for advanced options
   if (!isSystem) {
-    const slideTime = document.createElement('span');
-    slideTime.className = 'msg-slide-timestamp';
-    slideTime.textContent = formatTimestamp(opts.sentAt);
-    el.appendChild(slideTime);
-
-    // Long press / Press event listener for advanced options
     let pressTimer = null;
     let touchStartX = 0, touchStartY = 0;
 
     const handlePressStart = (e) => {
-      if (e.target.closest('button') || e.target.closest('a')) return;
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.msg-reply-block') || e.target.closest('.rxn-btn')) return;
       
       // Clear any existing timer to prevent double-firing
       if (pressTimer) {
@@ -805,9 +799,9 @@ function appendMsg(text, opts = {}) {
 
       pressTimer = setTimeout(() => {
         const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
-        showAdvancedMsgOptions(e, msgId, currentText, isPartner, false, isSelf, opts.sentAt);
+        showAdvancedMsgOptions(e, msgId, currentText, isPartner, false, isSelf, opts.sentAt, touchStartX, touchStartY);
         pressTimer = null;
-      }, 450); // Slightly longer for better UX
+      }, 450);
     };
 
     const handlePressMove = (e) => {
@@ -837,7 +831,11 @@ function appendMsg(text, opts = {}) {
     el.addEventListener('mousemove', handlePressMove);
     el.addEventListener('mouseup', handlePressEnd);
     el.addEventListener('mouseleave', handlePressEnd);
-    el.addEventListener('mouseleave', handlePressEnd);
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
+      showAdvancedMsgOptions(e, msgId, currentText, isPartner, false, isSelf, opts.sentAt, e.clientX, e.clientY);
+    });
   }
 
   // Double tap to heart
@@ -891,9 +889,12 @@ function appendMsg(text, opts = {}) {
   if (!isSystem) checkKeywordEffects(text);
 }
 
-function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sentAt) {
+function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sentAt, touchX, touchY) {
   const old = document.querySelector('.msg-context-menu');
   if (old) old.remove();
+
+  const targetBubble = e?.currentTarget || e?.target?.closest('.msg');
+  const bubbleRect = targetBubble ? targetBubble.getBoundingClientRect() : null;
 
   const menu = document.createElement('div');
   menu.className = 'msg-context-menu';
@@ -904,6 +905,7 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
   const emojis = ['😂', '❤️', '🔥', '💀', '🥺', '✨', '👍', '⚡'];
   emojis.forEach(emo => {
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'menu-rxn-btn';
     btn.textContent = emo;
     btn.onclick = (evt) => {
@@ -922,25 +924,43 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
   menu.appendChild(divider);
 
   // 2. Reply
-  const replyBtn = document.createElement('div');
+  const replyBtn = document.createElement('button');
+  replyBtn.type = 'button';
   replyBtn.className = 'menu-item';
-  replyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l5-5-5-5M21 11H3"/></svg> Reply';
+  replyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l5-5-5-5M21 11H3"/></svg><span>Reply</span>';
   replyBtn.onclick = (evt) => {
     evt.stopPropagation();
     menu.remove();
-    window.startReply(text, isPartner, msgId);
+    if (typeof window.startReply === 'function') {
+      window.startReply(text, isPartner, msgId);
+    }
   };
   menu.appendChild(replyBtn);
 
   // 3. Copy Text
-  const copyBtn = document.createElement('div');
+  const copyBtn = document.createElement('button');
+  copyBtn.type = 'button';
   copyBtn.className = 'menu-item';
-  copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Text';
-  copyBtn.onclick = (evt) => {
+  copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy Text</span>';
+  copyBtn.onclick = async (evt) => {
     evt.stopPropagation();
     menu.remove();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      showToast('Copied to clipboard!', 'info', 1500);
+    } catch (err) {
       showToast('Copied to clipboard!', 'info', 1500);
     }
   };
@@ -948,9 +968,10 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
 
   // 4. Edit / Delete (for own messages)
   if (isSelf && msgId) {
-    const editBtn = document.createElement('div');
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
     editBtn.className = 'menu-item';
-    editBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Message';
+    editBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>Edit Message</span>';
     editBtn.onclick = (evt) => {
       evt.stopPropagation();
       menu.remove();
@@ -958,9 +979,10 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
     };
     menu.appendChild(editBtn);
 
-    const deleteBtn = document.createElement('div');
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
     deleteBtn.className = 'menu-item danger';
-    deleteBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete Message';
+    deleteBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete Message</span>';
     deleteBtn.onclick = (evt) => {
       evt.stopPropagation();
       menu.remove();
@@ -969,44 +991,87 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
     menu.appendChild(deleteBtn);
   }
 
-  const menuWidth = 230;
-  const menuHeight = isSelf ? 230 : 150;
-  const clickX = e.touches ? e.touches[0].clientX : (e.clientX || e.pageX || 100);
-  const clickY = e.touches ? e.touches[0].clientY : (e.clientY || e.pageY || 100);
-
-  const left = Math.min(Math.max(16, clickX - 40), window.innerWidth - menuWidth - 16);
-  const top = Math.min(Math.max(16, clickY - 40), window.innerHeight - menuHeight - 16);
-
-  menu.style.top = `${top}px`;
-  menu.style.left = `${left}px`;
-
   document.body.appendChild(menu);
 
+  const menuRect = menu.getBoundingClientRect();
+  const menuWidth = menuRect.width || 240;
+  const menuHeight = menuRect.height || (isSelf ? 230 : 150);
+  const padding = 12;
+  const topClearance = 64;
+  const bottomClearance = 76;
+
+  let clickX = (e && e.touches && e.touches[0]) ? e.touches[0].clientX : (e?.clientX || (typeof touchX === 'number' ? touchX : (bubbleRect ? bubbleRect.right - menuWidth : 100)));
+  let clickY = (e && e.touches && e.touches[0]) ? e.touches[0].clientY : (e?.clientY || (typeof touchY === 'number' ? touchY : (bubbleRect ? bubbleRect.top : 100)));
+
+  // Horizontal clamping
+  let left = Math.min(Math.max(padding, clickX - (isSelf ? menuWidth - 40 : 20)), window.innerWidth - menuWidth - padding);
+
+  // Vertical placement logic
+  let top = clickY - menuHeight - 8;
+  if (top < topClearance) {
+    top = clickY + 8;
+  }
+  if (top + menuHeight > window.innerHeight - bottomClearance) {
+    top = Math.max(topClearance, window.innerHeight - bottomClearance - menuHeight);
+  }
+
+  menu.style.position = 'fixed';
+  menu.style.left = `${Math.round(left)}px`;
+  menu.style.top = `${Math.round(top)}px`;
+  menu.style.zIndex = '9999';
+
   setTimeout(() => {
-    document.addEventListener('click', () => menu.remove(), { once: true });
-    document.addEventListener('touchstart', () => menu.remove(), { once: true });
+    const closeMenu = (evt) => {
+      if (!menu.contains(evt.target)) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+        document.removeEventListener('touchstart', closeMenu);
+        document.removeEventListener('pointerdown', closeMenu);
+      }
+    };
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('touchstart', closeMenu);
+    document.addEventListener('pointerdown', closeMenu);
   }, 50);
 }
 
 function openEditModal(msgId, currentText, isFriend) {
+  const safeText = (currentText || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   showConfirm('Edit Message', 
-    `<textarea id="editInput" style="width:100%; height:80px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.1); padding:10px; border-radius:12px; font-family:inherit; font-size:14px; outline:none; focus:border-purple;">${currentText}</textarea>`,
+    `<div style="margin-top:8px;"><textarea id="editInput" style="width:100%; height:90px; background:rgba(255,255,255,0.06); color:#f8fafc; border:1px solid rgba(139,92,246,0.35); padding:10px; border-radius:12px; font-family:inherit; font-size:14px; outline:none; resize:none; box-sizing:border-box;">${safeText}</textarea></div>`,
     () => {
-      const newText = document.getElementById('editInput').value.trim();
+      const editEl = document.getElementById('editInput');
+      const newText = editEl ? editEl.value.trim() : '';
       if (newText && newText !== currentText) {
-        if (isFriend) socket.emit('edit_dm', { roomId: friendRoomId, msgId, newMessage: newText });
-        else socket.emit('edit_message', { roomId: activeRoomId, msgId, newMessage: newText });
+        const roomId = isFriend 
+          ? (AppState.friends.activeRoomId || friendRoomId) 
+          : (AppState.explore.roomId || activeRoomId);
+        if (isFriend) socket.emit('edit_dm', { roomId, msgId, newMessage: newText });
+        else socket.emit('edit_message', { roomId, msgId, newMessage: newText });
       }
     }
   );
-  setTimeout(() => document.getElementById('editInput')?.focus(), 100);
+  const modalIcon = $('modalIcon');
+  if (modalIcon) modalIcon.textContent = '✏️';
+  setTimeout(() => {
+    const editEl = document.getElementById('editInput');
+    if (editEl) {
+      editEl.focus();
+      editEl.setSelectionRange(editEl.value.length, editEl.value.length);
+    }
+  }, 100);
 }
 
 function openDeleteModal(msgId, isFriend) {
   showConfirm('Delete Message', 'Are you sure you want to delete this message? This action cannot be undone.', () => {
-    if (isFriend) socket.emit('delete_dm', { roomId: friendRoomId, msgId });
-    else socket.emit('delete_message', { roomId: activeRoomId, msgId });
+    const roomId = isFriend 
+      ? (AppState.friends.activeRoomId || friendRoomId) 
+      : (AppState.explore.roomId || activeRoomId);
+    if (isFriend) socket.emit('delete_dm', { roomId, msgId });
+    else socket.emit('delete_message', { roomId, msgId });
   });
+  const modalIcon = $('modalIcon');
+  if (modalIcon) modalIcon.textContent = '🗑️';
 }
 
 function updateMsgStatus(msgId, newStatus) {
@@ -1168,19 +1233,13 @@ function appendFriendMsg(text, opts = {}) {
   contentWrap.appendChild(footer);
   el.appendChild(contentWrap);
 
-  // Slide timestamp for Pull-Left gesture
+  // Context Menu & Long press event listener for advanced options
   if (!isSystem) {
-    const slideTime = document.createElement('span');
-    slideTime.className = 'msg-slide-timestamp';
-    slideTime.textContent = formatTimestamp(opts.sentAt);
-    el.appendChild(slideTime);
-
-    // Long press / Press event listener for advanced options
     let pressTimer = null;
     let touchStartX = 0, touchStartY = 0;
 
     const handlePressStart = (e) => {
-      if (e.target.closest('button') || e.target.closest('a')) return;
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.msg-reply-block') || e.target.closest('.rxn-btn')) return;
       if (pressTimer) {
         clearTimeout(pressTimer);
         pressTimer = null;
@@ -1194,7 +1253,7 @@ function appendFriendMsg(text, opts = {}) {
       }
       pressTimer = setTimeout(() => {
         const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
-        showAdvancedMsgOptions(e, msgId, currentText, isPartner, true, isSelf, opts.sentAt);
+        showAdvancedMsgOptions(e, msgId, currentText, isPartner, true, isSelf, opts.sentAt, touchStartX, touchStartY);
         pressTimer = null;
       }, 450);
     };
@@ -1226,6 +1285,11 @@ function appendFriendMsg(text, opts = {}) {
     el.addEventListener('mousemove', handlePressMove);
     el.addEventListener('mouseup', handlePressEnd);
     el.addEventListener('mouseleave', handlePressEnd);
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
+      showAdvancedMsgOptions(e, msgId, currentText, isPartner, true, isSelf, opts.sentAt, e.clientX, e.clientY);
+    });
   }
 
   // Double tap to heart
@@ -1314,8 +1378,9 @@ function triggerEffect(type) {
 function startTimer(endMs) {
   stopTimer();
   if (!timerEl) return;
+  AppState.explore.timerEndMs = endMs;
   function tick() {
-    const rem = endMs - Date.now();
+    const rem = (AppState.explore.timerEndMs || endMs) - Date.now();
     timerEl.textContent = formatTime(rem);
     if (rem <= 30000) timerEl.classList.add('danger');
     else timerEl.classList.remove('danger');
@@ -1331,7 +1396,15 @@ function stopTimer() {
 }
 
 // ── BUTTON SYNC ──────────────────────────────────────────────
+let syncButtonsDebounceTimer = null;
 function syncButtons() {
+  if (syncButtonsDebounceTimer) cancelAnimationFrame(syncButtonsDebounceTimer);
+  syncButtonsDebounceTimer = requestAnimationFrame(() => {
+    _executeSyncButtons();
+  });
+}
+
+function _executeSyncButtons() {
   if (messageInput) {
     messageInput.disabled = !inChat && !autoSearchInterval;
     messageInput.placeholder = inChat ? 'Type a message…' : (autoSearchInterval ? 'Partner disconnected...' : 'Waiting for a match…');
@@ -1489,7 +1562,7 @@ function showView(which) {
   views.forEach(({ key, el }) => {
     if (!el) return;
     const isTarget = key === which;
-    const wasVisible = el.style.display === 'flex';
+    const wasVisible = window.getComputedStyle(el).display !== 'none';
     el.style.display = isTarget ? 'flex' : 'none';
     if (isTarget && !wasVisible) {
       el.classList.remove('view-enter');
@@ -1738,15 +1811,7 @@ function switchHomeTab(tab) {
 
   if (tab === 'friends') {
     // ── Switch to Friends context ──
-    // Terminate or skip any active Explore stranger session and clear stranger message containers
-    if (inChat && currentChatType === 'stranger') {
-      socket.emit('end_chat', { roomId: activeRoomId });
-    } else if (isWaiting) {
-      socket.emit('cancel_search');
-    }
-    endCurrentChat();
-
-    // Stop matchmaking timers
+    // Matchmaking timers paused
     stopAutoSearch();
 
     // Show friends list
@@ -1776,25 +1841,19 @@ function switchHomeTab(tab) {
     clearFriendChat();
     window.cancelReply();
 
-    // Force-reset Explore state to ensure start chat button is fully enabled and ready
-    AppState.explore.roomId = null;
-    AppState.explore.partnerId = null;
-    AppState.explore.isSearching = false;
-    pendingStart = false;
-    isWaiting = false;
-    inChat = false;
-
-    // Ensure Start Chat buttons are fully enabled and ready
-    document.querySelectorAll('#start-chat-btn, #startBtn, #startLandingBtn, #findChatBtn').forEach(btn => {
-      if (btn) {
-        btn.disabled = false;
-        btn.classList.remove('disabled');
+    // If currently in an active explore chat, restore it!
+    if (AppState.explore.inChat && AppState.explore.roomId) {
+      showView('chat');
+      if (AppState.explore.timerEndMs && AppState.explore.timerEndMs > Date.now()) {
+        startTimer(AppState.explore.timerEndMs);
       }
-    });
-
-    // Show appropriate view
-    showView('prechat');
-    syncButtons();
+      syncButtons();
+    } else if (AppState.explore.isWaiting) {
+      showView('waiting');
+    } else {
+      showView('prechat');
+      syncButtons();
+    }
   }
 }
 
@@ -1827,14 +1886,10 @@ function handleSuccessfulConnection() {
   const activeFriendId = localStorage.getItem('ping_active_friend_id') || currentFriendId;
   socket.emit('authenticate', { userId: AppState.user.id, activeFriendId }, (authRes) => {
     if (activeFriendId) {
+      currentFriendId = activeFriendId;
       socket.emit('open_friend_dm', { friendId: activeFriendId });
     }
   });
-
-  if (activeFriendId) {
-    currentFriendId = activeFriendId;
-    socket.emit('open_friend_dm', { friendId: activeFriendId });
-  }
 
   // 4. Request authoritative status from server
   socket.emit('get_status', (state) => {
@@ -1956,6 +2011,7 @@ socket.on('connect_error', (error) => {
   }
 });
 
+socket.off('self');
 socket.on('self', ({ userId }) => {
   selfUserId = userId;
   const activeFriendId = localStorage.getItem('ping_active_friend_id') || currentFriendId;
@@ -1964,8 +2020,10 @@ socket.on('self', ({ userId }) => {
   }
 });
 
+socket.off('state_update');
 socket.on('state_update', ({ status, roomId }) => applyState(status, roomId));
 
+socket.off('system_metrics');
 socket.on('system_metrics', m => {
   const u = Number(m.activeUsers ?? m.liveUsers ?? 0);
   setOnlineCount(u);
@@ -1988,15 +2046,12 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc }) => {
   if (window.__pingMatchBurst) window.__pingMatchBurst();
 });
 
+socket.off('new_message');
 socket.on('new_message', (payload) => {
   if (AppState.activeTab !== 'EXPLORE') return;
   const { from, message, roomId } = payload;
-  const isMe = (from === socket.id || from === persistentUserId || from === selfUserId);
+  const isMe = (from === socket.id || from === persistentUserId || from === selfUserId || (AppState.user.id && from === AppState.user.id));
   if (isMe) return; // Optimistically rendered.
-
-  // Note: friend DM traffic uses 'dm_message' event now
-  // We keep this handler focused on stranger chats
-
 
   let processedReplyTo = null;
   if (payload.replyTo) {
@@ -2021,6 +2076,7 @@ socket.on('new_message', (payload) => {
   }
 });
 
+socket.off('message_seen');
 socket.on('message_seen', () => {
   // Checkmarks removed
 });
@@ -2028,7 +2084,7 @@ socket.on('message_seen', () => {
 function handleIncomingDm(payload) {
   const { from, fromUserId, message, roomId, replyTo } = payload;
   const senderId = fromUserId || from;
-  const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId);
+  const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId || (AppState.user.id && (senderId === AppState.user.id || from === AppState.user.id)));
 
   // 1. Update friends list preview if visible
   const item = document.querySelector(`.friend-item[data-room-id="${roomId}"]`) ||
@@ -2075,7 +2131,7 @@ socket.off('dm_message').on('dm_message', handleIncomingDm);
 socket.off('friend_dm_notification').on('friend_dm_notification', (payload) => {
   const { from, fromUserId, message, roomId, friendCountry } = payload;
   const senderId = fromUserId || from;
-  const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId);
+  const isMe = (from === socket.id || senderId === persistentUserId || senderId === selfUserId || (AppState.user.id && (senderId === AppState.user.id || from === AppState.user.id)));
   if (isMe) return;
 
   // 1. Update friends list item preview and unread status if present
@@ -2128,6 +2184,7 @@ socket.off('dm_partner_typing').on('dm_partner_typing', ({ roomId, isTyping, fro
   }
 });
 
+socket.off('partner_typing');
 socket.on('partner_typing', ({ isTyping }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
   if (!typingIndicator) return;
@@ -2186,11 +2243,13 @@ function handleChatEnd(reason) {
   }, 1000);
 }
 
+socket.off('chat_end');
 socket.on('chat_end', ({ reason }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
   handleChatEnd(reason);
 });
 
+socket.off('partner_disconnected');
 socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
   console.log('[Ping] Partner disconnected, waiting for reconnect...', { roomId, timeout: reconnectTimeoutMs });
@@ -2223,6 +2282,7 @@ socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
   }, 1000);
 });
 
+socket.off('partner_reconnected');
 socket.on('partner_reconnected', () => {
   if (AppState.activeTab !== 'EXPLORE') return;
   stopAutoSearch();
@@ -2257,23 +2317,35 @@ socket.on('message_rejected', ({ message, reason }) => {
   appendMsg(message, { isSystem: true, variant: 'error' });
 });
 
+let banExpiryTimestamp = localStorage.getItem('ping_ban_expires_at') || null;
+
 socket.off('chat_ended_banned');
-socket.on('chat_ended_banned', ({ reason, message, autoRequeue }) => {
+socket.on('chat_ended_banned', ({ reason, message, isOffender, banExpiresAt, remainingMs, autoRequeue }) => {
   stopAutoSearch();
   stopTimer();
   endCurrentChat();
 
-  const formattedMsg = message || '🚫 Chat ended due to a safety rule violation.';
-  appendMsg(formattedMsg, { isSystem: true, variant: 'error' });
-  showToast(formattedMsg, 'error', 4000);
+  if (isOffender || (!autoRequeue && message && message.toLowerCase().includes('you have been banned'))) {
+    const expiry = banExpiresAt || (Date.now() + (remainingMs || 900000));
+    banExpiryTimestamp = expiry;
+    try { localStorage.setItem('ping_ban_expires_at', expiry); } catch (e) {}
 
-  if (autoRequeue) {
-    appendMsg('⚡ Re-queuing for a fresh match...', { isSystem: true, variant: 'success' });
-    setTimeout(() => {
-      if (socket && socket.connected) {
-        socket.emit('start_chat');
-      }
-    }, 1200);
+    const formattedMsg = message || '⚠️ You have been banned for 15 minutes due to inappropriate behavior or restricted content.';
+    appendMsg(formattedMsg, { isSystem: true, variant: 'error' });
+    showToast(formattedMsg, 'error', 5000);
+  } else {
+    const formattedMsg = message || '🛡️ The stranger attempted to use restricted content/slurs and has been banned for 15 minutes.';
+    appendMsg(formattedMsg, { isSystem: true, variant: 'success' });
+    showToast(formattedMsg, 'info', 4000);
+
+    if (autoRequeue) {
+      appendMsg('⚡ Finding a fresh match for you...', { isSystem: true, variant: 'success' });
+      setTimeout(() => {
+        if (socket && socket.connected) {
+          socket.emit('start_chat');
+        }
+      }, 1200);
+    }
   }
 });
 
@@ -2281,6 +2353,7 @@ socket.on('chat_ended_banned', ({ reason, message, autoRequeue }) => {
 //  TIME EXTENSION EVENTS
 // ═══════════════════════════════════════════════
 
+socket.off('time_extension_offer');
 socket.on('time_extension_offer', ({ roomId, fromUserId }) => {
   if (!inChat || activeRoomId !== roomId) return;
   appendMsg('⏳ Partner wants more time! Do you agree?', { isSystem: true, variant: 'success' });
@@ -2291,11 +2364,13 @@ socket.on('time_extension_offer', ({ roomId, fromUserId }) => {
   });
 });
 
+socket.off('time_extension_pending');
 socket.on('time_extension_pending', ({ roomId }) => {
   if (!inChat || activeRoomId !== roomId) return;
   appendMsg('⏳ Waiting for your partner to respond...', { isSystem: true });
 });
 
+socket.off('time_extended');
 socket.on('time_extended', ({ roomId, addedMs, remainingMs }) => {
   if (!inChat || activeRoomId !== roomId) return;
   const addedMin = Math.round(addedMs / 60000);
@@ -2304,6 +2379,7 @@ socket.on('time_extended', ({ roomId, addedMs, remainingMs }) => {
   startTimer(Date.now() + remainingMs);
 });
 
+socket.off('time_extension_declined');
 socket.on('time_extension_declined', ({ roomId }) => {
   if (!inChat || activeRoomId !== roomId) return;
   appendMsg('❌ Partner declined to extend time', { isSystem: true });
@@ -2313,26 +2389,38 @@ socket.on('time_extension_declined', ({ roomId }) => {
 //  FRIEND SYSTEM EVENTS
 // ═══════════════════════════════════════════════
 
+socket.off('friend_request_sent');
 socket.on('friend_request_sent', ({ requestId, toUserId }) => {
   showToast('👫 Friend request sent!', 'success', 3000);
 });
 
+socket.off('friend_request_received');
 socket.on('friend_request_received', ({ requestId, fromUserId, fromCountry }) => {
   appendMsg(`👋 ${fromCountry} wants to be friends!`, { isSystem: true, variant: 'success' });
   showConfirm('New Friend?', `${fromCountry} wants to add you as a friend!`, () => {
     socket.emit('friend_request_response', { requestId, accept: true });
+    if (!AppState.user.isAuthenticated) {
+      showPostFriendAuthModal();
+    }
   }, () => {
     socket.emit('friend_request_response', { requestId, accept: false });
   });
 });
 
+socket.off('friend_request_accepted');
 socket.on('friend_request_accepted', ({ friendId, friendCountry, dmRoomId }) => {
   appendMsg(`✨ You're now friends with ${friendCountry}!`, { isSystem: true, variant: 'success' });
+  showToast(`✨ Friends with ${friendCountry}!`, 'success', 3000);
+  if (!AppState.user.isAuthenticated) {
+    showPostFriendAuthModal();
+  }
 });
 
+socket.off('friend_request_declined');
 socket.on('friend_request_declined', ({ fromUserId }) => {
 });
 
+socket.off('friend_dm_opened');
 socket.on('friend_dm_opened', ({ roomId, friendId, friendCountry, friendOnline, messages = [] }) => {
   // ── Clean up any lingering stranger-chat state ──
   // Stop the auto-search countdown (runs after stranger leaves) so it can't
@@ -2409,6 +2497,13 @@ startLandingBtn?.addEventListener('click', () => {
 });
 
 findChatBtn?.addEventListener('click', () => {
+  if (banExpiryTimestamp && Date.now() < Number(banExpiryTimestamp)) {
+    const remainingMs = Number(banExpiryTimestamp) - Date.now();
+    const mins = Math.floor(remainingMs / 60000);
+    const secs = Math.floor((remainingMs % 60000) / 1000);
+    showToast(`⚠️ You are banned for bad behavior. Please wait ${mins} minute${mins !== 1 ? 's' : ''} and ${secs} second${secs !== 1 ? 's' : ''} before chatting again.`, 'error', 4000);
+    return;
+  }
   stopAutoSearch();
   switchHomeTab('random');
   socket.emit('start_chat');
@@ -2440,6 +2535,14 @@ backBtn?.addEventListener('click', () => {
 });
 
 startBtn?.addEventListener('click', () => {
+  if (banExpiryTimestamp && Date.now() < Number(banExpiryTimestamp)) {
+    const remainingMs = Number(banExpiryTimestamp) - Date.now();
+    const mins = Math.floor(remainingMs / 60000);
+    const secs = Math.floor((remainingMs % 60000) / 1000);
+    showToast(`⚠️ You are banned for bad behavior. Please wait ${mins} minute${mins !== 1 ? 's' : ''} and ${secs} second${secs !== 1 ? 's' : ''} before chatting again.`, 'error', 4000);
+    return;
+  }
+
   if (!isConnected || pendingStart) return;
   stopAutoSearch();
   pendingStart = true;
@@ -2447,8 +2550,9 @@ startBtn?.addEventListener('click', () => {
 });
 
 let skipConfirmTimer = null;
-nextBtn?.addEventListener('click', () => {
+nextBtn?.addEventListener('click', (e) => {
   if (nextBtn.dataset.confirming !== 'true') {
+    e.stopPropagation();
     nextBtn.dataset.confirming = 'true';
     const originalHTML = nextBtn.innerHTML;
     nextBtn.innerHTML = 'Sure? 👀';
@@ -2464,8 +2568,11 @@ nextBtn?.addEventListener('click', () => {
 
   clearTimeout(skipConfirmTimer);
   nextBtn.dataset.confirming = 'false';
-  nextBtn.innerHTML = 'Skip <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  nextBtn.innerHTML = '⏩ Skip Stranger';
   nextBtn.classList.remove('confirming-skip');
+
+  const threeDotsMenu = $('threeDotsMenu');
+  if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
   socket.emit('next_chat', { autoStart: true });
@@ -2473,8 +2580,9 @@ nextBtn?.addEventListener('click', () => {
 });
 
 let reportSkipConfirmTimer = null;
-reportSkipBtn?.addEventListener('click', () => {
+reportSkipBtn?.addEventListener('click', (e) => {
   if (reportSkipBtn.dataset.confirming !== 'true') {
+    e.stopPropagation();
     reportSkipBtn.dataset.confirming = 'true';
     const originalHTML = reportSkipBtn.innerHTML;
     reportSkipBtn.innerHTML = 'Sure? ⚠️';
@@ -2493,6 +2601,9 @@ reportSkipBtn?.addEventListener('click', () => {
   reportSkipBtn.innerHTML = '⚑ Report User';
   reportSkipBtn.classList.remove('confirming-skip');
 
+  const threeDotsMenu = $('threeDotsMenu');
+  if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
+
   stopAutoSearch();
   socket.emit('report_user', { roomId: AppState.explore.roomId, reason: 'inappropriate' });
   if (inChat) appendMsg('Reporting & Skipping...', { isSystem: true });
@@ -2504,6 +2615,7 @@ cancelWaitBtn?.addEventListener('click', () => {
 });
 
 let msgIdGen = 0;
+const messageRetryQueue = new Map(); // msgId -> { payload, timer, retries, chatType }
 
 function sendMessage(overrideText = null) {
   const text = (overrideText || messageInput?.value || "").trim();
@@ -2511,10 +2623,11 @@ function sendMessage(overrideText = null) {
 
   if (sendBtn) sendBtn.disabled = true;
 
-  const msgId = 'm_' + (++msgIdGen);
+  const msgId = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + '_' + (++msgIdGen);
   const isFlash = isFlashMode;
   const replyTarget = window.currentReplyTarget;
 
+  // Optimistic rendering
   appendMsg(text, {
     isSelf: true,
     status: 'sending',
@@ -2533,13 +2646,44 @@ function sendMessage(overrideText = null) {
   if (cc) { cc.textContent = ''; cc.className = 'char-counter'; }
   window.cancelReply();
 
-  socket.emit('send_message', { message: text, replyTo: replyTarget, msgId, isFlash }, (ack) => {
-    if (ack && ack.ok) {
-      updateMsgStatus(msgId, 'sent');
-    } else {
+  const payload = { message: text, replyTo: replyTarget, msgId, isFlash };
+
+  const attemptSend = (isRetry = false) => {
+    socket.emit('send_message', payload, (ack) => {
+      const entry = messageRetryQueue.get(msgId);
+      if (entry?.timer) clearTimeout(entry.timer);
+      messageRetryQueue.delete(msgId);
+
+      if (ack && (ack.ok || ack.success)) {
+        updateMsgStatus(msgId, 'sent');
+      } else {
+        updateMsgStatus(msgId, 'failed');
+        if (ack?.reason) showToast(ack.reason, 'error', 3000);
+      }
       if (sendBtn) syncButtons();
+    });
+  };
+
+  // 3-second retry queue
+  const timer = setTimeout(() => {
+    const entry = messageRetryQueue.get(msgId);
+    if (entry) {
+      if (entry.retries < 1) {
+        entry.retries++;
+        attemptSend(true);
+        entry.timer = setTimeout(() => {
+          messageRetryQueue.delete(msgId);
+          updateMsgStatus(msgId, 'failed');
+        }, 3000);
+      } else {
+        messageRetryQueue.delete(msgId);
+        updateMsgStatus(msgId, 'failed');
+      }
     }
-  });
+  }, 3000);
+
+  messageRetryQueue.set(msgId, { payload, timer, retries: 0, chatType: 'explore' });
+  attemptSend(false);
 }
 
 function sendFriendMessage(overrideText = null) {
@@ -2548,11 +2692,12 @@ function sendFriendMessage(overrideText = null) {
 
   if (friendSendBtn && !overrideText) friendSendBtn.disabled = true;
 
-  const msgId = 'f_' + (++msgIdGen);
+  const msgId = 'f_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + '_' + (++msgIdGen);
   const isFlash = isFriendFlashMode;
   const replyTarget = window.currentReplyTarget;
 
-  appendFriendMsg(text, { isSelf: true, replyTo: replyTarget, msgId, isFlash });
+  // Optimistic rendering
+  appendFriendMsg(text, { isSelf: true, replyTo: replyTarget, msgId, isFlash, status: 'sending' });
 
   if (!overrideText) {
     friendMessageInput.value = '';
@@ -2565,47 +2710,59 @@ function sendFriendMessage(overrideText = null) {
 
   window.cancelReply();
 
-  socket.emit('send_dm', { roomId: friendRoomId, friendId: currentFriendId, message: text, replyTo: replyTarget, msgId, isFlash }, (ack) => {
-    const el = friendChatBox.querySelector(`[data-msg-id="${msgId}"]`);
-    if (ack && (ack.ok || ack.success)) {
-      // Use helper to update status to sent
-      if (el) {
-        const statusEl = el.querySelector('.msg-status');
-        if (statusEl) {
-          statusEl.className = 'msg-status msg-status--sent';
-          statusEl.classList.add('status-flash');
-          setTimeout(() => statusEl.classList.remove('status-flash'), 600);
-        }
+  const payload = { roomId: friendRoomId, friendId: currentFriendId, message: text, replyTo: replyTarget, msgId, isFlash };
+
+  const attemptSend = (isRetry = false) => {
+    socket.emit('send_dm', payload, (ack) => {
+      const entry = messageRetryQueue.get(msgId);
+      if (entry?.timer) clearTimeout(entry.timer);
+      messageRetryQueue.delete(msgId);
+
+      if (ack && (ack.ok || ack.success)) {
+        updateMsgStatus(msgId, 'sent');
+      } else {
+        updateMsgStatus(msgId, 'failed');
+        if (ack?.reason) showToast(ack.reason, 'error', 3000);
       }
-    } else {
-      if (el) {
-        const statusEl = el.querySelector('.msg-status');
-        if (statusEl) {
-          statusEl.className = 'msg-status msg-status--failed';
-          statusEl.textContent = '❌ msg failed to send';
-        }
+    });
+  };
+
+  const timer = setTimeout(() => {
+    const entry = messageRetryQueue.get(msgId);
+    if (entry) {
+      if (entry.retries < 1) {
+        entry.retries++;
+        attemptSend(true);
+        entry.timer = setTimeout(() => {
+          messageRetryQueue.delete(msgId);
+          updateMsgStatus(msgId, 'failed');
+        }, 3000);
+      } else {
+        messageRetryQueue.delete(msgId);
+        updateMsgStatus(msgId, 'failed');
       }
-      showToast(ack?.reason || 'Failed to send message', 'error', 3000);
     }
-  });
+  }, 3000);
+
+  messageRetryQueue.set(msgId, { payload, timer, retries: 0, chatType: 'friend' });
+  attemptSend(false);
 }
 
 messageForm?.addEventListener('submit', e => {
+  e.preventDefault();
+});
+
+sendBtn?.addEventListener('click', e => {
   e.preventDefault();
   sendMessage();
   messageInput?.focus();
 });
 
-sendBtn?.addEventListener('pointerdown', e => {
-  e.preventDefault();
-  messageInput?.focus();
-});
-
-messageInput?.addEventListener('keydown', e => {
+messageInput?.addEventListener('keydown', function (e) {
   if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-    messageInput?.focus();
+    // Prevent Enter key from submitting form or sending message
+    // Pressing Enter inserts a newline (\n) in the message input
+    e.stopPropagation();
   }
 });
 
@@ -2637,20 +2794,17 @@ messageInput?.addEventListener('input', function () {
 // Friend DM message form listeners
 friendMessageForm?.addEventListener('submit', e => {
   e.preventDefault();
+});
+
+friendSendBtn?.addEventListener('click', e => {
+  e.preventDefault();
   sendFriendMessage();
   friendMessageInput?.focus();
 });
 
-friendSendBtn?.addEventListener('pointerdown', e => {
-  e.preventDefault();
-  friendMessageInput?.focus();
-});
-
-friendMessageInput?.addEventListener('keydown', e => {
+friendMessageInput?.addEventListener('keydown', function (e) {
   if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendFriendMessage();
-    friendMessageInput?.focus();
+    e.stopPropagation();
   }
 });
 
@@ -2694,12 +2848,10 @@ extendTimeBtn?.addEventListener('click', () => {
 });
 
 friendBtn?.addEventListener('click', () => {
+  socket.emit('send_friend_request');
   if (!AppState.user.isAuthenticated) {
     AppState.deferredFriendRequest = true;
-    showToast("Please sign in to add friends! Deferring your request until signed in. 👫", "info", 3000);
-    triggerGoogleLogin();
-  } else {
-    socket.emit('send_friend_request');
+    showPostFriendAuthModal();
   }
 });
 
@@ -2954,122 +3106,42 @@ function setupCompactChatUI() {
   const threeDotsBtn = $('threeDotsBtn');
   const threeDotsMenu = $('threeDotsMenu');
 
-  if (threeDotsBtn && threeDotsMenu) {
-    threeDotsBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      threeDotsMenu.classList.toggle('hidden');
-    });
-
-    threeDotsMenu.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        threeDotsMenu.classList.add('hidden');
+  if (threeDotsMenu) {
+    if (threeDotsBtn) {
+      threeDotsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        threeDotsMenu.classList.toggle('hidden');
       });
+    }
+
+    threeDotsMenu.addEventListener('click', (e) => {
+      const targetBtn = e.target.closest('button');
+      if (!targetBtn) return;
+
+      // If button requires 2-step confirmation and is currently in confirming state, keep menu open!
+      if (targetBtn.dataset.confirming === 'true') {
+        e.stopPropagation();
+      } else {
+        threeDotsMenu.classList.add('hidden');
+      }
     });
 
     document.addEventListener('click', (e) => {
-      if (!threeDotsMenu.contains(e.target) && e.target !== threeDotsBtn) {
+      if (threeDotsMenu && !threeDotsMenu.contains(e.target) && e.target !== threeDotsBtn && !threeDotsBtn?.contains(e.target)) {
         threeDotsMenu.classList.add('hidden');
       }
     });
   }
 }
 
-// ── SWIPE / PULL LEFT TO REVEAL TIMESTAMPS ───────────────────
-function initSwipeToRevealTimestamps(container) {
-  if (!container) return;
-  let startX = 0;
-  let startY = 0;
-  let isSwiping = false;
-
-  const resetAllMsgs = () => {
-    startX = 0;
-    startY = 0;
-    isSwiping = false;
-    const msgs = container.querySelectorAll('.msg:not(.system)');
-    msgs.forEach(m => {
-      m.style.transition = 'transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-      m.style.transform = 'translateX(0px)';
-      const timeEl = m.querySelector('.msg-slide-timestamp');
-      if (timeEl) {
-        timeEl.style.transition = 'opacity 0.22s ease, right 0.22s ease';
-        timeEl.style.opacity = '0';
-        timeEl.style.right = '-80px';
-      }
-    });
-  };
-
-  const onStart = (e) => {
-    const touch = e.touches ? e.touches[0] : e;
-    startX = touch.clientX;
-    startY = touch.clientY;
-    isSwiping = false;
-  };
-
-  const onMove = (e) => {
-    if (!startX) return;
-    const touch = e.touches ? e.touches[0] : e;
-    const deltaX = touch.clientX - startX;
-    const deltaY = touch.clientY - startY;
-
-    // Trigger when pulling towards the left side
-    if (deltaX < -10 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
-      isSwiping = true;
-      const currentDeltaX = Math.max(-75, deltaX);
-      const msgs = container.querySelectorAll('.msg:not(.system)');
-      msgs.forEach(m => {
-        m.style.transition = 'none';
-        m.style.transform = `translateX(${currentDeltaX}px)`;
-        const timeEl = m.querySelector('.msg-slide-timestamp');
-        if (timeEl) {
-          const progress = Math.min(1, Math.abs(currentDeltaX) / 50);
-          timeEl.style.opacity = progress;
-          timeEl.style.right = `${-80 + (progress * 20)}px`;
-        }
-      });
-    } else if (deltaX >= 0 && isSwiping) {
-      resetAllMsgs();
-    }
-  };
-
-  const onEnd = () => {
-    if (isSwiping || startX) {
-      // Ensure a smooth return with transition
-      const msgs = container.querySelectorAll('.msg:not(.system)');
-      msgs.forEach(m => {
-        m.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-        m.style.transform = 'translateX(0px)';
-        const timeEl = m.querySelector('.msg-slide-timestamp');
-        if (timeEl) {
-          timeEl.style.transition = 'opacity 0.2s ease, right 0.2s ease';
-          timeEl.style.opacity = '0';
-          timeEl.style.right = '-80px';
-        }
-      });
-      
-      // Reset state after transition starts
-      setTimeout(() => {
-        isSwiping = false;
-        startX = 0;
-        startY = 0;
-      }, 50);
-    }
-  };
-
-  container.addEventListener('touchstart', onStart, { passive: true });
-  container.addEventListener('touchmove', onMove, { passive: true });
-  container.addEventListener('touchend', onEnd);
-  container.addEventListener('touchcancel', onEnd);
-
-  container.addEventListener('mousedown', onStart);
-  window.addEventListener('mousemove', (e) => { if (startX && (e.buttons === 1 || e.buttons === 0)) onMove(e); });
-  window.addEventListener('mouseup', onEnd);
-  container.addEventListener('mouseleave', onEnd);
-}
-
-// Initialize swipe gestures on chat containers
-if (chatBox) initSwipeToRevealTimestamps(chatBox);
-if (friendChatBox) initSwipeToRevealTimestamps(friendChatBox);
-
+// Clean compact chat UI setup
 setupCompactChatUI();
+
+// 2-minute Soft-Auth Banner Trigger for Guest Users
+setTimeout(() => {
+  if (!AppState.user.isAuthenticated && inChat) {
+    triggerSoftAuthBanner();
+  }
+}, 120000);
 
 

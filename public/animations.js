@@ -146,9 +146,13 @@
 
   function resizeApp() {
     if (!aCv) return;
-    AW = aCv.width  = aCv.offsetWidth  || innerWidth;
-    AH = aCv.height = aCv.offsetHeight || innerHeight;
-    rebuild();
+    const newW = aCv.offsetWidth || innerWidth;
+    const newH = aCv.offsetHeight || innerHeight;
+    if (newW !== AW || newH !== AH) {
+      AW = aCv.width = newW;
+      AH = aCv.height = newH;
+      rebuild();
+    }
   }
   addEventListener('resize', () => { if (aCv && chatApp?.style.display !== 'none') resizeApp(); });
 
@@ -248,14 +252,20 @@
   // ─────────────────────────────────────────────────────────────
   //  ANIMATED COUNTER
   // ─────────────────────────────────────────────────────────────
-  window.__pingCountUp = (el, target, dur=800) => {
-    if(!el) return;
-    const start=parseInt(el.textContentStr)||0;
-    const t0=performance.now();
-    const step=now=>{
-      const p=Math.min((now-t0)/dur,1);
-      el.textContent=Math.round(start+(target-start)*(1-Math.pow(1-p,3))).toLocaleString();
-      if(p<1) requestAnimationFrame(step);
+  window.__pingCountUp = (el, target, dur=600) => {
+    if (!el || typeof target !== 'number') return;
+    const currentVal = parseInt((el.textContent || '').replace(/[^\d]/g, ''), 10) || 0;
+    if (currentVal === target) {
+      el.textContent = target > 0 ? target.toLocaleString() : '—';
+      return;
+    }
+    const start = currentVal;
+    const t0 = performance.now();
+    const step = now => {
+      const p = Math.min((now - t0) / dur, 1);
+      const val = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3)));
+      el.textContent = val > 0 ? val.toLocaleString() : '—';
+      if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   };
