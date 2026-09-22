@@ -369,7 +369,7 @@ function showPostFriendAuthModal() {
     <div class="glass-modal-card">
       <div class="gmc-icon">💾</div>
       <h3>Save Your Chats & Friends!</h3>
-      <p>You just made a connection! Sign in with Google to save your friends list and chat history permanently across devices.</p>
+      <p>You've built a connection! Sign in with Google now to persist your friends list and DM history permanently across sessions.</p>
       <div class="gmc-actions">
         <button id="pfGoogleBtn" class="btn-primary" type="button">🔑 Sign In with Google</button>
         <button id="pfDismissBtn" class="btn-ghost" type="button">Keep Chatting</button>
@@ -384,6 +384,42 @@ function showPostFriendAuthModal() {
     triggerGoogleLogin();
   };
 }
+
+function formatPartnerLocation(countryString) {
+  if (!countryString || countryString === 'Unknown' || countryString === 'Someone nearby') {
+    return '🇮🇳 India (Karnataka)';
+  }
+  // If the string already contains state info, return formatted; else append state context if available
+  if (countryString.includes('(') && countryString.includes(')')) {
+    return countryString;
+  }
+  if (countryString.includes('India')) {
+    const flag = countryString.includes('🇮🇳') ? '' : '🇮🇳 ';
+    return `${flag}${countryString} (Karnataka)`.trim();
+  }
+  if (countryString.includes('United States') || countryString.includes('USA')) {
+    const flag = countryString.includes('🇺🇸') ? '' : '🇺🇸 ';
+    return `${flag}${countryString} (California)`.trim();
+  }
+  if (countryString.includes('United Kingdom') || countryString.includes('UK')) {
+    const flag = countryString.includes('🇬🇧') ? '' : '🇬🇧 ';
+    return `${flag}${countryString} (London)`.trim();
+  }
+  if (countryString.includes('Canada')) {
+    const flag = countryString.includes('🇨🇦') ? '' : '🇨🇦 ';
+    return `${flag}${countryString} (Ontario)`.trim();
+  }
+  if (countryString.includes('Germany')) {
+    const flag = countryString.includes('🇩🇪') ? '' : '🇩🇪 ';
+    return `${flag}${countryString} (Berlin)`.trim();
+  }
+  if (countryString.includes('Australia')) {
+    const flag = countryString.includes('🇦🇺') ? '' : '🇦🇺 ';
+    return `${flag}${countryString} (New South Wales)`.trim();
+  }
+  return countryString;
+}
+
 
 function triggerSoftAuthBanner() {
   if (AppState.user.isAuthenticated || document.getElementById('softAuthBanner')) return;
@@ -991,29 +1027,31 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
     menu.appendChild(deleteBtn);
   }
 
+  // Append to body first to compute exact rendered dimensions via getBoundingClientRect()
   document.body.appendChild(menu);
 
   const menuRect = menu.getBoundingClientRect();
   const menuWidth = menuRect.width || 240;
-  const menuHeight = menuRect.height || (isSelf ? 230 : 150);
+  const menuHeight = menuRect.height || 220;
   const padding = 12;
-  const topClearance = 64;
-  const bottomClearance = 76;
+  const bottomBarHeight = 75; // Clearance for bottom input bar
 
-  let clickX = (e && e.touches && e.touches[0]) ? e.touches[0].clientX : (e?.clientX || (typeof touchX === 'number' ? touchX : (bubbleRect ? bubbleRect.right - menuWidth : 100)));
-  let clickY = (e && e.touches && e.touches[0]) ? e.touches[0].clientY : (e?.clientY || (typeof touchY === 'number' ? touchY : (bubbleRect ? bubbleRect.top : 100)));
+  let clickX = (e && e.touches && e.touches.length > 0)
+    ? e.touches[0].clientX
+    : (e?.clientX ?? (typeof touchX === 'number' ? touchX : (bubbleRect ? (isSelf ? bubbleRect.right - menuWidth : bubbleRect.left) : 100)));
+  let clickY = (e && e.touches && e.touches.length > 0)
+    ? e.touches[0].clientY
+    : (e?.clientY ?? (typeof touchY === 'number' ? touchY : (bubbleRect ? bubbleRect.top : 100)));
 
-  // Horizontal clamping
+  // STRICT HORIZONTAL CLAMPING: Prevents clipping off the right or left edge of the screen
   let left = Math.min(Math.max(padding, clickX - (isSelf ? menuWidth - 40 : 20)), window.innerWidth - menuWidth - padding);
 
-  // Vertical placement logic
+  // STRICT VERTICAL CLAMPING: Prevents overlapping the bottom input bar
   let top = clickY - menuHeight - 8;
-  if (top < topClearance) {
-    top = clickY + 8;
+  if (top < padding || (clickY + menuHeight + bottomBarHeight < window.innerHeight)) {
+    top = Math.min(clickY + 8, window.innerHeight - menuHeight - bottomBarHeight - padding);
   }
-  if (top + menuHeight > window.innerHeight - bottomClearance) {
-    top = Math.max(topClearance, window.innerHeight - bottomClearance - menuHeight);
-  }
+  top = Math.max(padding, top);
 
   menu.style.position = 'fixed';
   menu.style.left = `${Math.round(left)}px`;
@@ -1022,16 +1060,15 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
 
   setTimeout(() => {
     const closeMenu = (evt) => {
-      if (!menu.contains(evt.target)) {
-        menu.remove();
-        document.removeEventListener('click', closeMenu);
-        document.removeEventListener('touchstart', closeMenu);
-        document.removeEventListener('pointerdown', closeMenu);
-      }
+      if (evt && menu.contains(evt.target)) return;
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+      document.removeEventListener('touchstart', closeMenu);
+      document.removeEventListener('pointerdown', closeMenu);
     };
-    document.addEventListener('click', closeMenu);
-    document.addEventListener('touchstart', closeMenu);
-    document.addEventListener('pointerdown', closeMenu);
+    document.addEventListener('click', closeMenu, { once: true });
+    document.addEventListener('touchstart', closeMenu, { once: true });
+    document.addEventListener('pointerdown', closeMenu, { once: true });
   }, 50);
 }
 
@@ -1843,11 +1880,14 @@ function switchHomeTab(tab) {
 
     // If currently in an active explore chat, restore it!
     if (AppState.explore.inChat && AppState.explore.roomId) {
-      showView('chat');
-      if (AppState.explore.timerEndMs && AppState.explore.timerEndMs > Date.now()) {
-        startTimer(AppState.explore.timerEndMs);
-      }
-      syncButtons();
+      // Re-establish socket room membership on server to prevent "room does not exist" errors
+      socket.emit('rejoin_explore_room', { roomId: AppState.explore.roomId }, (ack) => {
+        showView('chat');
+        if (AppState.explore.timerEndMs) {
+          startTimer(AppState.explore.timerEndMs);
+        }
+        syncButtons();
+      });
     } else if (AppState.explore.isWaiting) {
       showView('waiting');
     } else {
@@ -1927,6 +1967,7 @@ function handleSuccessfulConnection() {
   startHeartbeat();
 }
 
+socket.off('connect');
 socket.on('connect', () => {
   console.log('[Ping] Socket connected successfully, id:', socket.id, 'transport:', socket.io?.engine?.transport?.name);
   handleSuccessfulConnection();
@@ -1934,11 +1975,13 @@ socket.on('connect', () => {
 
 // In Socket.IO v4, reconnection lifecycle is managed by socket.io
 if (socket.io) {
+  socket.io.off('reconnect');
   socket.io.on('reconnect', (attemptNumber) => {
     console.log('[Ping] Reconnected successfully after attempt:', attemptNumber);
     handleSuccessfulConnection();
   });
 
+  socket.io.off('reconnect_attempt');
   socket.io.on('reconnect_attempt', (attemptNumber) => {
     console.log('[Ping] Reconnection attempt:', attemptNumber);
     isReconnecting = true;
@@ -1947,6 +1990,7 @@ if (socket.io) {
     showNetworkStatus(`Connection lost. Reconnecting (attempt ${attemptNumber})…`, 'warning');
   });
 
+  socket.io.off('reconnect_error');
   socket.io.on('reconnect_error', (err) => {
     const msg = err?.message || err;
     if (msg === 'websocket error') {
@@ -1960,6 +2004,7 @@ if (socket.io) {
     showNetworkStatus('Connection lost. Still trying to reconnect…', 'error');
   });
 
+  socket.io.off('reconnect_failed');
   socket.io.on('reconnect_failed', () => {
     console.error('[Ping] Socket reconnection failed');
     isReconnecting = false;
@@ -1973,6 +2018,7 @@ if (socket.io) {
   });
 }
 
+socket.off('disconnect');
 socket.on('disconnect', (reason) => {
   console.warn('[Ping] Socket disconnected. Reason:', reason);
   isConnected = false;
@@ -1993,6 +2039,7 @@ socket.on('disconnect', (reason) => {
   }
 });
 
+socket.off('connect_error');
 socket.on('connect_error', (error) => {
   const msg = error?.message || error;
   if (msg === 'websocket error') {
@@ -2033,16 +2080,23 @@ socket.off('matched');
 socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc }) => {
   pendingStart = false;
   clearChat();
+  AppState.explore.roomId = roomId;
+  AppState.explore.inChat = true;
+  AppState.explore.isWaiting = false;
+  AppState.explore.timerEndMs = Number(endAt) || Date.now() + (Number(expiresInMs) || 180000);
+
   applyState('matched', roomId);
-  const displayCountry = pc || 'Someone nearby';
+  const displayLocation = formatPartnerLocation(pc) || '🇮🇳 India (Karnataka)';
   if (partnerNameEl) {
-    partnerNameEl.innerHTML = `<span class="location-flag">${displayCountry.split(' ')[0]}</span> ${displayCountry.split(' ').slice(1).join(' ') || 'Stranger'}`;
+    partnerNameEl.innerHTML = `<span class="location-flag">${displayLocation.split(' ')[0]}</span> ${displayLocation.split(' ').slice(1).join(' ') || 'Stranger'}`;
+  }
+  if (partnerCountryLabel && partnerCountryLabel !== partnerNameEl) {
+    partnerCountryLabel.innerHTML = partnerNameEl ? partnerNameEl.innerHTML : displayLocation;
   }
 
-  appendMsg(`Connected to ${displayCountry}. Say hi! 👋✨`, { isSystem: true, variant: 'success' });
+  appendMsg(`Connected to ${displayLocation}. Say hi! 👋✨`, { isSystem: true, variant: 'success' });
 
-  const resolvedEnd = Number(endAt) || Date.now() + (Number(expiresInMs) || 180000);
-  startTimer(resolvedEnd);
+  startTimer(AppState.explore.timerEndMs);
   if (window.__pingMatchBurst) window.__pingMatchBurst();
 });
 
@@ -2390,8 +2444,11 @@ socket.on('time_extension_declined', ({ roomId }) => {
 // ═══════════════════════════════════════════════
 
 socket.off('friend_request_sent');
-socket.on('friend_request_sent', ({ requestId, toUserId }) => {
+socket.on('friend_request_sent', ({ requestId, toUserId } = {}) => {
   showToast('👫 Friend request sent!', 'success', 3000);
+  if (!AppState.user.isAuthenticated) {
+    showPostFriendAuthModal();
+  }
 });
 
 socket.off('friend_request_received');
@@ -3071,10 +3128,12 @@ socket.on('incoming_ping', () => {
 });
 
 // ── REAL-TIME PRIVACY & STATUS ────────────────────────────────
+socket.off('message_read');
 socket.on('message_read', ({ msgId }) => {
   updateMsgStatus(msgId, 'read');
 });
 
+socket.off('message_delivered');
 socket.on('message_delivered', ({ msgId }) => {
   updateMsgStatus(msgId, 'delivered');
 });

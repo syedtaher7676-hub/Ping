@@ -39,11 +39,55 @@ const { validateMessage } = require("../utils/moderation");
 // ═══════════════════════════════════════════════════════════════
 // MULTI-TIER REAL-TIME MODERATION & FLOOD STATE STORES
 // ═══════════════════════════════════════════════════════════════
+const roomsMap = rooms; // Direct alias for rooms Map
 const messageTimestamps = new Map();     // socketId -> array of message timestamps
 const silencedSockets = new Map();       // socketId -> silence expiry timestamp (Date.now() + 10s)
 const silenceViolationCounts = new Map(); // socketId -> continuous violation frequency
 const recentReports = new Map();         // reporterId_reportedUserId -> timestamp of report
 const temporaryBans = new Map();         // userId/IP -> ban expiry timestamp (Date.now() + 1 hour)
+
+// ═══════════════════════════════════════════════════════════════
+// RECENT PARTNERS RE-MATCHING LOCK (30-SECOND AUTO-RELEASE)
+// ═══════════════════════════════════════════════════════════════
+const recentPartners = new Map(); // userId -> Map<partnerId, timeoutRef>
+
+function addRecentPartnerLock(userAId, userBId) {
+  if (!userAId || !userBId || userAId === userBId) return;
+
+  if (!recentPartners.has(userAId)) recentPartners.set(userAId, new Map());
+  if (!recentPartners.has(userBId)) recentPartners.set(userBId, new Map());
+
+  const mapA = recentPartners.get(userAId);
+  const mapB = recentPartners.get(userBId);
+
+  if (mapA.has(userBId)) {
+    clearTimeout(mapA.get(userBId));
+  }
+  if (mapB.has(userAId)) {
+    clearTimeout(mapB.get(userAId));
+  }
+
+  // 30 seconds lock release timeout ensures recentPartners timeout is cleaned up
+  // after 30 seconds on the server side so users can immediately re-match if desired
+  const timeoutA = setTimeout(() => {
+    mapA.delete(userBId);
+    if (mapA.size === 0) recentPartners.delete(userAId);
+  }, 30000);
+  timeoutA.unref?.();
+  mapA.set(userBId, timeoutA);
+
+  const timeoutB = setTimeout(() => {
+    mapB.delete(userAId);
+    if (mapB.size === 0) recentPartners.delete(userBId);
+  }, 30000);
+  timeoutB.unref?.();
+  mapB.set(userAId, timeoutB);
+}
+
+function areRecentPartnersLocked(userAId, userBId) {
+  if (!userAId || !userBId) return false;
+  return Boolean(recentPartners.get(userAId)?.has(userBId));
+}
 
 function isUserBanned(socket, userId) {
   const now = Date.now();
@@ -1426,8 +1470,38 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     });
 
     // ═══════════════════════════════════════════════
-    //  NAVIGATION
+    //  NAVIGATION & EXPLORE ROOM RE-JOIN
     // ═══════════════════════════════════════════════
+
+    socket.on('rejoin_explore_room', (payload, callback) => {
+      try {
+        const roomId = safeId(payload?.roomId) || (typeof payload === 'string' ? safeId(payload) : null);
+        const room = roomsMap.get(roomId) || rooms.get(roomId);
+        const isMember = room && (
+          (Array.isArray(room.users) && (
+            room.users.includes(socket.id) ||
+            room.users.includes(userId) ||
+            (socket.data && room.users.includes(socket.data.userId))
+          )) ||
+          user?.roomId === roomId
+        );
+
+        if (room && isMember) {
+          socket.join(roomId);
+          socket.data.currentRoomId = roomId;
+          if (user) {
+            user.roomId = roomId;
+            user.status = "matched";
+          }
+          callback?.({ success: true, ok: true });
+        } else {
+          callback?.({ success: false, ok: false, reason: 'Room expired or invalid' });
+        }
+      } catch (err) {
+        log("rejoin_explore_room_error", { userId, error: err?.message });
+        callback?.({ success: false, ok: false, reason: 'Internal error' });
+      }
+    });
 
     socket.on("next_chat", (rawPayload = {}) => {
       try {
@@ -1439,6 +1513,10 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         currentUser.lastActionAt = Date.now();
 
         if (currentUser.status === "matched" && currentUser.roomId) {
+          const activeRoom = rooms.get(currentUser.roomId);
+          if (activeRoom && Array.isArray(activeRoom.users) && activeRoom.users.length >= 2) {
+            addRecentPartnerLock(activeRoom.users[0], activeRoom.users[1]);
+          }
           terminateSession(io, currentUser.roomId, "next_clicked");
           if (autoStart) queueUserForMatch(socket, io, userId);
         } else if (currentUser.status === "waiting") {
@@ -1717,6 +1795,11 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       try {
         const currentUser = users.get(userId);
         if (!currentUser || !currentUser.roomId) return;
+
+        const activeRoom = rooms.get(currentUser.roomId);
+        if (activeRoom && Array.isArray(activeRoom.users) && activeRoom.users.length >= 2) {
+          addRecentPartnerLock(activeRoom.users[0], activeRoom.users[1]);
+        }
 
         log("user_ended_chat", { userId, roomId: currentUser.roomId, endedAt: Date.now() });
 
