@@ -17,17 +17,17 @@ if (!persistentUserId) {
 }
 
 // ── SOCKET ───────────────────────────────────────────────────
-// Configured with dual transport fallback (polling -> websocket)
-// to ensure rock-solid stability in proxy and iframe environments.
+// Configured with prioritized websocket transport for instant low-latency connections
+// and fallback polling for proxy and iframe environments.
 const socket = io(backendUrl, {
-  transports: ['polling', 'websocket'],
+  transports: ['websocket', 'polling'],
   upgrade: true,
   rememberUpgrade: true,
-  timeout: 20000,
+  timeout: 10000,
   reconnection: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
+  reconnectionDelay: 500,
+  reconnectionDelayMax: 2500,
   randomizationFactor: 0.3,
   auth: { userId: persistentUserId },
   autoConnect: true,
@@ -276,13 +276,35 @@ async function initFirebaseClient() {
           console.error("Firestore sync error:", dbErr);
         }
         
-        // Seamlessly authenticate active socket session
-        socket.emit('authenticate', { userId: user.uid }, (ack) => {
+        // Seamlessly authenticate active socket session & migrate guest friendships
+        socket.emit('authenticate', { 
+          userId: user.uid,
+          oldUserId: persistentUserId,
+          activeFriendId: currentFriendId
+        }, (ack) => {
           if (ack && ack.success) {
             console.log("Socket authenticated with user:", user.uid);
             showToast(`Logged in as ${user.displayName || 'user'}! ✨`, 'success', 3000);
           }
         });
+
+        // Persist any active friendship directly in Firestore for instant cloud safety
+        if (currentFriendId) {
+          try {
+            const pairId = [user.uid, currentFriendId].sort().join('__');
+            await dbInstance.collection('friendships').doc(pairId).set({
+              userAId: [user.uid, currentFriendId].sort()[0],
+              userBId: [user.uid, currentFriendId].sort()[1],
+              users: [user.uid, currentFriendId],
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            console.log("Direct client friendship persistence saved to Firestore:", pairId);
+            showToast("✨ Friendship saved to Firebase!", "success", 3000);
+          } catch (fErr) {
+            console.warn("Client friendship sync warning:", fErr);
+          }
+        }
 
         // Intent-driven Friend Request Gate: Send deferred request now!
         if (AppState.deferredFriendRequest) {
@@ -359,27 +381,36 @@ function showInChatAuthModal(onDismiss = null) {
   );
 }
 
-function showPostFriendAuthModal() {
+function showPostFriendAuthModal(friendInfo = {}) {
   if (AppState.user.isAuthenticated || document.getElementById('postFriendAuthModal')) return;
 
+  const friendLabel = friendInfo.friendCountry || 'your new connection';
   const modal = document.createElement('div');
   modal.id = 'postFriendAuthModal';
   modal.className = 'glass-modal-overlay';
   modal.innerHTML = `
     <div class="glass-modal-card">
       <div class="gmc-icon">💾</div>
-      <h3>Save Your Chats & Friends!</h3>
-      <p>You've built a connection! Sign in with Google now to persist your friends list and DM history permanently across sessions.</p>
+      <div class="gmc-badge">🔥 Friend Connected!</div>
+      <h3>Save Friendships in Firebase</h3>
+      <p>You've connected with <strong>${friendLabel}</strong>! Sign in with Google now to securely save this friendship and your DM history in Firebase Cloud Firestore so you never lose contact across sessions.</p>
       <div class="gmc-actions">
-        <button id="pfGoogleBtn" class="btn-primary" type="button">🔑 Sign In with Google</button>
-        <button id="pfDismissBtn" class="btn-ghost" type="button">Keep Chatting</button>
+        <button id="pfGoogleBtn" class="btn-primary" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
+          Sign In & Save to Firebase
+        </button>
+        <button id="pfDismissBtn" class="btn-ghost" type="button">Keep Chatting as Guest</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
 
-  document.getElementById('pfDismissBtn').onclick = () => modal.remove();
+  document.getElementById('pfDismissBtn').onclick = () => {
+    if (navigator.vibrate) navigator.vibrate(10);
+    modal.remove();
+  };
   document.getElementById('pfGoogleBtn').onclick = async () => {
+    if (navigator.vibrate) navigator.vibrate(20);
     modal.remove();
     triggerGoogleLogin();
   };
@@ -682,6 +713,92 @@ function setOnlineCount(n) {
   const ws = $('wsCount'); if (ws) ws.textContent = display;
 }
 
+// ── REUSABLE OPTIMIZED LONG-PRESS & CONTEXT MENU HANDLER ────
+function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, isSelf, sentAt }) {
+  let pressTimer = null;
+  let startX = 0, startY = 0;
+  let hasTriggered = false;
+
+  const getCleanText = () => {
+    if (textNode && textNode.childNodes) {
+      const parts = Array.from(textNode.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE || (n.classList && !n.classList.contains('edited-tag') && !n.classList.contains('msg-reply-block')))
+        .map(n => n.textContent);
+      if (parts.length > 0) return parts.join('').trim();
+    }
+    return (text || '').replace(/<[^>]*>/g, '').trim();
+  };
+
+  const handleStart = (e) => {
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.msg-reply-block') || e.target.closest('.rxn-btn') || e.target.closest('.msg-reply-trigger')) return;
+
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    hasTriggered = false;
+
+    if (e.type === 'touchstart') {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    } else {
+      startX = e.clientX;
+      startY = e.clientY;
+    }
+
+    el.classList.add('msg-pressing');
+
+    // Snappy 320ms press timing with immediate haptic touch
+    pressTimer = setTimeout(() => {
+      hasTriggered = true;
+      el.classList.remove('msg-pressing');
+      if (navigator.vibrate) navigator.vibrate(28);
+      showAdvancedMsgOptions(e, msgId, getCleanText(), isPartner, isFriend, isSelf, sentAt, startX, startY);
+      pressTimer = null;
+    }, 320);
+  };
+
+  const handleMove = (e) => {
+    if (pressTimer) {
+      const touch = e.touches ? e.touches[0] : e;
+      const dx = Math.abs(touch.clientX - startX);
+      const dy = Math.abs(touch.clientY - startY);
+      if (dx > 8 || dy > 8) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        el.classList.remove('msg-pressing');
+      }
+    }
+  };
+
+  const handleEnd = (e) => {
+    if (pressTimer) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+    }
+    el.classList.remove('msg-pressing');
+    if (hasTriggered && e && e.cancelable) {
+      e.preventDefault();
+    }
+  };
+
+  el.addEventListener('touchstart', handleStart, { passive: true });
+  el.addEventListener('touchmove', handleMove, { passive: true });
+  el.addEventListener('touchend', handleEnd);
+  el.addEventListener('touchcancel', handleEnd);
+  el.addEventListener('mousedown', handleStart);
+  el.addEventListener('mousemove', handleMove);
+  el.addEventListener('mouseup', handleEnd);
+  el.addEventListener('mouseleave', handleEnd);
+
+  el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    el.classList.remove('msg-pressing');
+    if (navigator.vibrate) navigator.vibrate(25);
+    showAdvancedMsgOptions(e, msgId, getCleanText(), isPartner, isFriend, isSelf, sentAt, e.clientX, e.clientY);
+  });
+}
+
 // ── MESSAGES ─────────────────────────────────────────────────
 let lastSystemMsgText = '';
 let lastSystemMsgTime = 0;
@@ -813,65 +930,7 @@ function appendMsg(text, opts = {}) {
 
   // Context Menu & Long press event listener for advanced options
   if (!isSystem) {
-    let pressTimer = null;
-    let touchStartX = 0, touchStartY = 0;
-
-    const handlePressStart = (e) => {
-      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.msg-reply-block') || e.target.closest('.rxn-btn')) return;
-      
-      // Clear any existing timer to prevent double-firing
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
-
-      if (e.type === 'touchstart') {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      } else {
-        touchStartX = e.clientX;
-        touchStartY = e.clientY;
-      }
-
-      pressTimer = setTimeout(() => {
-        const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
-        showAdvancedMsgOptions(e, msgId, currentText, isPartner, false, isSelf, opts.sentAt, touchStartX, touchStartY);
-        pressTimer = null;
-      }, 450);
-    };
-
-    const handlePressMove = (e) => {
-      if (pressTimer) {
-        const touch = e.touches ? e.touches[0] : e;
-        const dx = Math.abs(touch.clientX - touchStartX);
-        const dy = Math.abs(touch.clientY - touchStartY);
-        if (dx > 10 || dy > 10) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
-        }
-      }
-    };
-
-    const handlePressEnd = () => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
-    };
-
-    el.addEventListener('touchstart', handlePressStart, { passive: true });
-    el.addEventListener('touchmove', handlePressMove, { passive: true });
-    el.addEventListener('touchend', handlePressEnd);
-    el.addEventListener('touchcancel', handlePressEnd);
-    el.addEventListener('mousedown', handlePressStart);
-    el.addEventListener('mousemove', handlePressMove);
-    el.addEventListener('mouseup', handlePressEnd);
-    el.addEventListener('mouseleave', handlePressEnd);
-    el.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
-      showAdvancedMsgOptions(e, msgId, currentText, isPartner, false, isSelf, opts.sentAt, e.clientX, e.clientY);
-    });
+    attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend: false, isSelf, sentAt: opts.sentAt });
   }
 
   // Double tap to heart
@@ -946,10 +1005,12 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
     btn.textContent = emo;
     btn.onclick = (evt) => {
       evt.stopPropagation();
+      if (navigator.vibrate) navigator.vibrate(15);
       menu.remove();
       window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
       if (isFriend) sendFriendMessage(emo);
       else sendMessage(emo);
+      showToast(`Reacted ${emo}`, 'info', 1200);
     };
     rxnRow.appendChild(btn);
   });
@@ -966,9 +1027,15 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
   replyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l5-5-5-5M21 11H3"/></svg><span>Reply</span>';
   replyBtn.onclick = (evt) => {
     evt.stopPropagation();
+    if (navigator.vibrate) navigator.vibrate(20);
     menu.remove();
     if (typeof window.startReply === 'function') {
       window.startReply(text, isPartner, msgId);
+    }
+    const targetInput = isFriend ? $('friendMessageInput') : $('messageInput');
+    if (targetInput) {
+      targetInput.focus();
+      targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
   menu.appendChild(replyBtn);
@@ -980,13 +1047,15 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
   copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy Text</span>';
   copyBtn.onclick = async (evt) => {
     evt.stopPropagation();
+    if (navigator.vibrate) navigator.vibrate(25);
     menu.remove();
+    const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(cleanText);
       } else {
         const ta = document.createElement('textarea');
-        ta.value = text;
+        ta.value = cleanText;
         ta.style.position = 'fixed';
         ta.style.opacity = '0';
         document.body.appendChild(ta);
@@ -995,9 +1064,9 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
         document.execCommand('copy');
         ta.remove();
       }
-      showToast('Copied to clipboard!', 'info', 1500);
+      showToast('📋 Copied to clipboard!', 'info', 1500);
     } catch (err) {
-      showToast('Copied to clipboard!', 'info', 1500);
+      showToast('📋 Copied to clipboard!', 'info', 1500);
     }
   };
   menu.appendChild(copyBtn);
@@ -1272,61 +1341,7 @@ function appendFriendMsg(text, opts = {}) {
 
   // Context Menu & Long press event listener for advanced options
   if (!isSystem) {
-    let pressTimer = null;
-    let touchStartX = 0, touchStartY = 0;
-
-    const handlePressStart = (e) => {
-      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.msg-reply-block') || e.target.closest('.rxn-btn')) return;
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
-      if (e.type === 'touchstart') {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      } else {
-        touchStartX = e.clientX;
-        touchStartY = e.clientY;
-      }
-      pressTimer = setTimeout(() => {
-        const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
-        showAdvancedMsgOptions(e, msgId, currentText, isPartner, true, isSelf, opts.sentAt, touchStartX, touchStartY);
-        pressTimer = null;
-      }, 450);
-    };
-
-    const handlePressMove = (e) => {
-      if (pressTimer) {
-        const touch = e.touches ? e.touches[0] : e;
-        const dx = Math.abs(touch.clientX - touchStartX);
-        const dy = Math.abs(touch.clientY - touchStartY);
-        if (dx > 10 || dy > 10) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
-        }
-      }
-    };
-
-    const handlePressEnd = () => {
-      if (pressTimer) {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-      }
-    };
-
-    el.addEventListener('touchstart', handlePressStart, { passive: true });
-    el.addEventListener('touchmove', handlePressMove, { passive: true });
-    el.addEventListener('touchend', handlePressEnd);
-    el.addEventListener('touchcancel', handlePressEnd);
-    el.addEventListener('mousedown', handlePressStart);
-    el.addEventListener('mousemove', handlePressMove);
-    el.addEventListener('mouseup', handlePressEnd);
-    el.addEventListener('mouseleave', handlePressEnd);
-    el.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      const currentText = textNode.firstChild ? textNode.firstChild.textContent : text;
-      showAdvancedMsgOptions(e, msgId, currentText, isPartner, true, isSelf, opts.sentAt, e.clientX, e.clientY);
-    });
+    attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend: true, isSelf, sentAt: opts.sentAt });
   }
 
   // Double tap to heart
@@ -1586,7 +1601,9 @@ window.cancelReply = () => {
 if ($('cancelReplyBtn')) $('cancelReplyBtn').addEventListener('click', window.cancelReply);
 if ($('cancelFriendReplyBtn')) $('cancelFriendReplyBtn').addEventListener('click', window.cancelReply);
 
-// ── VIEWS ────────────────────────────────────────────────────
+// ── VIEWS (ZERO-FLICKER HARDWARE ACCELERATED) ─────────────────
+let currentActiveView = 'prechat';
+
 function showView(which) {
   const views = [
     { key: 'prechat', el: preChatView },
@@ -1596,21 +1613,26 @@ function showView(which) {
     { key: 'friendDM', el: friendDMView },
   ];
 
+  const viewChanged = currentActiveView !== which;
+  currentActiveView = which;
+
   views.forEach(({ key, el }) => {
     if (!el) return;
     const isTarget = key === which;
-    const wasVisible = window.getComputedStyle(el).display !== 'none';
-    el.style.display = isTarget ? 'flex' : 'none';
-    if (isTarget && !wasVisible) {
-      el.classList.remove('view-enter');
-      requestAnimationFrame(() => el.classList.add('view-enter'));
-    } else if (!isTarget) {
+    if (isTarget) {
+      el.style.display = 'flex';
+      if (viewChanged) {
+        el.classList.remove('view-enter');
+        void el.offsetWidth; // single hardware-accelerated reflow
+        el.classList.add('view-enter');
+      }
+    } else {
+      el.style.display = 'none';
       el.classList.remove('view-enter');
     }
   });
 
-  // Show/hide home tabs — visible on ALL views except waiting? 
-  // Actually, tabs should be visible on prechat, friends, friendDM, and chat.
+  // Show/hide home tabs — visible on ALL views except waiting
   const showTabs = (which === 'prechat' || which === 'friends' || which === 'friendDM' || which === 'chat');
   if (homeTabs) homeTabs.style.display = showTabs ? 'flex' : 'none';
 
@@ -2469,7 +2491,9 @@ socket.on('friend_request_accepted', ({ friendId, friendCountry, dmRoomId }) => 
   appendMsg(`✨ You're now friends with ${friendCountry}!`, { isSystem: true, variant: 'success' });
   showToast(`✨ Friends with ${friendCountry}!`, 'success', 3000);
   if (!AppState.user.isAuthenticated) {
-    showPostFriendAuthModal();
+    setTimeout(() => {
+      showPostFriendAuthModal({ friendCountry });
+    }, 600);
   }
 });
 

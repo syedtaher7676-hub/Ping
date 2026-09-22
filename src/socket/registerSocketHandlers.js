@@ -443,6 +443,17 @@ function registerSocketHandlers(io, getCountryFromSocket) {
               redisSetUser(authUserId, oldUser).catch(() => {});
             }
           }
+
+          // Migrate any friendships from old guest session to new authenticated user ID
+          const oldFriends = getFriends(oldUserId);
+          if (Array.isArray(oldFriends) && oldFriends.length > 0) {
+            for (const fId of oldFriends) {
+              addFriendship(authUserId, fId);
+              addFriendship(fId, authUserId);
+              dbService.saveFriendship(authUserId, fId).catch(() => {});
+            }
+          }
+
           userId = authUserId;
         }
 
@@ -463,6 +474,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
               user.totalMatches = profile.totalMatches;
             }
             userStore.setUserData(authUserId, profile);
+          }
+          // Persist all current friendships to Firestore
+          const allFriends = getFriends(authUserId);
+          if (Array.isArray(allFriends)) {
+            for (const fId of allFriends) {
+              dbService.saveFriendship(authUserId, fId).catch(() => {});
+            }
           }
         }).catch(() => {});
 
