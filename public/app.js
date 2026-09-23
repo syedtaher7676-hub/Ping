@@ -381,40 +381,85 @@ function showInChatAuthModal(onDismiss = null) {
   );
 }
 
-function showPostFriendAuthModal(friendInfo = {}) {
-  if (AppState.user.isAuthenticated || document.getElementById('postFriendAuthModal')) return;
+function showFirebaseConnectModal(options = {}) {
+  const existing = document.getElementById('firebaseConnectModal') || document.getElementById('postFriendAuthModal');
+  if (existing) existing.remove();
 
-  const friendLabel = friendInfo.friendCountry || 'your new connection';
+  const isAlreadyAuth = AppState.user.isAuthenticated;
+  const friendLabel = options.friendCountry || 'your connection';
+
   const modal = document.createElement('div');
-  modal.id = 'postFriendAuthModal';
+  modal.id = 'firebaseConnectModal';
   modal.className = 'glass-modal-overlay';
-  modal.innerHTML = `
-    <div class="glass-modal-card">
-      <div class="gmc-icon">💾</div>
-      <div class="gmc-badge">🔥 Friend Connected!</div>
-      <h3>Save Friendships in Firebase</h3>
-      <p>You've connected with <strong>${friendLabel}</strong>! Sign in with Google now to securely save this friendship and your DM history in Firebase Cloud Firestore so you never lose contact across sessions.</p>
-      <div class="gmc-actions">
-        <button id="pfGoogleBtn" class="btn-primary" type="button">
-          <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
-          Sign In & Save to Firebase
-        </button>
-        <button id="pfDismissBtn" class="btn-ghost" type="button">Keep Chatting as Guest</button>
+  
+  if (isAlreadyAuth) {
+    modal.innerHTML = `
+      <div class="glass-modal-card">
+        <div class="gmc-icon">☁️</div>
+        <div class="gmc-badge">🔥 Firebase Sync Active</div>
+        <h3>Friends List Saved</h3>
+        <p>Your account is logged into Firebase! Your connection with <strong>${friendLabel}</strong> and your friends list are safely saved in Cloud Firestore.</p>
+        <div class="gmc-actions">
+          <button id="fcDoneBtn" class="btn-primary" type="button">Great, Keep Chatting</button>
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  } else {
+    modal.innerHTML = `
+      <div class="glass-modal-card">
+        <div class="gmc-icon">⚠️</div>
+        <div class="gmc-badge" style="color:#f59e0b;background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.35);">⚠️ Save Friends List</div>
+        <h3>Save Your Friends List in Firebase</h3>
+        <p>Friend request sent! Please log into Firebase now to save your friends list, <strong>or it will be lost forever</strong> once you close or refresh this tab.</p>
+        <div class="gmc-actions">
+          <button id="fcGoogleBtn" class="btn-primary" type="button" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);font-weight:600;">
+            <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
+            Log In to Firebase (Save Friends List)
+          </button>
+          <button id="fcDismissBtn" class="btn-ghost" type="button" style="color:#94a3b8;">
+            Continue Without It (Lose Friends on Exit)
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
   document.body.appendChild(modal);
 
-  document.getElementById('pfDismissBtn').onclick = () => {
-    if (navigator.vibrate) navigator.vibrate(10);
-    modal.remove();
-  };
-  document.getElementById('pfGoogleBtn').onclick = async () => {
-    if (navigator.vibrate) navigator.vibrate(20);
-    modal.remove();
-    triggerGoogleLogin();
+  const doneBtn = document.getElementById('fcDoneBtn');
+  if (doneBtn) {
+    doneBtn.onclick = () => {
+      if (navigator.vibrate) navigator.vibrate(10);
+      modal.remove();
+    };
+  }
+
+  const dismissBtn = document.getElementById('fcDismissBtn');
+  if (dismissBtn) {
+    dismissBtn.onclick = () => {
+      if (navigator.vibrate) navigator.vibrate(10);
+      modal.remove();
+      showToast('Continuing as guest. Friends will not be saved.', 'info', 3000);
+    };
+  }
+
+  const googleBtn = document.getElementById('fcGoogleBtn');
+  if (googleBtn) {
+    googleBtn.onclick = async () => {
+      if (navigator.vibrate) navigator.vibrate(20);
+      modal.remove();
+      triggerGoogleLogin();
+    };
+  }
+
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
   };
 }
+window.showPostFriendAuthModal = showFirebaseConnectModal;
+window.showFirebaseConnectModal = showFirebaseConnectModal;
 
 function formatPartnerLocation(countryString) {
   if (!countryString || countryString === 'Unknown' || countryString === 'Someone nearby') {
@@ -713,7 +758,7 @@ function setOnlineCount(n) {
   const ws = $('wsCount'); if (ws) ws.textContent = display;
 }
 
-// ── REUSABLE OPTIMIZED LONG-PRESS & CONTEXT MENU HANDLER ────
+// ── REUSABLE OPTIMIZED INSTAGRAM-STYLE LONG-PRESS HANDLER ──
 function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, isSelf, sentAt }) {
   let pressTimer = null;
   let startX = 0, startY = 0;
@@ -748,12 +793,12 @@ function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, is
 
     el.classList.add('msg-pressing');
 
-    // Snappy 320ms press timing with immediate haptic touch
+    // Snappy 320ms hold timing with immediate haptic touch
     pressTimer = setTimeout(() => {
       hasTriggered = true;
       el.classList.remove('msg-pressing');
       if (navigator.vibrate) navigator.vibrate(28);
-      showAdvancedMsgOptions(e, msgId, getCleanText(), isPartner, isFriend, isSelf, sentAt, startX, startY);
+      showInstagramMsgMenu(e, msgId, getCleanText(), isPartner, isFriend, isSelf, sentAt, startX, startY);
       pressTimer = null;
     }, 320);
   };
@@ -763,6 +808,7 @@ function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, is
       const touch = e.touches ? e.touches[0] : e;
       const dx = Math.abs(touch.clientX - startX);
       const dy = Math.abs(touch.clientY - startY);
+      // Cancel long-press if finger moved > 8px so chat scrolling remains buttery smooth
       if (dx > 8 || dy > 8) {
         clearTimeout(pressTimer);
         pressTimer = null;
@@ -779,6 +825,7 @@ function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, is
     el.classList.remove('msg-pressing');
     if (hasTriggered && e && e.cancelable) {
       e.preventDefault();
+      e.stopPropagation();
     }
   };
 
@@ -791,11 +838,12 @@ function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, is
   el.addEventListener('mouseup', handleEnd);
   el.addEventListener('mouseleave', handleEnd);
 
+  // Desktop right-click context menu opens Instagram-style menu directly
   el.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     el.classList.remove('msg-pressing');
     if (navigator.vibrate) navigator.vibrate(25);
-    showAdvancedMsgOptions(e, msgId, getCleanText(), isPartner, isFriend, isSelf, sentAt, e.clientX, e.clientY);
+    showInstagramMsgMenu(e, msgId, getCleanText(), isPartner, isFriend, isSelf, sentAt, e.clientX, e.clientY);
   });
 }
 
@@ -832,6 +880,7 @@ function appendMsg(text, opts = {}) {
   if (isPartner) cls.push('partner');
   if (isSystem) cls.push('system');
   if (variant) cls.push(variant);
+  if (opts.extraClass) cls.push(opts.extraClass);
   el.className = cls.join(' ');
   if (msgId) el.dataset.msgId = msgId;
 
@@ -942,36 +991,7 @@ function appendMsg(text, opts = {}) {
     if (window.__pingMatchBurst) window.__pingMatchBurst();
   };
 
-  if ((isSelf || isPartner) && !isSystem) {
-    const rxns = document.createElement('div');
-    rxns.className = 'msg-reactions';
-    const emojis = ['😂', '❤️', '🔥', '💀', '🥺', '✨'];
-    emojis.forEach(emo => {
-      const b = document.createElement('button');
-      b.className = 'rxn-btn';
-      b.textContent = emo;
-      b.onclick = (e) => {
-        e.stopPropagation();
-        window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
-        if (currentChatType === 'friend') {
-          sendFriendMessage(emo);
-        } else {
-          sendMessage(emo);
-        }
-      };
-      rxns.appendChild(b);
-    });
-    el.appendChild(rxns);
-
-    const rTrig = document.createElement('div');
-    rTrig.className = 'msg-reply-trigger';
-    rTrig.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 11l5-5-5-5M21 11H3"/></svg>';
-    rTrig.onclick = () => window.startReply(text, isPartner, msgId);
-    rTrig.title = "Reply";
-    rTrig.setAttribute('aria-label', "Reply");
-    el.appendChild(rTrig);
-  }
-
+  // Message appending without inline hover reactions or reply buttons (handled via Instagram-style long-press)
   chatBox.appendChild(el);
   scrollToBottom(chatBox);
 
@@ -984,53 +1004,129 @@ function appendMsg(text, opts = {}) {
   if (!isSystem) checkKeywordEffects(text);
 }
 
-function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sentAt, touchX, touchY) {
-  const old = document.querySelector('.msg-context-menu');
-  if (old) old.remove();
+// ── INSTAGRAM-STYLE LONG PRESS TO REPLY & REACT (PING UI) ────
+function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentAt, touchX, touchY) {
+  // Clean up any previously opened menus or backdrops
+  document.querySelectorAll('.ping-ig-backdrop, .ping-ig-reaction-pill, .ping-ig-menu, .msg-context-menu').forEach(el => el.remove());
+  document.querySelectorAll('.ping-msg-highlighted').forEach(el => el.classList.remove('ping-msg-highlighted'));
 
-  const targetBubble = e?.currentTarget || e?.target?.closest('.msg');
-  const bubbleRect = targetBubble ? targetBubble.getBoundingClientRect() : null;
+  const targetBubble = (e && e.currentTarget && e.currentTarget.classList && e.currentTarget.classList.contains('msg'))
+    ? e.currentTarget
+    : (e?.target?.closest ? e.target.closest('.msg') : null)
+      || (msgId ? document.querySelector(`[data-msg-id="${msgId}"]`) : null);
 
-  const menu = document.createElement('div');
-  menu.className = 'msg-context-menu';
+  if (targetBubble) {
+    targetBubble.classList.add('ping-msg-highlighted');
+  }
 
-  // 1. Quick Emoji Reactions
-  const rxnRow = document.createElement('div');
-  rxnRow.className = 'menu-rxn-row';
-  const emojis = ['😂', '❤️', '🔥', '💀', '🥺', '✨', '👍', '⚡'];
-  emojis.forEach(emo => {
+  // 1. Fullscreen frosted backdrop
+  const backdrop = document.createElement('div');
+  backdrop.className = 'ping-ig-backdrop';
+  document.body.appendChild(backdrop);
+
+  // 2. Floating Instagram reaction pill (capsule)
+  const pill = document.createElement('div');
+  pill.className = 'ping-ig-reaction-pill';
+
+  const primaryEmojis = ['❤️', '😂', '😮', '😢', '🔥', '👍'];
+  primaryEmojis.forEach(emo => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'menu-rxn-btn';
+    btn.className = 'ping-ig-rxn-btn';
     btn.textContent = emo;
+    btn.title = `React ${emo}`;
     btn.onclick = (evt) => {
       evt.stopPropagation();
-      if (navigator.vibrate) navigator.vibrate(15);
-      menu.remove();
+      if (navigator.vibrate) navigator.vibrate(18);
+      closeAll();
       window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
       if (isFriend) sendFriendMessage(emo);
       else sendMessage(emo);
-      showToast(`Reacted ${emo}`, 'info', 1200);
+      if (emo === '❤️') triggerEffect('hearts');
+      else if (emo === '🔥') triggerEffect('fire');
+      else if (emo === '👍') triggerEffect('confetti');
+      showToast(`Reacted ${emo}`, 'info', 1400);
     };
-    rxnRow.appendChild(btn);
+    pill.appendChild(btn);
   });
-  menu.appendChild(rxnRow);
 
-  const divider = document.createElement('div');
-  divider.className = 'menu-divider';
-  menu.appendChild(divider);
+  // Secondary emoji expander tray
+  const moreTray = document.createElement('div');
+  moreTray.className = 'ping-ig-more-tray';
+  const extraEmojis = ['💀', '🥺', '✨', '🙌', '💯', '👏'];
+  extraEmojis.forEach(emo => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ping-ig-rxn-btn';
+    btn.textContent = emo;
+    btn.title = `React ${emo}`;
+    btn.onclick = (evt) => {
+      evt.stopPropagation();
+      if (navigator.vibrate) navigator.vibrate(18);
+      closeAll();
+      window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
+      if (isFriend) sendFriendMessage(emo);
+      else sendMessage(emo);
+      showToast(`Reacted ${emo}`, 'info', 1400);
+    };
+    moreTray.appendChild(btn);
+  });
+  pill.appendChild(moreTray);
 
-  // 2. Reply
-  const replyBtn = document.createElement('button');
-  replyBtn.type = 'button';
-  replyBtn.className = 'menu-item';
-  replyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l5-5-5-5M21 11H3"/></svg><span>Reply</span>';
-  replyBtn.onclick = (evt) => {
+  const moreBtn = document.createElement('button');
+  moreBtn.type = 'button';
+  moreBtn.className = 'ping-ig-rxn-more';
+  moreBtn.innerHTML = '+';
+  moreBtn.title = 'More reactions';
+  moreBtn.onclick = (evt) => {
     evt.stopPropagation();
-    if (navigator.vibrate) navigator.vibrate(20);
-    menu.remove();
+    const isOpening = !moreTray.classList.contains('open');
+    moreTray.classList.toggle('open', isOpening);
+    pill.classList.toggle('expanded', isOpening);
+    moreBtn.innerHTML = isOpening ? '✕' : '+';
+    reposition();
+  };
+  pill.appendChild(moreBtn);
+
+  document.body.appendChild(pill);
+
+  // 3. Floating Instagram Action Menu with Ping UI
+  const menu = document.createElement('div');
+  menu.className = 'ping-ig-menu';
+
+  // Primary Action: Reply
+  const replyItem = document.createElement('button');
+  replyItem.type = 'button';
+  replyItem.className = 'ping-ig-item ping-ig-reply-item';
+  const partnerLabel = isFriend ? 'Friend' : 'Stranger';
+  const replySubtitle = isPartner ? `Reply to ${partnerLabel}` : 'Reply to your message';
+  replyItem.innerHTML = `
+    <div class="ping-ig-item-left">
+      <div class="ping-ig-item-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 14 4 9 9 4"/>
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+        </svg>
+      </div>
+      <div class="ping-ig-item-text">
+        <span class="ping-ig-item-title">Reply</span>
+        <span class="ping-ig-item-sub">${replySubtitle}</span>
+      </div>
+    </div>
+    <span class="ping-ig-shortcut">↩ Reply</span>
+  `;
+  replyItem.onclick = (evt) => {
+    evt.stopPropagation();
+    if (navigator.vibrate) navigator.vibrate(22);
+    closeAll();
     if (typeof window.startReply === 'function') {
       window.startReply(text, isPartner, msgId);
+    }
+    const rp = isFriend ? $('friendReplyPreview') : $('replyPreview');
+    if (rp) {
+      rp.classList.remove('rp-flash-highlight');
+      void rp.offsetWidth;
+      rp.classList.add('rp-flash-highlight');
     }
     const targetInput = isFriend ? $('friendMessageInput') : $('messageInput');
     if (targetInput) {
@@ -1038,17 +1134,30 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
       targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
-  menu.appendChild(replyBtn);
+  menu.appendChild(replyItem);
 
-  // 3. Copy Text
-  const copyBtn = document.createElement('button');
-  copyBtn.type = 'button';
-  copyBtn.className = 'menu-item';
-  copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copy Text</span>';
-  copyBtn.onclick = async (evt) => {
+  // Copy Text
+  const copyItem = document.createElement('button');
+  copyItem.type = 'button';
+  copyItem.className = 'ping-ig-item';
+  copyItem.innerHTML = `
+    <div class="ping-ig-item-left">
+      <div class="ping-ig-item-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      </div>
+      <div class="ping-ig-item-text">
+        <span class="ping-ig-item-title">Copy Text</span>
+        <span class="ping-ig-item-sub">Copy to clipboard</span>
+      </div>
+    </div>
+  `;
+  copyItem.onclick = async (evt) => {
     evt.stopPropagation();
-    if (navigator.vibrate) navigator.vibrate(25);
-    menu.remove();
+    if (navigator.vibrate) navigator.vibrate(18);
+    closeAll();
     const cleanText = (text || '').replace(/<[^>]*>/g, '').trim();
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1069,77 +1178,200 @@ function showAdvancedMsgOptions(e, msgId, text, isPartner, isFriend, isSelf, sen
       showToast('📋 Copied to clipboard!', 'info', 1500);
     }
   };
-  menu.appendChild(copyBtn);
+  menu.appendChild(copyItem);
 
-  // 4. Edit / Delete (for own messages)
+  // Edit / Delete (for own messages)
   if (isSelf && msgId) {
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'menu-item';
-    editBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>Edit Message</span>';
-    editBtn.onclick = (evt) => {
+    const editItem = document.createElement('button');
+    editItem.type = 'button';
+    editItem.className = 'ping-ig-item';
+    editItem.innerHTML = `
+      <div class="ping-ig-item-left">
+        <div class="ping-ig-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </div>
+        <div class="ping-ig-item-text">
+          <span class="ping-ig-item-title">Edit Message</span>
+          <span class="ping-ig-item-sub">Modify your message</span>
+        </div>
+      </div>
+    `;
+    editItem.onclick = (evt) => {
       evt.stopPropagation();
-      menu.remove();
+      closeAll();
       openEditModal(msgId, text, isFriend);
     };
-    menu.appendChild(editBtn);
+    menu.appendChild(editItem);
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'menu-item danger';
-    deleteBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete Message</span>';
-    deleteBtn.onclick = (evt) => {
+    const deleteItem = document.createElement('button');
+    deleteItem.type = 'button';
+    deleteItem.className = 'ping-ig-item danger';
+    deleteItem.innerHTML = `
+      <div class="ping-ig-item-left">
+        <div class="ping-ig-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+        <div class="ping-ig-item-text">
+          <span class="ping-ig-item-title">Delete Message</span>
+          <span class="ping-ig-item-sub">Remove for everyone</span>
+        </div>
+      </div>
+    `;
+    deleteItem.onclick = (evt) => {
       evt.stopPropagation();
-      menu.remove();
+      closeAll();
       openDeleteModal(msgId, isFriend);
     };
-    menu.appendChild(deleteBtn);
+    menu.appendChild(deleteItem);
   }
 
-  // Append to body first to compute exact rendered dimensions via getBoundingClientRect()
+  // Report option for stranger messages
+  if (!isSelf && !isFriend) {
+    const reportItem = document.createElement('button');
+    reportItem.type = 'button';
+    reportItem.className = 'ping-ig-item danger';
+    reportItem.innerHTML = `
+      <div class="ping-ig-item-left">
+        <div class="ping-ig-item-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+            <line x1="4" y1="22" x2="4" y2="15"/>
+          </svg>
+        </div>
+        <div class="ping-ig-item-text">
+          <span class="ping-ig-item-title">Report User</span>
+          <span class="ping-ig-item-sub">15m ban & end chat</span>
+        </div>
+      </div>
+    `;
+    reportItem.onclick = (evt) => {
+      evt.stopPropagation();
+      closeAll();
+      showConfirm('Report User?', 'This user will be banned for 15 minutes and the chat will end immediately.', () => {
+        socket.emit('report_user', { roomId: activeRoomId, reason: 'inappropriate' });
+        endCurrentChat();
+        showToast('User reported and banned for 15 minutes.', 'success', 3000);
+      });
+    };
+    menu.appendChild(reportItem);
+  }
+
   document.body.appendChild(menu);
 
-  const menuRect = menu.getBoundingClientRect();
-  const menuWidth = menuRect.width || 240;
-  const menuHeight = menuRect.height || 220;
-  const padding = 12;
-  const bottomBarHeight = 75; // Clearance for bottom input bar
-
-  let clickX = (e && e.touches && e.touches.length > 0)
-    ? e.touches[0].clientX
-    : (e?.clientX ?? (typeof touchX === 'number' ? touchX : (bubbleRect ? (isSelf ? bubbleRect.right - menuWidth : bubbleRect.left) : 100)));
-  let clickY = (e && e.touches && e.touches.length > 0)
-    ? e.touches[0].clientY
-    : (e?.clientY ?? (typeof touchY === 'number' ? touchY : (bubbleRect ? bubbleRect.top : 100)));
-
-  // STRICT HORIZONTAL CLAMPING: Prevents clipping off the right or left edge of the screen
-  let left = Math.min(Math.max(padding, clickX - (isSelf ? menuWidth - 40 : 20)), window.innerWidth - menuWidth - padding);
-
-  // STRICT VERTICAL CLAMPING: Prevents overlapping the bottom input bar
-  let top = clickY - menuHeight - 8;
-  if (top < padding || (clickY + menuHeight + bottomBarHeight < window.innerHeight)) {
-    top = Math.min(clickY + 8, window.innerHeight - menuHeight - bottomBarHeight - padding);
-  }
-  top = Math.max(padding, top);
-
-  menu.style.position = 'fixed';
-  menu.style.left = `${Math.round(left)}px`;
-  menu.style.top = `${Math.round(top)}px`;
-  menu.style.zIndex = '9999';
-
-  setTimeout(() => {
-    const closeMenu = (evt) => {
-      if (evt && menu.contains(evt.target)) return;
-      menu.remove();
-      document.removeEventListener('click', closeMenu);
-      document.removeEventListener('touchstart', closeMenu);
-      document.removeEventListener('pointerdown', closeMenu);
+  // Dynamic positioning calculation
+  function reposition() {
+    const bRect = targetBubble ? targetBubble.getBoundingClientRect() : {
+      top: touchY || 200,
+      bottom: (touchY || 200) + 40,
+      left: touchX || 100,
+      right: (touchX || 100) + 120,
+      width: 120,
+      height: 40
     };
-    document.addEventListener('click', closeMenu, { once: true });
-    document.addEventListener('touchstart', closeMenu, { once: true });
-    document.addEventListener('pointerdown', closeMenu, { once: true });
-  }, 50);
+
+    const pRect = pill.getBoundingClientRect();
+    const pW = pRect.width || 280;
+    const pH = pRect.height || 44;
+
+    const mRect = menu.getBoundingClientRect();
+    const mW = mRect.width || 224;
+    const mH = mRect.height || 180;
+
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const bottomBarPadding = 84;
+
+    // Horizontally center both the reaction pill and action menu over the target bubble/element
+    const targetCenterX = bRect.left + (bRect.width / 2);
+    let pLeft = Math.round(targetCenterX - (pW / 2));
+    pLeft = Math.max(12, Math.min(pLeft, winW - pW - 12));
+
+    let mLeft = Math.round(targetCenterX - (mW / 2));
+    mLeft = Math.max(12, Math.min(mLeft, winW - mW - 12));
+
+    // Pill: prefer directly above bubble
+    const pillFitsAbove = (bRect.top >= pH + 14);
+    let pTop = pillFitsAbove ? (bRect.top - pH - 8) : (bRect.bottom + 8);
+
+    // Menu: place below bubble if pill is above, or below pill if pill is below bubble
+    let mTop;
+    if (pillFitsAbove) {
+      mTop = bRect.bottom + 8;
+      if (mTop + mH > winH - bottomBarPadding) {
+        if (pTop - mH - 8 >= 12) {
+          mTop = pTop - mH - 8;
+        } else {
+          mTop = Math.max(12, winH - bottomBarPadding - mH);
+        }
+      }
+    } else {
+      mTop = pTop + pH + 8;
+      if (mTop + mH > winH - bottomBarPadding) {
+        mTop = Math.max(12, bRect.top - mH - 8);
+      }
+    }
+
+    pill.style.position = 'fixed';
+    pill.style.top = `${Math.round(pTop)}px`;
+    pill.style.left = `${Math.round(pLeft)}px`;
+
+    menu.style.position = 'fixed';
+    menu.style.top = `${Math.round(mTop)}px`;
+    menu.style.left = `${Math.round(mLeft)}px`;
+  }
+  reposition();
+
+  // Dismiss listeners
+  let isClosed = false;
+  function closeAll() {
+    if (isClosed) return;
+    isClosed = true;
+    if (targetBubble) targetBubble.classList.remove('ping-msg-highlighted');
+    backdrop.classList.add('closing');
+    pill.style.opacity = '0';
+    pill.style.transform = 'scale(0.8)';
+    pill.style.transition = 'all 0.15s ease';
+    menu.style.opacity = '0';
+    menu.style.transform = 'scale(0.85)';
+    menu.style.transition = 'all 0.15s ease';
+    setTimeout(() => {
+      backdrop.remove();
+      pill.remove();
+      menu.remove();
+    }, 160);
+    cleanup();
+  }
+
+  const handlePointerDown = (evt) => {
+    if (pill.contains(evt.target) || menu.contains(evt.target)) return;
+    closeAll();
+  };
+  const handleKeyDown = (evt) => {
+    if (evt.key === 'Escape') closeAll();
+  };
+  const handleScroll = () => {
+    closeAll();
+  };
+
+  backdrop.addEventListener('pointerdown', handlePointerDown);
+  window.addEventListener('keydown', handleKeyDown);
+  chatBox?.addEventListener('scroll', handleScroll, { passive: true });
+  friendChatBox?.addEventListener('scroll', handleScroll, { passive: true });
+
+  function cleanup() {
+    backdrop.removeEventListener('pointerdown', handlePointerDown);
+    window.removeEventListener('keydown', handleKeyDown);
+    chatBox?.removeEventListener('scroll', handleScroll);
+    friendChatBox?.removeEventListener('scroll', handleScroll);
+  }
 }
+window.showInstagramMsgMenu = showInstagramMsgMenu;
+window.showAdvancedMsgOptions = showInstagramMsgMenu;
 
 function openEditModal(msgId, currentText, isFriend) {
   const safeText = (currentText || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -1351,32 +1583,7 @@ function appendFriendMsg(text, opts = {}) {
     sendFriendMessage('❤️');
   };
 
-  if ((isSelf || isPartner) && !isSystem) {
-    const rxns = document.createElement('div');
-    rxns.className = 'msg-reactions';
-    const emojis = ['😂', '❤️', '🔥', '💀', '🥺', '✨'];
-    emojis.forEach(emo => {
-      const b = document.createElement('button');
-      b.className = 'rxn-btn';
-      b.textContent = emo;
-      b.onclick = (e) => {
-        e.stopPropagation();
-        window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
-        sendFriendMessage(emo);
-      };
-      rxns.appendChild(b);
-    });
-    el.appendChild(rxns);
-
-    const rTrig = document.createElement('div');
-    rTrig.className = 'msg-reply-trigger';
-    rTrig.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 11l5-5-5-5M21 11H3"/></svg>';
-    rTrig.onclick = () => window.startReply(text, isPartner, msgId);
-    rTrig.title = "Reply";
-    rTrig.setAttribute('aria-label', "Reply");
-    el.appendChild(rTrig);
-  }
-
+  // Friend message appending without inline hover reactions or reply buttons (handled via Instagram-style long-press)
   friendChatBox.appendChild(el);
   scrollToBottom(friendChatBox);
 
@@ -2198,6 +2405,24 @@ function handleIncomingDm(payload) {
       sentAt: payload.sentAt,
       isEdited: payload.isEdited
     });
+
+    // Directly persist to Cloud Firestore for recipient backup
+    if (AppState.user.isAuthenticated && dbInstance && senderId) {
+      try {
+        const canonicalChatId = [AppState.user.id, senderId].sort().join('__');
+        const mId = payload.msgId || ('f_' + Date.now());
+        dbInstance.collection('friend_chats').doc(canonicalChatId).collection('messages').doc(mId).set({
+          messageId: mId,
+          chatId: canonicalChatId,
+          fromUserId: senderId,
+          message: payload.message,
+          replyTo: processedReplyTo || null,
+          isFlash: Boolean(payload.isFlash),
+          sentAt: payload.sentAt || Date.now(),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(() => {});
+      } catch (_) {}
+    }
   }
 }
 
@@ -2450,7 +2675,7 @@ socket.off('time_extended');
 socket.on('time_extended', ({ roomId, addedMs, remainingMs }) => {
   if (!inChat || activeRoomId !== roomId) return;
   const addedMin = Math.round(addedMs / 60000);
-  appendMsg(`✅ Time extended by ${addedMin} minutes! Keep chatting 🎉`, { isSystem: true, variant: 'success' });
+  appendMsg(`✅ Time extended by ${addedMin} minutes! Keep chatting 🎉`, { isSystem: true, variant: 'success', extraClass: 'time-extended-msg' });
   showToast(`+${addedMin} min granted!`, 'success', 3000);
   startTimer(Date.now() + remainingMs);
 });
@@ -2468,9 +2693,7 @@ socket.on('time_extension_declined', ({ roomId }) => {
 socket.off('friend_request_sent');
 socket.on('friend_request_sent', ({ requestId, toUserId } = {}) => {
   showToast('👫 Friend request sent!', 'success', 3000);
-  if (!AppState.user.isAuthenticated) {
-    showPostFriendAuthModal();
-  }
+  showFirebaseConnectModal({ friendCountry: partnerNameEl?.textContent || 'Stranger' });
 });
 
 socket.off('friend_request_received');
@@ -2478,9 +2701,7 @@ socket.on('friend_request_received', ({ requestId, fromUserId, fromCountry }) =>
   appendMsg(`👋 ${fromCountry} wants to be friends!`, { isSystem: true, variant: 'success' });
   showConfirm('New Friend?', `${fromCountry} wants to add you as a friend!`, () => {
     socket.emit('friend_request_response', { requestId, accept: true });
-    if (!AppState.user.isAuthenticated) {
-      showPostFriendAuthModal();
-    }
+    showFirebaseConnectModal({ friendCountry: fromCountry });
   }, () => {
     socket.emit('friend_request_response', { requestId, accept: false });
   });
@@ -2490,11 +2711,9 @@ socket.off('friend_request_accepted');
 socket.on('friend_request_accepted', ({ friendId, friendCountry, dmRoomId }) => {
   appendMsg(`✨ You're now friends with ${friendCountry}!`, { isSystem: true, variant: 'success' });
   showToast(`✨ Friends with ${friendCountry}!`, 'success', 3000);
-  if (!AppState.user.isAuthenticated) {
-    setTimeout(() => {
-      showPostFriendAuthModal({ friendCountry });
-    }, 600);
-  }
+  setTimeout(() => {
+    showFirebaseConnectModal({ friendCountry });
+  }, 600);
 });
 
 socket.off('friend_request_declined');
@@ -2656,8 +2875,9 @@ nextBtn?.addEventListener('click', (e) => {
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
-  socket.emit('next_chat', { autoStart: true });
-  if (inChat) appendMsg('Searching...', { isSystem: true });
+  socket.emit('end_chat', { roomId: activeRoomId });
+  endCurrentChat();
+  showToast('Chat ended.', 'info', 2000);
 });
 
 let reportSkipConfirmTimer = null;
@@ -2686,8 +2906,9 @@ reportSkipBtn?.addEventListener('click', (e) => {
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
-  socket.emit('report_user', { roomId: AppState.explore.roomId, reason: 'inappropriate' });
-  if (inChat) appendMsg('Reporting & Skipping...', { isSystem: true });
+  socket.emit('report_user', { roomId: AppState.explore.roomId || activeRoomId, reason: 'inappropriate' });
+  endCurrentChat();
+  showToast('User reported and banned for 15 minutes.', 'success', 3000);
 });
 
 cancelWaitBtn?.addEventListener('click', () => {
@@ -2827,6 +3048,25 @@ function sendFriendMessage(overrideText = null) {
 
   messageRetryQueue.set(msgId, { payload, timer, retries: 0, chatType: 'friend' });
   attemptSend(false);
+
+  // Directly persist to Cloud Firestore if user is authenticated with Firebase
+  if (AppState.user.isAuthenticated && dbInstance && currentFriendId) {
+    try {
+      const canonicalChatId = [AppState.user.id, currentFriendId].sort().join('__');
+      dbInstance.collection('friend_chats').doc(canonicalChatId).collection('messages').doc(msgId).set({
+        messageId: msgId,
+        chatId: canonicalChatId,
+        fromUserId: AppState.user.id,
+        message: text,
+        replyTo: replyTarget || null,
+        isFlash: Boolean(isFlash),
+        sentAt: Date.now(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true }).catch((err) => console.warn('Direct Firestore msg write notice:', err));
+    } catch (dbErr) {
+      console.warn('Firestore msg write notice:', dbErr);
+    }
+  }
 }
 
 messageForm?.addEventListener('submit', e => {
@@ -2917,10 +3157,10 @@ friendMessageInput?.addEventListener('input', function () {
 });
 
 reportBtn?.addEventListener('click', () => {
-  showConfirm('Report?', "This will end the chat.", () => {
-    socket.emit('report_user', { roomId: activeRoomId });
+  showConfirm('Report User?', "This user will be banned for 15 minutes and the chat will end immediately.", () => {
+    socket.emit('report_user', { roomId: activeRoomId, reason: 'inappropriate' });
     endCurrentChat();
-    showToast('Reported.', 'success');
+    showToast('User reported and banned for 15 minutes.', 'success', 3000);
   });
 });
 
@@ -2929,11 +3169,10 @@ extendTimeBtn?.addEventListener('click', () => {
 });
 
 friendBtn?.addEventListener('click', () => {
+  const threeDotsMenu = $('threeDotsMenu');
+  if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
   socket.emit('send_friend_request');
-  if (!AppState.user.isAuthenticated) {
-    AppState.deferredFriendRequest = true;
-    showPostFriendAuthModal();
-  }
+  showFirebaseConnectModal({ friendCountry: partnerNameEl?.textContent || 'Stranger' });
 });
 
 homeAuthBtn?.addEventListener('click', () => {

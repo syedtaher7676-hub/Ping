@@ -1743,57 +1743,32 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         terminateSession(io, currentUser.roomId, "user_reported");
         socket.emit("chat_end", { reason: "user_reported" });
 
-        // Increment partner's report score and apply temporary ban if necessary (2 reports in 10 minutes)
+        // Immediately ban the reported user for 15 mins from starting a chat (same like slurs when detected)
         if (partnerId && partnerId !== "unknown") {
           const now = Date.now();
-          const reportKey = `${userId}_${partnerId}`;
+          const banExpiry = now + 900000; // 15 minutes ban (15 * 60 * 1000)
+          temporaryBans.set(partnerId, banExpiry);
 
-          if (!recentReports.has(reportKey)) {
-            recentReports.set(reportKey, now);
-
-            // Clean stale reports (>10 mins)
-            for (const [key, value] of recentReports.entries()) {
-              if (now - value > 600000) {
-                recentReports.delete(key);
+          if (partner && partner.socketId) {
+            const partnerSocket = io.sockets.sockets.get(partner.socketId);
+            if (partnerSocket) {
+              const ip = partnerSocket.handshake.headers["x-forwarded-for"] || partnerSocket.handshake.address;
+              if (ip) {
+                temporaryBans.set(ip, banExpiry);
+                log("ip_banned_via_reports", { ip, partnerId });
               }
-            }
-
-            // Count reports on this partner
-            let reportCount = 0;
-            for (const [key, valTime] of recentReports.entries()) {
-              if (key.endsWith(`_${partnerId}`) && (now - valTime <= 600000)) {
-                reportCount++;
-              }
-            }
-
-            log("report_score_incremented", { partnerId, reportCount });
-
-            if (reportCount >= 2) {
-              const banExpiry = now + 900000; // 15 minutes ban
-              temporaryBans.set(partnerId, banExpiry);
-
-              if (partner && partner.socketId) {
-                const partnerSocket = io.sockets.sockets.get(partner.socketId);
-                if (partnerSocket) {
-                  const ip = partnerSocket.handshake.headers["x-forwarded-for"] || partnerSocket.handshake.address;
-                  if (ip) {
-                    temporaryBans.set(ip, banExpiry);
-                    log("ip_banned_via_reports", { ip, partnerId });
-                  }
-                  const banMsg = "⚠️ You have been banned for 15 minutes due to multiple user reports.";
-                  partnerSocket.emit("chat_ended_banned", {
-                    isOffender: true,
-                    message: banMsg,
-                    banExpiresAt: banExpiry,
-                    remainingMs: 900000
-                  });
-                  partnerSocket.emit("error_message", { message: banMsg });
-                  try { partnerSocket.disconnect(true); } catch (e) {}
-                }
-              }
-              log("temporary_ban_applied", { partnerId });
+              const banMsg = "⚠️ You have been banned for 15 minutes due to a user report for inappropriate behavior.";
+              partnerSocket.emit("chat_ended_banned", {
+                isOffender: true,
+                message: banMsg,
+                banExpiresAt: banExpiry,
+                remainingMs: 900000
+              });
+              partnerSocket.emit("error_message", { message: banMsg });
+              try { partnerSocket.disconnect(true); } catch (e) {}
             }
           }
+          log("temporary_ban_applied_report", { partnerId, banExpiry });
         }
 
         // Cleanly auto-requeue reporting user if it's an Explore chat

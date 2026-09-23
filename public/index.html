@@ -185,45 +185,16 @@
       color: rgba(255, 255, 255, .8);
     }
 
-    .msg-reply-trigger {
-      position: absolute;
-      right: -36px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 30px;
-      height: 30px;
-      background: rgba(255, 255, 255, .05);
-      border: 1px solid rgba(255, 255, 255, .1);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--t-med);
-      cursor: pointer;
-      opacity: 0;
-      transition: all .2s;
-      backdrop-filter: blur(5px);
-    }
-
-    .msg:hover .msg-reply-trigger {
-      opacity: 1;
-      transform: translateY(-50%) scale(1);
-      right: -36px;
-    }
-
-    .msg-reply-trigger:hover {
-      background: rgba(255, 255, 255, .1);
-      color: #fff;
-    }
-
-    .msg.self .msg-reply-trigger {
-      right: auto;
-      left: -36px;
-    }
-
+    /* Inline reaction and reply triggers disabled on message click/hover */
+    .msg-reply-trigger,
+    .msg-reactions,
+    .msg:hover .msg-reply-trigger,
+    .msg:hover .msg-reactions,
     .msg.self:hover .msg-reply-trigger {
-      opacity: 1;
-      left: -36px;
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
     }
   </style>
 </head>

@@ -1041,7 +1041,7 @@ input {
   box-shadow: 0 0 10px rgba(34, 197, 94, .1) inset;
   border-radius: var(--r-full);
   font-family: 'Space Grotesk', sans-serif;
-  font-size: .82rem;
+  font-size: .70rem;
   font-weight: 600;
   color: #4ade80;
 }
@@ -1407,7 +1407,7 @@ input {
   background: rgba(34, 197, 94, .09);
   border: 1px solid rgba(34, 197, 94, .25);
   border-radius: var(--r-full);
-  font-size: .82rem;
+  font-size: .70rem;
   font-weight: 600;
   color: var(--green);
 }
@@ -3110,6 +3110,11 @@ input:checked+.slider-round:before {
   padding: 0;
 }
 
+.msg.system .msg-text {
+  font-size: inherit;
+  line-height: inherit;
+}
+
 @keyframes system-pop {
   from {
     opacity: 0;
@@ -3142,71 +3147,42 @@ input:checked+.slider-round:before {
   box-shadow: 0 0 20px rgba(239, 68, 68, .08);
 }
 
-.msg.system.success {
+.msg.system.success,
+.msg.system.success .msg-text {
   font-style: normal;
   background: linear-gradient(135deg, rgba(34, 197, 94, .12), rgba(34, 197, 94, .05));
   border: 1px solid rgba(34, 197, 94, .3);
   border-radius: var(--r-full);
   color: var(--green);
-  padding: 8px 18px;
-  box-shadow: 0 0 20px rgba(34, 197, 94, .08);
+  padding: 4px 14px;
+  font-size: .66rem !important;
+  line-height: 1.35;
+  box-shadow: 0 0 16px rgba(34, 197, 94, .06);
 }
 
-/* Emoji hover-reaction row */
-.msg-reactions {
-  position: absolute;
-  top: -28px;
-  display: none;
-  gap: 4px;
-  align-items: center;
-  background: rgba(10, 10, 28, .95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, .15);
-  border-radius: 30px;
-  padding: 4px 10px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, .5);
-  animation: rxn-pop .18s var(--spring) both;
-  z-index: 15;
+.msg.system.time-extended-msg,
+.msg.system.time-extended-msg .msg-text {
+  font-size: .62rem !important;
+  padding: 3px 12px;
+  line-height: 1.3;
 }
 
-@keyframes rxn-pop {
-  from {
-    opacity: 0;
-    transform: scale(.7)
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1)
-  }
-}
-
-.msg.self .msg-reactions {
-  right: 8px;
-}
-
-.msg.partner .msg-reactions {
-  left: 8px;
-}
-
-.msg:hover .msg-reactions {
-  display: flex;
+/* Inline emoji reaction row disabled on click/hover (handled exclusively in Instagram-style long-press) */
+.msg-reactions,
+.msg-reply-trigger,
+.msg:hover .msg-reactions,
+.msg:hover .msg-reply-trigger,
+.msg.self .msg-reactions,
+.msg.partner .msg-reactions,
+.msg.self:hover .msg-reply-trigger {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
 }
 
 .rxn-btn {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  padding: 2px 3px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform .15s var(--spring);
-  line-height: 1;
-}
-
-.rxn-btn:hover {
-  transform: scale(1.35);
+  display: none !important;
 }
 
 /* Hide footers and status ticks */
@@ -3954,7 +3930,7 @@ input:checked+.slider-round:before {
   background: rgba(34, 197, 94, .07);
   border: 1px solid rgba(34, 197, 94, .18);
   border-radius: var(--r-full);
-  font-size: .8rem;
+  font-size: .68rem;
   font-weight: 600;
   color: var(--green);
   font-variant-numeric: tabular-nums;
@@ -4121,6 +4097,7 @@ input:checked+.slider-round:before {
 .toast.success {
   border-color: rgba(34, 197, 94, .3);
   color: var(--green);
+  font-size: .80rem;
 }
 
 .toast.error {
@@ -4372,7 +4349,7 @@ input:checked+.slider-round:before {
 }
 
 .friend-status-text {
-  font-size: .72rem;
+  font-size: .64rem;
   text-transform: uppercase;
   letter-spacing: .05em;
   color: var(--green);
@@ -4999,27 +4976,333 @@ input:checked+.slider-round:before {
 }
 
 .msg:hover .msg-options-trigger {
-  opacity: 1;
+  opacity: 0;
+  display: none !important;
 }
 
-.msg-context-menu {
+/* ═════════════════════════════════════════════════════════════
+   PING × INSTAGRAM-STYLE LONG-PRESS & REPLY SUITE
+   ═════════════════════════════════════════════════════════════ */
+
+/* 1. Backdrop Overlay */
+.ping-ig-backdrop {
   position: fixed;
-  background: rgba(18, 14, 36, 0.98);
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(5, 5, 16, 0.76);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 99990;
+  opacity: 0;
+  animation: ping-ig-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+@keyframes ping-ig-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.ping-ig-backdrop.closing {
+  animation: ping-ig-fade-out 0.16s ease-in forwards;
+}
+
+@keyframes ping-ig-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* 2. Elevated & Highlighted Message */
+.msg.ping-msg-highlighted {
+  position: relative !important;
+  z-index: 99995 !important;
+  transform: scale(1.028) !important;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease !important;
+  box-shadow: 0 0 32px rgba(139, 92, 246, 0.55), 0 16px 40px rgba(0, 0, 0, 0.8) !important;
+  pointer-events: auto !important;
+}
+
+.msg-pressing {
+  transform: scale(0.975) !important;
+  transition: transform 0.12s ease-out !important;
+}
+
+/* 3. Floating Instagram Reaction Capsule (Ping UI) */
+.ping-ig-reaction-pill {
+  position: fixed;
+  z-index: 99999;
+  background: rgba(18, 14, 38, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(139, 92, 246, 0.45);
-  border-radius: 18px;
-  padding: 10px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(124, 58, 237, 0.3);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
+  border-radius: 9999px;
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(124, 58, 237, 0.35);
+  animation: ping-ig-pill-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  touch-action: manipulation;
+  user-select: none;
+  box-sizing: border-box;
+  max-width: calc(100vw - 20px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ping-ig-reaction-pill.expanded {
+  border-radius: 22px;
+  flex-wrap: wrap;
+  max-width: 290px;
+  padding: 8px 10px;
   gap: 6px;
-  min-width: 220px;
+}
+
+@keyframes ping-ig-pill-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.ping-ig-rxn-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.35rem;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, filter 0.15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.ping-ig-rxn-btn:hover,
+.ping-ig-rxn-btn:active {
+  transform: scale(1.35) translateY(-3px);
+  background: rgba(139, 92, 246, 0.3);
+  filter: drop-shadow(0 4px 10px rgba(124, 58, 237, 0.7));
+}
+
+.ping-ig-rxn-more {
+  color: var(--t-med, #94a3b8);
+  font-size: 1.15rem;
+  font-weight: 700;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+.ping-ig-rxn-more:hover,
+.ping-ig-rxn-more:active {
+  background: rgba(139, 92, 246, 0.45);
+  color: #ffffff;
+  transform: scale(1.12);
+}
+
+.ping-ig-more-tray {
+  display: none;
+  align-items: center;
+  gap: 3px;
+  animation: ping-ig-fade-in 0.18s ease forwards;
+}
+
+.ping-ig-more-tray.open {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 4. Floating Action Menu (Instagram Menu with Ping UI) */
+.ping-ig-menu {
+  position: fixed;
+  z-index: 99999;
+  background: rgba(18, 14, 38, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(139, 92, 246, 0.38);
+  border-radius: 18px;
+  padding: 6px;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85), 0 0 25px rgba(124, 58, 237, 0.25);
+  min-width: 224px;
   max-width: calc(100vw - 24px);
   box-sizing: border-box;
-  animation: context-menu-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: ping-ig-menu-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   touch-action: manipulation;
+  user-select: none;
+}
+
+@keyframes ping-ig-menu-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.ping-ig-item {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  padding: 9px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #f1f5f9;
+  cursor: pointer;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.ping-ig-item:hover,
+.ping-ig-item:active {
+  background: rgba(139, 92, 246, 0.22);
+  color: #ffffff;
+}
+
+.ping-ig-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ping-ig-item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--purple-l, #a78bfa);
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.ping-ig-item:hover .ping-ig-item-icon {
+  background: rgba(139, 92, 246, 0.4);
+  color: #ffffff;
+}
+
+.ping-ig-item-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.ping-ig-item-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.ping-ig-item-sub {
+  font-size: 0.72rem;
+  color: var(--t-low, #64748b);
+  margin-top: 1px;
+}
+
+/* Featured Reply item highlight */
+.ping-ig-item.ping-ig-reply-item {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(236, 72, 153, 0.18));
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  margin-bottom: 2px;
+}
+
+.ping-ig-item.ping-ig-reply-item:hover,
+.ping-ig-item.ping-ig-reply-item:active {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.45), rgba(236, 72, 153, 0.35));
+  border-color: rgba(167, 139, 250, 0.7);
+  transform: translateY(-1px);
+}
+
+.ping-ig-item.ping-ig-reply-item .ping-ig-item-icon {
+  background: rgba(124, 58, 237, 0.45);
+  color: #ffffff;
+}
+
+.ping-ig-shortcut {
+  font-size: 0.75rem;
+  color: var(--purple-l, #a78bfa);
+  background: rgba(124, 58, 237, 0.22);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+.ping-ig-item.danger {
+  color: #f87171;
+}
+
+.ping-ig-item.danger .ping-ig-item-icon {
+  color: #f87171;
+}
+
+.ping-ig-item.danger:hover,
+.ping-ig-item.danger:active {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+.ping-ig-item.danger:hover .ping-ig-item-icon {
+  background: rgba(239, 68, 68, 0.3);
+  color: #ffffff;
+}
+
+/* Reply Preview Flash Confirmation */
+@keyframes rp-flash-glow {
+  0% {
+    box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+  }
+  30% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.85), 0 0 50px rgba(236, 72, 153, 0.45);
+    border-color: rgba(167, 139, 250, 0.95);
+    transform: translateY(-2px);
+  }
+  100% {
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, .3);
+    border-color: rgba(124, 58, 237, .3);
+    transform: translateY(0);
+  }
+}
+
+.reply-preview-bar.rp-flash-highlight {
+  animation: rp-flash-glow 0.9s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .location-flag {
@@ -5027,48 +5310,6 @@ input:checked+.slider-round:before {
   margin-right: 4px;
   vertical-align: middle;
   display: inline-block;
-}
-
-
-@keyframes context-menu-pop {
-  from { opacity: 0; transform: scale(0.88) translateY(-6px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.menu-rxn-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  padding: 4px 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.menu-rxn-btn {
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  padding: 6px 4px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.menu-rxn-btn:hover,
-.menu-rxn-btn:active {
-  transform: scale(1.35);
-  background: rgba(124, 58, 237, 0.3);
-}
-
-.menu-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 2px 4px;
 }
 
 .menu-item {
@@ -5535,15 +5776,33 @@ body.privacy-blur #chatApp {
 .glass-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(10, 8, 20, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(10, 8, 20, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   animation: fadeIn 0.25s ease both;
+}
+
+@media (max-width: 480px) {
+  .glass-modal-overlay {
+    padding: 14px;
+  }
+  .glass-modal-card {
+    padding: 22px 16px !important;
+    max-width: 94vw !important;
+    border-radius: 18px !important;
+  }
+  .glass-modal-card h3 {
+    font-size: 1.2rem !important;
+  }
+  .glass-modal-card p {
+    font-size: 0.85rem !important;
+    margin-bottom: 18px !important;
+  }
 }
 
 .glass-modal-card {
