@@ -2898,36 +2898,32 @@ function handleTimeExpired() {
   }, 1200);
 }
 
-function handleChatEnd(reason) {
+function handleChatEnd(reason, rawReason) {
   if (isReconnecting) return;
   stopTimer();
   stopAutoSearch();
 
-  // Reset some UI states
+  // Reset UI states
   if (friendBtn) friendBtn.disabled = true;
   if (reportBtn) reportBtn.disabled = true;
   if (extendTimeBtn) extendTimeBtn.disabled = true;
 
   inChat = false;
   activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = false;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
   syncButtons();
 
-  if (currentChatType !== 'stranger') return;
+  if (autoSearchBar) autoSearchBar.style.display = 'none';
+  clearChat();
+  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  let remaining = 30;
-  if (autoSearchBar) autoSearchBar.style.display = 'flex';
-  if (autoSearchStatus) autoSearchStatus.textContent = `Stranger left. Auto-searching in ${remaining}s...`;
-
-  autoSearchInterval = setInterval(() => {
-    remaining--;
-    if (autoSearchStatus) autoSearchStatus.textContent = `Stranger left. Auto-searching in ${remaining}s...`;
-
-    if (remaining <= 0) {
-      stopAutoSearch();
-      socket.emit('next_chat', { autoStart: true });
-      appendMsg('Neural search initiated... 🔍', { isSystem: true });
-    }
-  }, 1000);
+  const msg = reason || 'Chat ended.';
+  showToast(msg, 'info', 3500);
+  appendMsg(msg, { isSystem: true, variant: 'warn' });
+  showView('prechat');
 }
 
 socket.off('chat_end');
@@ -2937,7 +2933,7 @@ socket.on('chat_end', ({ reason, rawReason }) => {
     handleTimeExpired();
     return;
   }
-  handleChatEnd(reason);
+  handleChatEnd(reason, rawReason);
 });
 
 socket.off('partner_disconnected');
@@ -3270,25 +3266,75 @@ startBtn?.addEventListener('click', () => {
   }, 1500);
 });
 
+let skipConfirmTimer = null;
 nextBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
+  if (nextBtn.dataset.confirming !== 'true') {
+    e.stopPropagation();
+    nextBtn.dataset.confirming = 'true';
+    const originalHTML = nextBtn.innerHTML;
+    nextBtn.innerHTML = 'Sure? 👀';
+    nextBtn.classList.add('confirming-skip');
+
+    skipConfirmTimer = setTimeout(() => {
+      nextBtn.dataset.confirming = 'false';
+      nextBtn.innerHTML = originalHTML;
+      nextBtn.classList.remove('confirming-skip');
+    }, 3000); // 3 seconds to confirm
+    return;
+  }
+
+  clearTimeout(skipConfirmTimer);
+  nextBtn.dataset.confirming = 'false';
+  nextBtn.innerHTML = '⏩ Skip Stranger';
+  nextBtn.classList.remove('confirming-skip');
+
   const threeDotsMenu = $('threeDotsMenu');
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
-  showToast('Skipping stranger...', 'info', 1500);
-  window.forceNextChat();
+  stopTimer();
+  socket.emit('next_chat', { autoStart: true });
+  inChat = false;
+  activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = true;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
+  showView('waiting');
+  startWaitingScreen();
+  syncButtons();
+  showToast('Searching for a new stranger...', 'info', 2000);
 });
 
+let reportSkipConfirmTimer = null;
 reportSkipBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
+  if (reportSkipBtn.dataset.confirming !== 'true') {
+    e.stopPropagation();
+    reportSkipBtn.dataset.confirming = 'true';
+    const originalHTML = reportSkipBtn.innerHTML;
+    reportSkipBtn.innerHTML = 'Sure? ⚠️';
+    reportSkipBtn.classList.add('confirming-skip');
+
+    reportSkipConfirmTimer = setTimeout(() => {
+      reportSkipBtn.dataset.confirming = 'false';
+      reportSkipBtn.innerHTML = originalHTML;
+      reportSkipBtn.classList.remove('confirming-skip');
+    }, 3000); // 3 seconds to confirm
+    return;
+  }
+
+  clearTimeout(reportSkipConfirmTimer);
+  reportSkipBtn.dataset.confirming = 'false';
+  reportSkipBtn.innerHTML = '⚑ Report User';
+  reportSkipBtn.classList.remove('confirming-skip');
+
   const threeDotsMenu = $('threeDotsMenu');
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
   socket.emit('report_user', { roomId: AppState.explore.roomId || activeRoomId, reason: 'inappropriate' });
-  showToast('User reported and banned. Finding a new stranger...', 'success', 3000);
-  window.forceNextChat();
+  endCurrentChat();
+  showToast('User reported and banned for 15 minutes.', 'success', 3000);
 });
 
 cancelWaitBtn?.addEventListener('click', () => {
