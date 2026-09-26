@@ -1,0 +1,1022 @@
+[
+  {
+    "text": "hey! how is your day going?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what kind of music do you listen to?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "just studying for my exam tomorrow",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that movie was incredible, 10/10 recommend",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "lol that is hilarious",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "nice to meet you! where are you from?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "have a wonderful evening ahead!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love coding in javascript and python",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "no worries, take your time",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "gg good game",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i'm going to kill this workout session today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i feel so tired today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "which university do you attend?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that was a killer guitar solo!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what are your hobbies?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "see you later, peace out",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "thanks for the conversation!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what books have you been reading lately?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i really like playing chess and soccer",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "hope you have a great week!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the weather is super nice today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what is your favorite food to cook?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am learning how to play the piano",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "do you watch anime or read manga?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "can you recommend a good sci-fi movie?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that was such a classic moment",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i need to pass this mathematics test",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the assistant helped me with my code",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love walking on the green grass",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the bass guitar sounded amazing in that song",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "can you pass the butter please?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am traveling to another country next month",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "this Indian curry is deliciously spicy",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "we need to assemble the furniture together",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the data analytics showed great results",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "charles dickens wrote wonderful novels",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "niger is a country in west africa",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the river flows smoothly through the valley",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i ordered a non-alcoholic cocktail at the cafe",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am wearing a black shirt and blue jeans",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "welcome to Ping! having fun chatting?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "let's share some fun riddles",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "do you play any video games like valorant or minecraft?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "happy birthday! hope you have an awesome day",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i had a cucumber sandwich for lunch",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "we visited the grand canal in venice",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the document was saved successfully",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love drinking hot chocolate in winter",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "good luck on your interview tomorrow!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "let's stay positive and keep trying",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "shut up you faggot",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$hut up y0u f@gg0t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you dumb nigger",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u dumb n1gg3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "y.o.u d.u.m.b n.i.g.g.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "f@ggot gtfo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f@gg0t gtf0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f.@.g.g.o.t g.t.f.o",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "f.a.g.g.o.t get out of here",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.@.g.g.0.t g3t 0ut 0f h3r3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "stupid retard",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$tup1d r3t@rd",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "s.t.u.p.i.d r.e.t.a.r.d",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "you are an absolute r3tard",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u @r3 @n @b$0lut3 r3t@rd",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "fucking retards everywhere",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "fuck1ng r3t@rd$ 3v3rywh3r3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f.u.c.k.i.n.g r.e.t.a.r.d.s e.v.e.r.y.w.h.e.r.e",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "you fucking cunt",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u fuck1ng cunt",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "y.o.u f.u.c.k.i.n.g c.u.n.t",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "f.u.c.k you bitch",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.u.c.k y0u b1tch",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f...u...c...k y.o.u b.i.t.c.h",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "you ugly bitch",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u ugly b1tch",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "y.o.u u.g.l.y b.i.t.c.h",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "dumb wh0re go away",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "dumb wh0r3 g0 @w@y",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "she is a dirty slut",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$h3 1$ @ d1rty $lut",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "dirty kike go home",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "d1rty k1k3 g0 h0m3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "k1k3 trash",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "k1k3 tr@$h",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "k.1.k.3 t.r.a.s.h",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "stupid chink",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$tup1d ch1nk",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "s.t.u.p.i.d c.h.i.n.k",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "ch1nk go back to your country",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "ch1nk g0 b@ck t0 y0ur c0untry",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you filthy gook",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u f1lthy g00k",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "y.o.u f.i.l.t.h.y g.o.o.k",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "spic get out of here",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$p1c g3t 0ut 0f h3r3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "wetback loser",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "w3tb@ck l0$3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "w.e.t.b.a.c.k l.o.s.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "n!gg3r leave now",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n!gg3r l3@v3 n0w",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "n.!.g.g.3.r l.e.a.v.e n.o.w",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "n1gger piece of shit",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n1gg3r p13c3 0f $h1t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you are a f.a.g",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u @r3 @ f.@.g",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "stupid dyke nobody asked you",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$tup1d dyk3 n0b0dy @$k3d y0u",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "trans tranny freak",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tr@n$ tr@nny fr3@k",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "t.r.a.n.s t.r.a.n.n.y f.r.e.a.k",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "ugly shemale go die",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "ugly $h3m@l3 g0 d13",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "dirty raghead terrorist",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "d1rty r@gh3@d t3rr0r1$t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "d.i.r.t.y r.a.g.h.e.a.d t.e.r.r.o.r.i.s.t",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "towelhead loser",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "t0w3lh3@d l0$3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "t.o.w.e.l.h.e.a.d l.o.s.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "stupid paki get lost",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$tup1d p@k1 g3t l0$t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "terrible beaner",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "t3rr1bl3 b3@n3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "t.e.r.r.i.b.l.e b.e.a.n.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "fck you bhenchod",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "fck y0u bh3nch0d",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f.c.k y.o.u b.h.e.n.c.h.o.d",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "madarchod teri maa ki",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "m@d@rch0d t3r1 m@@ k1",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "chutiya saale bhag yaha se",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "chut1y@ $@@l3 bh@g y@h@ $3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "tu ek number ka gandu hai",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tu 3k numb3r k@ g@ndu h@1",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "bhosadike nikal yaha se",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bh0$@d1k3 n1k@l y@h@ $3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "bhosdike chup kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bh0$d1k3 chup k@r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "b.h.o.s.d.i.k.e c.h.u.p k.a.r",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "randi ki aulad",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "r@nd1 k1 @ul@d",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "r.a.n.d.i k.i a.u.l.a.d",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "haramkhor kutte",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "h@r@mkh0r kutt3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "h.a.r.a.m.k.h.o.r k.u.t.t.e",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "kamine suar ki tarah",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "k@m1n3 $u@r k1 t@r@h",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "bhadwe chup reh",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bh@dw3 chup r3h",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "b.h.a.d.w.e c.h.u.p r.e.h",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "laude apna muh band kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "l@ud3 @pn@ muh b@nd k@r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "jhantu aadmi",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "jh@ntu @@dm1",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "j.h.a.n.t.u a.a.d.m.i",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "eres un maricon de mierda",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "3r3$ un m@r1c0n d3 m13rd@",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "hijo de puta vete al diablo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "h1j0 d3 put@ v3t3 @l d1@bl0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "pinche pendejo culero",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "p1nch3 p3nd3j0 cul3r0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "p.i.n.c.h.e p.e.n.d.e.j.o c.u.l.e.r.o",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "tu eres una puta",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tu 3r3$ un@ put@",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "b!tch stfu",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "b!tch $tfu",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "b.!.t.c.h s.t.f.u",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "c*nt gtfo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "c*nt gtf0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "c.*.n.t g.t.f.o",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "wh0r3 die already",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "wh0r3 d13 @lr3@dy",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "w.h.0.r.3 d.i.e a.l.r.e.a.d.y",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "n-i-g-g-a get out",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n-1-g-g-@ g3t 0ut",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "n.-.i.-.g.-.g.-.a g.e.t o.u.t",
+    "label": 1,
+    "category": "hate_speech_slurs_obfuscated"
+  },
+  {
+    "text": "f a g g o t",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f @ g g 0 t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "kys loser nobody wants you here",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "kill yourself you worthless idiot",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "you are ugly and stupid go die",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "i hope you get cancer and die",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "nobody loves you, end it all",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "k.y.s trash",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "i will find where you live and beat you up",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "commit suicide idiot",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "go jump off a bridge",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "i'm going to dox you and leak your address",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "m 18 looking for girl snapchat me",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "any female here? m19 horny",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m16 looking for f",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "send nudes or snap me",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "show boobies",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "looking for dirty chat add my snap",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "f15 looking for older guy",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "are you a boy or girl? send pic",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "how old are you? are you a girl?",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m4f looking for naughty chat",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "add my snap: coolguy_99",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "follow my insta @john_doe23",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "hit me up on telegram @fastbucks",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "whatsapp me at +14155552671",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "join my discord server discord.gg/abc1234",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "insta in bio message me there",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "add me on kik: user123",
+    "label": 1,
+    "category": "contact_exchange"
+  }
+]

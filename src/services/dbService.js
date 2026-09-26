@@ -602,6 +602,68 @@ async function deleteFriendChatMessage(chatId, messageId, fromUserId) {
   }
 }
 
+/**
+ * Retrieves all saved chat conversations for a user from Firestore
+ * @param {string} userId
+ * @returns {Promise<Array<object>>}
+ */
+async function getUserConversations(userId) {
+  const db = getDb();
+  if (!db || !userId) return [];
+
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.FRIEND_CHATS)
+      .where("participants", "array-contains", userId)
+      .get();
+
+    const conversations = [];
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      const participants = Array.isArray(data.participants) ? data.participants : [];
+      const otherUserId = participants.find((id) => id !== userId) || "Friend";
+
+      let otherProfile = { displayName: `Friend (${otherUserId.slice(0, 5)})`, country: "Global" };
+      try {
+        const uDoc = await db.collection(COLLECTIONS.USERS).doc(otherUserId).get();
+        if (uDoc.exists) {
+          const uData = uDoc.data();
+          if (uData.profile?.displayName) otherProfile.displayName = uData.profile.displayName;
+          else if (uData.displayName) otherProfile.displayName = uData.displayName;
+          if (uData.country) otherProfile.country = uData.country;
+        }
+      } catch (_) {}
+
+      let previewMsg = data.lastMessage || "No messages yet";
+      let lastMsgTime = data.lastMessageAt ? (data.lastMessageAt.toMillis ? data.lastMessageAt.toMillis() : Date.now()) : Date.now();
+
+      try {
+        const msgsSnap = await docSnap.ref.collection("messages").orderBy("sentAt", "desc").limit(1).get();
+        if (!msgsSnap.empty) {
+          const latestDoc = msgsSnap.docs[0].data();
+          previewMsg = latestDoc.isFlash ? "⚡ [Flash Message]" : (latestDoc.message || previewMsg);
+          if (latestDoc.sentAt) lastMsgTime = latestDoc.sentAt;
+        }
+      } catch (_) {}
+
+      conversations.push({
+        chatId: data.chatId || docSnap.id,
+        otherUserId,
+        otherUserName: otherProfile.displayName,
+        otherUserCountry: otherProfile.country,
+        lastMessage: previewMsg,
+        lastMessageAt: lastMsgTime,
+      });
+    }
+
+    conversations.sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
+    return conversations;
+  } catch (error) {
+    handleDbError("getUserConversations", error, userId);
+    return [];
+  }
+}
+
 // ── MODULE EXPORTS ────────────────────────────────────────────
 module.exports = {
   COLLECTIONS,
@@ -622,6 +684,7 @@ module.exports = {
   // Friend chat operations
   saveFriendChatMessage,
   getFriendChatMessages,
+  getUserConversations,
   editFriendChatMessage,
   deleteFriendChatMessage,
   // Report operations

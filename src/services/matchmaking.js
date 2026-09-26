@@ -66,12 +66,20 @@ function enqueueForMatchmaking(userId, io = null) {
     }
   }
 
-  if (user.status === "matched" && user.roomId) {
-    return { ok: false, reason: "already_matched" };
+  // If user was recorded in a room, check if the room is still active
+  if (user.roomId) {
+    const room = rooms.get(user.roomId);
+    if (!room || room.status !== "active" || room.type !== "friend_dm") {
+      user.roomId = null;
+      user.status = "idle";
+    } else {
+      return { ok: false, reason: "already_matched" };
+    }
   }
 
   if (user.status === "waiting" && isUserQueued(userId)) {
-    return { ok: false, reason: "already_waiting" };
+    matchmakingStartTimes.set(userId, Date.now());
+    return { ok: true, reason: "already_waiting" };
   }
 
   user.status = "waiting";

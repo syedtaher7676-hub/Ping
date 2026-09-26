@@ -46,84 +46,138 @@ const silenceViolationCounts = new Map(); // socketId -> continuous violation fr
 const recentReports = new Map();         // reporterId_reportedUserId -> timestamp of report
 const temporaryBans = new Map();         // userId/IP -> ban expiry timestamp (Date.now() + 1 hour)
 
-// ═══════════════════════════════════════════════════════════════
-// RECENT PARTNERS RE-MATCHING LOCK (30-SECOND AUTO-RELEASE)
-// ═══════════════════════════════════════════════════════════════
-const recentPartners = new Map(); // userId -> Map<partnerId, timeoutRef>
+const exploreViolations = new Map();     // userId -> array of timestamps for Explore chat
+const friendViolations = new Map();      // userId -> array of timestamps for Friends chat
 
-function addRecentPartnerLock(userAId, userBId) {
-  if (!userAId || !userBId || userAId === userBId) return;
-
-  if (!recentPartners.has(userAId)) recentPartners.set(userAId, new Map());
-  if (!recentPartners.has(userBId)) recentPartners.set(userBId, new Map());
-
-  const mapA = recentPartners.get(userAId);
-  const mapB = recentPartners.get(userBId);
-
-  if (mapA.has(userBId)) {
-    clearTimeout(mapA.get(userBId));
+function getSocketIp(socket) {
+  if (!socket) return null;
+  const headers = socket.handshake?.headers || {};
+  let ip =
+    headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    headers["cf-connecting-ip"] ||
+    headers["x-real-ip"] ||
+    headers["x-client-ip"] ||
+    headers["x-forwarded-ip"] ||
+    socket.handshake?.address ||
+    socket.conn?.remoteAddress;
+  if (typeof ip === "string" && ip.startsWith("::ffff:")) {
+    ip = ip.substring(7);
   }
-  if (mapB.has(userAId)) {
-    clearTimeout(mapB.get(userAId));
-  }
-
-  // 30 seconds lock release timeout ensures recentPartners timeout is cleaned up
-  // after 30 seconds on the server side so users can immediately re-match if desired
-  const timeoutA = setTimeout(() => {
-    mapA.delete(userBId);
-    if (mapA.size === 0) recentPartners.delete(userAId);
-  }, 30000);
-  timeoutA.unref?.();
-  mapA.set(userBId, timeoutA);
-
-  const timeoutB = setTimeout(() => {
-    mapB.delete(userAId);
-    if (mapB.size === 0) recentPartners.delete(userBId);
-  }, 30000);
-  timeoutB.unref?.();
-  mapB.set(userAId, timeoutB);
+  return ip || null;
 }
 
-function areRecentPartnersLocked(userAId, userBId) {
-  if (!userAId || !userBId) return false;
-  return Boolean(recentPartners.get(userAId)?.has(userBId));
+const exemptPartnerUsers = new Map(); // userId -> expiry timestamp
+function markUserAsExemptPartner(userId, durationMs = 60000) {
+  if (!userId) return;
+  exemptPartnerUsers.set(userId, Date.now() + durationMs);
 }
 
 function isUserBanned(socket, userId) {
   const now = Date.now();
-
-  // Housekeep expired bans
   for (const [id, expiry] of temporaryBans.entries()) {
-    if (now >= expiry) {
-      temporaryBans.delete(id);
+    if (now >= expiry) temporaryBans.delete(id);
+  }
+  for (const [id, exp] of exemptPartnerUsers.entries()) {
+    if (now >= exp) exemptPartnerUsers.delete(id);
+  }
+  if (userId) {
+    if (temporaryBans.has(userId)) {
+      const expiry = temporaryBans.get(userId);
+      if (now < expiry) return { banned: true, remaining: expiry - now };
+    }
+    const penalty = slurFilter.getActivePenalty(userId);
+    if (penalty && penalty.type === "ban_15min" && now < penalty.expiresAt) {
+      temporaryBans.set(userId, penalty.expiresAt);
+      return { banned: true, remaining: penalty.expiresAt - now };
     }
   }
-
-  // Check user ID ban
-  if (temporaryBans.has(userId)) {
-    const expiry = temporaryBans.get(userId);
-    if (now < expiry) {
-      return { banned: true, remaining: expiry - now };
+  const isExempt = userId && exemptPartnerUsers.has(userId);
+  if (!isExempt) {
+    const ip = getSocketIp(socket);
+    if (ip && ip !== "127.0.0.1" && ip !== "::1" && ip !== "localhost") {
+      if (temporaryBans.has(ip) && now < temporaryBans.get(ip)) {
+        return { banned: true, remaining: temporaryBans.get(ip) - now };
+      }
+      const ipPenalty = slurFilter.getActivePenalty(ip) || slurFilter.getActivePenalty(`ip_${ip}`);
+      if (ipPenalty && ipPenalty.type === "ban_15min" && now < ipPenalty.expiresAt) {
+        temporaryBans.set(ip, ipPenalty.expiresAt);
+        return { banned: true, remaining: ipPenalty.expiresAt - now };
+      }
     }
   }
-
-  // Check IP ban
-  const ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
-  if (ip && temporaryBans.has(ip)) {
-    const expiry = temporaryBans.get(ip);
-    if (now < expiry) {
-      return { banned: true, remaining: expiry - now };
-    }
-  }
-
   return { banned: false };
 }
 
-// ═══════════════════════════════════════════════════════════════
-// BUG FIX 3: Robust Payload Validation & Sanitization Helpers
-// ═══════════════════════════════════════════════════════════════
-// Pure validation functions to eliminate Node.js process crashes
-// from non-JSON payloads, null/undefined destructuring, or unexpected data types.
+function emitState(socket, user) {
+  if (!socket || !user) return;
+  socket.emit("state_update", {
+    status: user.status,
+    roomId: user.roomId,
+    joinedAt: user.joinedAt,
+  });
+}
+
+function queueUserForMatch(socket, io, userId) {
+  const banStatus = isUserBanned(socket, userId);
+  if (banStatus.banned) {
+    const mins = Math.ceil(banStatus.remaining / 60000);
+    socket.emit("queue_rejected", { reason: "banned", message: `🚫 You are temporarily suspended from matchmaking for another ${mins} minutes.` });
+    socket.emit("error_message", { message: `🚫 Matchmaking disabled: Suspended for another ${mins} mins.` });
+    return { ok: false };
+  }
+  let currentUser = users.get(userId);
+  if (!currentUser) {
+    currentUser = {
+      id: userId,
+      socketId: socket.id,
+      status: "idle",
+      roomId: null,
+      joinedAt: Date.now(),
+      country: socket.data?.country || "Someone nearby",
+      lastHeartbeat: Date.now(),
+      isActive: true,
+    };
+    users.set(userId, currentUser);
+  }
+  const result = enqueueForMatchmaking(userId, io);
+  if (!result.ok) {
+    socket.emit("queue_rejected", { reason: result.reason });
+    emitState(socket, currentUser);
+    return { ok: false };
+  }
+  socket.emit("queue_joined", { status: "waiting" });
+  emitState(socket, currentUser);
+  attemptMatchmaking(io);
+  return { ok: true };
+}
+
+function deliverMessage(io, socket, userId, roomId, finalMessage, replyToContext, throttleDelay, ack, msgId, isFlash) {
+  const deliverFn = () => {
+    if (socket && !socket.rooms.has(roomId)) {
+      socket.join(roomId);
+    }
+    const room = rooms.get(roomId);
+    if (!room || room.status !== "active") return;
+    io.to(roomId).emit("new_message", {
+      from: userId,
+      message: finalMessage,
+      replyTo: replyToContext,
+      sentAt: Date.now(),
+      roomId,
+      msgId,
+      isFlash,
+    });
+    if (typeof ack === "function" && throttleDelay === 0) {
+      ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now() });
+    }
+  };
+  if (throttleDelay > 0) {
+    setTimeout(deliverFn, throttleDelay);
+    if (typeof ack === "function") ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now(), throttled: true });
+  } else {
+    deliverFn();
+  }
+}
 
 function safeObject(val) {
   if (val && typeof val === "object" && !Array.isArray(val)) {
@@ -167,98 +221,172 @@ function safeReplyTo(val) {
   return { text, from, msgId };
 }
 
-function emitState(socket, user) {
-  if (!socket || !user) return;
-  socket.emit("state_update", {
-    status: user.status,
-    roomId: user.roomId,
-    joinedAt: user.joinedAt,
+function getViolationCount(userId, isDm) {
+  const store = isDm ? friendViolations : exploreViolations;
+  const list = store.get(userId) || [];
+  const windowStart = Date.now() - 3600000;
+  const active = list.filter(t => t > windowStart);
+  store.set(userId, active);
+  return active.length;
+}
+
+function addViolation(userId, isDm) {
+  const store = isDm ? friendViolations : exploreViolations;
+  const list = store.get(userId) || [];
+  const now = Date.now();
+  const windowStart = now - 3600000;
+  const active = list.filter(t => t > windowStart);
+  active.push(now);
+  store.set(userId, active);
+  return active.length;
+}
+
+// 1st Offense etc.
+function handleInappropriateViolation(socket, io, userId, reason, text, roomId, isDm, ack) {
+  const ip = getSocketIp(socket);
+  const violationCount = addViolation(userId, isDm);
+  const maxLimit = isDm ? 5 : 3;
+
+  spamStore.addSpamViolation({
+    userId,
+    type: "bad_language_blocked",
+    message: text.slice(0, 50),
+    violationCount,
+    reason,
   });
-}
 
-function queueUserForMatch(socket, io, userId) {
-  const banStatus = isUserBanned(socket, userId);
-  if (banStatus.banned) {
-    const mins = Math.ceil(banStatus.remaining / 60000);
-    socket.emit("queue_rejected", { reason: "banned", message: `🚫 You are temporarily suspended from matchmaking for another ${mins} minutes.` });
-    socket.emit("error_message", { message: `🚫 Matchmaking disabled: Suspended for another ${mins} mins.` });
-    return { ok: false };
-  }
+  securityStore.addSecurityLog("bad_language_violation", {
+    userId,
+    message: text.slice(0, 100),
+    violationCount,
+    reason,
+    ip,
+    severity: violationCount >= maxLimit ? "critical" : violationCount >= 2 ? "high" : "medium",
+  });
 
-  const currentUser = users.get(userId);
-  if (!currentUser) {
-    socket.emit("queue_rejected", { reason: "user_not_found" });
-    return { ok: false };
-  }
-
-  const result = enqueueForMatchmaking(userId, io);
-  if (!result.ok) {
-    socket.emit("queue_rejected", { reason: result.reason });
-    emitState(socket, currentUser);
-    return { ok: false };
-  }
-
-  socket.emit("queue_joined", { status: "waiting" });
-  emitState(socket, currentUser);
-  attemptMatchmaking(io);
-  return { ok: true };
-}
-
-// Helper: deliver a message to a room (shared between stranger chat and friend DM)
-function deliverMessage(io, socket, userId, roomId, finalMessage, replyToContext, throttleDelay, ack, msgId, isFlash) {
-  const deliverFn = () => {
-    if (socket && !socket.rooms.has(roomId)) {
-      socket.join(roomId);
-    }
-    const room = rooms.get(roomId);
-    if (!room || room.status !== "active") {
-      log("message_rejected", { userId, reason: "room_inactive" });
-      if (typeof ack === "function") {
-        ack({ ok: false, reason: "room_inactive" });
-      }
-      return;
-    }
-
-    room.lastActivityAt = Date.now();
-    if (room.endAt) {
-      room.remainingMs = Math.max(0, room.endAt - room.lastActivityAt);
-    }
-
-    io.to(roomId).emit("new_message", {
-      from: userId,
-      message: finalMessage,
-      replyTo: replyToContext,
-      sentAt: Date.now(),
-      roomId,
-      msgId,
-      isFlash,
+  if (violationCount < maxLimit) {
+    const warnMsg = `⚠️ Warning (${violationCount}/${maxLimit}): Inappropriate language detected. Message was not sent. ${violationCount >= maxLimit - 1 ? 'One more violation will result in a 15-minute ban!' : 'Please keep conversations respectful!'}`;
+    socket.emit("warning_message", {
+      message: warnMsg,
+      type: `strike_${violationCount}_warning`,
+      violationCount,
     });
-
-    if (typeof ack === "function" && throttleDelay === 0) {
-      ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now() });
-    }
-
-    log("message_delivered", {
-      userId, roomId,
-      deliveredTo: room.users.length,
-      messageLength: finalMessage.length,
-      throttled: throttleDelay > 0,
+    socket.emit("message_rejected", {
+      message: warnMsg,
+      reason: `strike_${violationCount}_warning`,
+      violationCount,
     });
-  };
-
-  if (throttleDelay > 0) {
-    setTimeout(deliverFn, throttleDelay);
     if (typeof ack === "function") {
-      ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now(), throttled: true });
+      ack({
+        ok: false,
+        success: false,
+        reason: `strike_${violationCount}_warning`,
+        message: warnMsg,
+        violationCount,
+      });
     }
+    return { blocked: true, action: `warning_${violationCount}` };
   } else {
-    deliverFn();
+    // Ban triggered! (Explore limit = 3, Friends limit = 5)
+    const banDurationMs = 15 * 60 * 1000; // 15 minutes = 900,000 ms
+    const banExpiry = Date.now() + banDurationMs;
+
+    temporaryBans.set(userId, banExpiry);
+    slurFilter.applyPenalty(userId, "ban_15min", banDurationMs);
+
+    if (ip && ip !== "127.0.0.1" && ip !== "::1" && ip !== "localhost") {
+      temporaryBans.set(ip, banExpiry);
+      temporaryBans.set(`ip_${ip}`, banExpiry);
+      slurFilter.applyPenalty(ip, "ban_15min", banDurationMs);
+    }
+
+    const offenderMsg = "⚠️ You have been banned for 15 minutes due to repeated inappropriate language or slurs.";
+    socket.emit("chat_ended_banned", {
+      isOffender: true,
+      message: offenderMsg,
+      banExpiresAt: banExpiry,
+      remainingMs: banDurationMs,
+      violationCount,
+    });
+    socket.emit("error_message", { message: offenderMsg });
+    socket.emit("message_rejected", {
+      message: offenderMsg,
+      reason: "banned_15min",
+      violationCount,
+    });
+
+    if (typeof ack === "function") {
+      ack({
+        ok: false,
+        success: false,
+        reason: "banned_15min",
+        message: offenderMsg,
+        violationCount,
+        banExpiresAt: banExpiry,
+        remainingMs: banDurationMs,
+      });
+    }
+
+    // Session ends and offended person (victim) is notified
+    const victimMsg = "⚠️ The abuser has been banned for 15 mins for using bad behaviour.";
+
+    if (roomId && !isDm) {
+      const room = rooms.get(roomId);
+      if (room && room.users) {
+        const partnerId = room.users.find(id => id !== userId);
+        if (partnerId) {
+          markUserAsExemptPartner(partnerId, 300000);
+
+          const partner = users.get(partnerId);
+          if (partner && partner.socketId) {
+            const partnerSocket = io.sockets.sockets.get(partner.socketId);
+            if (partnerSocket) {
+              partnerSocket.emit("chat_ended_banned", {
+                isOffender: false,
+                message: victimMsg,
+                autoRequeue: true,
+              });
+              partnerSocket.emit("error_message", { message: victimMsg });
+              setTimeout(() => {
+                queueUserForMatch(partnerSocket, io, partnerId);
+              }, 1500);
+            }
+          }
+        }
+      }
+      terminateSession(io, roomId, "banned_violation");
+    } else if (isDm && roomId) {
+      const room = rooms.get(roomId);
+      if (room && room.users) {
+        const partnerId = room.users.find(id => id !== userId);
+        if (partnerId) {
+          const partner = users.get(partnerId);
+          if (partner && partner.socketId) {
+            const partnerSocket = io.sockets.sockets.get(partner.socketId);
+            if (partnerSocket) {
+              partnerSocket.emit("chat_ended_banned", {
+                isOffender: false,
+                message: victimMsg,
+              });
+              partnerSocket.emit("error_message", { message: victimMsg });
+            }
+          }
+        }
+      }
+      terminateSession(io, roomId, "banned_violation");
+    }
+
+    try {
+      socket.disconnect(true);
+    } catch (e) {}
+
+    return { blocked: true, action: "banned" };
   }
 }
 
 // Shared message validation (slur filter, moderation, spam)
 function validateAndModerateMessage(socket, userId, text) {
-  // Slur filter - NEVER terminates session, only blocks message
+  // Slur filter - NEVER terminates session immediately
   const slurResult = slurFilter.moderateSlurMessage(userId, text);
 
   if (!slurResult.allowed) {
@@ -270,7 +398,7 @@ function validateAndModerateMessage(socket, userId, text) {
     securityStore.addSecurityLog("slur_blocked", {
       userId, message: text.slice(0, 100), action: slurResult.action,
       isTargeting: slurResult.isTargeting, matchedWords: slurResult.matchedWords,
-      severity: slurResult.action === "mute" ? "high" : "medium",
+      severity: slurResult.action === "ban_15min" ? "critical" : slurResult.action === "cooldown" ? "high" : "medium",
     });
     log("message_rejected", {
       userId, reason: "slur_blocked", action: slurResult.action,
@@ -279,7 +407,7 @@ function validateAndModerateMessage(socket, userId, text) {
     socket.emit("error_message", {
       message: slurResult.message, action: slurResult.action, duration: slurResult.duration || 0,
     });
-    return { blocked: true, reason: "slur_blocked", action: slurResult.action };
+    return { blocked: true, reason: "slur_blocked", action: slurResult.action, slurResult };
   }
 
   // Flagged but allowed
@@ -495,6 +623,66 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    socket.on("logout_user", (rawPayload, ack) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const newGuestId = safeId(payload.newGuestId) || `guest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const oldUserId = userId;
+        log("user_logout", { oldUserId, newGuestId });
+        socket.leave(`user_${oldUserId}`);
+        userId = newGuestId;
+        socket.join(`user_${newGuestId}`);
+
+        const newGuestUser = {
+          id: newGuestId,
+          socketId: socket.id,
+          country: user?.country || "Global",
+          status: "idle",
+          roomId: null,
+          joinedAt: Date.now(),
+          lastActionAt: Date.now(),
+          totalMatches: 0,
+          isAuthenticated: false,
+        };
+        users.set(newGuestId, newGuestUser);
+        emitState(socket, newGuestUser);
+
+        if (typeof ack === "function") {
+          ack({ success: true, guestId: newGuestId });
+        }
+      } catch (err) {
+        log("logout_user_error", { userId, error: err?.message });
+        if (typeof ack === "function") {
+          ack({ success: false });
+        }
+      }
+    });
+
+    socket.on("update_username", async (rawPayload, ack) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const username = safeString(payload.username, 30);
+        if (!username) {
+          if (typeof ack === "function") ack({ ok: false, reason: "invalid_username" });
+          return;
+        }
+        user.username = username;
+        if (user.profile) {
+          user.profile.displayName = username;
+        } else {
+          user.profile = { displayName: username };
+        }
+        users.set(userId, user);
+        if (typeof redisSetUser === "function") {
+          redisSetUser(userId, user).catch(() => {});
+        }
+        dbService.updateUserProfile(userId, { username, displayName: username }).catch(() => {});
+        if (typeof ack === "function") ack({ ok: true, username });
+      } catch (err) {
+        if (typeof ack === "function") ack({ ok: false });
+      }
+    });
+
     // Asynchronously fetch user profile and friend list from Firestore upon authentication
     dbService.syncUserOnAuth(userId, { country: user.country }).then(async (profile) => {
       if (profile) {
@@ -586,8 +774,23 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     socket.on("start_chat", async () => {
       try {
         if (!socket.connected) return;
-        const currentUser = users.get(userId);
-        if (!currentUser) return;
+        let currentUser = users.get(userId);
+        if (!currentUser) {
+          currentUser = {
+            id: userId,
+            socketId: socket.id,
+            status: "idle",
+            roomId: null,
+            joinedAt: Date.now(),
+            lastStartChatAt: 0,
+            lastMessageAt: 0,
+            lastActionAt: 0,
+            country: socket.data?.country || "Someone nearby",
+            lastHeartbeat: Date.now(),
+            isActive: true,
+          };
+          users.set(userId, currentUser);
+        }
 
         // Verify if user or IP is currently in a 15-minute ban cooldown
         const banCheck = isUserBanned(socket, userId);
@@ -601,6 +804,21 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           });
           return;
         }
+
+        // If user was recorded in a room that is inactive, ended, or not an active friend DM, cleanly reset room state
+        if (currentUser.roomId) {
+          const room = rooms.get(currentUser.roomId);
+          if (!room || room.status !== "active" || room.type !== "friend_dm") {
+            try { socket.leave(currentUser.roomId); } catch (_) {}
+            currentUser.roomId = null;
+            currentUser.status = "idle";
+          }
+        } else {
+          currentUser.status = "idle";
+        }
+
+        // Clean any old waiting queue entry
+        leaveWaitingQueue(userId);
 
         const now = Date.now();
         currentUser.lastStartChatAt = now;
@@ -672,60 +890,27 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // ═══════════════════════════════════════════════
-        // TIER 2: Real-time Regex, ASL & Handle Filter
-        // ═══════════════════════════════════════════════
-        const customMod = await validateMessage(text);
-        if (!customMod.valid) {
-          log("message_rejected_custom_mod", { userId, reason: customMod.reason, text: text.slice(0, 100) });
-          if (customMod.action === 'ban_15min' || customMod.action === 'ban_1hour') {
-            const banExpiry = Date.now() + 900000; // 15 minutes ban
-            temporaryBans.set(userId, banExpiry);
-            const ip = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
-            if (ip) temporaryBans.set(ip, banExpiry);
+        // 1. Check if user or IP is currently banned
+        const banCheck = isUserBanned(socket, userId);
+        if (banCheck.banned) {
+          const mins = Math.max(1, Math.ceil(banCheck.remaining / 60000));
+          const msg = `🚫 You are banned from chatting for another ${mins} minute(s).`;
+          socket.emit("error_message", { message: msg });
+          if (typeof ack === "function") ack({ ok: false, reason: "banned", message: msg, remainingMs: banCheck.remaining });
+          return;
+        }
 
-            const offenderMsg = "⚠️ You have been banned for 15 minutes due to inappropriate behavior, slurs, or restricted tags (e.g. M18).";
-            socket.emit("chat_ended_banned", {
-              isOffender: true,
-              message: offenderMsg,
-              banExpiresAt: banExpiry,
-              remainingMs: 900000
-            });
-            socket.emit("error_message", { message: offenderMsg });
+        // 2. Check for slurs or inappropriate communication (3-Strike Policy)
+        const slurCheck = slurFilter.detectSlurWithContext(text);
+        let customMod = { valid: true };
+        if (!slurCheck.hasSlur) {
+          customMod = await validateMessage(text);
+        }
 
-            if (currentUser.roomId) {
-              const room = rooms.get(currentUser.roomId);
-              if (room && room.users) {
-                const partnerId = room.users.find(id => id !== userId);
-                if (partnerId) {
-                  const partner = users.get(partnerId);
-                  if (partner && partner.socketId) {
-                    const partnerSocket = io.sockets.sockets.get(partner.socketId);
-                    if (partnerSocket) {
-                      const victimMsg = "🛡️ The stranger attempted to use restricted content/slurs and has been banned for 15 minutes.";
-                      partnerSocket.emit("chat_ended_banned", {
-                        isOffender: false,
-                        message: victimMsg,
-                        autoRequeue: true
-                      });
-                      partnerSocket.emit("error_message", { message: victimMsg });
-                      setTimeout(() => {
-                        queueUserForMatch(partnerSocket, io, partnerId);
-                      }, 1500);
-                    }
-                  }
-                }
-              }
-              terminateSession(io, currentUser.roomId, "banned_violation");
-            }
-
-            try { socket.disconnect(true); } catch (e) {}
-            if (typeof ack === "function") ack({ ok: false, reason: "banned_15min" });
-            return;
-          }
-          socket.emit("message_rejected", { message: "⚠️ Message blocked: Keep chats safe and respectful.", reason: customMod.reason });
-          socket.emit("error_message", { message: "⚠️ Message blocked: Keep chats safe and respectful." });
-          if (typeof ack === "function") ack({ ok: false, reason: "custom_moderation_blocked" });
+        if (slurCheck.hasSlur || !customMod.valid) {
+          const violationReason = slurCheck.hasSlur ? "slur_detected" : (customMod.reason || "inappropriate_communication");
+          log("message_blocked_inappropriate", { userId, reason: violationReason, text: text.slice(0, 100) });
+          handleInappropriateViolation(socket, io, userId, violationReason, text, currentUser.roomId, false, ack);
           return;
         }
 
@@ -735,9 +920,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // Run moderation (never terminates session)
+        // Run secondary low-quality pattern moderation if clean of slurs
         const modResult = validateAndModerateMessage(socket, userId, text);
         if (modResult.blocked) {
+          if (modResult.reason === "slur_blocked") {
+            handleInappropriateViolation(socket, io, userId, "slur_blocked", text, currentUser.roomId, false, ack);
+            return;
+          }
           if (typeof ack === "function") ack({ ok: false, reason: modResult.reason, action: modResult.action });
           return;
         }
@@ -879,35 +1068,44 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           if (typeof ack === "function") ack({ ok: false, success: false, reason: "empty_message" });
           return;
         }
+
+        // 1. Check if user or IP is currently banned
+        const banCheck = isUserBanned(socket, userId);
+        if (banCheck.banned) {
+          const mins = Math.max(1, Math.ceil(banCheck.remaining / 60000));
+          const msg = `🚫 You are banned from chatting for another ${mins} minute(s).`;
+          socket.emit("error_message", { message: msg });
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: "banned", message: msg, remainingMs: banCheck.remaining });
+          return;
+        }
+
+        // 2. Check for slurs or inappropriate communication (3-Strike Policy)
+        const slurCheck = slurFilter.detectSlurWithContext(text);
+        let customMod = { valid: true };
+        if (!slurCheck.hasSlur) {
+          customMod = await validateMessage(text);
+        }
+
+        if (slurCheck.hasSlur || !customMod.valid) {
+          const violationReason = slurCheck.hasSlur ? "slur_detected" : (customMod.reason || "inappropriate_communication");
+          log("dm_blocked_inappropriate", { userId, reason: violationReason, text: text.slice(0, 100) });
+          handleInappropriateViolation(socket, io, userId, violationReason, text, roomId, true, ack);
+          return;
+        }
+
         if (text.length > MAX_MESSAGE_LENGTH) {
           socket.emit("error_message", { message: `✂️ message too long! keep it under ${MAX_MESSAGE_LENGTH} chars bestie` });
           if (typeof ack === "function") ack({ ok: false, success: false, reason: "message_too_long" });
           return;
         }
 
-        const customMod = await validateMessage(text);
-        if (!customMod.valid) {
-          log("dm_rejected_custom_mod", { userId, reason: customMod.reason, text: text.slice(0, 100) });
-          if (customMod.action === 'ban_15min' || customMod.action === 'ban_1hour') {
-            const banExpiry = Date.now() + 900000; // 15 minutes ban
-            temporaryBans.set(userId, banExpiry);
-            const ip = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
-            if (ip) temporaryBans.set(ip, banExpiry);
-            const offenderMsg = "You have been banned for 15 minutes due to inappropriate behavior, slurs, or restricted tags (e.g. M18).";
-            socket.emit("chat_ended_banned", { message: offenderMsg, remainingMs: 900000 });
-            socket.emit("error_message", { message: offenderMsg });
-            try { socket.disconnect(true); } catch (e) {}
-            if (typeof ack === "function") ack({ ok: false, success: false, reason: "banned_15min" });
-            return;
-          }
-          socket.emit("message_rejected", { message: "⚠️ Message blocked: Keep chats safe and respectful.", reason: customMod.reason });
-          if (typeof ack === "function") ack({ ok: false, success: false, reason: "custom_moderation_blocked" });
-          return;
-        }
-
-        // Run moderation (never disconnects)
+        // Run secondary low-quality pattern moderation if clean of slurs
         const modResult = validateAndModerateMessage(socket, userId, text);
         if (modResult.blocked) {
+          if (modResult.reason === "slur_blocked") {
+            handleInappropriateViolation(socket, io, userId, "slur_blocked", text, roomId, true, ack);
+            return;
+          }
           if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action });
           return;
         }
@@ -1019,6 +1217,12 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
+        const slurCheck = slurFilter.detectSlurWithContext(newMessage);
+        if (slurCheck.hasSlur) {
+          handleInappropriateViolation(socket, io, userId, "slur_edited", newMessage, roomId, true, ack);
+          return;
+        }
+
         let targetRoom = null;
         for (const r of friendRooms.values()) {
           if (r.roomId === roomId && r.userIds.includes(userId)) {
@@ -1109,6 +1313,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const newMessage = safeString(payload.newMessage, MAX_MESSAGE_LENGTH);
 
         if (!roomId || !msgId || !newMessage) return;
+
+        const slurCheck = slurFilter.detectSlurWithContext(newMessage);
+        if (slurCheck.hasSlur) {
+          handleInappropriateViolation(socket, io, userId, "slur_edited", newMessage, roomId, false);
+          return;
+        }
+
         const room = rooms.get(roomId);
         if (room && room.users.includes(userId)) {
           io.to(roomId).emit("message_edited", { msgId, newMessage, roomId });
@@ -1337,6 +1548,33 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       } catch (err) {
         log("get_friends_error", { userId, message: err.message });
         if (typeof ack === "function") ack({ friends: [] });
+      }
+    });
+
+    socket.on("get_user_chats", async (ack) => {
+      try {
+        const chats = await dbService.getUserConversations(userId);
+        if (typeof ack === "function") ack({ success: true, chats: chats || [] });
+        else socket.emit("user_chats_list", { chats: chats || [] });
+      } catch (err) {
+        log("get_user_chats_error", { userId, message: err?.message });
+        if (typeof ack === "function") ack({ success: false, chats: [] });
+      }
+    });
+
+    socket.on("get_chat_transcript", async (rawPayload, ack) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const chatId = safeId(payload.chatId);
+        if (!chatId) {
+          if (typeof ack === "function") ack({ success: false, messages: [] });
+          return;
+        }
+        const messages = await dbService.getFriendChatMessages(chatId, 100);
+        if (typeof ack === "function") ack({ success: true, chatId, messages: messages || [] });
+      } catch (err) {
+        log("get_chat_transcript_error", { userId, message: err?.message });
+        if (typeof ack === "function") ack({ success: false, messages: [] });
       }
     });
 
@@ -1828,6 +2066,9 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         // 1. Instantly and atomically purge user from all waiting queues and Redis state
         purgeUserFromAllState(disconnectedUser.id, socket.id);
+        messageTimestamps.delete(socket.id);
+        silencedSockets.delete(socket.id);
+        silenceViolationCounts.delete(socket.id);
 
         if (disconnectedUser.status === "waiting") {
           leaveWaitingQueue(disconnectedUser.id);

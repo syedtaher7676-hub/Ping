@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const http = require("http");
 const express = require("express");
 const { Server } = require("socket.io");
@@ -218,6 +219,34 @@ app.get("/api/stats", (_req, res) => {
   res.json({
     activeUsers: stats?.activeUsers || 0,
     totalChats: stats?.totalMatches || 0,
+  });
+});
+
+// Firebase public configuration endpoint
+app.get("/api/firebase-config", (_req, res) => {
+  try {
+    const configPath = path.resolve(__dirname, "..", "firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      const parsed = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      return res.json({
+        projectId: parsed.projectId,
+        appId: parsed.appId,
+        apiKey: parsed.apiKey,
+        authDomain: parsed.authDomain,
+        firestoreDatabaseId: parsed.firestoreDatabaseId || "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
+        storageBucket: parsed.storageBucket,
+        messagingSenderId: parsed.messagingSenderId,
+      });
+    }
+  } catch {}
+  res.json({
+    projectId: "impressive-atlas-4ggh3",
+    appId: "1:237904937112:web:42917cae7c903634dc50ed",
+    apiKey: "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY",
+    authDomain: "impressive-atlas-4ggh3.firebaseapp.com",
+    firestoreDatabaseId: "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
+    storageBucket: "impressive-atlas-4ggh3.firebasestorage.app",
+    messagingSenderId: "237904937112",
   });
 });
 

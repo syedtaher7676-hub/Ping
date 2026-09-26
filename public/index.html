@@ -341,6 +341,14 @@
         </svg>
         <span>Friends</span>
       </button>
+      <button class="home-tab" data-tab="settings" id="tabSettings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        <span>Settings</span>
+      </button>
     </div>
 
     <main class="app-main">
@@ -761,7 +769,172 @@
 
       </div><!-- /friendDMView -->
 
+      <!-- SETTINGS & PING ACCOUNT VIEW -->
+      <div id="settingsView" class="view view-settings" style="display:none;">
+        <div class="settings-shell">
+
+          <!-- Main Settings Header -->
+          <div class="settings-header">
+            <div class="settings-title-row">
+              <div class="settings-icon">⚙️</div>
+              <div class="settings-titles">
+                <h2>Settings</h2>
+                <p>Account, chat preferences, and community safety</p>
+              </div>
+            </div>
+            <div class="settings-cloud-pill">
+              <span class="scp-dot"></span>
+              <span id="settingsCloudStatusText">Ping Cloud Active</span>
+            </div>
+          </div>
+
+          <div class="settings-container-wrap">
+
+            <!-- SECTION 1: ACCOUNT & SYNC -->
+            <div class="settings-card glass-card">
+              <div class="sc-header">
+                <div class="sc-header-left">
+                  <span class="sc-header-icon">👤</span>
+                  <div>
+                    <h3>Account & Sync</h3>
+                  </div>
+                </div>
+                <span id="settingsAuthBadge" class="sc-badge guest">Guest</span>
+              </div>
+
+              <!-- Unauthenticated / Guest View -->
+              <div id="settingsGuestAuthSection" class="settings-auth-section">
+                <div class="settings-auth-actions">
+                  <button id="settingsGoogleLoginBtn" class="btn-primary auth-google-btn" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
+                    <span>Continue with Google</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Logged In / Authenticated View -->
+              <div id="settingsUserAuthSection" class="settings-auth-section" style="display:none;">
+                <div class="user-profile-card">
+                  <div class="up-avatar" id="settingsUserAvatar">👤</div>
+                  <div class="up-info">
+                    <div class="up-name-row">
+                      <h4 id="settingsUserDisplayName">Ping User</h4>
+                      <span class="sync-badge">☁️ Synced</span>
+                    </div>
+                    <p id="settingsUserEmailText">user@example.com</p>
+                    <div class="up-meta">
+                      <span id="settingsUserUid" class="uid-tag">UID: ...</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="setting-row" style="margin-top: 14px; width: 100%; display: flex; flex-direction: column; gap: 6px;">
+                  <label style="font-size: 0.8rem; font-weight: 600; color: var(--t-med);">Username (Displayed in Explore & Friends Chat)</label>
+                  <div style="display: flex; gap: 8px; width: 100%;">
+                    <input type="text" id="customUsernameInput" placeholder="Enter your username..." maxlength="30" style="flex:1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-brd); padding: 8px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none;" />
+                    <button id="saveUsernameBtn" class="btn-primary btn-sm" type="button" style="padding: 8px 16px;">Save</button>
+                  </div>
+                </div>
+
+                <div class="settings-user-actions">
+                  <button id="settingsLogoutBtn" class="btn-danger logout-btn" type="button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: CHAT PREFERENCES -->
+            <div class="settings-card glass-card">
+              <div class="sc-header">
+                <div class="sc-header-left">
+                  <span class="sc-header-icon">🎛️</span>
+                  <div>
+                    <h3>Preferences</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pref-items-list">
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Sound Alerts</span>
+                    <span class="pref-desc">Audio cues on new messages and stranger matches</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefSoundToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Haptic Feedback</span>
+                    <span class="pref-desc">Vibrate on reactions, pings, and friend requests</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefHapticToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Auto-Scroll</span>
+                    <span class="pref-desc">Automatically follow the latest chat messages</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefAutoScrollToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Typing Indicator</span>
+                    <span class="pref-desc">Show indicator when partner is composing</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefTypingToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /settings-container-wrap -->
+        </div><!-- /settings-shell -->
+      </div><!-- /settingsView -->
+
     </main>
+
+    <!-- CHAT TRANSCRIPT VIEWER MODAL -->
+    <div id="chatTranscriptModal" class="glass-modal-overlay" style="display:none;">
+      <div class="glass-modal-card transcript-modal-card">
+        <div class="tmc-header">
+          <div class="tmc-title">
+            <span id="transcriptPartnerAvatar" class="tmc-avatar">💬</span>
+            <div>
+              <h3 id="transcriptPartnerName">Chat Transcript</h3>
+              <span id="transcriptMeta" class="tmc-meta">Stored in Cloud Firestore</span>
+            </div>
+          </div>
+          <button id="closeTranscriptBtn" class="tmc-close-btn" type="button" aria-label="Close">✕</button>
+        </div>
+        <div id="transcriptMessagesList" class="transcript-messages-list">
+          <!-- Messages rendered dynamically -->
+        </div>
+        <div class="tmc-footer">
+          <button id="transcriptOpenFriendDmBtn" class="btn-primary" type="button">Open in Friends Chat</button>
+          <button id="transcriptCloseFooterBtn" class="btn-ghost" type="button">Close</button>
+        </div>
+      </div>
+    </div>
 
     <!-- MODAL -->
     <div id="confirmModal" class="modal-backdrop" style="display:none;">
@@ -781,10 +954,7 @@
 
   </div><!-- /chatApp -->
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
+  <script type="module" src="/firebase-client.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/app.js?v=1.1.3"></script>
   <script src="/animations.js?v=1.1.2"></script>

@@ -78,7 +78,7 @@ function terminateSession(io, roomId, reason = "session_ended") {
     const firstSocket = io.sockets.sockets.get(firstUser.socketId);
     if (firstSocket) {
       firstSocket.leave(roomId);
-      firstSocket.emit("chat_end", { reason: friendlyReason, roomId });
+      firstSocket.emit("chat_end", { reason: friendlyReason, rawReason: reason, roomId });
       firstSocket.emit("state_update", { status: "idle", roomId: null, joinedAt: firstUser.joinedAt });
     }
   }
@@ -87,7 +87,7 @@ function terminateSession(io, roomId, reason = "session_ended") {
     const secondSocket = io.sockets.sockets.get(secondUser.socketId);
     if (secondSocket) {
       secondSocket.leave(roomId);
-      secondSocket.emit("chat_end", { reason: friendlyReason, roomId });
+      secondSocket.emit("chat_end", { reason: friendlyReason, rawReason: reason, roomId });
       secondSocket.emit("state_update", { status: "idle", roomId: null, joinedAt: secondUser.joinedAt });
     }
   }
@@ -309,6 +309,9 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
   firstSocket.join(roomId);
   secondSocket.join(roomId);
 
+  const secondUsername = secondUser.username || secondUser.displayName || (secondUser.profile && (secondUser.profile.username || secondUser.profile.displayName)) || null;
+  const firstUsername = firstUser.username || firstUser.displayName || (firstUser.profile && (firstUser.profile.username || firstUser.profile.displayName)) || null;
+
   firstSocket.emit("matched", {
     roomId,
     peerId: secondUser.id,
@@ -316,6 +319,8 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
     endAt,
     startedAt: createdAt,
     partnerCountry: secondUser.country || "Unknown",
+    partnerUsername: secondUsername,
+    partnerDisplayName: secondUser.displayName || secondUsername,
     remainingMs: CHAT_DURATION_MS,
   });
   secondSocket.emit("matched", {
@@ -325,6 +330,8 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
     endAt,
     startedAt: createdAt,
     partnerCountry: firstUser.country || "Unknown",
+    partnerUsername: firstUsername,
+    partnerDisplayName: firstUser.displayName || firstUsername,
     remainingMs: CHAT_DURATION_MS,
   });
 

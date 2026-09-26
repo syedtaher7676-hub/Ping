@@ -122,9 +122,12 @@ function getFriendsList(userId) {
   return friendIds.map(fId => {
     const friend = users.get(fId);
     const room = getFriendRoom(userId, fId);
+    const username = friend?.username || friend?.displayName || (friend?.profile && (friend.profile.username || friend.profile.displayName)) || null;
     return {
       friendId: fId,
       country: friend?.country || "Unknown",
+      username: username,
+      displayName: friend?.displayName || username || null,
       online: friend ? friend.isActive : false,
       lastSeen: friend ? friend.lastDisconnect : null,
       dmRoomId: room?.roomId || null,

@@ -7,11 +7,12 @@
     "dev": "node src/server.js",
     "build": "echo 'Build complete'",
     "start": "node src/server.js",
-    "lint": "node -c src/server.js src/config.js src/config/firebase.js src/services/dbService.js src/state/redisStore.js src/state/store.js src/services/matchmaking.js src/services/sessionManager.js src/socket/registerSocketHandlers.js scripts/smoke-test.js scripts/test-redis-integration.js scripts/test-firestore-integration.js scripts/test-friend-dm-routing.js",
+    "lint": "node -c src/server.js src/config.js src/config/firebase.js src/services/dbService.js src/state/redisStore.js src/state/store.js src/services/matchmaking.js src/services/sessionManager.js src/socket/registerSocketHandlers.js scripts/smoke-test.js scripts/test-redis-integration.js scripts/test-firestore-integration.js scripts/test-friend-dm-routing.js scripts/test-slur-3strike-policy.js scripts/test-socket-3strike-flow.js",
     "smoke": "node scripts/smoke-test.js",
     "test:redis": "node scripts/test-redis-integration.js",
     "test:firestore": "node scripts/test-firestore-integration.js",
-    "test:dm": "node scripts/test-friend-dm-routing.js"
+    "test:dm": "node scripts/test-friend-dm-routing.js",
+    "test:slur": "node scripts/test-slur-3strike-policy.js && node scripts/test-socket-3strike-flow.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
   "dependencies": {
     "@google/genai": "^2.23.0",
     "@socket.io/redis-adapter": "^8.3.0",
+    "@xenova/transformers": "^2.17.2",
     "express": "^5.2.1",
     "firebase-admin": "^14.4.0",
     "geoip-lite": "^2.0.1",

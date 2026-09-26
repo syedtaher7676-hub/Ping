@@ -32,6 +32,10 @@ service cloud.firestore {
     function isValidUser(data) {
       return data.userId is string && data.userId.size() <= 128 &&
         (!('country' in data) || (data.country is string && data.country.size() <= 64)) &&
+        (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 128)) &&
+        (!('streak' in data) || (data.streak is number && data.streak >= 0)) &&
+        (!('xp' in data) || (data.xp is number && data.xp >= 0)) &&
         (!('totalMatches' in data) || (data.totalMatches is number && data.totalMatches >= 0));
     }
 

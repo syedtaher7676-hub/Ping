@@ -78,8 +78,13 @@ const friendFlashToggleBtn = $('friendFlashToggleBtn');
 // Home tabs references
 const homeTabs = $('homeTabs');
 const tabRandom = $('tabRandom');
+const tabSettings = $('tabSettings');
 const tabFriends = $('tabFriends');
-let activeHomeTab = 'random'; // 'random' or 'friends'
+let activeHomeTab = 'random'; // 'random', 'settings', or 'friends'
+
+// Settings view references
+const settingsView = $('settingsView');
+const chatTranscriptModal = $('chatTranscriptModal');
 
 // Friends view references
 const friendsView = $('friendsView');
@@ -215,115 +220,149 @@ pendingStart = false;
 let authInstance = null;
 let dbInstance = null;
 
-async function initFirebaseClient() {
-  if (typeof firebase === 'undefined') {
-    console.log("Firebase CDN scripts are not loaded, running in Guest Mode only.");
-    return;
-  }
+async function applyUserSession(userProfile, isCloudFallback = false) {
+  if (!userProfile) return;
+  const uid = userProfile.uid || ('usr_' + Date.now().toString(36));
+  const email = userProfile.email || '';
+  const displayName = userProfile.displayName || (email ? email.split('@')[0] : 'Ping User');
 
-  // Robust default fallback matching the actual Cloud project credentials
-  const firebaseConfig = {
-    apiKey: "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY",
-    authDomain: "impressive-atlas-4ggh3.firebaseapp.com",
-    projectId: "impressive-atlas-4ggh3",
-    storageBucket: "impressive-atlas-4ggh3.firebasestorage.app",
-    messagingSenderId: "237904937112",
-    appId: "1:237904937112:web:42917cae7c903634dc50ed"
+  console.log("Applying User Session:", uid, email, displayName);
+  AppState.user.id = uid;
+  AppState.user.isAuthenticated = true;
+  AppState.user.profile = {
+    uid,
+    email,
+    displayName,
+    isAnonymous: userProfile.isAnonymous || false
   };
 
   try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+    localStorage.setItem('ping_persistent_uid', uid);
+    localStorage.setItem('ping_user_id', uid);
+    if (email) localStorage.setItem('ping_user_email', email);
+    localStorage.setItem('ping_is_auth', 'true');
+    localStorage.setItem('ping_displayName', displayName);
+  } catch (_) {}
+
+  // Manage dynamic UI buttons
+  const eAuth = document.getElementById('exploreAuthBtn');
+  if (eAuth) eAuth.style.display = 'none';
+
+  const hAuth = document.getElementById('homeAuthBtn');
+  if (hAuth) {
+    hAuth.innerHTML = `<span>👤 Profile</span>`;
+    hAuth.title = `Signed in as ${displayName}`;
+  }
+
+  const lAuth = document.getElementById('landingAuthBtn');
+  if (lAuth) {
+    lAuth.innerHTML = `<span class="cta-label">👤 Profile</span>`;
+    lAuth.title = `Signed in as ${displayName}`;
+  }
+
+  // Synchronize user profile in Firestore
+  try {
+    if (dbInstance) {
+      const userRef = dbInstance.collection('users').doc(uid);
+      await userRef.set({
+        userId: uid,
+        country: AppState.user.country || 'Global',
+        displayName: displayName,
+        email: email,
+        lastSeenAt: firebase?.firestore?.FieldValue?.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
+        updatedAt: firebase?.firestore?.FieldValue?.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+      }, { merge: true });
     }
+  } catch (dbErr) {
+    console.warn("Firestore user sync notice:", dbErr);
+  }
+
+  // Authenticate socket session
+  socket.emit('authenticate', { 
+    userId: uid,
+    oldUserId: persistentUserId,
+    activeFriendId: currentFriendId,
+    email: email,
+    displayName: displayName
+  }, (ack) => {
+    if (ack && ack.success) {
+      console.log("Socket successfully authenticated with user:", uid);
+    }
+  });
+
+  // Persist active friendship in Firestore if present
+  if (currentFriendId && dbInstance) {
+    try {
+      const pairId = [uid, currentFriendId].sort().join('__');
+      await dbInstance.collection('friendships').doc(pairId).set({
+        userAId: [uid, currentFriendId].sort()[0],
+        userBId: [uid, currentFriendId].sort()[1],
+        users: [uid, currentFriendId],
+        createdAt: firebase?.firestore?.FieldValue?.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
+        updatedAt: firebase?.firestore?.FieldValue?.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+      }, { merge: true });
+    } catch (_) {}
+  }
+
+  if (AppState.deferredFriendRequest) {
+    AppState.deferredFriendRequest = false;
+    showToast("Signed in! Sending friend request now... 👫", "success", 2000);
+    socket.emit('send_friend_request');
+  }
+
+  const banner = document.getElementById('softAuthBanner');
+  if (banner) banner.remove();
+  closeModal();
+
+  updateSettingsUI();
+}
+
+async function initFirebaseClient() {
+  if (window.firebaseReadyPromise) {
+    try {
+      await window.firebaseReadyPromise;
+    } catch (_) {}
+  } else if (typeof firebase === 'undefined') {
+    await new Promise((resolve) => {
+      const timer = setTimeout(resolve, 2500);
+      window.addEventListener('firebase:ready', () => {
+        clearTimeout(timer);
+        resolve();
+      }, { once: true });
+    });
+  }
+
+  if (typeof firebase === 'undefined') {
+    console.log("Firebase module is not ready, running in Guest Mode.");
+    return;
+  }
+
+  try {
     authInstance = firebase.auth();
-    dbInstance = firebase.firestore();
+    dbInstance = firebase.firestore("ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea");
 
     authInstance.onAuthStateChanged(async (user) => {
       if (user) {
-        console.log("Authenticated User:", user.uid);
-        AppState.user.id = user.uid;
-        AppState.user.isAuthenticated = true;
-        AppState.user.profile = user;
-
-        // Manage dynamic UI buttons
-        const eAuth = document.getElementById('exploreAuthBtn');
-        if (eAuth) eAuth.style.display = 'none';
-
-        const hAuth = document.getElementById('homeAuthBtn');
-        if (hAuth) {
-          hAuth.innerHTML = `<span>👤 Profile</span>`;
-          hAuth.title = `Signed in as ${user.displayName || user.email}`;
-        }
-
-        const lAuth = document.getElementById('landingAuthBtn');
-        if (lAuth) {
-          lAuth.innerHTML = `<span class="cta-label">👤 Profile</span>`;
-          lAuth.title = `Signed in as ${user.displayName || user.email}`;
-        }
-        
-        // Asynchronously save user data to Firestore
-        try {
-          const userRef = dbInstance.collection('users').doc(user.uid);
-          await userRef.set({
-            userId: user.uid,
-            country: AppState.user.country || 'Global',
-            displayName: user.displayName || 'Anonymous',
-            lastSeenAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-          console.log("Successfully synchronized user profile in Firestore directly from client.");
-        } catch (dbErr) {
-          console.error("Firestore sync error:", dbErr);
-        }
-        
-        // Seamlessly authenticate active socket session & migrate guest friendships
-        socket.emit('authenticate', { 
-          userId: user.uid,
-          oldUserId: persistentUserId,
-          activeFriendId: currentFriendId
-        }, (ack) => {
-          if (ack && ack.success) {
-            console.log("Socket authenticated with user:", user.uid);
-            showToast(`Logged in as ${user.displayName || 'user'}! ✨`, 'success', 3000);
-          }
-        });
-
-        // Persist any active friendship directly in Firestore for instant cloud safety
-        if (currentFriendId) {
-          try {
-            const pairId = [user.uid, currentFriendId].sort().join('__');
-            await dbInstance.collection('friendships').doc(pairId).set({
-              userAId: [user.uid, currentFriendId].sort()[0],
-              userBId: [user.uid, currentFriendId].sort()[1],
-              users: [user.uid, currentFriendId],
-              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-            console.log("Direct client friendship persistence saved to Firestore:", pairId);
-            showToast("✨ Friendship saved to Firebase!", "success", 3000);
-          } catch (fErr) {
-            console.warn("Client friendship sync warning:", fErr);
-          }
-        }
-
-        // Intent-driven Friend Request Gate: Send deferred request now!
-        if (AppState.deferredFriendRequest) {
-          AppState.deferredFriendRequest = false;
-          showToast("Signed in! Sending friend request now... 👫", "success", 2000);
-          socket.emit('send_friend_request');
-        }
-        
-        // Hide soft auth banner & close modal if open
-        const banner = document.getElementById('softAuthBanner');
-        if (banner) banner.remove();
-        closeModal();
-        
+        await applyUserSession(user);
+        showToast(`Logged in as ${user.displayName || user.email?.split('@')[0] || 'Ping User'}! ✨`, 'success', 3000);
       } else {
+        // Only clear state if not logged in via local cloud session
+        const isLocallyAuth = localStorage.getItem('ping_is_auth') === 'true';
+        const savedEmail = localStorage.getItem('ping_user_email');
+        const savedUid = localStorage.getItem('ping_persistent_uid');
+        if (isLocallyAuth && savedEmail && savedUid && savedUid.startsWith('usr_')) {
+          await applyUserSession({
+            uid: savedUid,
+            email: savedEmail,
+            displayName: localStorage.getItem('ping_displayName') || savedEmail.split('@')[0]
+          }, true);
+          return;
+        }
+
         AppState.user.isAuthenticated = false;
         AppState.user.id = persistentUserId;
         AppState.user.profile = null;
 
-        // Show "Sign In" during active stranger chat if user is guest
         const eAuth = document.getElementById('exploreAuthBtn');
         if (eAuth && currentChatType === 'stranger' && inChat) {
           eAuth.style.display = 'block';
@@ -342,6 +381,8 @@ async function initFirebaseClient() {
           lAuth.innerHTML = `<span class="cta-label">🔑 Account</span>`;
           lAuth.title = "Sign in to persist your connections";
         }
+
+        updateSettingsUI();
       }
     });
   } catch (err) {
@@ -349,20 +390,253 @@ async function initFirebaseClient() {
   }
 }
 
+// Auto bootstrap Firebase on startup and on ready event
+initFirebaseClient();
+window.addEventListener('firebase:ready', () => {
+  initFirebaseClient();
+});
+
+let isGoogleLoginPending = false;
 async function triggerGoogleLogin() {
-  if (typeof firebase === 'undefined' || !firebase.apps.length) {
-    showToast("Firebase Auth is not initialized or configured on this project.", "error", 3000);
+  if (isGoogleLoginPending) return;
+  isGoogleLoginPending = true;
+
+  if (window.firebaseReadyPromise) {
+    try { await window.firebaseReadyPromise; } catch (_) {}
+  }
+  if (!authInstance && typeof firebase !== 'undefined' && firebase.auth) {
+    try { authInstance = firebase.auth(); } catch (_) {}
+  }
+  if (typeof firebase === 'undefined' || !authInstance) {
+    isGoogleLoginPending = false;
+    showToast("Ping Cloud is initializing, please try again in a moment.", "warn", 2500);
     return;
   }
-  const provider = new firebase.auth.GoogleAuthProvider();
+  
   try {
+    const provider = new firebase.auth.GoogleAuthProvider();
     showToast("Opening Google Sign-in...", "info", 1500);
-    await firebase.auth().signInWithPopup(provider);
+    const result = await authInstance.signInWithPopup(provider);
+    if (result && result.user) {
+      await applyUserSession(result.user);
+      showToast(`Welcome ${result.user.displayName || 'to Ping'}! ✨`, 'success', 3000);
+    }
   } catch (err) {
-    console.error("Sign up popup error:", err);
-    showToast(`Auth error: ${err.message}`, "error", 4000);
+    console.warn("Google sign-in exception caught:", err);
+    const code = err?.code || '';
+    const msg = (err?.message || '').toLowerCase();
+    if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request' || msg.includes('popup') || msg.includes('assertion failed')) {
+      showToast("⚠️ Browser blocked Google popup. Please allow popups for this site and try again.", "warn", 4000);
+    } else if (code !== 'auth/popup-closed-by-user') {
+      showToast(err?.message || "Sign-in could not be completed. Please try again.", "error", 4000);
+    }
+  } finally {
+    isGoogleLoginPending = false;
   }
 }
+
+// ── SINGLETON AUDIO CONTEXT (PREVENTS MEMORY & HARDWARE LEAKS) ──
+let sharedAudioCtx = null;
+function getSharedAudioContext() {
+  if (!sharedAudioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      sharedAudioCtx = new AudioCtx();
+    }
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+function escapeHtml(str) {
+  if (typeof str !== 'string') return String(str || '');
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatChatTime(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - Number(ts);
+  if (diff < 60000) return 'Just now';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+  const d = new Date(Number(ts));
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function updateSettingsUI() {
+  const isAuth = AppState.user.isAuthenticated;
+  const guestSection = document.getElementById('settingsGuestAuthSection');
+  const userSection = document.getElementById('settingsUserAuthSection');
+  const authBadge = document.getElementById('settingsAuthBadge');
+  const statusText = document.getElementById('settingsCloudStatusText');
+
+  if (statusText) {
+    statusText.textContent = isAuth ? 'Ping Synced' : 'Ping Connected';
+  }
+
+  if (isAuth) {
+    if (authBadge) {
+      authBadge.textContent = '⚡ Ping Synced';
+      authBadge.className = 'sc-badge auth';
+    }
+    if (guestSection) guestSection.style.display = 'none';
+    if (userSection) userSection.style.display = 'flex';
+
+    // Populate user profile info
+    const user = authInstance?.currentUser || AppState.user.profile || {};
+    const dName = user.displayName || user.email?.split('@')[0] || 'Ping User';
+    const email = user.email || (user.isAnonymous ? 'Demo Guest Account' : 'Cloud Account');
+    const uid = AppState.user.id || user.uid || 'Anonymous';
+
+    const nameEl = document.getElementById('settingsUserDisplayName');
+    const emailEl = document.getElementById('settingsUserEmailText');
+    const uidEl = document.getElementById('settingsUserUid');
+    const avatarEl = document.getElementById('settingsUserAvatar');
+
+    if (nameEl) nameEl.textContent = dName;
+    if (emailEl) emailEl.textContent = email;
+    if (uidEl) uidEl.textContent = `UID: ${uid.slice(0, 10)}…`;
+    if (avatarEl) avatarEl.textContent = (dName && dName[0] ? dName[0].toUpperCase() : '👤');
+  } else {
+    if (authBadge) {
+      authBadge.textContent = 'Guest Mode';
+      authBadge.className = 'sc-badge guest';
+    }
+    if (guestSection) guestSection.style.display = 'flex';
+    if (userSection) userSection.style.display = 'none';
+  }
+}
+
+function initSettingsTab() {
+  // Google sign in
+  document.getElementById('settingsGoogleLoginBtn')?.addEventListener('click', () => {
+    triggerGoogleLogin();
+  });
+
+  const customUsernameInput = document.getElementById('customUsernameInput');
+  const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+  if (customUsernameInput) {
+    customUsernameInput.value = localStorage.getItem('ping_custom_username') || '';
+  }
+  if (saveUsernameBtn) {
+    saveUsernameBtn.addEventListener('click', () => {
+      const uname = customUsernameInput ? customUsernameInput.value.trim() : '';
+      if (!uname) {
+        showToast('Please enter a username', 'warn', 2000);
+        return;
+      }
+      localStorage.setItem('ping_custom_username', uname);
+      socket.emit('update_username', { username: uname }, (ack) => {
+        if (ack && ack.ok) {
+          showToast(`Username saved as "${uname}"! ✨`, 'success', 2500);
+        } else {
+          showToast('Failed to save username', 'error', 2000);
+        }
+      });
+    });
+  }
+
+  // Experience & Preference Toggles
+  const soundToggle = document.getElementById('prefSoundToggle');
+  const hapticToggle = document.getElementById('prefHapticToggle');
+  const autoScrollToggle = document.getElementById('prefAutoScrollToggle');
+  const typingToggle = document.getElementById('prefTypingToggle');
+
+  if (soundToggle) {
+    soundToggle.checked = localStorage.getItem('ping_pref_sound') !== 'false';
+    soundToggle.addEventListener('change', (e) => {
+      localStorage.setItem('ping_pref_sound', e.target.checked);
+      showToast(e.target.checked ? '🔊 Sound alerts enabled' : '🔇 Sound alerts muted', 'info', 1500);
+    });
+  }
+
+  if (hapticToggle) {
+    hapticToggle.checked = localStorage.getItem('ping_pref_haptic') !== 'false';
+    hapticToggle.addEventListener('change', (e) => {
+      localStorage.setItem('ping_pref_haptic', e.target.checked);
+      if (e.target.checked && navigator.vibrate) navigator.vibrate(30);
+      showToast(e.target.checked ? '📳 Haptics enabled' : '📴 Haptics disabled', 'info', 1500);
+    });
+  }
+
+  if (autoScrollToggle) {
+    autoScrollToggle.checked = localStorage.getItem('ping_pref_autoscroll') !== 'false';
+    autoScrollToggle.addEventListener('change', (e) => {
+      localStorage.setItem('ping_pref_autoscroll', e.target.checked);
+      showToast(e.target.checked ? '⬇️ Auto-scroll active' : '⏸️ Auto-scroll disabled', 'info', 1500);
+    });
+  }
+
+  if (typingToggle) {
+    typingToggle.checked = localStorage.getItem('ping_pref_typing') !== 'false';
+    typingToggle.addEventListener('change', (e) => {
+      localStorage.setItem('ping_pref_typing', e.target.checked);
+      showToast(e.target.checked ? '✍️ Typing indicators visible' : '🙈 Typing indicators hidden', 'info', 1500);
+    });
+  }
+
+  // Logout button
+  document.getElementById('settingsLogoutBtn')?.addEventListener('click', () => {
+    showConfirm('Log Out?', 'Would you like to log out of your Google account?', async () => {
+      try {
+        if (authInstance) {
+          try { await authInstance.signOut(); } catch (_) {}
+        }
+        const freshGuestId = 'guest_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+        try {
+          localStorage.setItem('ping_persistent_uid', freshGuestId);
+          localStorage.setItem('ping_user_id', freshGuestId);
+          localStorage.removeItem('ping_user_email');
+          localStorage.removeItem('ping_is_auth');
+          localStorage.removeItem('ping_displayName');
+          localStorage.removeItem('ping_active_friend_id');
+        } catch (_) {}
+
+        persistentUserId = freshGuestId;
+        AppState.user.isAuthenticated = false;
+        AppState.user.id = freshGuestId;
+        AppState.user.profile = null;
+
+        socket.emit('logout_user', { newGuestId: freshGuestId });
+
+        const eAuth = document.getElementById('exploreAuthBtn');
+        if (eAuth && currentChatType === 'stranger' && inChat) {
+          eAuth.style.display = 'block';
+        } else if (eAuth) {
+          eAuth.style.display = 'none';
+        }
+
+        const hAuth = document.getElementById('homeAuthBtn');
+        if (hAuth) {
+          hAuth.innerHTML = `<span>🔑 Sign In</span>`;
+          hAuth.title = "Sign in to persist your connections";
+        }
+
+        const lAuth = document.getElementById('landingAuthBtn');
+        if (lAuth) {
+          lAuth.innerHTML = `<span class="cta-label">🔑 Account</span>`;
+          lAuth.title = "Sign in to persist your connections";
+        }
+
+        showToast('Logged out of Ping. Returned to Guest Mode.', 'info', 3000);
+        updateSettingsUI();
+      } catch (err) {
+        console.error('Logout error:', err);
+        showToast('Logout error: ' + (err.message || 'Unknown error'), 'error', 3000);
+      }
+    });
+  });
+}
+
+// Initialize settings handlers & preferences
+initSettingsTab();
 
 function showInChatAuthModal(onDismiss = null) {
   if (AppState.user.isAuthenticated) return;
@@ -382,64 +656,46 @@ function showInChatAuthModal(onDismiss = null) {
 }
 
 function showFirebaseConnectModal(options = {}) {
-  const existing = document.getElementById('firebaseConnectModal') || document.getElementById('postFriendAuthModal');
-  if (existing) existing.remove();
+  // Always remove any existing modals to prevent stacking / double popups
+  document.querySelectorAll('.glass-modal-overlay').forEach(m => m.remove());
 
   const isAlreadyAuth = AppState.user.isAuthenticated;
   const friendLabel = options.friendCountry || 'your connection';
 
+  if (isAlreadyAuth) {
+    showToast(`✨ Friends list saved in Ping Cloud! (${friendLabel})`, 'success', 3000);
+    return;
+  }
+
   const modal = document.createElement('div');
   modal.id = 'firebaseConnectModal';
   modal.className = 'glass-modal-overlay';
-  
-  if (isAlreadyAuth) {
-    modal.innerHTML = `
-      <div class="glass-modal-card">
-        <div class="gmc-icon">☁️</div>
-        <div class="gmc-badge">🔥 Firebase Sync Active</div>
-        <h3>Friends List Saved</h3>
-        <p>Your account is logged into Firebase! Your connection with <strong>${friendLabel}</strong> and your friends list are safely saved in Cloud Firestore.</p>
-        <div class="gmc-actions">
-          <button id="fcDoneBtn" class="btn-primary" type="button">Great, Keep Chatting</button>
-        </div>
+  modal.innerHTML = `
+    <div class="glass-modal-card">
+      <div class="gmc-icon">⚡</div>
+      <div class="gmc-badge" style="color:#a78bfa;background:rgba(124,58,237,0.15);border-color:rgba(124,58,237,0.35);">⚡ Save Friends List</div>
+      <h3>Save Your Friends List in Ping</h3>
+      <p>Friend request connected! Log into Ping with Google now to keep your friends list synced across all your devices.</p>
+      <div class="gmc-actions">
+        <button id="fcGoogleBtn" class="btn-primary" type="button" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);font-weight:600;">
+          <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
+          Continue with Google
+        </button>
+        <button id="fcDismissBtn" class="btn-ghost" type="button" style="color:#94a3b8;">
+          Continue As Guest
+        </button>
       </div>
-    `;
-  } else {
-    modal.innerHTML = `
-      <div class="glass-modal-card">
-        <div class="gmc-icon">⚠️</div>
-        <div class="gmc-badge" style="color:#f59e0b;background:rgba(245,158,11,0.15);border-color:rgba(245,158,11,0.35);">⚠️ Save Friends List</div>
-        <h3>Save Your Friends List in Firebase</h3>
-        <p>Friend request sent! Please log into Firebase now to save your friends list, <strong>or it will be lost forever</strong> once you close or refresh this tab.</p>
-        <div class="gmc-actions">
-          <button id="fcGoogleBtn" class="btn-primary" type="button" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);font-weight:600;">
-            <svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
-            Log In to Firebase (Save Friends List)
-          </button>
-          <button id="fcDismissBtn" class="btn-ghost" type="button" style="color:#94a3b8;">
-            Continue Without It (Lose Friends on Exit)
-          </button>
-        </div>
-      </div>
-    `;
-  }
+    </div>
+  `;
 
   document.body.appendChild(modal);
-
-  const doneBtn = document.getElementById('fcDoneBtn');
-  if (doneBtn) {
-    doneBtn.onclick = () => {
-      if (navigator.vibrate) navigator.vibrate(10);
-      modal.remove();
-    };
-  }
 
   const dismissBtn = document.getElementById('fcDismissBtn');
   if (dismissBtn) {
     dismissBtn.onclick = () => {
       if (navigator.vibrate) navigator.vibrate(10);
       modal.remove();
-      showToast('Continuing as guest. Friends will not be saved.', 'info', 3000);
+      showToast('Continuing as guest.', 'info', 2000);
     };
   }
 
@@ -526,14 +782,23 @@ function triggerSoftAuthBanner() {
   document.getElementById('sabSignUpBtn')?.addEventListener('click', () => triggerGoogleLogin());
 }
 
-// Start Firebase client initialization and set a 2-minute soft auth banner trigger
+// Start Firebase client initialization
 initFirebaseClient();
-setTimeout(() => {
-  triggerSoftAuthBanner();
-}, 120000);
 
 if (typeof document !== 'undefined') {
-  document.addEventListener('DOMContentLoaded', () => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initSettingsTab();
+      document.querySelectorAll('#start-chat-btn, #startBtn, #startLandingBtn, #findChatBtn').forEach(btn => {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('disabled');
+        }
+      });
+      if (confirmModal) confirmModal.style.display = 'none';
+    });
+  } else {
+    initSettingsTab();
     document.querySelectorAll('#start-chat-btn, #startBtn, #startLandingBtn, #findChatBtn').forEach(btn => {
       if (btn) {
         btn.disabled = false;
@@ -541,7 +806,7 @@ if (typeof document !== 'undefined') {
       }
     });
     if (confirmModal) confirmModal.style.display = 'none';
-  });
+  }
 }
 
 socket.off('friend_status_change');
@@ -873,6 +1138,13 @@ function appendMsg(text, opts = {}) {
 
   const empty = chatBox.querySelector('.msgs-empty');
   if (empty) empty.remove();
+
+  // Cap message DOM nodes to prevent memory leaks
+  while (chatBox.children.length > 150) {
+    const first = chatBox.firstElementChild;
+    if (first) first.remove();
+    else break;
+  }
 
   const el = document.createElement('div');
   const cls = ['msg'];
@@ -1474,6 +1746,13 @@ function appendFriendMsg(text, opts = {}) {
   const empty = friendChatBox.querySelector('.msgs-empty');
   if (empty) empty.remove();
 
+  // Cap friend message DOM nodes to prevent memory leaks
+  while (friendChatBox.children.length > 150) {
+    const first = friendChatBox.firstElementChild;
+    if (first) first.remove();
+    else break;
+  }
+
   const el = document.createElement('div');
   const cls = ['msg'];
   if (isSelf) cls.push('self');
@@ -1643,7 +1922,10 @@ function startTimer(endMs) {
     timerEl.textContent = formatTime(rem);
     if (rem <= 30000) timerEl.classList.add('danger');
     else timerEl.classList.remove('danger');
-    if (rem <= 0) stopTimer();
+    if (rem <= 0) {
+      stopTimer();
+      handleTimeExpired();
+    }
   }
   tick();
   timerInterval = setInterval(tick, 1000);
@@ -1818,6 +2100,7 @@ function showView(which) {
     { key: 'chat', el: activeChatView },
     { key: 'friends', el: friendsView },
     { key: 'friendDM', el: friendDMView },
+    { key: 'settings', el: settingsView },
   ];
 
   const viewChanged = currentActiveView !== which;
@@ -1840,17 +2123,24 @@ function showView(which) {
   });
 
   // Show/hide home tabs — visible on ALL views except waiting
-  const showTabs = (which === 'prechat' || which === 'friends' || which === 'friendDM' || which === 'chat');
+  const showTabs = (which === 'prechat' || which === 'friends' || which === 'friendDM' || which === 'chat' || which === 'settings');
   if (homeTabs) homeTabs.style.display = showTabs ? 'flex' : 'none';
 
   // Sync active tab highlight
   if (which === 'friendDM' || which === 'friends') {
     activeHomeTab = 'friends';
     if (tabFriends) tabFriends.classList.add('active');
+    if (tabSettings) tabSettings.classList.remove('active');
     if (tabRandom) tabRandom.classList.remove('active');
-  } else if (which === 'prechat' || which === 'waiting' || which === 'chat') {
+  } else if (which === 'settings') {
+    activeHomeTab = 'settings';
+    if (tabSettings) tabSettings.classList.add('active');
+    if (tabFriends) tabFriends.classList.remove('active');
+    if (tabRandom) tabRandom.classList.remove('active');
+  } else if (which === 'prechat' || which === 'chat' || which === 'waiting') {
     activeHomeTab = 'random';
     if (tabRandom) tabRandom.classList.add('active');
+    if (tabSettings) tabSettings.classList.remove('active');
     if (tabFriends) tabFriends.classList.remove('active');
   }
 
@@ -1922,11 +2212,25 @@ function endCurrentChat() {
   isWaiting = false;
   inChat = false;
   activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = false;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
+  
   stopAutoSearch(); // Always kill the auto-search timer when ending any chat
+  stopTimer();
+  
+  // Clear any pending message retry timers to eliminate timer memory leaks
+  if (typeof messageRetryQueue !== 'undefined' && messageRetryQueue.size > 0) {
+    messageRetryQueue.forEach(entry => {
+      if (entry?.timer) clearTimeout(entry.timer);
+    });
+    messageRetryQueue.clear();
+  }
+
   if (currentChatType === 'stranger') {
     currentChatType = 'stranger';
   }
-  stopTimer();
   syncButtons();
   clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
@@ -2069,13 +2373,22 @@ function goToLanding() {
 function switchHomeTab(tab) {
   // Update active tab state
   activeHomeTab = tab;
-  AppState.activeTab = tab === 'random' ? 'EXPLORE' : 'FRIENDS';
+  AppState.activeTab = tab === 'random' ? 'EXPLORE' : (tab === 'settings' ? 'SETTINGS' : 'FRIENDS');
 
   // Update tab visual state
   if (tabRandom) tabRandom.classList.toggle('active', tab === 'random');
+  if (tabSettings) tabSettings.classList.toggle('active', tab === 'settings');
   if (tabFriends) tabFriends.classList.toggle('active', tab === 'friends');
 
-  if (tab === 'friends') {
+  if (tab === 'settings') {
+    // ── Switch to Settings context ──
+    stopAutoSearch();
+    if (friendRoomId) {
+      socket.emit('leave_friend_dm', { roomId: friendRoomId });
+    }
+    showView('settings');
+    updateSettingsUI();
+  } else if (tab === 'friends') {
     // ── Switch to Friends context ──
     // Matchmaking timers paused
     stopAutoSearch();
@@ -2106,6 +2419,7 @@ function switchHomeTab(tab) {
     // Clear Friends DM UI containers and clear preview replies
     clearFriendChat();
     window.cancelReply();
+    stopAutoSearch();
 
     // If currently in an active explore chat, restore it!
     if (AppState.explore.inChat && AppState.explore.roomId) {
@@ -2119,7 +2433,12 @@ function switchHomeTab(tab) {
       });
     } else if (AppState.explore.isWaiting) {
       showView('waiting');
+      syncButtons();
     } else {
+      pendingStart = false;
+      isWaiting = false;
+      AppState.explore.inChat = false;
+      AppState.explore.isWaiting = false;
       showView('prechat');
       syncButtons();
     }
@@ -2127,6 +2446,7 @@ function switchHomeTab(tab) {
 }
 
 tabRandom?.addEventListener('click', () => switchHomeTab('random'));
+tabSettings?.addEventListener('click', () => switchHomeTab('settings'));
 tabFriends?.addEventListener('click', () => switchHomeTab('friends'));
 
 // ═══════════════════════════════════════════════
@@ -2298,6 +2618,32 @@ socket.on('self', ({ userId }) => {
 
 socket.off('state_update');
 socket.on('state_update', ({ status, roomId }) => applyState(status, roomId));
+
+socket.off('queue_joined');
+socket.on('queue_joined', () => {
+  pendingStart = false;
+  isWaiting = true;
+  AppState.explore.isWaiting = true;
+  if (AppState.activeTab === 'EXPLORE') {
+    showView('waiting');
+  }
+  syncButtons();
+});
+
+socket.off('queue_rejected');
+socket.on('queue_rejected', ({ reason, message }) => {
+  pendingStart = false;
+  isWaiting = false;
+  AppState.explore.isWaiting = false;
+  if (reason === 'banned') {
+    showToast(message || '🚫 Matchmaking suspended.', 'error', 4000);
+  } else if (reason !== 'already_queued' && reason !== 'already_waiting') {
+    if (!inChat && AppState.activeTab === 'EXPLORE') {
+      showView('prechat');
+    }
+  }
+  syncButtons();
+});
 
 socket.off('system_metrics');
 socket.on('system_metrics', m => {
@@ -2512,6 +2858,46 @@ function stopAutoSearch() {
   }
 }
 
+let isHandlingTimeExpired = false;
+function handleTimeExpired() {
+  if (isHandlingTimeExpired) return;
+  if (!inChat && !AppState.explore.inChat && !activeRoomId) return;
+
+  isHandlingTimeExpired = true;
+  stopTimer();
+  stopAutoSearch();
+
+  const closingRoomId = activeRoomId || AppState.explore.roomId;
+  if (closingRoomId) {
+    socket.emit('end_chat', { roomId: closingRoomId });
+  }
+
+  // Close the room and reset UI immediately, returning to prechat (do not auto connect)
+  inChat = false;
+  activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = false;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
+  pendingStart = false;
+  isWaiting = false;
+
+  if (autoSearchBar) autoSearchBar.style.display = 'none';
+  syncButtons();
+  clearChat();
+  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+
+  showToast("⏳ Time's up! Click Start Chat to chat again.", "info", 4000);
+  appendMsg("⏳ Time's up! Room closed. Click Start Chat to chat again.", { isSystem: true, variant: 'warn' });
+
+  // Return to prechat view and let the user click Start Chat to chat again
+  showView('prechat');
+
+  setTimeout(() => {
+    isHandlingTimeExpired = false;
+  }, 1200);
+}
+
 function handleChatEnd(reason) {
   if (isReconnecting) return;
   stopTimer();
@@ -2545,8 +2931,12 @@ function handleChatEnd(reason) {
 }
 
 socket.off('chat_end');
-socket.on('chat_end', ({ reason }) => {
+socket.on('chat_end', ({ reason, rawReason }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
+  if (rawReason === 'time_expired' || (typeof reason === 'string' && (reason.toLowerCase().includes("time's up") || reason.toLowerCase().includes("time_expired")))) {
+    handleTimeExpired();
+    return;
+  }
   handleChatEnd(reason);
 });
 
@@ -2602,6 +2992,9 @@ socket.on('warning_message', ({ message }) => {
   if (!message) return;
   // Backend already formats the message with emoji prefix — display as-is
   appendMsg(message, { isSystem: true, variant: 'warn' });
+  if (currentChatType === 'friend') {
+    appendFriendMsg(message, { isSystem: true, variant: 'warn' });
+  }
 });
 
 socket.off('error_message');
@@ -2610,11 +3003,17 @@ socket.on('error_message', ({ message, action, duration }) => {
 
   // Backend already formats the message with emoji prefix — display as-is
   appendMsg(message, { isSystem: true, variant: 'error' });
+  if (currentChatType === 'friend') {
+    appendFriendMsg(message, { isSystem: true, variant: 'error' });
+  }
 });
 
 socket.off('message_rejected');
 socket.on('message_rejected', ({ message, reason }) => {
   if (!message) return;
+  if (reason && (reason.startsWith('strike_') || reason === 'banned_15min')) {
+    return; // Already rendered by warning_message or chat_ended_banned
+  }
   appendMsg(message, { isSystem: true, variant: 'error' });
 });
 
@@ -2693,7 +3092,9 @@ socket.on('time_extension_declined', ({ roomId }) => {
 socket.off('friend_request_sent');
 socket.on('friend_request_sent', ({ requestId, toUserId } = {}) => {
   showToast('👫 Friend request sent!', 'success', 3000);
-  showFirebaseConnectModal({ friendCountry: partnerNameEl?.textContent || 'Stranger' });
+  if (!AppState.user.isAuthenticated) {
+    showFirebaseConnectModal({ friendCountry: partnerNameEl?.textContent || 'Stranger' });
+  }
 });
 
 socket.off('friend_request_received');
@@ -2701,7 +3102,6 @@ socket.on('friend_request_received', ({ requestId, fromUserId, fromCountry }) =>
   appendMsg(`👋 ${fromCountry} wants to be friends!`, { isSystem: true, variant: 'success' });
   showConfirm('New Friend?', `${fromCountry} wants to add you as a friend!`, () => {
     socket.emit('friend_request_response', { requestId, accept: true });
-    showFirebaseConnectModal({ friendCountry: fromCountry });
   }, () => {
     socket.emit('friend_request_response', { requestId, accept: false });
   });
@@ -2711,9 +3111,11 @@ socket.off('friend_request_accepted');
 socket.on('friend_request_accepted', ({ friendId, friendCountry, dmRoomId }) => {
   appendMsg(`✨ You're now friends with ${friendCountry}!`, { isSystem: true, variant: 'success' });
   showToast(`✨ Friends with ${friendCountry}!`, 'success', 3000);
-  setTimeout(() => {
-    showFirebaseConnectModal({ friendCountry });
-  }, 600);
+  if (!AppState.user.isAuthenticated) {
+    setTimeout(() => {
+      showFirebaseConnectModal({ friendCountry });
+    }, 600);
+  }
 });
 
 socket.off('friend_request_declined');
@@ -2805,7 +3207,12 @@ findChatBtn?.addEventListener('click', () => {
     return;
   }
   stopAutoSearch();
+  pendingStart = false;
+  isWaiting = true;
+  AppState.explore.isWaiting = true;
   switchHomeTab('random');
+  showView('waiting');
+  syncButtons();
   socket.emit('start_chat');
 });
 
@@ -2843,72 +3250,45 @@ startBtn?.addEventListener('click', () => {
     return;
   }
 
-  if (!isConnected || pendingStart) return;
-  stopAutoSearch();
-  pendingStart = true;
-  socket.emit('start_chat');
-});
-
-let skipConfirmTimer = null;
-nextBtn?.addEventListener('click', (e) => {
-  if (nextBtn.dataset.confirming !== 'true') {
-    e.stopPropagation();
-    nextBtn.dataset.confirming = 'true';
-    const originalHTML = nextBtn.innerHTML;
-    nextBtn.innerHTML = 'Sure? 👀';
-    nextBtn.classList.add('confirming-skip');
-
-    skipConfirmTimer = setTimeout(() => {
-      nextBtn.dataset.confirming = 'false';
-      nextBtn.innerHTML = originalHTML;
-      nextBtn.classList.remove('confirming-skip');
-    }, 3000); // 3 seconds to confirm
+  if (!isConnected) {
+    showToast("Connecting to server...", "info", 1500);
     return;
   }
 
-  clearTimeout(skipConfirmTimer);
-  nextBtn.dataset.confirming = 'false';
-  nextBtn.innerHTML = '⏩ Skip Stranger';
-  nextBtn.classList.remove('confirming-skip');
+  stopAutoSearch();
+  pendingStart = true;
+  isWaiting = true;
+  AppState.explore.isWaiting = true;
+  showView('waiting');
+  syncButtons();
+  socket.emit('start_chat');
 
+  // Safeguard: auto-clear pending lock after 1.5s
+  setTimeout(() => {
+    pendingStart = false;
+    syncButtons();
+  }, 1500);
+});
+
+nextBtn?.addEventListener('click', (e) => {
+  e.stopPropagation();
   const threeDotsMenu = $('threeDotsMenu');
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
-  socket.emit('end_chat', { roomId: activeRoomId });
-  endCurrentChat();
-  showToast('Chat ended.', 'info', 2000);
+  showToast('Skipping stranger...', 'info', 1500);
+  window.forceNextChat();
 });
 
-let reportSkipConfirmTimer = null;
 reportSkipBtn?.addEventListener('click', (e) => {
-  if (reportSkipBtn.dataset.confirming !== 'true') {
-    e.stopPropagation();
-    reportSkipBtn.dataset.confirming = 'true';
-    const originalHTML = reportSkipBtn.innerHTML;
-    reportSkipBtn.innerHTML = 'Sure? ⚠️';
-    reportSkipBtn.classList.add('confirming-skip');
-
-    reportSkipConfirmTimer = setTimeout(() => {
-      reportSkipBtn.dataset.confirming = 'false';
-      reportSkipBtn.innerHTML = originalHTML;
-      reportSkipBtn.classList.remove('confirming-skip');
-    }, 3000); // 3 seconds to confirm
-    return;
-  }
-
-  clearTimeout(reportSkipConfirmTimer);
-  reportSkipBtn.dataset.confirming = 'false';
-  reportSkipBtn.innerHTML = '⚑ Report User';
-  reportSkipBtn.classList.remove('confirming-skip');
-
+  e.stopPropagation();
   const threeDotsMenu = $('threeDotsMenu');
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
   stopAutoSearch();
   socket.emit('report_user', { roomId: AppState.explore.roomId || activeRoomId, reason: 'inappropriate' });
-  endCurrentChat();
-  showToast('User reported and banned for 15 minutes.', 'success', 3000);
+  showToast('User reported and banned. Finding a new stranger...', 'success', 3000);
+  window.forceNextChat();
 });
 
 cancelWaitBtn?.addEventListener('click', () => {
@@ -2959,8 +3339,14 @@ function sendMessage(overrideText = null) {
       if (ack && (ack.ok || ack.success)) {
         updateMsgStatus(msgId, 'sent');
       } else {
-        updateMsgStatus(msgId, 'failed');
-        if (ack?.reason) showToast(ack.reason, 'error', 3000);
+        if (ack?.reason && (ack.reason.startsWith('strike_') || ack.reason === 'banned_15min' || ack.reason === 'slur_blocked')) {
+          const el = (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
+                     (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`));
+          if (el) el.remove();
+        } else {
+          updateMsgStatus(msgId, 'failed');
+          if (ack?.reason) showToast(ack.reason, 'error', 3000);
+        }
       }
       if (sendBtn) syncButtons();
     });
@@ -3023,8 +3409,14 @@ function sendFriendMessage(overrideText = null) {
       if (ack && (ack.ok || ack.success)) {
         updateMsgStatus(msgId, 'sent');
       } else {
-        updateMsgStatus(msgId, 'failed');
-        if (ack?.reason) showToast(ack.reason, 'error', 3000);
+        if (ack?.reason && (ack.reason.startsWith('strike_') || ack.reason === 'banned_15min' || ack.reason === 'slur_blocked')) {
+          const el = (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
+                     (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`));
+          if (el) el.remove();
+        } else {
+          updateMsgStatus(msgId, 'failed');
+          if (ack?.reason) showToast(ack.reason, 'error', 3000);
+        }
       }
     });
   };
@@ -3373,20 +3765,22 @@ socket.on('incoming_ping', () => {
     container.classList.add('ping-shake');
     setTimeout(() => container.classList.remove('ping-shake'), 400);
   }
-  // Optional: Play subtle sound if allowed
+  // Optional: Play subtle sound if allowed using shared AudioContext singleton
   try {
-    const context = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = context.createOscillator();
-    const gain = context.createGain();
-    osc.connect(gain);
-    gain.connect(context.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, context.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(110, context.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.1, context.currentTime);
-    gain.gain.linearRampToValueAtTime(0, context.currentTime + 0.2);
-    osc.start();
-    osc.stop(context.currentTime + 0.2);
+    const context = getSharedAudioContext();
+    if (context) {
+      const osc = context.createOscillator();
+      const gain = context.createGain();
+      osc.connect(gain);
+      gain.connect(context.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, context.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, context.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.1, context.currentTime);
+      gain.gain.linearRampToValueAtTime(0, context.currentTime + 0.2);
+      osc.start();
+      osc.stop(context.currentTime + 0.2);
+    }
   } catch (e) { }
 });
 
