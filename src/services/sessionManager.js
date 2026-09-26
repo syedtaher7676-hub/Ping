@@ -70,8 +70,8 @@ function terminateSession(io, roomId, reason = "session_ended") {
   const friendlyReason =
     reason === "next_clicked" ? "Stranger skipped the chat." :
       reason === "time_expired" ? "Time's up! The session has expired." :
-        reason === "user_ended" ? "Stranger ended the chat." :
-          reason === "partner_left" ? "Your partner left." :
+        reason === "user_ended" ? "Stranger is inactive and left the chat." :
+          reason === "partner_left" ? "Stranger is inactive. Search for a new user." :
             reason === "server_shutdown" ? "Server is restarting for maintenance." : "Chat ended.";
 
   if (firstUser?.socketId) {
@@ -133,7 +133,7 @@ function handlePartnerDisconnect(io, roomId, disconnectedUserId) {
   remainingSocket.emit("partner_disconnected", {
     roomId,
     partnerId: disconnectedUserId,
-    message: "Your chat partner disconnected. Waiting for them to reconnect...",
+    message: "Stranger is inactive. Search for a new user.",
     reconnectTimeoutMs: 30000,
   });
 

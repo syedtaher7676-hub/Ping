@@ -2898,6 +2898,30 @@ function handleTimeExpired() {
   }, 1200);
 }
 
+function handleSkippedChat(reason, rawReason) {
+  if (isReconnecting) return;
+  stopTimer();
+  stopAutoSearch();
+
+  inChat = false;
+  activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = false;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
+  isWaiting = false;
+
+  stopWaitingScreen();
+  if (autoSearchBar) autoSearchBar.style.display = 'none';
+  clearChat();
+  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+
+  const msg = reason || 'Stranger skipped the chat. Click Start Chat to match again.';
+  showToast(msg, 'info', 3500);
+  showView('prechat');
+  syncButtons();
+}
+
 function handleChatEnd(reason, rawReason) {
   if (isReconnecting) return;
   stopTimer();
@@ -2920,17 +2944,38 @@ function handleChatEnd(reason, rawReason) {
   clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  const msg = reason || 'Chat ended.';
-  showToast(msg, 'info', 3500);
-  appendMsg(msg, { isSystem: true, variant: 'warn' });
+  if (reason !== 'left_queue' && rawReason !== 'left_queue') {
+    const msg = reason || 'Stranger is inactive and left the chat.';
+    showToast(msg, 'info', 3500);
+    appendMsg(msg, { isSystem: true, variant: 'warn' });
+  }
   showView('prechat');
 }
 
 socket.off('chat_end');
 socket.on('chat_end', ({ reason, rawReason }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
+  if (reason === 'left_queue' || rawReason === 'left_queue') {
+    stopTimer();
+    stopAutoSearch();
+    inChat = false;
+    activeRoomId = null;
+    AppState.explore.inChat = false;
+    AppState.explore.isWaiting = false;
+    AppState.explore.roomId = null;
+    AppState.explore.timerEndMs = 0;
+    isWaiting = false;
+    stopWaitingScreen();
+    showView('prechat');
+    syncButtons();
+    return;
+  }
   if (rawReason === 'time_expired' || (typeof reason === 'string' && (reason.toLowerCase().includes("time's up") || reason.toLowerCase().includes("time_expired")))) {
     handleTimeExpired();
+    return;
+  }
+  if (rawReason === 'next_clicked' || (typeof reason === 'string' && (reason.toLowerCase().includes('skipped') || reason.toLowerCase().includes('next')))) {
+    handleSkippedChat(reason, rawReason);
     return;
   }
   handleChatEnd(reason, rawReason);
@@ -2939,31 +2984,34 @@ socket.on('chat_end', ({ reason, rawReason }) => {
 socket.off('partner_disconnected');
 socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  console.log('[Ping] Partner disconnected, waiting for reconnect...', { roomId, timeout: reconnectTimeoutMs });
+  console.log('[Ping] Partner disconnected/inactive...', { roomId, timeout: reconnectTimeoutMs });
 
   stopAutoSearch();
   let remaining = Math.round((reconnectTimeoutMs || 30000) / 1000);
   const targetRoomId = roomId || activeRoomId;
 
+  const notifMsg = message || 'Stranger is inactive. Search for a new user!';
+  appendMsg(`⚠️ ${notifMsg}`, { isSystem: true, variant: 'warn' });
+  showToast(notifMsg, 'info', 3500);
+
   if (autoSearchBar) autoSearchBar.style.display = 'flex';
-  if (autoSearchStatus) autoSearchStatus.textContent = `Partner disconnected. Waiting for recovery (${remaining}s)...`;
+  if (autoSearchStatus) autoSearchStatus.textContent = `Stranger is inactive. Search for new user (${remaining}s)...`;
 
   if (messageInput) {
     messageInput.disabled = true;
-    messageInput.placeholder = `Partner disconnected (${remaining}s)...`;
+    messageInput.placeholder = `Stranger is inactive...`;
   }
   if (sendBtn) sendBtn.disabled = true;
 
   autoSearchInterval = setInterval(() => {
     remaining--;
-    if (autoSearchStatus) autoSearchStatus.textContent = `Partner disconnected. Waiting for recovery (${remaining}s)...`;
-    if (messageInput && messageInput.disabled) messageInput.placeholder = `Partner disconnected (${remaining}s)...`;
+    if (autoSearchStatus) autoSearchStatus.textContent = `Stranger is inactive. Search for new user (${remaining}s)...`;
 
     if (remaining <= 0) {
       stopAutoSearch();
       if (activeRoomId === targetRoomId || lastKnownRoomId === targetRoomId) {
-        appendMsg('Partner did not reconnect. Finding someone new... 🔍', { isSystem: true });
-        socket.emit('next_chat', { autoStart: true });
+        appendMsg('Stranger remained inactive. Searching for new user... 🔍', { isSystem: true });
+        window.forceNextChat();
       }
     }
   }, 1000);
@@ -3181,7 +3229,25 @@ socket.on('friend_dm_opened', ({ roomId, friendId, friendCountry, friendOnline, 
 // Login button - goes to app with tabs visible
 window.forceNextChat = () => {
   stopAutoSearch();
+  stopTimer();
   if (autoSearchBar) autoSearchBar.style.display = 'none';
+
+  inChat = false;
+  activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = true;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
+  isWaiting = true;
+
+  clearChat();
+  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+
+  showView('waiting');
+  startWaitingScreen();
+  syncButtons();
+  showToast('Searching for a new stranger... 🔍', 'info', 2500);
+
   socket.emit('next_chat', { autoStart: true });
 };
 
@@ -3293,17 +3359,20 @@ nextBtn?.addEventListener('click', (e) => {
 
   stopAutoSearch();
   stopTimer();
-  socket.emit('next_chat', { autoStart: true });
+  socket.emit('next_chat', { autoStart: false });
   inChat = false;
   activeRoomId = null;
+  isWaiting = false;
   AppState.explore.inChat = false;
-  AppState.explore.isWaiting = true;
+  AppState.explore.isWaiting = false;
   AppState.explore.roomId = null;
   AppState.explore.timerEndMs = 0;
-  showView('waiting');
-  startWaitingScreen();
+  stopWaitingScreen();
+  clearChat();
+  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
   syncButtons();
-  showToast('Searching for a new stranger...', 'info', 2000);
+  showView('prechat');
+  showToast('Chat skipped. Click Start Chat when you want to search again.', 'info', 3000);
 });
 
 let reportSkipConfirmTimer = null;
@@ -3739,7 +3808,6 @@ document.addEventListener('visibilitychange', () => {
 function setTheme(name) {
   document.body.className = `theme-${name}`;
   localStorage.setItem('ping-theme', name);
-  showToast(`${name.charAt(0).toUpperCase() + name.slice(1)} theme applied`, 'success', 1000);
 }
 
 // Load saved theme
@@ -3844,7 +3912,21 @@ socket.on('message_delivered', ({ msgId }) => {
 invisibleToggle?.addEventListener('change', () => {
   const isInvisible = invisibleToggle.checked;
   socket.emit('toggle_invisible', { invisible: isInvisible });
-  showToast(isInvisible ? 'Invisible Mode ON 👻' : 'Visible Mode ON', 'info', 2000);
+});
+
+// Preference toggles in settings (sound, haptics, auto-scroll, typing)
+['prefSoundToggle', 'prefHapticToggle', 'prefAutoScrollToggle', 'prefTypingToggle'].forEach(id => {
+  const el = $(id);
+  if (el) {
+    // Restore saved state
+    const saved = localStorage.getItem(`ping_${id}`);
+    if (saved !== null) {
+      el.checked = saved === 'true';
+    }
+    el.addEventListener('change', () => {
+      localStorage.setItem(`ping_${id}`, el.checked);
+    });
+  }
 });
 
 // Privacy Shield Click

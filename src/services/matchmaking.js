@@ -11,6 +11,7 @@ const {
   atomicMatchmake,
   isRedisReady,
   purgeUserFromAllState,
+  areRecentPartners,
 } = require("../state/store");
 const { createSession } = require("./sessionManager");
 const { createId } = require("../utils/ids");
@@ -75,6 +76,8 @@ function enqueueForMatchmaking(userId, io = null) {
     } else {
       return { ok: false, reason: "already_matched" };
     }
+  } else if (user.status === "matched") {
+    user.status = "idle";
   }
 
   if (user.status === "waiting" && isUserQueued(userId)) {
@@ -184,6 +187,15 @@ async function attemptMatchmaking(io) {
       if (firstUser.socketId === secondUser.socketId) {
         enqueueUser(firstUserId);
         continue;
+      }
+
+      // Check if pair was recently skipped and other candidates are available
+      if (typeof areRecentPartners === "function" && areRecentPartners(firstUserId, secondUserId)) {
+        if (waitingQueue.length > 0) {
+          // Re-enqueue second user and try matching first user with another candidate
+          enqueueUser(secondUserId);
+          continue;
+        }
       }
 
       const roomId = createSession(io, firstUser, secondUser);

@@ -457,9 +457,8 @@ function purgeUserFromAllState(userId, socketId = null) {
     if (!socketId || user.socketId === socketId) {
       user.isActive = false;
       user.lastDisconnect = Date.now();
-      if (user.status === "waiting") {
-        user.status = "idle";
-      }
+      user.status = "idle";
+      user.roomId = null;
     }
   }
 
@@ -472,7 +471,7 @@ function purgeUserFromAllState(userId, socketId = null) {
       if (socketId) {
         pipeline.del(`${KEYS.SOCKET_PREFIX}${socketId}`);
       }
-      pipeline.hset(`${KEYS.USER_PREFIX}${userId}`, "status", "idle", "isActive", "0");
+      pipeline.hset(`${KEYS.USER_PREFIX}${userId}`, "status", "idle", "roomId", "", "isActive", "0");
       pipeline.exec().catch(() => {});
     } catch {}
   }
@@ -772,6 +771,27 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000).unref();
 
+// ── RECENT PARTNER LOCKING ────────────────────────────────────
+const recentPartnerLocks = new Map(); // pairKey -> expiry timestamp
+
+function addRecentPartnerLock(user1, user2, durationMs = 15000) {
+  if (!user1 || !user2) return;
+  const pairKey = [user1, user2].sort().join("::");
+  recentPartnerLocks.set(pairKey, Date.now() + durationMs);
+}
+
+function areRecentPartners(user1, user2) {
+  if (!user1 || !user2) return false;
+  const pairKey = [user1, user2].sort().join("::");
+  const expiry = recentPartnerLocks.get(pairKey);
+  if (!expiry) return false;
+  if (Date.now() >= expiry) {
+    recentPartnerLocks.delete(pairKey);
+    return false;
+  }
+  return true;
+}
+
 // ── MODULE EXPORTS ────────────────────────────────────────────
 module.exports = {
   // Underlying redis instances & helpers
@@ -779,6 +799,10 @@ module.exports = {
   isRedisReady,
   initializeRedis,
   checkSlidingWindowRateLimit,
+
+  // Recent partner locks
+  addRecentPartnerLock,
+  areRecentPartners,
 
   // Async Redis wrappers
   redisSetUser,

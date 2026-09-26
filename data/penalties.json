@@ -1,16 +1,10 @@
 {
   "penalties": {
-    "u_7a2a5b1f-0a30-48b5-9f51-ea92edeebcf0": {
+    "u_7a1eef29-2540-49ba-97cc-cf49f47466e0": {
       "type": "ban_15min",
-      "startTime": 1790446362921,
+      "startTime": 1790450941388,
       "duration": 900000,
-      "expiresAt": 1790447262921
-    },
-    "u_1174ceac-c795-428a-94ac-bb8dc10a5b00": {
-      "type": "ban_15min",
-      "startTime": 1790446379597,
-      "duration": 900000,
-      "expiresAt": 1790447279597
+      "expiresAt": 1790451841388
     }
   }
 }

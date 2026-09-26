@@ -3,6 +3,7 @@ const { users, rooms, getUserBySocketId, getUserById, recordMatchmakingTime, get
   appendFriendRoomMessage, getFriendRoomMessages, createFriendRequest, acceptFriendRequest, rejectFriendRequest,
   getPendingRequestsFor, getExistingRequest, removeFriendRequest,
   checkSlidingWindowRateLimit, redisSetUser, redisDeleteUser, purgeUserFromAllState, createFriendRoomEntry,
+  addRecentPartnerLock, areRecentPartners,
 } = require("../state/store");
 const { createId } = require("../utils/ids");
 const {
@@ -1770,11 +1771,20 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         if (currentUser.status === "matched" && currentUser.roomId) {
           const activeRoom = rooms.get(currentUser.roomId);
+
           if (activeRoom && Array.isArray(activeRoom.users) && activeRoom.users.length >= 2) {
-            addRecentPartnerLock(activeRoom.users[0], activeRoom.users[1]);
+            if (typeof addRecentPartnerLock === "function") {
+              addRecentPartnerLock(activeRoom.users[0], activeRoom.users[1]);
+            }
           }
-          terminateSession(io, currentUser.roomId, "next_clicked");
-          if (autoStart) queueUserForMatch(socket, io, userId);
+
+          const targetRoomId = currentUser.roomId;
+          terminateSession(io, targetRoomId, "next_clicked");
+
+          // Do NOT auto-queue users when skip is used — let both users return to prechat view to click Start Chat
+          if (autoStart) {
+            queueUserForMatch(socket, io, userId);
+          }
         } else if (currentUser.status === "waiting") {
           leaveWaitingQueue(userId);
           if (autoStart) {
