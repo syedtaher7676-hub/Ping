@@ -2990,27 +2990,31 @@ socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
   let remaining = Math.round((reconnectTimeoutMs || 30000) / 1000);
   const targetRoomId = roomId || activeRoomId;
 
-  const notifMsg = message || 'Stranger is inactive. Search for a new user!';
-  appendMsg(`⚠️ ${notifMsg}`, { isSystem: true, variant: 'warn' });
+  const notifMsg = 'Stranger has left the chat.';
+  appendMsg(`⚠️ ${notifMsg} <button onclick="window.forceNextChat()" class="btn-xs btn-primary" style="margin-left:8px; display:inline-flex; align-items:center; gap:4px; font-weight:700; cursor:pointer;">Search Now 🔍</button>`, {
+    isSystem: true,
+    isHTML: true,
+    variant: 'warn'
+  });
   showToast(notifMsg, 'info', 3500);
 
   if (autoSearchBar) autoSearchBar.style.display = 'flex';
-  if (autoSearchStatus) autoSearchStatus.textContent = `Stranger is inactive. Search for new user (${remaining}s)...`;
+  if (autoSearchStatus) autoSearchStatus.textContent = `Stranger has left the chat (${remaining}s)...`;
 
   if (messageInput) {
     messageInput.disabled = true;
-    messageInput.placeholder = `Stranger is inactive...`;
+    messageInput.placeholder = `Stranger has left the chat...`;
   }
   if (sendBtn) sendBtn.disabled = true;
 
   autoSearchInterval = setInterval(() => {
     remaining--;
-    if (autoSearchStatus) autoSearchStatus.textContent = `Stranger is inactive. Search for new user (${remaining}s)...`;
+    if (autoSearchStatus) autoSearchStatus.textContent = `Stranger has left the chat (${remaining}s)...`;
 
     if (remaining <= 0) {
       stopAutoSearch();
       if (activeRoomId === targetRoomId || lastKnownRoomId === targetRoomId) {
-        appendMsg('Stranger remained inactive. Searching for new user... 🔍', { isSystem: true });
+        appendMsg('Stranger did not return. Finding someone new... 🔍', { isSystem: true });
         window.forceNextChat();
       }
     }
