@@ -3119,34 +3119,11 @@ socket.on('chat_ended', handleGenericChatEnd);
 socket.off('partner_disconnected');
 socket.on('partner_disconnected', ({ roomId, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  const now = Date.now();
-  if (now - lastEndChatHandledMs < 2000) return;
-  lastEndChatHandledMs = now;
-
-  stopAutoSearch();
-  stopTimer();
-
-  const wasInChat = inChat || AppState.explore.inChat || activeRoomId;
-  inChat = false;
-  activeRoomId = null;
-  AppState.explore.inChat = false;
-  AppState.explore.isWaiting = false;
-  AppState.explore.roomId = null;
-  AppState.explore.timerEndMs = 0;
-  syncButtons();
-
-  clearChat();
-  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
-  showView('prechat');
-
-  if (userInitiatedLeave || userInitiatedSkip) {
-    userInitiatedLeave = false;
-    userInitiatedSkip = false;
-    return;
-  }
-
-  if (wasInChat) {
-    showStrangerDisconnectedPopup();
+  // Grace period: show reconnection warning banner / status message instead of abruptly ending chat
+  appendMsg(message || "⚡ Stranger's connection dropped. Waiting for them to reconnect...", { isSystem: true, variant: 'warn' });
+  if (messageInput) {
+    messageInput.disabled = true;
+    messageInput.placeholder = 'Waiting for stranger to reconnect...';
   }
 });
 

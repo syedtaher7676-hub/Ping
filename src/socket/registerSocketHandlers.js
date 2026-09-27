@@ -2164,31 +2164,40 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const originalStatus = disconnectedUser.status;
         const originalRoomId = disconnectedUser.roomId;
 
-        // 1. Handle active room cleanup or partner notification BEFORE purging state
+        // 1. Handle active room grace period or partner notification BEFORE purging state
         if (originalStatus === "matched" && originalRoomId) {
           const room = rooms.get(originalRoomId);
-          if (room) {
-            log("user_disconnected_while_matched_explore_partner_disconnect", {
+          if (room && room.status === "active") {
+            log("user_disconnected_while_matched_explore_grace_period", {
               userId: disconnectedUser.id, socketId: socket.id,
-              roomId: originalRoomId, reason: "explore_partner_disconnect",
+              roomId: originalRoomId, reason: "explore_partner_disconnect_grace_period",
             });
 
             const partnerId = room.users?.find(id => id !== disconnectedUser.id);
             const partnerUser = partnerId ? users.get(partnerId) : null;
 
-            // handlePartnerDisconnect will broadcast chat_ended once to the room and leave sockets
-            handlePartnerDisconnect(io, originalRoomId, disconnectedUser.id);
-
-            // Cleanly reset both users' states in memory (status = "idle", roomId = null)
-            disconnectedUser.status = "idle";
-            disconnectedUser.roomId = null;
-            if (partnerUser) {
-              partnerUser.status = "idle";
-              partnerUser.roomId = null;
-              if (typeof redisSetUser === "function") {
-                redisSetUser(partnerId, partnerUser).catch(() => {});
-              }
+            // Notify partner that stranger disconnected temporarily, waiting 15s for reconnection
+            if (partnerUser?.socketId) {
+              const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
+              partnerSocket?.emit("partner_disconnected", {
+                roomId: originalRoomId,
+                message: "Stranger's connection dropped. Waiting 15s for them to reconnect...",
+                gracePeriod: 15000,
+              });
             }
+
+            // Set disconnect grace period timer (15 seconds) before terminating the room
+            if (room.disconnectTimeoutRef) {
+              clearTimeout(room.disconnectTimeoutRef);
+            }
+            room.disconnectTimeoutRef = setTimeout(() => {
+              handlePartnerDisconnect(io, originalRoomId, disconnectedUser.id);
+            }, 15000);
+
+            // Preserve user's matched status and roomId for 15s so they can seamlessly reconnect
+            disconnectedUser.status = "matched";
+            disconnectedUser.roomId = originalRoomId;
+            return;
           }
         }
 

@@ -2945,15 +2945,15 @@ input:checked+.slider-round:before {
 
 /* Inner content wrapper */
 .msg-content {
-  padding: 10px 14px 8px;
+  padding: 6px 10px 6px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .msg-text {
-  font-size: .95rem;
-  line-height: 1.55;
+  font-size: .88rem;
+  line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -3249,24 +3249,24 @@ input:checked+.slider-round:before {
 .typing-bubble {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
+  gap: 6px;
+  padding: 5px 10px;
   background: rgba(255, 255, 255, .075);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, .1);
-  border-radius: 18px 18px 18px 4px;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, .18);
+  border-radius: 14px 14px 14px 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
   animation: typing-appear .25s var(--ease) both;
 }
 
 .typing-avatar {
-  font-size: .85rem;
+  font-size: .75rem;
   flex-shrink: 0;
   opacity: .8;
 }
 
 .typing-label {
-  font-size: .78rem;
+  font-size: .72rem;
   color: var(--t-low);
   font-style: italic;
 }

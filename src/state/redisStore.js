@@ -138,8 +138,8 @@ const slidingWindowLuaScript = `
 function initializeRedis() {
   if (redisClient) return redisClient;
 
-  // Only attempt Redis connection if REDIS_URL or explicit REDIS_HOST is provided
-  const connectionTarget = REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${DEFAULT_REDIS_PORT}` : "");
+  // Automatically attempt Redis connection for multi-node shared state across Server A and Server B
+  const connectionTarget = REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${DEFAULT_REDIS_PORT}` : "redis://127.0.0.1:6379");
 
   if (!connectionTarget) {
     if (!hasLoggedFailure) {
@@ -853,58 +853,16 @@ async function isTemporaryBanned(targetId) {
   return { banned: false, remaining: 0 };
 }
 
-function addRecentPartnerLock(user1, user2, durationMs = 30000) {
-  if (!user1 || !user2) return;
-  const pairKey = [user1, user2].sort().join("::");
-  const expiry = Date.now() + durationMs;
-  recentPartnerLocks.set(pairKey, expiry);
-
-  if (isRedisReady()) {
-    const ttlSec = Math.max(1, Math.ceil(durationMs / 1000));
-    redisClient.set(`${KEYS.PARTNER_LOCK_PREFIX}${pairKey}`, String(expiry), "EX", ttlSec).catch((err) => {
-      log("redis_add_partner_lock_error", { pairKey, message: err.message });
-    });
-  }
+function addRecentPartnerLock(user1, user2, durationMs = 0) {
+  // Partner lock disabled - allow immediate rematching
 }
 
 async function areRecentPartnersAsync(user1, user2) {
-  if (!user1 || !user2) return false;
-  const pairKey = [user1, user2].sort().join("::");
-  const now = Date.now();
-
-  if (isRedisReady()) {
-    try {
-      const lockKey = `${KEYS.PARTNER_LOCK_PREFIX}${pairKey}`;
-      const expiryStr = await redisClient.get(lockKey);
-      if (expiryStr) {
-        const expiry = Number(expiryStr);
-        if (now < expiry) return true;
-      }
-    } catch (err) {
-      log("redis_check_partner_lock_error", { pairKey, message: err.message });
-    }
-  }
-
-  const expiry = recentPartnerLocks.get(pairKey);
-  if (!expiry) return false;
-  if (now >= expiry) {
-    recentPartnerLocks.delete(pairKey);
-    return false;
-  }
-  return true;
+  return false;
 }
 
 function areRecentPartners(user1, user2) {
-  if (!user1 || !user2) return false;
-  const pairKey = [user1, user2].sort().join("::");
-  const now = Date.now();
-  const expiry = recentPartnerLocks.get(pairKey);
-  if (!expiry) return false;
-  if (now >= expiry) {
-    recentPartnerLocks.delete(pairKey);
-    return false;
-  }
-  return true;
+  return false;
 }
 
 // ── MODULE EXPORTS ────────────────────────────────────────────

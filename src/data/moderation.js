@@ -3,6 +3,9 @@
 // Patterns for detecting gender/age questions - case-insensitive
 // Only target specific question patterns, NOT single letters or normal words
 const GENDER_PATTERNS = [
+  // Standalone M or m (case-insensitive) as bad behavior / gender probing
+  /^\s*m\s*\??\s*$/i,
+  /^\s*f\s*\??\s*$/i,
   // Direct gender questions with ? or as direct question
   /\bm\?\s*$/i,
   /\bf\?\s*$/i,
@@ -78,7 +81,7 @@ const MODERATION_CONFIG = {
   MUTE_DURATION_MS: 120000,      // 2 minute mute
   
   // Pattern matching
-  MIN_PATTERN_LENGTH: 2,         // Minimum pattern length to check
+  MIN_PATTERN_LENGTH: 1,         // Minimum pattern length to check (allows single-char detection like M/m)
 };
 
 // === IN-MEMORY VIOLATION STORAGE ===
@@ -142,7 +145,10 @@ function detectLowQualityMessage(text) {
 function isNormalConversation(text) {
   if (!text) return false;
   
-  const lower = text.toLowerCase();
+  const lower = text.toLowerCase().trim();
+  if (lower === 'm' || lower === 'm?' || lower === 'f' || lower === 'f?' || lower === 'male' || lower === 'female') {
+    return false;
+  }
   
   // Common greeting patterns
   const greetings = ['hi', 'hello', 'hey', 'yo', 'sup', 'what\'s up', 'wassup', 'good morning', 'good evening', 'good afternoon'];

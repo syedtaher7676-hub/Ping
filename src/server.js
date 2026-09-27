@@ -176,8 +176,8 @@ let redisPubClient = null;
 let redisSubClient = null;
 
 function initializeRedisAdapter(ioServer) {
-  // Only initialize Redis adapter if REDIS_URL or REDIS_HOST is explicitly provided
-  const target = REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : "");
+  // Automatically connect to configured Redis URL, REDIS_HOST, or default local Redis for multi-node clustering
+  const target = REDIS_URL || (process.env.REDIS_HOST ? `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT || 6379}` : "redis://127.0.0.1:6379");
 
   if (!target) {
     log("redis_adapter_skipped", { reason: "no_redis_url_configured", mode: "in_memory_standalone" });

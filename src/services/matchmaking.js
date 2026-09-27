@@ -238,19 +238,7 @@ async function attemptMatchmaking(io) {
         continue;
       }
 
-      // Check if pair was recently skipped and other candidates are available
-      if (typeof areRecentPartners === "function" && areRecentPartners(firstUserId, secondUserId)) {
-        // Re-enqueue BOTH firstUserId and secondUserId to avoid dropping firstUserId into limbo
-        enqueueUser(firstUserId);
-        enqueueUser(secondUserId);
-        
-        // If waitingQueue.length < 2 (no other candidates available to pair with), break out of the matchmaking loop cleanly
-        if (waitingQueue.length < 2) {
-          break;
-        }
-        continue;
-      }
-
+      // Match pair directly without partner lock restrictions
       const roomId = createSession(io, firstUser, secondUser);
       if (!roomId) {
         // Session creation handled peer recovery internally if one disconnected
