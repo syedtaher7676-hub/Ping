@@ -13,6 +13,7 @@ const {
   redisDeleteRoom,
   redisSetUser,
   purgeUserFromAllState,
+  isRedisReady,
 } = require("../state/store");
 const { createId } = require("../utils/ids");
 const { log } = require("../utils/logger");
@@ -41,6 +42,29 @@ function terminateSession(io, roomId, reason = "session_ended") {
     return;
   }
 
+  const [firstUserId, secondUserId] = room.users || [];
+  const firstUser = firstUserId ? users.get(firstUserId) : null;
+  const secondUser = secondUserId ? users.get(secondUserId) : null;
+
+  const friendlyReason =
+    reason === "next_clicked" ? "Stranger skipped the chat." :
+      reason === "time_expired" ? "Time's up! The session has expired." :
+        reason === "user_ended" ? "Stranger left the chat." :
+          reason === "partner_left" ? "Stranger left the chat." :
+            reason === "server_shutdown" ? "Server is restarting for maintenance." : "Stranger left the chat.";
+
+  const endPayload = {
+    reason: "stranger_disconnected",
+    message: "Stranger left the chat.",
+    friendlyReason,
+    rawReason: reason,
+    roomId
+  };
+
+  // Broadcast chat_ended and chat_end to the room and individual user rooms BEFORE removing room metadata
+  // Broadcast exactly once to the room before deleting metadata or leaving sockets
+  io.to(roomId).emit("chat_ended", endPayload);
+
   room.status = "terminated";
   room.endedAt = Date.now();
   if (room.timerRef) {
@@ -58,36 +82,29 @@ function terminateSession(io, roomId, reason = "session_ended") {
   if (timeExtensionRequests) {
     timeExtensionRequests.delete(roomId);
   }
+
+  // Enforce explicit physical socket leave for BOTH users on all server instances
+  if (io && typeof io.in === "function") {
+    try {
+      io.in(roomId).socketsLeave(roomId);
+    } catch (_) {}
+  }
+
   rooms.delete(roomId);
   if (typeof redisDeleteRoom === "function") {
     redisDeleteRoom(roomId).catch(() => {});
   }
 
-  const [firstUserId, secondUserId] = room.users || [];
-  const firstUser = firstUserId ? users.get(firstUserId) : null;
-  const secondUser = secondUserId ? users.get(secondUserId) : null;
-
-  const friendlyReason =
-    reason === "next_clicked" ? "Stranger skipped the chat." :
-      reason === "time_expired" ? "Time's up! The session has expired." :
-        reason === "user_ended" ? "Stranger is inactive and left the chat." :
-          reason === "partner_left" ? "Stranger is inactive. Search for a new user." :
-            reason === "server_shutdown" ? "Server is restarting for maintenance." : "Chat ended.";
-
   if (firstUser?.socketId) {
-    const firstSocket = io.sockets.sockets.get(firstUser.socketId);
+    const firstSocket = io.sockets?.sockets?.get(firstUser.socketId);
     if (firstSocket) {
-      firstSocket.leave(roomId);
-      firstSocket.emit("chat_end", { reason: friendlyReason, rawReason: reason, roomId });
       firstSocket.emit("state_update", { status: "idle", roomId: null, joinedAt: firstUser.joinedAt });
     }
   }
 
   if (secondUser?.socketId) {
-    const secondSocket = io.sockets.sockets.get(secondUser.socketId);
+    const secondSocket = io.sockets?.sockets?.get(secondUser.socketId);
     if (secondSocket) {
-      secondSocket.leave(roomId);
-      secondSocket.emit("chat_end", { reason: friendlyReason, rawReason: reason, roomId });
       secondSocket.emit("state_update", { status: "idle", roomId: null, joinedAt: secondUser.joinedAt });
     }
   }
@@ -110,62 +127,79 @@ function terminateSession(io, roomId, reason = "session_ended") {
 // ─────────────────────────────────────────────────────────────
 function handlePartnerDisconnect(io, roomId, disconnectedUserId) {
   const room = rooms.get(roomId);
-  if (!room || room.status !== "active") {
+  if (!room) {
     return;
   }
 
-  const remainingUserId = room.users.find(id => id !== disconnectedUserId);
-  if (!remainingUserId) {
-    return;
-  }
+  const remainingUserId = room.users ? room.users.find(id => id !== disconnectedUserId) : null;
+  const remainingUser = remainingUserId ? users.get(remainingUserId) : null;
+  const disconnectedUser = users.get(disconnectedUserId);
 
-  const remainingUser = users.get(remainingUserId);
-  if (!remainingUser?.socketId) {
-    return;
-  }
-
-  const remainingSocket = io.sockets.sockets.get(remainingUser.socketId);
-  if (!remainingSocket) {
-    return;
-  }
-
-  // Notify remaining user that partner disconnected, but don't end the session yet
-  remainingSocket.emit("partner_disconnected", {
+  log("handling_partner_disconnect", {
     roomId,
-    partnerId: disconnectedUserId,
-    message: "Stranger is inactive. Search for a new user.",
-    reconnectTimeoutMs: 30000,
+    disconnectedUserId,
+    remainingUserId,
   });
 
-  log("partner_disconnected_notified", {
+  const endPayload = {
+    reason: "stranger_disconnected",
+    message: "Stranger left the chat.",
+    roomId,
+    partnerId: disconnectedUserId,
+    autoSearchAvailable: true,
+  };
+
+  // Broadcast exactly once to the room before deleting metadata or leaving sockets
+  io.to(roomId).emit("chat_ended", endPayload);
+
+  // Update remaining partner's and disconnected user's state immediately
+  safelyResetUser(remainingUser);
+  safelyResetUser(disconnectedUser);
+
+  // Enforce explicit physical socket leave for the room on all server instances BEFORE deleting room metadata
+  if (io && typeof io.in === "function") {
+    try {
+      io.in(roomId).socketsLeave(roomId);
+    } catch (_) {}
+  }
+
+  // Clear room timers and delete room metadata
+  if (room.timerRef) {
+    clearTimeout(room.timerRef);
+    room.timerRef = null;
+  }
+  if (room.timerIntervalRef) {
+    clearInterval(room.timerIntervalRef);
+    room.timerIntervalRef = null;
+  }
+  if (room.disconnectTimeoutRef) {
+    clearTimeout(room.disconnectTimeoutRef);
+    room.disconnectTimeoutRef = null;
+  }
+  if (timeExtensionRequests) {
+    timeExtensionRequests.delete(roomId);
+  }
+
+  room.status = "terminated";
+  room.endedAt = Date.now();
+  rooms.delete(roomId);
+  if (typeof redisDeleteRoom === "function") {
+    redisDeleteRoom(roomId).catch(() => {});
+  }
+
+  if (remainingUser?.socketId) {
+    const remainingSocket = io.sockets?.sockets?.get(remainingUser.socketId);
+    if (remainingSocket) {
+      remainingSocket.emit("state_update", { status: "idle", roomId: null, joinedAt: remainingUser.joinedAt });
+    }
+  }
+
+  log("partner_disconnected_resolved", {
     roomId,
     disconnectedUserId,
     remainingUserId,
     timestamp: Date.now(),
   });
-
-  // Set a timeout to actually terminate if they don't reconnect
-  const disconnectTimeout = setTimeout(() => {
-    const currentRoom = rooms.get(roomId);
-    const disconnectedUser = users.get(disconnectedUserId);
-
-    // If user reconnected or room already terminated, don't do anything
-    if (!currentRoom || currentRoom.status !== "active" || disconnectedUser?.isActive) {
-      return;
-    }
-
-    terminateSession(io, roomId, "partner_left");
-
-    log("session_terminated_after_disconnect_timeout", {
-      roomId,
-      reason: "partner_reconnect_timeout",
-      disconnectedUserId,
-      remainingUserId,
-    });
-  }, 30000);
-
-  // Store the timeout ref on the room so it can be cleared if partner reconnects
-  room.disconnectTimeoutRef = disconnectTimeout;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -219,54 +253,54 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
     return null;
   }
 
-  const firstSocket = firstUser.socketId ? io.sockets.sockets.get(firstUser.socketId) : null;
-  const secondSocket = secondUser.socketId ? io.sockets.sockets.get(secondUser.socketId) : null;
+  const firstSocket = firstUser.socketId ? io.sockets?.sockets?.get(firstUser.socketId) : null;
+  const secondSocket = secondUser.socketId ? io.sockets?.sockets?.get(secondUser.socketId) : null;
 
-  const firstConnected = Boolean(firstSocket && firstSocket.connected);
-  const secondConnected = Boolean(secondSocket && secondSocket.connected);
+  const isRedisActive = typeof isRedisReady === "function" && isRedisReady();
 
-  // Handle edge case where one or both sockets disconnected right during matching
-  if (!firstConnected || !secondConnected) {
-    log("matchmaking_socket_disconnected_edge_case", {
-      firstUserId: firstUser.id,
-      firstConnected,
-      secondUserId: secondUser.id,
-      secondConnected,
-    });
+  if (!isRedisActive) {
+    const firstConnected = Boolean(firstSocket && firstSocket.connected);
+    const secondConnected = Boolean(secondSocket && secondSocket.connected);
 
-    if (!firstConnected && secondConnected) {
-      // User A dropped — purge User A and recover User B
-      if (typeof purgeUserFromAllState === "function") {
-        purgeUserFromAllState(firstUser.id, firstUser.socketId);
+    if (!firstConnected || !secondConnected) {
+      log("matchmaking_socket_disconnected_edge_case", {
+        firstUserId: firstUser.id,
+        firstConnected,
+        secondUserId: secondUser.id,
+        secondConnected,
+      });
+
+      if (!firstConnected && secondConnected) {
+        if (typeof purgeUserFromAllState === "function") {
+          purgeUserFromAllState(firstUser.id, firstUser.socketId);
+        }
+        secondUser.status = "waiting";
+        secondUser.roomId = null;
+        enqueueUser(secondUser.id);
+        if (secondSocket) {
+          secondSocket.emit("queue_joined", { status: "waiting" });
+          secondSocket.emit("state_update", { status: "waiting", roomId: null, joinedAt: secondUser.joinedAt });
+        }
+      } else if (firstConnected && !secondConnected) {
+        if (typeof purgeUserFromAllState === "function") {
+          purgeUserFromAllState(secondUser.id, secondUser.socketId);
+        }
+        firstUser.status = "waiting";
+        firstUser.roomId = null;
+        enqueueUser(firstUser.id);
+        if (firstSocket) {
+          firstSocket.emit("queue_joined", { status: "waiting" });
+          firstSocket.emit("state_update", { status: "waiting", roomId: null, joinedAt: firstUser.joinedAt });
+        }
+      } else {
+        if (typeof purgeUserFromAllState === "function") {
+          purgeUserFromAllState(firstUser.id, firstUser.socketId);
+          purgeUserFromAllState(secondUser.id, secondUser.socketId);
+        }
       }
-      secondUser.status = "waiting";
-      secondUser.roomId = null;
-      enqueueUser(secondUser.id);
-      if (secondSocket) {
-        secondSocket.emit("queue_joined", { status: "waiting" });
-        secondSocket.emit("state_update", { status: "waiting", roomId: null, joinedAt: secondUser.joinedAt });
-      }
-    } else if (firstConnected && !secondConnected) {
-      // User B dropped — purge User B and recover User B
-      if (typeof purgeUserFromAllState === "function") {
-        purgeUserFromAllState(secondUser.id, secondUser.socketId);
-      }
-      firstUser.status = "waiting";
-      firstUser.roomId = null;
-      enqueueUser(firstUser.id);
-      if (firstSocket) {
-        firstSocket.emit("queue_joined", { status: "waiting" });
-        firstSocket.emit("state_update", { status: "waiting", roomId: null, joinedAt: firstUser.joinedAt });
-      }
-    } else {
-      // Both dropped
-      if (typeof purgeUserFromAllState === "function") {
-        purgeUserFromAllState(firstUser.id, firstUser.socketId);
-        purgeUserFromAllState(secondUser.id, secondUser.socketId);
-      }
+
+      return null;
     }
-
-    return null;
   }
 
   const roomId = customRoomId || createId("room");
@@ -306,13 +340,20 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
     redisSetUser(secondUser.id, secondUser).catch(() => {});
   }
 
-  firstSocket.join(roomId);
-  secondSocket.join(roomId);
+  if (firstSocket) firstSocket.join(roomId);
+  if (secondSocket) secondSocket.join(roomId);
+
+  if (io && typeof io.in === "function") {
+    try {
+      io.in(`user_${firstUser.id}`).socketsJoin(roomId);
+      io.in(`user_${secondUser.id}`).socketsJoin(roomId);
+    } catch (_) {}
+  }
 
   const secondUsername = secondUser.username || secondUser.displayName || (secondUser.profile && (secondUser.profile.username || secondUser.profile.displayName)) || null;
   const firstUsername = firstUser.username || firstUser.displayName || (firstUser.profile && (firstUser.profile.username || firstUser.profile.displayName)) || null;
 
-  firstSocket.emit("matched", {
+  const matchPayloadA = {
     roomId,
     peerId: secondUser.id,
     expiresInMs: CHAT_DURATION_MS,
@@ -322,8 +363,9 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
     partnerUsername: secondUsername,
     partnerDisplayName: secondUser.displayName || secondUsername,
     remainingMs: CHAT_DURATION_MS,
-  });
-  secondSocket.emit("matched", {
+  };
+
+  const matchPayloadB = {
     roomId,
     peerId: firstUser.id,
     expiresInMs: CHAT_DURATION_MS,
@@ -333,7 +375,13 @@ function createSession(io, firstUser, secondUser, customRoomId = null) {
     partnerUsername: firstUsername,
     partnerDisplayName: firstUser.displayName || firstUsername,
     remainingMs: CHAT_DURATION_MS,
-  });
+  };
+
+  if (firstSocket) firstSocket.emit("matched", matchPayloadA);
+  io.to(`user_${firstUser.id}`).emit("matched", matchPayloadA);
+
+  if (secondSocket) secondSocket.emit("matched", matchPayloadB);
+  io.to(`user_${secondUser.id}`).emit("matched", matchPayloadB);
 
   // Start periodic timer updates to clients
   const timerInterval = setInterval(() => {

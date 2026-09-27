@@ -2,8 +2,8 @@ const { users, rooms, getUserBySocketId, getUserById, recordMatchmakingTime, get
   pendingFriendRequests, timeExtensionRequests, addFriendship, areFriends, getFriends, getFriendRoom, getCanonicalPairId, friendRooms,
   appendFriendRoomMessage, getFriendRoomMessages, createFriendRequest, acceptFriendRequest, rejectFriendRequest,
   getPendingRequestsFor, getExistingRequest, removeFriendRequest,
-  checkSlidingWindowRateLimit, redisSetUser, redisDeleteUser, purgeUserFromAllState, createFriendRoomEntry,
-  addRecentPartnerLock, areRecentPartners,
+  checkSlidingWindowRateLimit, redisSetUser, redisGetUser, redisGetRoom, redisDeleteUser, purgeUserFromAllState, createFriendRoomEntry,
+  addRecentPartnerLock, areRecentPartners, addTemporaryBan, isTemporaryBanned, temporaryBans,
 } = require("../state/store");
 const { createId } = require("../utils/ids");
 const {
@@ -45,7 +45,6 @@ const messageTimestamps = new Map();     // socketId -> array of message timesta
 const silencedSockets = new Map();       // socketId -> silence expiry timestamp (Date.now() + 10s)
 const silenceViolationCounts = new Map(); // socketId -> continuous violation frequency
 const recentReports = new Map();         // reporterId_reportedUserId -> timestamp of report
-const temporaryBans = new Map();         // userId/IP -> ban expiry timestamp (Date.now() + 1 hour)
 
 const exploreViolations = new Map();     // userId -> array of timestamps for Explore chat
 const friendViolations = new Map();      // userId -> array of timestamps for Friends chat
@@ -89,6 +88,7 @@ function isUserBanned(socket, userId) {
     const penalty = slurFilter.getActivePenalty(userId);
     if (penalty && penalty.type === "ban_15min" && now < penalty.expiresAt) {
       temporaryBans.set(userId, penalty.expiresAt);
+      addTemporaryBan(userId, penalty.expiresAt - now);
       return { banned: true, remaining: penalty.expiresAt - now };
     }
   }
@@ -102,6 +102,7 @@ function isUserBanned(socket, userId) {
       const ipPenalty = slurFilter.getActivePenalty(ip) || slurFilter.getActivePenalty(`ip_${ip}`);
       if (ipPenalty && ipPenalty.type === "ban_15min" && now < ipPenalty.expiresAt) {
         temporaryBans.set(ip, ipPenalty.expiresAt);
+        addTemporaryBan(ip, ipPenalty.expiresAt - now);
         return { banned: true, remaining: ipPenalty.expiresAt - now };
       }
     }
@@ -293,11 +294,14 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
     const banExpiry = Date.now() + banDurationMs;
 
     temporaryBans.set(userId, banExpiry);
+    addTemporaryBan(userId, banDurationMs);
     slurFilter.applyPenalty(userId, "ban_15min", banDurationMs);
 
     if (ip && ip !== "127.0.0.1" && ip !== "::1" && ip !== "localhost") {
       temporaryBans.set(ip, banExpiry);
       temporaryBans.set(`ip_${ip}`, banExpiry);
+      addTemporaryBan(ip, banDurationMs);
+      addTemporaryBan(`ip_${ip}`, banDurationMs);
       slurFilter.applyPenalty(ip, "ban_15min", banDurationMs);
     }
 
@@ -468,7 +472,22 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     for (const [userId, user] of users.entries()) {
       if (!user.isActive && now - (user.lastDisconnect || user.lastHeartbeat) > HEARTBEAT_TIMEOUT_MS) {
         log("user_inactive_timeout", { userId });
-        purgeUserFromAllState(userId, user.socketId);
+        
+        const origStatus = user.status;
+        const origRoomId = user.roomId;
+        const socketId = user.socketId;
+
+        // Clean up the active match room before purging/deleting the user from memory
+        if (origStatus === "matched" && origRoomId) {
+          const room = rooms.get(origRoomId);
+          if (room && room.type !== "friend_dm") {
+            terminateSession(io, origRoomId, "heartbeat_timeout");
+          }
+        } else if (origStatus === "waiting") {
+          leaveWaitingQueue(userId);
+        }
+
+        purgeUserFromAllState(userId, socketId);
         users.delete(userId);
       }
     }
@@ -659,6 +678,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    /* [DISABLED FOR LEAN MVP LAUNCH] Secondary Settings Handler: update_username
     socket.on("update_username", async (rawPayload, ack) => {
       try {
         const payload = safeObject(rawPayload);
@@ -683,8 +703,9 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (typeof ack === "function") ack({ ok: false });
       }
     });
+    */
 
-    // Asynchronously fetch user profile and friend list from Firestore upon authentication
+    // Asynchronously fetch user profile upon connection (friends sync disabled for lean MVP)
     dbService.syncUserOnAuth(userId, { country: user.country }).then(async (profile) => {
       if (profile) {
         user.profile = profile;
@@ -693,8 +714,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         }
         userStore.setUserData(userId, profile);
       }
-
-      // Fetch persistent friends from Firestore and sync into local/Redis state
+      /* [DISABLED FOR LEAN MVP LAUNCH] Persistent friends sync
       const persistentFriends = await dbService.getUserFriends(userId);
       if (Array.isArray(persistentFriends) && persistentFriends.length > 0) {
         persistentFriends.forEach((f) => {
@@ -703,6 +723,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           }
         });
       }
+      */
     }).catch(() => {});
 
     socket.emit("self", { userId, country: user.country, isNewUser });
@@ -974,9 +995,9 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     });
 
     // ═══════════════════════════════════════════════
-    //  SEND DM (friend chat)
+    //  [DISABLED FOR LEAN MVP LAUNCH] SEND DM (friend chat)
     // ═══════════════════════════════════════════════
-
+    /*
     socket.on("send_dm", async (rawPayload, ack) => {
       try {
         const payload = safeObject(rawPayload);
@@ -1168,6 +1189,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (typeof ack === "function") ack({ ok: false, success: false, reason: "internal_error" });
       }
     });
+    */
 
     socket.on("send_ping", (rawPayload) => {
       try {
@@ -1206,6 +1228,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    /* [DISABLED FOR LEAN MVP LAUNCH] SECONDARY HANDLER: edit_dm
     socket.on("edit_dm", (rawPayload, ack) => {
       try {
         const payload = safeObject(rawPayload);
@@ -1305,6 +1328,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (typeof ack === "function") ack({ ok: false, reason: "internal_error" });
       }
     });
+    */
 
     socket.on("edit_message", (rawPayload) => {
       try {
@@ -1434,9 +1458,9 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     });
 
     // ═══════════════════════════════════════════════
-    //  FRIEND SYSTEM
+    //  [DISABLED FOR LEAN MVP LAUNCH] FRIEND SYSTEM & SECONDARY HANDLERS
     // ═══════════════════════════════════════════════
-
+    /*
     socket.on("send_friend_request", () => {
       try {
         const currentUser = users.get(userId);
@@ -1725,15 +1749,19 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         log("dm_typing_error", { userId, message: err.message });
       }
     });
+    */
 
     // ═══════════════════════════════════════════════
     //  NAVIGATION & EXPLORE ROOM RE-JOIN
     // ═══════════════════════════════════════════════
 
-    socket.on('rejoin_explore_room', (payload, callback) => {
+    socket.on('rejoin_explore_room', async (payload, callback) => {
       try {
         const roomId = safeId(payload?.roomId) || (typeof payload === 'string' ? safeId(payload) : null);
-        const room = roomsMap.get(roomId) || rooms.get(roomId);
+        let room = roomsMap.get(roomId) || rooms.get(roomId);
+        if (!room && typeof redisGetRoom === "function") {
+          room = await redisGetRoom(roomId);
+        }
         const isMember = room && (
           (Array.isArray(room.users) && (
             room.users.includes(socket.id) ||
@@ -1770,7 +1798,8 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         currentUser.lastActionAt = Date.now();
 
         if (currentUser.status === "matched" && currentUser.roomId) {
-          const activeRoom = rooms.get(currentUser.roomId);
+          const targetRoomId = currentUser.roomId;
+          const activeRoom = rooms.get(targetRoomId);
 
           if (activeRoom && Array.isArray(activeRoom.users) && activeRoom.users.length >= 2) {
             if (typeof addRecentPartnerLock === "function") {
@@ -1778,8 +1807,27 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             }
           }
 
-          const targetRoomId = currentUser.roomId;
+          // Resolve partner before termination
+          const partnerId = activeRoom?.users?.find(id => id !== userId);
+          const partnerUser = partnerId ? users.get(partnerId) : null;
+
+          // Terminate session cleanly (terminateSession will broadcast chat_ended once to the room and leave sockets)
           terminateSession(io, targetRoomId, "next_clicked");
+
+          // Reset user and partner states synchronously
+          currentUser.status = "idle";
+          currentUser.roomId = null;
+          if (typeof redisSetUser === "function") {
+            redisSetUser(userId, currentUser).catch(() => {});
+          }
+
+          if (partnerUser) {
+            partnerUser.status = "idle";
+            partnerUser.roomId = null;
+            if (typeof redisSetUser === "function") {
+              redisSetUser(partnerId, partnerUser).catch(() => {});
+            }
+          }
 
           // Do NOT auto-queue users when skip is used — let both users return to prechat view to click Start Chat
           if (autoStart) {
@@ -1874,6 +1922,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    /* [DISABLED FOR LEAN MVP LAUNCH] Secondary Settings Handler: update_profile
     socket.on("update_profile", async (rawProfileData, ack) => {
       try {
         const profileData = safeObject(rawProfileData);
@@ -1889,6 +1938,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (typeof ack === "function") ack({ ok: false, error: err.message });
       }
     });
+    */
 
     socket.on("send_flash", (rawPayload) => {
       try {
@@ -1988,7 +2038,23 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           reportedAt: Date.now(), roomCreatedAt: room?.createdAt,
         });
 
+        // Terminate session cleanly (terminateSession will broadcast chat_ended once to the room and leave sockets)
         terminateSession(io, currentUser.roomId, "user_reported");
+
+        // Cleanly reset both users' states in memory
+        currentUser.status = "idle";
+        currentUser.roomId = null;
+        if (typeof redisSetUser === "function") {
+          redisSetUser(userId, currentUser).catch(() => {});
+        }
+        if (partner) {
+          partner.status = "idle";
+          partner.roomId = null;
+          if (typeof redisSetUser === "function") {
+            redisSetUser(partnerId, partner).catch(() => {});
+          }
+        }
+
         socket.emit("chat_end", { reason: "user_reported" });
 
         // Immediately ban the reported user for 15 mins from starting a chat (same like slurs when detected)
@@ -1996,6 +2062,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           const now = Date.now();
           const banExpiry = now + 900000; // 15 minutes ban (15 * 60 * 1000)
           temporaryBans.set(partnerId, banExpiry);
+          addTemporaryBan(partnerId, 900000);
 
           if (partner && partner.socketId) {
             const partnerSocket = io.sockets.sockets.get(partner.socketId);
@@ -2003,6 +2070,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
               const ip = partnerSocket.handshake.headers["x-forwarded-for"] || partnerSocket.handshake.address;
               if (ip) {
                 temporaryBans.set(ip, banExpiry);
+                addTemporaryBan(ip, 900000);
                 log("ip_banned_via_reports", { ip, partnerId });
               }
               const banMsg = "⚠️ You have been banned for 15 minutes due to a user report for inappropriate behavior.";
@@ -2019,14 +2087,10 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           log("temporary_ban_applied_report", { partnerId, banExpiry });
         }
 
-        // Cleanly auto-requeue reporting user if it's an Explore chat
-        const isFriendDm = targetRoomId && targetRoomId.startsWith("friend_chat_");
-        if (!isFriendDm) {
-          log("auto_requeue_after_report", { userId });
-          setTimeout(() => {
-            queueUserForMatch(socket, io, userId);
-          }, 500);
-        }
+        // Cleanly auto-requeue reporting user
+        setTimeout(() => {
+          queueUserForMatch(socket, io, userId);
+        }, 500);
       } catch (err) {
         log("report_user_error", { userId, message: err.message });
       }
@@ -2037,15 +2101,37 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const currentUser = users.get(userId);
         if (!currentUser || !currentUser.roomId) return;
 
-        const activeRoom = rooms.get(currentUser.roomId);
+        const targetRoomId = currentUser.roomId;
+        const activeRoom = rooms.get(targetRoomId);
         if (activeRoom && Array.isArray(activeRoom.users) && activeRoom.users.length >= 2) {
           addRecentPartnerLock(activeRoom.users[0], activeRoom.users[1]);
         }
 
-        log("user_ended_chat", { userId, roomId: currentUser.roomId, endedAt: Date.now() });
+        log("user_ended_chat", { userId, roomId: targetRoomId, endedAt: Date.now() });
 
-        terminateSession(io, currentUser.roomId, "user_ended");
-        socket.emit("chat_end", { reason: "you_ended" });
+        // Resolve partner and broadcast before state is reset
+        const partnerId = activeRoom?.users?.find(id => id !== userId);
+        const partnerUser = partnerId ? users.get(partnerId) : null;
+
+        // Terminate session cleanly (terminateSession will broadcast chat_ended once to the room and leave sockets)
+        terminateSession(io, targetRoomId, "user_ended");
+
+        // Reset user and partner states synchronously
+        currentUser.status = "idle";
+        currentUser.roomId = null;
+        if (typeof redisSetUser === "function") {
+          redisSetUser(userId, currentUser).catch(() => {});
+        }
+
+        if (partnerUser) {
+          partnerUser.status = "idle";
+          partnerUser.roomId = null;
+          if (typeof redisSetUser === "function") {
+            redisSetUser(partnerId, partnerUser).catch(() => {});
+          }
+        }
+
+        socket.emit("state_update", { status: "idle", roomId: null, joinedAt: currentUser.joinedAt });
       } catch (err) {
         log("end_chat_error", { userId, message: err.message });
       }
@@ -2074,33 +2160,52 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // 1. Instantly and atomically purge user from all waiting queues and Redis state
+        // Store status and roomId before resetting/purging user state to avoid race conditions
+        const originalStatus = disconnectedUser.status;
+        const originalRoomId = disconnectedUser.roomId;
+
+        // 1. Handle active room cleanup or partner notification BEFORE purging state
+        if (originalStatus === "matched" && originalRoomId) {
+          const room = rooms.get(originalRoomId);
+          if (room) {
+            log("user_disconnected_while_matched_explore_partner_disconnect", {
+              userId: disconnectedUser.id, socketId: socket.id,
+              roomId: originalRoomId, reason: "explore_partner_disconnect",
+            });
+
+            const partnerId = room.users?.find(id => id !== disconnectedUser.id);
+            const partnerUser = partnerId ? users.get(partnerId) : null;
+
+            // handlePartnerDisconnect will broadcast chat_ended once to the room and leave sockets
+            handlePartnerDisconnect(io, originalRoomId, disconnectedUser.id);
+
+            // Cleanly reset both users' states in memory (status = "idle", roomId = null)
+            disconnectedUser.status = "idle";
+            disconnectedUser.roomId = null;
+            if (partnerUser) {
+              partnerUser.status = "idle";
+              partnerUser.roomId = null;
+              if (typeof redisSetUser === "function") {
+                redisSetUser(partnerId, partnerUser).catch(() => {});
+              }
+            }
+          }
+        }
+
+        if (originalStatus === "waiting") {
+          leaveWaitingQueue(disconnectedUser.id);
+        }
+
+        // 2. Now instantly and atomically purge user from waiting queues and Redis state
         purgeUserFromAllState(disconnectedUser.id, socket.id);
         messageTimestamps.delete(socket.id);
         silencedSockets.delete(socket.id);
         silenceViolationCounts.delete(socket.id);
 
-        if (disconnectedUser.status === "waiting") {
-          leaveWaitingQueue(disconnectedUser.id);
-        }
-
         disconnectedUser.isActive = false;
         disconnectedUser.lastDisconnect = Date.now();
-
-        // 2. Handle active room cleanup or partner notification
-        if (disconnectedUser.status === "matched" && disconnectedUser.roomId) {
-          const room = rooms.get(disconnectedUser.roomId);
-          if (room && room.type !== "friend_dm") {
-            log("user_disconnected_while_matched_explore_partner_disconnect", {
-              userId: disconnectedUser.id, socketId: socket.id,
-              roomId: disconnectedUser.roomId, reason: "explore_partner_disconnect",
-            });
-            handlePartnerDisconnect(io, disconnectedUser.roomId, disconnectedUser.id);
-          }
-        }
-
-        // 3. Notify friends that user is offline
-        notifyFriendsOfStatusChange(io, userId, false);
+        disconnectedUser.status = "idle";
+        disconnectedUser.roomId = null;
       } catch (err) {
         log("disconnect_handler_error", { userId, message: err.message });
       }

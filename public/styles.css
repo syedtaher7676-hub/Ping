@@ -5053,7 +5053,7 @@ input:checked+.slider-round:before {
 /* 3. Floating Instagram Reaction Capsule (Ping UI) */
 .ping-ig-reaction-pill {
   position: fixed;
-  z-index: 99999;
+  z-index: 100001;
   background: rgba(18, 14, 38, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -5071,6 +5071,7 @@ input:checked+.slider-round:before {
   box-sizing: border-box;
   max-width: calc(100vw - 20px);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, top, left;
 }
 
 .ping-ig-reaction-pill.expanded {
@@ -5160,7 +5161,7 @@ input:checked+.slider-round:before {
 /* 4. Floating Action Menu (Instagram Menu with Ping UI) */
 .ping-ig-menu {
   position: fixed;
-  z-index: 99999;
+  z-index: 100000;
   background: rgba(18, 14, 38, 0.97);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -5177,6 +5178,9 @@ input:checked+.slider-round:before {
   animation: ping-ig-menu-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   touch-action: manipulation;
   user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.35) transparent;
+  will-change: transform, top, left;
 }
 
 @keyframes ping-ig-menu-pop {

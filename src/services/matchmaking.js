@@ -10,6 +10,7 @@ const {
   recordMatchmakingTime,
   atomicMatchmake,
   isRedisReady,
+  redisGetUser,
   purgeUserFromAllState,
   areRecentPartners,
 } = require("../state/store");
@@ -63,6 +64,7 @@ function enqueueForMatchmaking(userId, io = null) {
     const socket = io.sockets.sockets.get(user.socketId);
     if (!socket || !socket.connected) {
       purgeUserFromAllState(userId, user.socketId);
+      matchmakingStartTimes.delete(userId);
       return { ok: false, reason: "socket_disconnected" };
     }
   }
@@ -114,6 +116,18 @@ function sanitizeQueue(io = null) {
       }
     }
   }
+
+  // Ensure waitingQueue and waitingSet remain strictly synchronized and free of ghost/stale entries
+  const seen = new Set();
+  const cleanQueue = [];
+  for (const id of waitingQueue) {
+    if (waitingSet.has(id) && !seen.has(id)) {
+      seen.add(id);
+      cleanQueue.push(id);
+    }
+  }
+  waitingQueue.length = 0;
+  waitingQueue.push(...cleanQueue);
 }
 
 async function attemptMatchmaking(io) {
@@ -134,12 +148,26 @@ async function attemptMatchmaking(io) {
           break; // No more pairs ready in Redis ZSET
         }
 
-        const userA = users.get(matchResult.userA.id);
-        const userB = users.get(matchResult.userB.id);
+        // Prevent Redis-First Memory Leaks in matchmakingStartTimes:
+        // Ensure matchmakingStartTimes.delete is called regardless of user resolution
+        if (matchResult.userA && matchResult.userA.id) {
+          matchmakingStartTimes.delete(matchResult.userA.id);
+        }
+        if (matchResult.userB && matchResult.userB.id) {
+          matchmakingStartTimes.delete(matchResult.userB.id);
+        }
+
+        let userA = users.get(matchResult.userA.id);
+        if (!userA && typeof redisGetUser === "function") {
+          userA = await redisGetUser(matchResult.userA.id);
+        }
+
+        let userB = users.get(matchResult.userB.id);
+        if (!userB && typeof redisGetUser === "function") {
+          userB = await redisGetUser(matchResult.userB.id);
+        }
 
         if (userA && userB) {
-          matchmakingStartTimes.delete(userA.id);
-          matchmakingStartTimes.delete(userB.id);
           createSession(io, userA, userB, matchResult.roomId);
         }
         matchAttempt++;
@@ -155,13 +183,38 @@ async function attemptMatchmaking(io) {
       const secondUserId = dequeueUser();
 
       if (!firstUserId || !secondUserId || firstUserId === secondUserId) {
-        if (firstUserId) removeUserFromQueue(firstUserId);
-        if (secondUserId) removeUserFromQueue(secondUserId);
+        if (firstUserId) {
+          removeUserFromQueue(firstUserId);
+          matchmakingStartTimes.delete(firstUserId);
+          purgeUserFromAllState(firstUserId, users.get(firstUserId)?.socketId);
+        }
+        if (secondUserId && secondUserId !== firstUserId) {
+          removeUserFromQueue(secondUserId);
+          matchmakingStartTimes.delete(secondUserId);
+          purgeUserFromAllState(secondUserId, users.get(secondUserId)?.socketId);
+        }
+        sanitizeQueue(io);
         continue;
       }
 
       const firstUser = users.get(firstUserId);
       const secondUser = users.get(secondUserId);
+
+      // Guard against same-socket or missing user states causing infinite loops
+      if (!firstUser || !secondUser || firstUser.socketId === secondUser.socketId) {
+        if (firstUserId) {
+          removeUserFromQueue(firstUserId);
+          matchmakingStartTimes.delete(firstUserId);
+          purgeUserFromAllState(firstUserId, firstUser?.socketId);
+        }
+        if (secondUserId) {
+          removeUserFromQueue(secondUserId);
+          matchmakingStartTimes.delete(secondUserId);
+          purgeUserFromAllState(secondUserId, secondUser?.socketId);
+        }
+        sanitizeQueue(io);
+        continue;
+      }
 
       const firstValid = isUserAvailableForMatch(firstUserId, io);
       const secondValid = isUserAvailableForMatch(secondUserId, io);
@@ -171,31 +224,31 @@ async function attemptMatchmaking(io) {
           enqueueUser(firstUserId);
         } else if (!firstValid && typeof purgeUserFromAllState === "function") {
           purgeUserFromAllState(firstUserId, firstUser?.socketId);
+          matchmakingStartTimes.delete(firstUserId);
         }
 
         if (secondValid && !isUserQueued(secondUserId)) {
           enqueueUser(secondUserId);
         } else if (!secondValid && typeof purgeUserFromAllState === "function") {
           purgeUserFromAllState(secondUserId, secondUser?.socketId);
+          matchmakingStartTimes.delete(secondUserId);
         }
 
         sanitizeQueue(io);
         continue;
       }
 
-      // Guard against same socket ID spoofing
-      if (firstUser.socketId === secondUser.socketId) {
-        enqueueUser(firstUserId);
-        continue;
-      }
-
       // Check if pair was recently skipped and other candidates are available
       if (typeof areRecentPartners === "function" && areRecentPartners(firstUserId, secondUserId)) {
-        if (waitingQueue.length > 0) {
-          // Re-enqueue second user and try matching first user with another candidate
-          enqueueUser(secondUserId);
-          continue;
+        // Re-enqueue BOTH firstUserId and secondUserId to avoid dropping firstUserId into limbo
+        enqueueUser(firstUserId);
+        enqueueUser(secondUserId);
+        
+        // If waitingQueue.length < 2 (no other candidates available to pair with), break out of the matchmaking loop cleanly
+        if (waitingQueue.length < 2) {
+          break;
         }
+        continue;
       }
 
       const roomId = createSession(io, firstUser, secondUser);

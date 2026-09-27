@@ -639,20 +639,8 @@ function initSettingsTab() {
 initSettingsTab();
 
 function showInChatAuthModal(onDismiss = null) {
-  if (AppState.user.isAuthenticated) return;
-  showConfirm(
-    'Save your connections & chats!',
-    '<div style="line-height:1.5; margin-top:4px;"><p style="color:var(--t-med); font-size:0.95rem;">Sign in with Google to save friends, restore chats, and continue conversations seamlessly across all your devices.</p></div>',
-    () => {
-      triggerGoogleLogin();
-    },
-    () => {
-      if (typeof onDismiss === 'function') onDismiss();
-    },
-    'Sign In with Google',
-    'Keep Chatting',
-    '🔐'
-  );
+  // Disabled: No login popups during anonymous chat
+  if (typeof onDismiss === 'function') onDismiss();
 }
 
 function showFirebaseConnectModal(options = {}) {
@@ -754,32 +742,8 @@ function formatPartnerLocation(countryString) {
 
 
 function triggerSoftAuthBanner() {
-  if (AppState.user.isAuthenticated || document.getElementById('softAuthBanner')) return;
-
-  const banner = document.createElement('div');
-  banner.id = 'softAuthBanner';
-  banner.className = 'soft-auth-banner glass-card';
-  banner.innerHTML = `
-    <div class="sab-content">
-      <span class="sab-icon">⚡</span>
-      <div class="sab-text">
-        <strong>Save your connections!</strong>
-        <p>Sign up now to persist your friends list across devices and sessions.</p>
-      </div>
-      <div class="sab-buttons">
-        <button id="sabCloseBtn" class="btn-ghost btn-xs" type="button">Dismiss</button>
-        <button id="sabSignUpBtn" class="btn-primary btn-xs" type="button">Sign Up</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(banner);
-
-  document.getElementById('sabCloseBtn')?.addEventListener('click', () => {
-    banner.style.animation = 'bannerSlideOut 0.2s ease forwards';
-    setTimeout(() => banner.remove(), 200);
-  });
-  document.getElementById('sabSignUpBtn')?.addEventListener('click', () => triggerGoogleLogin());
+  // Disabled: No login popups or banners during chat per lean MVP requirements
+  return;
 }
 
 // Start Firebase client initialization
@@ -918,8 +882,23 @@ function scrollToBottom(container) {
 }
 
 // ── TOAST ────────────────────────────────────────────────────
+let lastToastMsg = '';
+let lastToastTime = 0;
 function showToast(msg, type = 'info', duration = 3800) {
-  if (!toastContainer) return;
+  if (!toastContainer || !msg) return;
+  // Never show popup or toast for leaving queue
+  const lower = String(msg).toLowerCase();
+  if (lower.includes('queue') || lower.includes('left the queue') || lower.includes('left queue')) {
+    return;
+  }
+  // Debounce identical toasts within 3 seconds
+  const now = Date.now();
+  if (msg === lastToastMsg && now - lastToastTime < 3000) {
+    return;
+  }
+  lastToastMsg = msg;
+  lastToastTime = now;
+
   const el = document.createElement('div');
   el.className = `toast ${type}`;
   el.textContent = msg;
@@ -935,13 +914,38 @@ function showToast(msg, type = 'info', duration = 3800) {
 
 // ── MODAL ────────────────────────────────────────────────────
 function showConfirm(title, message, onYes, onNo, yesText = 'Confirm', noText = 'Cancel', icon = '⚠️') {
+  // Never show confirmation popup for queue actions
+  const titleLower = String(title || '').toLowerCase();
+  const msgLower = String(message || '').toLowerCase();
+  if (titleLower.includes('queue') || msgLower.includes('queue') || titleLower.includes('left the queue')) {
+    return;
+  }
+
+  // Enforce strictly one single popup: close/remove any other modals or banners first
+  document.querySelectorAll('.glass-modal-overlay').forEach(m => m.remove());
+  const existingBanner = document.getElementById('softAuthBanner');
+  if (existingBanner) existingBanner.remove();
+
   if (!confirmModal) { onYes?.(); return; }
+
+  // If a modal with the same title is already open, do not re-trigger / stack
+  if (confirmModal.style.display === 'flex' && confirmTitle?.textContent === title) {
+    return;
+  }
+
   if (confirmTitle) confirmTitle.textContent = title;
   if (confirmMessage) confirmMessage.innerHTML = message;
   const modalIcon = $('modalIcon');
   if (modalIcon) modalIcon.textContent = icon;
   if (confirmYes) confirmYes.textContent = yesText;
-  if (confirmNo) confirmNo.textContent = noText;
+  if (confirmNo) {
+    if (!noText) {
+      confirmNo.style.display = 'none';
+    } else {
+      confirmNo.style.display = '';
+      confirmNo.textContent = noText;
+    }
+  }
   confirmCb = onYes;
   confirmModal.dataset.onNo = typeof onNo === 'function' ? true : false;
   confirmModal.confirmNoFn = onNo;
@@ -950,7 +954,13 @@ function showConfirm(title, message, onYes, onNo, yesText = 'Confirm', noText = 
 function closeModal() {
   if (confirmModal) confirmModal.style.display = 'none';
   if (confirmYes) confirmYes.textContent = 'Confirm';
-  if (confirmNo) confirmNo.textContent = 'Cancel';
+  if (confirmNo) {
+    confirmNo.textContent = 'Cancel';
+    confirmNo.style.display = '';
+  }
+  document.querySelectorAll('.glass-modal-overlay').forEach(m => m.remove());
+  const existingBanner = document.getElementById('softAuthBanner');
+  if (existingBanner) existingBanner.remove();
 }
 
 // ── CONNECTION BADGE & NETWORK STATUS ─────────────────────────
@@ -1317,7 +1327,7 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
       if (emo === '❤️') triggerEffect('hearts');
       else if (emo === '🔥') triggerEffect('fire');
       else if (emo === '👍') triggerEffect('confetti');
-      showToast(`Reacted ${emo}`, 'info', 1400);
+      // No toast popup on emoji reaction per user requirement
     };
     pill.appendChild(btn);
   });
@@ -1339,7 +1349,7 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
       window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
       if (isFriend) sendFriendMessage(emo);
       else sendMessage(emo);
-      showToast(`Reacted ${emo}`, 'info', 1400);
+      // No toast popup on emoji reaction per user requirement
     };
     moreTray.appendChild(btn);
   });
@@ -1537,6 +1547,10 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
 
   // Dynamic positioning calculation
   function reposition() {
+    // Reset max-height so we get accurate native scroll/bounding rect
+    menu.style.maxHeight = '';
+    menu.style.overflowY = '';
+
     const bRect = targetBubble ? targetBubble.getBoundingClientRect() : {
       top: touchY || 200,
       bottom: (touchY || 200) + 40,
@@ -1556,36 +1570,91 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
 
     const winW = window.innerWidth;
     const winH = window.innerHeight;
-    const bottomBarPadding = 84;
+    const topPadding = 12;
+    const bottomBarPadding = 80;
+    const maxBottom = Math.max(topPadding + 100, winH - bottomBarPadding);
+    const GAP = 8;
 
-    // Horizontally center both the reaction pill and action menu over the target bubble/element
+    // ── HORIZONTAL ALIGNMENT ──────────────────────────────
+    // Coordinate alignment between emoji tab and reply options
     const targetCenterX = bRect.left + (bRect.width / 2);
-    let pLeft = Math.round(targetCenterX - (pW / 2));
-    pLeft = Math.max(12, Math.min(pLeft, winW - pW - 12));
+    let pLeft, mLeft;
 
-    let mLeft = Math.round(targetCenterX - (mW / 2));
-    mLeft = Math.max(12, Math.min(mLeft, winW - mW - 12));
-
-    // Pill: prefer directly above bubble
-    const pillFitsAbove = (bRect.top >= pH + 14);
-    let pTop = pillFitsAbove ? (bRect.top - pH - 8) : (bRect.bottom + 8);
-
-    // Menu: place below bubble if pill is above, or below pill if pill is below bubble
-    let mTop;
-    if (pillFitsAbove) {
-      mTop = bRect.bottom + 8;
-      if (mTop + mH > winH - bottomBarPadding) {
-        if (pTop - mH - 8 >= 12) {
-          mTop = pTop - mH - 8;
-        } else {
-          mTop = Math.max(12, winH - bottomBarPadding - mH);
-        }
-      }
+    if (winW < 480) {
+      // On mobile screens, center both cleanly over the message bubble
+      pLeft = Math.round(targetCenterX - (pW / 2));
+      mLeft = Math.round(targetCenterX - (mW / 2));
+    } else if (isSelf) {
+      // User's messages (right-aligned): align right edges with message bubble
+      pLeft = Math.round(bRect.right - pW);
+      mLeft = Math.round(bRect.right - mW);
     } else {
-      mTop = pTop + pH + 8;
-      if (mTop + mH > winH - bottomBarPadding) {
-        mTop = Math.max(12, bRect.top - mH - 8);
+      // Partner/Stranger messages (left-aligned): align left edges with message bubble
+      pLeft = Math.round(bRect.left);
+      mLeft = Math.round(bRect.left);
+    }
+
+    // Viewport boundary guardrails (ensures fully visible horizontally)
+    pLeft = Math.max(10, Math.min(pLeft, winW - pW - 10));
+    mLeft = Math.max(10, Math.min(mLeft, winW - mW - 10));
+
+    // ── VERTICAL ALIGNMENT (EMOJI TAB ALWAYS ABOVE REPLY OPTIONS) ──
+    let pTop, mTop;
+
+    // 1. Can emoji pill fit comfortably above the bubble?
+    const pillFitsAboveBubble = (bRect.top - pH - GAP >= topPadding);
+    // 2. Can menu fit comfortably below the bubble?
+    const menuFitsBelowBubble = (bRect.bottom + GAP + mH <= maxBottom);
+
+    if (pillFitsAboveBubble && menuFitsBelowBubble) {
+      // Standard layout: Emoji pill directly above bubble, Reply menu directly below bubble
+      // Emoji tab is strictly above the reply menu
+      pTop = bRect.top - pH - GAP;
+      mTop = bRect.bottom + GAP;
+    } else if (!menuFitsBelowBubble && (bRect.top - pH - GAP - mH - GAP >= topPadding)) {
+      // Bubble is near the bottom: place BOTH above the bubble!
+      // Emoji tab on top, Reply menu in the middle, Bubble on bottom
+      mTop = bRect.top - mH - GAP;
+      pTop = mTop - pH - GAP;
+    } else if (!pillFitsAboveBubble && (bRect.bottom + GAP + pH + GAP + 60 <= maxBottom)) {
+      // Bubble is near the top: place BOTH below the bubble!
+      // Bubble on top, Emoji tab in the middle, Reply menu on bottom
+      pTop = bRect.bottom + GAP;
+      mTop = pTop + pH + GAP;
+    } else {
+      // Clamped fallback: prioritize emoji pill visibility at top, stack reply menu directly below it
+      const spaceAbove = bRect.top - topPadding;
+      const spaceBelow = maxBottom - bRect.bottom;
+
+      if (spaceAbove > spaceBelow && spaceAbove >= pH + 80) {
+        // Position both above the bubble
+        mTop = Math.max(topPadding + pH + GAP, bRect.top - mH - GAP);
+        pTop = mTop - pH - GAP;
+        if (pTop < topPadding) {
+          pTop = topPadding;
+          mTop = pTop + pH + GAP;
+        }
+      } else {
+        // Position both below the bubble (or start at topPadding if bubble is huge)
+        pTop = Math.max(topPadding, Math.min(bRect.bottom + GAP, maxBottom - pH - 80));
+        mTop = pTop + pH + GAP;
       }
+    }
+
+    // ── ABSOLUTE INVARIANTS ──────────────────────────────
+    // 1. Emoji tab must ALWAYS be fully visible (never clipped at top)
+    pTop = Math.max(topPadding, pTop);
+
+    // 2. Emoji tab MUST ALWAYS be strictly above the reply options
+    if (mTop < pTop + pH + GAP) {
+      mTop = pTop + pH + GAP;
+    }
+
+    // 3. Reply options menu must fit on screen (scrollable if needed on small viewports)
+    if (mTop + mH > maxBottom) {
+      const allowedHeight = Math.max(110, maxBottom - mTop);
+      menu.style.maxHeight = `${allowedHeight}px`;
+      menu.style.overflowY = 'auto';
     }
 
     pill.style.position = 'fixed';
@@ -2208,6 +2277,8 @@ function applyState(status, roomId = null) {
 
 // ── END CHAT ─────────────────────────────────────────────────
 function endCurrentChat() {
+  userInitiatedLeave = true;
+  setTimeout(() => { userInitiatedLeave = false; }, 3000);
   pendingStart = false;
   isWaiting = false;
   inChat = false;
@@ -2851,6 +2922,25 @@ window.forceNextChat = () => {
 
 let autoSearchInterval = null;
 
+let userInitiatedLeave = false;
+let userInitiatedSkip = false;
+
+function showStrangerDisconnectedPopup() {
+  closeModal();
+  showConfirm(
+    'Stranger Disconnected',
+    '<div style="line-height:1.5; margin-top:4px;"><p style="font-size:0.95rem; color:var(--t-med);">Stranger has disconnected.</p></div>',
+    () => {
+      closeModal();
+      showView('prechat');
+    },
+    null,
+    'OK',
+    null,
+    '👋'
+  );
+}
+
 function stopAutoSearch() {
   if (autoSearchInterval) {
     clearInterval(autoSearchInterval);
@@ -2864,6 +2954,7 @@ function handleTimeExpired() {
   if (!inChat && !AppState.explore.inChat && !activeRoomId) return;
 
   isHandlingTimeExpired = true;
+  closeModal();
   stopTimer();
   stopAutoSearch();
 
@@ -2903,6 +2994,7 @@ function handleSkippedChat(reason, rawReason) {
   stopTimer();
   stopAutoSearch();
 
+  const wasInChat = inChat || AppState.explore.inChat || activeRoomId;
   inChat = false;
   activeRoomId = null;
   AppState.explore.inChat = false;
@@ -2916,14 +3008,26 @@ function handleSkippedChat(reason, rawReason) {
   clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  const msg = reason || 'Stranger skipped the chat. Click Start Chat to match again.';
-  showToast(msg, 'info', 3500);
   showView('prechat');
   syncButtons();
+
+  // If local user skipped/left, do NOT show popup to them
+  if (userInitiatedLeave || userInitiatedSkip) {
+    userInitiatedLeave = false;
+    userInitiatedSkip = false;
+    closeModal();
+    return;
+  }
+
+  // Show a SINGLE popup to the opponent that stranger has disconnected
+  if (wasInChat) {
+    showStrangerDisconnectedPopup();
+  }
 }
 
 function handleChatEnd(reason, rawReason) {
   if (isReconnecting) return;
+  closeModal();
   stopTimer();
   stopAutoSearch();
 
@@ -2932,6 +3036,7 @@ function handleChatEnd(reason, rawReason) {
   if (reportBtn) reportBtn.disabled = true;
   if (extendTimeBtn) extendTimeBtn.disabled = true;
 
+  const wasInChat = inChat || AppState.explore.inChat || activeRoomId;
   inChat = false;
   activeRoomId = null;
   AppState.explore.inChat = false;
@@ -2944,18 +3049,37 @@ function handleChatEnd(reason, rawReason) {
   clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  if (reason !== 'left_queue' && rawReason !== 'left_queue') {
-    const msg = reason || 'Stranger is inactive and left the chat.';
-    showToast(msg, 'info', 3500);
-    appendMsg(msg, { isSystem: true, variant: 'warn' });
-  }
   showView('prechat');
+
+  // If local user left/skipped, do NOT show popup to them
+  if (userInitiatedLeave || userInitiatedSkip) {
+    userInitiatedLeave = false;
+    userInitiatedSkip = false;
+    return;
+  }
+
+  const reasonStr = String(reason || rawReason || '').toLowerCase();
+  if (reasonStr.includes('queue') || reasonStr === 'left_queue' || reasonStr === 'you_ended') {
+    return;
+  }
+  if (reasonStr.includes("time's up") || reasonStr.includes('time_expired')) {
+    return;
+  }
+
+  // Show popup only to the opponent that stranger has disconnected
+  if (wasInChat) {
+    appendMsg('⚠️ Stranger has disconnected.', { isSystem: true, variant: 'warn' });
+    showStrangerDisconnectedPopup();
+  }
 }
 
 socket.off('chat_end');
-socket.on('chat_end', ({ reason, rawReason }) => {
+socket.off('chat_ended');
+let lastEndChatHandledMs = 0;
+const handleGenericChatEnd = ({ reason, rawReason, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  if (reason === 'left_queue' || rawReason === 'left_queue') {
+  const endReason = reason || rawReason;
+  if (endReason === 'left_queue' || rawReason === 'left_queue' || String(endReason).toLowerCase().includes('queue')) {
     stopTimer();
     stopAutoSearch();
     inChat = false;
@@ -2968,8 +3092,17 @@ socket.on('chat_end', ({ reason, rawReason }) => {
     stopWaitingScreen();
     showView('prechat');
     syncButtons();
+    // Do NOT show any toast or popup for leaving queue
     return;
   }
+
+  // Deduplicate rapid successive end events for the same chat
+  const now = Date.now();
+  if (now - lastEndChatHandledMs < 2000 && !inChat && !activeRoomId) {
+    return;
+  }
+  lastEndChatHandledMs = now;
+
   if (rawReason === 'time_expired' || (typeof reason === 'string' && (reason.toLowerCase().includes("time's up") || reason.toLowerCase().includes("time_expired")))) {
     handleTimeExpired();
     return;
@@ -2978,47 +3111,43 @@ socket.on('chat_end', ({ reason, rawReason }) => {
     handleSkippedChat(reason, rawReason);
     return;
   }
-  handleChatEnd(reason, rawReason);
-});
+  handleChatEnd(message || reason, rawReason || reason);
+};
+socket.on('chat_end', handleGenericChatEnd);
+socket.on('chat_ended', handleGenericChatEnd);
 
 socket.off('partner_disconnected');
-socket.on('partner_disconnected', ({ roomId, message, reconnectTimeoutMs }) => {
+socket.on('partner_disconnected', ({ roomId, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  console.log('[Ping] Partner disconnected/inactive...', { roomId, timeout: reconnectTimeoutMs });
+  const now = Date.now();
+  if (now - lastEndChatHandledMs < 2000) return;
+  lastEndChatHandledMs = now;
 
   stopAutoSearch();
-  let remaining = Math.round((reconnectTimeoutMs || 30000) / 1000);
-  const targetRoomId = roomId || activeRoomId;
+  stopTimer();
 
-  const notifMsg = 'Stranger has left the chat.';
-  appendMsg(`⚠️ ${notifMsg} <button onclick="window.forceNextChat()" class="btn-xs btn-primary" style="margin-left:8px; display:inline-flex; align-items:center; gap:4px; font-weight:700; cursor:pointer;">Search Now 🔍</button>`, {
-    isSystem: true,
-    isHTML: true,
-    variant: 'warn'
-  });
-  showToast(notifMsg, 'info', 3500);
+  const wasInChat = inChat || AppState.explore.inChat || activeRoomId;
+  inChat = false;
+  activeRoomId = null;
+  AppState.explore.inChat = false;
+  AppState.explore.isWaiting = false;
+  AppState.explore.roomId = null;
+  AppState.explore.timerEndMs = 0;
+  syncButtons();
 
-  if (autoSearchBar) autoSearchBar.style.display = 'flex';
-  if (autoSearchStatus) autoSearchStatus.textContent = `Stranger has left the chat (${remaining}s)...`;
+  clearChat();
+  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+  showView('prechat');
 
-  if (messageInput) {
-    messageInput.disabled = true;
-    messageInput.placeholder = `Stranger has left the chat...`;
+  if (userInitiatedLeave || userInitiatedSkip) {
+    userInitiatedLeave = false;
+    userInitiatedSkip = false;
+    return;
   }
-  if (sendBtn) sendBtn.disabled = true;
 
-  autoSearchInterval = setInterval(() => {
-    remaining--;
-    if (autoSearchStatus) autoSearchStatus.textContent = `Stranger has left the chat (${remaining}s)...`;
-
-    if (remaining <= 0) {
-      stopAutoSearch();
-      if (activeRoomId === targetRoomId || lastKnownRoomId === targetRoomId) {
-        appendMsg('Stranger did not return. Finding someone new... 🔍', { isSystem: true });
-        window.forceNextChat();
-      }
-    }
-  }, 1000);
+  if (wasInChat) {
+    showStrangerDisconnectedPopup();
+  }
 });
 
 socket.off('partner_reconnected');
@@ -3104,12 +3233,22 @@ socket.on('chat_ended_banned', ({ reason, message, isOffender, banExpiresAt, rem
 socket.off('time_extension_offer');
 socket.on('time_extension_offer', ({ roomId, fromUserId }) => {
   if (!inChat || activeRoomId !== roomId) return;
+  // Ensure any existing modal is closed so ONLY a single popup is shown to the opponent
+  closeModal();
   appendMsg('⏳ Partner wants more time! Do you agree?', { isSystem: true, variant: 'success' });
-  showConfirm('More Time?', 'Your partner wants to extend the chat time by 2 minutes. Agree?', () => {
-    socket.emit('time_extension_response', { accept: true });
-  }, () => {
-    socket.emit('time_extension_response', { accept: false });
-  });
+  showConfirm(
+    'More Time?',
+    '<div style="line-height:1.5; margin-top:4px;"><p style="font-size:0.95rem; color:var(--t-med);">Your partner wants to extend the chat time by 2 minutes. Agree?</p></div>',
+    () => {
+      socket.emit('time_extension_response', { accept: true });
+    },
+    () => {
+      socket.emit('time_extension_response', { accept: false });
+    },
+    'Agree',
+    'Decline',
+    '⏳'
+  );
 });
 
 socket.off('time_extension_pending');
@@ -3121,15 +3260,17 @@ socket.on('time_extension_pending', ({ roomId }) => {
 socket.off('time_extended');
 socket.on('time_extended', ({ roomId, addedMs, remainingMs }) => {
   if (!inChat || activeRoomId !== roomId) return;
+  closeModal();
   const addedMin = Math.round(addedMs / 60000);
   appendMsg(`✅ Time extended by ${addedMin} minutes! Keep chatting 🎉`, { isSystem: true, variant: 'success', extraClass: 'time-extended-msg' });
-  showToast(`+${addedMin} min granted!`, 'success', 3000);
+  // Popup toast removed per user request: only show in chat screen
   startTimer(Date.now() + remainingMs);
 });
 
 socket.off('time_extension_declined');
 socket.on('time_extension_declined', ({ roomId }) => {
   if (!inChat || activeRoomId !== roomId) return;
+  closeModal();
   appendMsg('❌ Partner declined to extend time', { isSystem: true });
 });
 
@@ -3307,7 +3448,7 @@ backBtn?.addEventListener('click', () => {
   } else goToLanding();
 });
 
-startBtn?.addEventListener('click', () => {
+function triggerStartChat() {
   if (banExpiryTimestamp && Date.now() < Number(banExpiryTimestamp)) {
     const remainingMs = Number(banExpiryTimestamp) - Date.now();
     const mins = Math.floor(remainingMs / 60000);
@@ -3334,7 +3475,10 @@ startBtn?.addEventListener('click', () => {
     pendingStart = false;
     syncButtons();
   }, 1500);
-});
+}
+window.triggerStartChat = triggerStartChat;
+
+startBtn?.addEventListener('click', triggerStartChat);
 
 let skipConfirmTimer = null;
 nextBtn?.addEventListener('click', (e) => {
@@ -3361,6 +3505,10 @@ nextBtn?.addEventListener('click', (e) => {
   const threeDotsMenu = $('threeDotsMenu');
   if (threeDotsMenu) threeDotsMenu.classList.add('hidden');
 
+  userInitiatedSkip = true;
+  userInitiatedLeave = true;
+  setTimeout(() => { userInitiatedSkip = false; userInitiatedLeave = false; }, 2500);
+
   stopAutoSearch();
   stopTimer();
   socket.emit('next_chat', { autoStart: false });
@@ -3376,7 +3524,7 @@ nextBtn?.addEventListener('click', (e) => {
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
   syncButtons();
   showView('prechat');
-  showToast('Chat skipped. Click Start Chat when you want to search again.', 'info', 3000);
+  // No popup/toast for the person who skips the chat per user requirement
 });
 
 let reportSkipConfirmTimer = null;
@@ -3863,7 +4011,7 @@ function triggerPing(isFriend = false) {
   const rid = isFriend ? friendRoomId : activeRoomId;
   if (!rid) return;
   socket.emit('send_ping', { roomId: rid });
-  showToast('Sent a Ping! ⚡', 'info', 1000);
+  // No popup/toast when sending a ping per user requirement
 }
 
 pingBtn?.addEventListener('click', (e) => {
@@ -3985,11 +4133,7 @@ function setupCompactChatUI() {
 // Clean compact chat UI setup
 setupCompactChatUI();
 
-// 2-minute Soft-Auth Banner Trigger for Guest Users
-setTimeout(() => {
-  if (!AppState.user.isAuthenticated && inChat) {
-    triggerSoftAuthBanner();
-  }
-}, 120000);
+// Note: 2-minute guest login popup removed per lean MVP requirements.
+
 
 

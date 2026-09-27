@@ -26,6 +26,8 @@ const KEYS = {
   ACTIVE_ROOMS: `${PREFIX}rooms:active`, // SET: active room IDs
   METRICS: `${PREFIX}metrics`,           // HASH: system metrics
   RATELIMIT: `${PREFIX}ratelimit:`,      // ZSET: sliding window rate limiter
+  BAN_PREFIX: `${PREFIX}ban:`,           // STRING: ping:ban:{targetId}
+  PARTNER_LOCK_PREFIX: `${PREFIX}partner_lock:`, // STRING: ping:partner_lock:{pairKey}
   FRIEND_PREFIX: `${PREFIX}friends:`,    // SET: ping:friends:{userId}
   DM_PREFIX: `${PREFIX}dm:`,             // LIST: ping:dm:{pairId}
 };
@@ -554,6 +556,36 @@ async function redisSetRoom(roomId, roomData) {
   }
 }
 
+async function redisGetRoom(roomId) {
+  if (!roomId) return null;
+  const localRoom = memoryRooms.get(roomId);
+  if (localRoom) return localRoom;
+
+  if (isRedisReady()) {
+    try {
+      const rKey = `${KEYS.ROOM_PREFIX}${roomId}`;
+      const data = await redisClient.hgetall(rKey);
+      if (data && data.id) {
+        let roomUsers = [];
+        try { roomUsers = JSON.parse(data.users || "[]"); } catch {}
+        const fetchedRoom = {
+          roomId: data.id,
+          users: roomUsers,
+          status: data.status || "active",
+          type: data.type || "stranger",
+          createdAt: Number(data.createdAt) || Date.now(),
+          endedAt: Number(data.endedAt) || 0,
+        };
+        memoryRooms.set(roomId, fetchedRoom);
+        return fetchedRoom;
+      }
+    } catch (err) {
+      log("redis_get_room_error", { roomId, message: err.message });
+    }
+  }
+  return null;
+}
+
 async function redisDeleteRoom(roomId) {
   memoryRooms.delete(roomId);
 
@@ -771,21 +803,104 @@ setInterval(() => {
   }
 }, 30 * 60 * 1000).unref();
 
-// ── RECENT PARTNER LOCKING ────────────────────────────────────
-const recentPartnerLocks = new Map(); // pairKey -> expiry timestamp
+// ── ATOMIC TEMPORARY BANS & RECENT PARTNER LOCKING ───────────
+const memoryTemporaryBans = new Map(); // targetId -> expiry timestamp
+const recentPartnerLocks = new Map();   // pairKey -> expiry timestamp
 
-function addRecentPartnerLock(user1, user2, durationMs = 15000) {
+async function addTemporaryBan(targetId, durationMs = 15 * 60 * 1000) {
+  if (!targetId) return;
+  const expiry = Date.now() + durationMs;
+  memoryTemporaryBans.set(targetId, expiry);
+
+  if (isRedisReady()) {
+    try {
+      const ttlSec = Math.max(1, Math.ceil(durationMs / 1000));
+      await redisClient.set(`${KEYS.BAN_PREFIX}${targetId}`, String(expiry), "EX", ttlSec);
+    } catch (err) {
+      log("redis_add_ban_error", { targetId, message: err.message });
+    }
+  }
+}
+
+async function isTemporaryBanned(targetId) {
+  if (!targetId) return { banned: false, remaining: 0 };
+  const now = Date.now();
+
+  if (isRedisReady()) {
+    try {
+      const bKey = `${KEYS.BAN_PREFIX}${targetId}`;
+      const expiryStr = await redisClient.get(bKey);
+      if (expiryStr) {
+        const expiry = Number(expiryStr);
+        if (now < expiry) {
+          return { banned: true, remaining: expiry - now };
+        }
+      }
+    } catch (err) {
+      log("redis_check_ban_error", { targetId, message: err.message });
+    }
+  }
+
+  // Memory fallback
+  const expiry = memoryTemporaryBans.get(targetId);
+  if (expiry) {
+    if (now < expiry) {
+      return { banned: true, remaining: expiry - now };
+    } else {
+      memoryTemporaryBans.delete(targetId);
+    }
+  }
+  return { banned: false, remaining: 0 };
+}
+
+function addRecentPartnerLock(user1, user2, durationMs = 30000) {
   if (!user1 || !user2) return;
   const pairKey = [user1, user2].sort().join("::");
-  recentPartnerLocks.set(pairKey, Date.now() + durationMs);
+  const expiry = Date.now() + durationMs;
+  recentPartnerLocks.set(pairKey, expiry);
+
+  if (isRedisReady()) {
+    const ttlSec = Math.max(1, Math.ceil(durationMs / 1000));
+    redisClient.set(`${KEYS.PARTNER_LOCK_PREFIX}${pairKey}`, String(expiry), "EX", ttlSec).catch((err) => {
+      log("redis_add_partner_lock_error", { pairKey, message: err.message });
+    });
+  }
+}
+
+async function areRecentPartnersAsync(user1, user2) {
+  if (!user1 || !user2) return false;
+  const pairKey = [user1, user2].sort().join("::");
+  const now = Date.now();
+
+  if (isRedisReady()) {
+    try {
+      const lockKey = `${KEYS.PARTNER_LOCK_PREFIX}${pairKey}`;
+      const expiryStr = await redisClient.get(lockKey);
+      if (expiryStr) {
+        const expiry = Number(expiryStr);
+        if (now < expiry) return true;
+      }
+    } catch (err) {
+      log("redis_check_partner_lock_error", { pairKey, message: err.message });
+    }
+  }
+
+  const expiry = recentPartnerLocks.get(pairKey);
+  if (!expiry) return false;
+  if (now >= expiry) {
+    recentPartnerLocks.delete(pairKey);
+    return false;
+  }
+  return true;
 }
 
 function areRecentPartners(user1, user2) {
   if (!user1 || !user2) return false;
   const pairKey = [user1, user2].sort().join("::");
+  const now = Date.now();
   const expiry = recentPartnerLocks.get(pairKey);
   if (!expiry) return false;
-  if (Date.now() >= expiry) {
+  if (now >= expiry) {
     recentPartnerLocks.delete(pairKey);
     return false;
   }
@@ -800,15 +915,22 @@ module.exports = {
   initializeRedis,
   checkSlidingWindowRateLimit,
 
+  // Ban management
+  addTemporaryBan,
+  isTemporaryBanned,
+  temporaryBans: memoryTemporaryBans,
+
   // Recent partner locks
   addRecentPartnerLock,
   areRecentPartners,
+  areRecentPartnersAsync,
 
   // Async Redis wrappers
   redisSetUser,
   redisGetUser,
   redisDeleteUser,
   redisSetRoom,
+  redisGetRoom,
   redisDeleteRoom,
   atomicMatchmake,
 

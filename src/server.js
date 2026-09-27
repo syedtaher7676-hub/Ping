@@ -14,6 +14,33 @@ const { rooms, redisClient } = require("./state/store");
 const { createId } = require("./utils/ids");
 const { log } = require("./utils/logger");
 
+// Memoization cache for geoip lookups to avoid event-loop blocking under high load
+const geoCache = new Map();
+const MAX_GEO_CACHE_SIZE = 5000;
+
+function lookupGeoIp(ip) {
+  if (!ip) return null;
+  if (geoCache.has(ip)) {
+    return geoCache.get(ip);
+  }
+  let result = null;
+  try {
+    const geo = geoip.lookup(ip);
+    if (geo && geo.country) {
+      const flag = geo.country.toUpperCase().replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
+      result = `${flag} ${geo.city ? geo.city + ", " : ""}${geo.country}`;
+    }
+  } catch (e) {
+    result = null;
+  }
+  if (geoCache.size >= MAX_GEO_CACHE_SIZE) {
+    const firstKey = geoCache.keys().next().value;
+    geoCache.delete(firstKey);
+  }
+  geoCache.set(ip, result);
+  return result;
+}
+
 // Helper to get country from IP or client provided
 function getCountryFromSocket(socket) {
   try {
@@ -26,7 +53,6 @@ function getCountryFromSocket(socket) {
     // 2. Resolve IP (supporting proxies like Render/Cloudflare/Heroku/Railway)
     const headers = socket.handshake.headers || {};
     
-    // Try multiple headers used by different hosting platforms
     let ip = 
       headers["x-forwarded-for"]?.split(",")[0].trim() ||
       headers["cf-connecting-ip"] ||  // Cloudflare
@@ -51,12 +77,8 @@ function getCountryFromSocket(socket) {
       return "📍 Local";
     }
 
-    const geo = geoip.lookup(ip);
-    if (geo && geo.country) {
-      // Convert country code (US) to Flag Emoji (🇺🇸)
-      const flag = geo.country.toUpperCase().replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
-      return `${flag} ${geo.city ? geo.city + ", " : ""}${geo.country}`;
-    }
+    const cachedLookup = lookupGeoIp(ip);
+    if (cachedLookup) return cachedLookup;
 
     return "Someone nearby";
   } catch (e) {
@@ -89,20 +111,19 @@ app.use((req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// SOCKET.IO SERVER INITIALIZATION WITH DUAL-TRANSPORT FALLBACK
+// SOCKET.IO SERVER INITIALIZATION WITH PRIORITIZED WEBSOCKETS
 // ═══════════════════════════════════════════════════════════════
-// Explicitly configures both 'polling' (HTTP long-polling fallback)
-// and 'websocket' (upgraded real-time streaming) to prevent drops
-// in proxy and sandbox environments (e.g. AI Studio preview).
+// Prioritizes WebSockets for low-latency multi-node scaling while
+// retaining HTTP long-polling fallback for constrained client proxies.
 const io = new Server(server, {
   cors: SOCKET_CORS,
-  transports: ["polling", "websocket"],
+  transports: ["websocket", "polling"],
   pingInterval: 10000,        // 10s keep-alive prevents cloud proxy / reverse proxy idle drops
   pingTimeout: 20000,         // 20s timeout before considering connection dropped
   connectTimeout: 45000,      // Generous connection timeout
   maxHttpBufferSize: 1e6,     // 1MB max payload
   allowUpgrades: true,        // Allow seamless polling to websocket upgrade
-  perMessageDeflate: false,   // Disable perMessageDeflate to eliminate zlib decompression memory overhead and leaks
+  perMessageDeflate: false,   // Disable perMessageDeflate to eliminate zlib decompression memory overhead
   httpCompression: true,
 });
 
@@ -222,37 +243,44 @@ app.get("/api/stats", (_req, res) => {
   });
 });
 
-// Firebase public configuration endpoint
-app.get("/api/firebase-config", (_req, res) => {
+// Asynchronously cached Firebase config to avoid blocking sync I/O during HTTP requests
+let cachedFirebaseConfig = {
+  projectId: "impressive-atlas-4ggh3",
+  appId: "1:237904937112:web:42917cae7c903634dc50ed",
+  apiKey: "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY",
+  authDomain: "impressive-atlas-4ggh3.firebaseapp.com",
+  firestoreDatabaseId: "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
+  storageBucket: "impressive-atlas-4ggh3.firebasestorage.app",
+  messagingSenderId: "237904937112",
+};
+
+async function loadFirebaseConfig() {
   try {
     const configPath = path.resolve(__dirname, "..", "firebase-applet-config.json");
-    if (fs.existsSync(configPath)) {
-      const parsed = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-      return res.json({
-        projectId: parsed.projectId,
-        appId: parsed.appId,
-        apiKey: parsed.apiKey,
-        authDomain: parsed.authDomain,
-        firestoreDatabaseId: parsed.firestoreDatabaseId || "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
-        storageBucket: parsed.storageBucket,
-        messagingSenderId: parsed.messagingSenderId,
-      });
-    }
-  } catch {}
-  res.json({
-    projectId: "impressive-atlas-4ggh3",
-    appId: "1:237904937112:web:42917cae7c903634dc50ed",
-    apiKey: "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY",
-    authDomain: "impressive-atlas-4ggh3.firebaseapp.com",
-    firestoreDatabaseId: "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
-    storageBucket: "impressive-atlas-4ggh3.firebasestorage.app",
-    messagingSenderId: "237904937112",
-  });
+    const rawData = await fs.promises.readFile(configPath, "utf-8");
+    const parsed = JSON.parse(rawData);
+    cachedFirebaseConfig = {
+      projectId: parsed.projectId,
+      appId: parsed.appId,
+      apiKey: parsed.apiKey,
+      authDomain: parsed.authDomain,
+      firestoreDatabaseId: parsed.firestoreDatabaseId || "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
+      storageBucket: parsed.storageBucket,
+      messagingSenderId: parsed.messagingSenderId,
+    };
+  } catch (err) {
+    // Silently fall back to default configuration
+  }
+}
+loadFirebaseConfig();
+
+// Firebase public configuration endpoint
+app.get("/api/firebase-config", (_req, res) => {
+  res.json(cachedFirebaseConfig);
 });
 
 registerSocketHandlers(io, getCountryFromSocket);
 const matchmakingInterval = setInterval(() => attemptMatchmaking(io), MATCHMAKING_INTERVAL_MS);
-matchmakingInterval.unref();
 
 // SPA fallback - serve index.html for client-side routing
 app.use((req, res) => {
