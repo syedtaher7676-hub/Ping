@@ -52,30 +52,170 @@ text,label,category
 "shut up you faggot",1,"hate_speech_slurs"
 "$hut up y0u f@gg0t",1,"hate_speech_slurs_leet"
 "you dumb nigger",1,"hate_speech_slurs"
+"y.o.u d.u.m.b n.i.g.g.e.r",1,"hate_speech_slurs_dotted"
+"y...o...u d...u...m...b n...i...g...g...e...r",1,"hate_speech_slurs_multidot"
+"y-o-u d-u-m-b n-i-g-g-e-r",1,"hate_speech_slurs_hyphenated"
+"y*o*u d*u*m*b n*i*g*g*e*r",1,"hate_speech_slurs_starred"
+"y o u   d u m b   n i g g e r",1,"hate_speech_slurs_spaced"
+"y
+o
+u
+
+d
+u
+m
+b
+
+n
+i
+g
+g
+e
+r",1,"hate_speech_slurs_vertical"
 "y0u dumb n1gg3r",1,"hate_speech_slurs_leet"
-"y.o.u d.u.m.b n.i.g.g.e.r",1,"hate_speech_slurs_obfuscated"
 "f@ggot gtfo",1,"hate_speech_slurs"
+"f.@.g.g.o.t g.t.f.o",1,"hate_speech_slurs_dotted"
+"f...@...g...g...o...t g...t...f...o",1,"hate_speech_slurs_multidot"
+"f-@-g-g-o-t g-t-f-o",1,"hate_speech_slurs_hyphenated"
+"f*@*g*g*o*t g*t*f*o",1,"hate_speech_slurs_starred"
+"f @ g g o t   g t f o",1,"hate_speech_slurs_spaced"
+"f
+@
+g
+g
+o
+t
+
+g
+t
+f
+o",1,"hate_speech_slurs_vertical"
 "f@gg0t gtf0",1,"hate_speech_slurs_leet"
-"f.@.g.g.o.t g.t.f.o",1,"hate_speech_slurs_obfuscated"
 "f.a.g.g.o.t get out of here",1,"hate_speech_slurs"
 "f.@.g.g.0.t g3t 0ut 0f h3r3",1,"hate_speech_slurs_leet"
 "stupid retard",1,"hate_speech_slurs"
+"s.t.u.p.i.d r.e.t.a.r.d",1,"hate_speech_slurs_dotted"
+"s...t...u...p...i...d r...e...t...a...r...d",1,"hate_speech_slurs_multidot"
+"s-t-u-p-i-d r-e-t-a-r-d",1,"hate_speech_slurs_hyphenated"
+"s*t*u*p*i*d r*e*t*a*r*d",1,"hate_speech_slurs_starred"
+"s t u p i d   r e t a r d",1,"hate_speech_slurs_spaced"
+"s
+t
+u
+p
+i
+d
+
+r
+e
+t
+a
+r
+d",1,"hate_speech_slurs_vertical"
 "$tup1d r3t@rd",1,"hate_speech_slurs_leet"
-"s.t.u.p.i.d r.e.t.a.r.d",1,"hate_speech_slurs_obfuscated"
 "you are an absolute r3tard",1,"hate_speech_slurs"
 "y0u @r3 @n @b$0lut3 r3t@rd",1,"hate_speech_slurs_leet"
 "fucking retards everywhere",1,"hate_speech_slurs"
+"f.u.c.k.i.n.g r.e.t.a.r.d.s e.v.e.r.y.w.h.e.r.e",1,"hate_speech_slurs_dotted"
+"f...u...c...k...i...n...g r...e...t...a...r...d...s e...v...e...r...y...w...h...e...r...e",1,"hate_speech_slurs_multidot"
+"f-u-c-k-i-n-g r-e-t-a-r-d-s e-v-e-r-y-w-h-e-r-e",1,"hate_speech_slurs_hyphenated"
+"f*u*c*k*i*n*g r*e*t*a*r*d*s e*v*e*r*y*w*h*e*r*e",1,"hate_speech_slurs_starred"
+"f u c k i n g   r e t a r d s   e v e r y w h e r e",1,"hate_speech_slurs_spaced"
+"f
+u
+c
+k
+i
+n
+g
+
+r
+e
+t
+a
+r
+d
+s
+
+e
+v
+e
+r
+y
+w
+h
+e
+r
+e",1,"hate_speech_slurs_vertical"
 "fuck1ng r3t@rd$ 3v3rywh3r3",1,"hate_speech_slurs_leet"
-"f.u.c.k.i.n.g r.e.t.a.r.d.s e.v.e.r.y.w.h.e.r.e",1,"hate_speech_slurs_obfuscated"
 "you fucking cunt",1,"hate_speech_slurs"
+"y.o.u f.u.c.k.i.n.g c.u.n.t",1,"hate_speech_slurs_dotted"
+"y...o...u f...u...c...k...i...n...g c...u...n...t",1,"hate_speech_slurs_multidot"
+"y-o-u f-u-c-k-i-n-g c-u-n-t",1,"hate_speech_slurs_hyphenated"
+"y*o*u f*u*c*k*i*n*g c*u*n*t",1,"hate_speech_slurs_starred"
+"y o u   f u c k i n g   c u n t",1,"hate_speech_slurs_spaced"
+"y
+o
+u
+
+f
+u
+c
+k
+i
+n
+g
+
+c
+u
+n
+t",1,"hate_speech_slurs_vertical"
 "y0u fuck1ng cunt",1,"hate_speech_slurs_leet"
-"y.o.u f.u.c.k.i.n.g c.u.n.t",1,"hate_speech_slurs_obfuscated"
 "f.u.c.k you bitch",1,"hate_speech_slurs"
+"f...u...c...k y.o.u b.i.t.c.h",1,"hate_speech_slurs_dotted"
+"f.......u.......c.......k y...o...u b...i...t...c...h",1,"hate_speech_slurs_multidot"
+"f-.-u-.-c-.-k y-o-u b-i-t-c-h",1,"hate_speech_slurs_hyphenated"
+"f*.*u*.*c*.*k y*o*u b*i*t*c*h",1,"hate_speech_slurs_starred"
+"f . u . c . k   y o u   b i t c h",1,"hate_speech_slurs_spaced"
+"f
+.
+u
+.
+c
+.
+k
+
+y
+o
+u
+
+b
+i
+t
+c
+h",1,"hate_speech_slurs_vertical"
 "f.u.c.k y0u b1tch",1,"hate_speech_slurs_leet"
-"f...u...c...k y.o.u b.i.t.c.h",1,"hate_speech_slurs_obfuscated"
 "you ugly bitch",1,"hate_speech_slurs"
+"y.o.u u.g.l.y b.i.t.c.h",1,"hate_speech_slurs_dotted"
+"y...o...u u...g...l...y b...i...t...c...h",1,"hate_speech_slurs_multidot"
+"y-o-u u-g-l-y b-i-t-c-h",1,"hate_speech_slurs_hyphenated"
+"y*o*u u*g*l*y b*i*t*c*h",1,"hate_speech_slurs_starred"
+"y o u   u g l y   b i t c h",1,"hate_speech_slurs_spaced"
+"y
+o
+u
+
+u
+g
+l
+y
+
+b
+i
+t
+c
+h",1,"hate_speech_slurs_vertical"
 "y0u ugly b1tch",1,"hate_speech_slurs_leet"
-"y.o.u u.g.l.y b.i.t.c.h",1,"hate_speech_slurs_obfuscated"
 "dumb wh0re go away",1,"hate_speech_slurs"
 "dumb wh0r3 g0 @w@y",1,"hate_speech_slurs_leet"
 "she is a dirty slut",1,"hate_speech_slurs"
@@ -83,24 +223,110 @@ text,label,category
 "dirty kike go home",1,"hate_speech_slurs"
 "d1rty k1k3 g0 h0m3",1,"hate_speech_slurs_leet"
 "k1k3 trash",1,"hate_speech_slurs"
+"k.1.k.3 t.r.a.s.h",1,"hate_speech_slurs_dotted"
+"k...1...k...3 t...r...a...s...h",1,"hate_speech_slurs_multidot"
+"k-1-k-3 t-r-a-s-h",1,"hate_speech_slurs_hyphenated"
+"k*1*k*3 t*r*a*s*h",1,"hate_speech_slurs_starred"
+"k 1 k 3   t r a s h",1,"hate_speech_slurs_spaced"
+"k
+1
+k
+3
+
+t
+r
+a
+s
+h",1,"hate_speech_slurs_vertical"
 "k1k3 tr@$h",1,"hate_speech_slurs_leet"
-"k.1.k.3 t.r.a.s.h",1,"hate_speech_slurs_obfuscated"
 "stupid chink",1,"hate_speech_slurs"
+"s.t.u.p.i.d c.h.i.n.k",1,"hate_speech_slurs_dotted"
+"s...t...u...p...i...d c...h...i...n...k",1,"hate_speech_slurs_multidot"
+"s-t-u-p-i-d c-h-i-n-k",1,"hate_speech_slurs_hyphenated"
+"s*t*u*p*i*d c*h*i*n*k",1,"hate_speech_slurs_starred"
+"s t u p i d   c h i n k",1,"hate_speech_slurs_spaced"
+"s
+t
+u
+p
+i
+d
+
+c
+h
+i
+n
+k",1,"hate_speech_slurs_vertical"
 "$tup1d ch1nk",1,"hate_speech_slurs_leet"
-"s.t.u.p.i.d c.h.i.n.k",1,"hate_speech_slurs_obfuscated"
 "ch1nk go back to your country",1,"hate_speech_slurs"
 "ch1nk g0 b@ck t0 y0ur c0untry",1,"hate_speech_slurs_leet"
 "you filthy gook",1,"hate_speech_slurs"
+"y.o.u f.i.l.t.h.y g.o.o.k",1,"hate_speech_slurs_dotted"
+"y...o...u f...i...l...t...h...y g...o...o...k",1,"hate_speech_slurs_multidot"
+"y-o-u f-i-l-t-h-y g-o-o-k",1,"hate_speech_slurs_hyphenated"
+"y*o*u f*i*l*t*h*y g*o*o*k",1,"hate_speech_slurs_starred"
+"y o u   f i l t h y   g o o k",1,"hate_speech_slurs_spaced"
+"y
+o
+u
+
+f
+i
+l
+t
+h
+y
+
+g
+o
+o
+k",1,"hate_speech_slurs_vertical"
 "y0u f1lthy g00k",1,"hate_speech_slurs_leet"
-"y.o.u f.i.l.t.h.y g.o.o.k",1,"hate_speech_slurs_obfuscated"
 "spic get out of here",1,"hate_speech_slurs"
 "$p1c g3t 0ut 0f h3r3",1,"hate_speech_slurs_leet"
 "wetback loser",1,"hate_speech_slurs"
+"w.e.t.b.a.c.k l.o.s.e.r",1,"hate_speech_slurs_dotted"
+"w...e...t...b...a...c...k l...o...s...e...r",1,"hate_speech_slurs_multidot"
+"w-e-t-b-a-c-k l-o-s-e-r",1,"hate_speech_slurs_hyphenated"
+"w*e*t*b*a*c*k l*o*s*e*r",1,"hate_speech_slurs_starred"
+"w e t b a c k   l o s e r",1,"hate_speech_slurs_spaced"
+"w
+e
+t
+b
+a
+c
+k
+
+l
+o
+s
+e
+r",1,"hate_speech_slurs_vertical"
 "w3tb@ck l0$3r",1,"hate_speech_slurs_leet"
-"w.e.t.b.a.c.k l.o.s.e.r",1,"hate_speech_slurs_obfuscated"
 "n!gg3r leave now",1,"hate_speech_slurs"
+"n.!.g.g.3.r l.e.a.v.e n.o.w",1,"hate_speech_slurs_dotted"
+"n...!...g...g...3...r l...e...a...v...e n...o...w",1,"hate_speech_slurs_multidot"
+"n-!-g-g-3-r l-e-a-v-e n-o-w",1,"hate_speech_slurs_hyphenated"
+"n*!*g*g*3*r l*e*a*v*e n*o*w",1,"hate_speech_slurs_starred"
+"n ! g g 3 r   l e a v e   n o w",1,"hate_speech_slurs_spaced"
+"n
+!
+g
+g
+3
+r
+
+l
+e
+a
+v
+e
+
+n
+o
+w",1,"hate_speech_slurs_vertical"
 "n!gg3r l3@v3 n0w",1,"hate_speech_slurs_leet"
-"n.!.g.g.3.r l.e.a.v.e n.o.w",1,"hate_speech_slurs_obfuscated"
 "n1gger piece of shit",1,"hate_speech_slurs"
 "n1gg3r p13c3 0f $h1t",1,"hate_speech_slurs_leet"
 "you are a f.a.g",1,"hate_speech_slurs"
@@ -108,24 +334,131 @@ text,label,category
 "stupid dyke nobody asked you",1,"hate_speech_slurs"
 "$tup1d dyk3 n0b0dy @$k3d y0u",1,"hate_speech_slurs_leet"
 "trans tranny freak",1,"hate_speech_slurs"
+"t.r.a.n.s t.r.a.n.n.y f.r.e.a.k",1,"hate_speech_slurs_dotted"
+"t...r...a...n...s t...r...a...n...n...y f...r...e...a...k",1,"hate_speech_slurs_multidot"
+"t-r-a-n-s t-r-a-n-n-y f-r-e-a-k",1,"hate_speech_slurs_hyphenated"
+"t*r*a*n*s t*r*a*n*n*y f*r*e*a*k",1,"hate_speech_slurs_starred"
+"t r a n s   t r a n n y   f r e a k",1,"hate_speech_slurs_spaced"
+"t
+r
+a
+n
+s
+
+t
+r
+a
+n
+n
+y
+
+f
+r
+e
+a
+k",1,"hate_speech_slurs_vertical"
 "tr@n$ tr@nny fr3@k",1,"hate_speech_slurs_leet"
-"t.r.a.n.s t.r.a.n.n.y f.r.e.a.k",1,"hate_speech_slurs_obfuscated"
 "ugly shemale go die",1,"hate_speech_slurs"
 "ugly $h3m@l3 g0 d13",1,"hate_speech_slurs_leet"
 "dirty raghead terrorist",1,"hate_speech_slurs"
+"d.i.r.t.y r.a.g.h.e.a.d t.e.r.r.o.r.i.s.t",1,"hate_speech_slurs_dotted"
+"d...i...r...t...y r...a...g...h...e...a...d t...e...r...r...o...r...i...s...t",1,"hate_speech_slurs_multidot"
+"d-i-r-t-y r-a-g-h-e-a-d t-e-r-r-o-r-i-s-t",1,"hate_speech_slurs_hyphenated"
+"d*i*r*t*y r*a*g*h*e*a*d t*e*r*r*o*r*i*s*t",1,"hate_speech_slurs_starred"
+"d i r t y   r a g h e a d   t e r r o r i s t",1,"hate_speech_slurs_spaced"
+"d
+i
+r
+t
+y
+
+r
+a
+g
+h
+e
+a
+d
+
+t
+e
+r
+r
+o
+r
+i
+s
+t",1,"hate_speech_slurs_vertical"
 "d1rty r@gh3@d t3rr0r1$t",1,"hate_speech_slurs_leet"
-"d.i.r.t.y r.a.g.h.e.a.d t.e.r.r.o.r.i.s.t",1,"hate_speech_slurs_obfuscated"
 "towelhead loser",1,"hate_speech_slurs"
+"t.o.w.e.l.h.e.a.d l.o.s.e.r",1,"hate_speech_slurs_dotted"
+"t...o...w...e...l...h...e...a...d l...o...s...e...r",1,"hate_speech_slurs_multidot"
+"t-o-w-e-l-h-e-a-d l-o-s-e-r",1,"hate_speech_slurs_hyphenated"
+"t*o*w*e*l*h*e*a*d l*o*s*e*r",1,"hate_speech_slurs_starred"
+"t o w e l h e a d   l o s e r",1,"hate_speech_slurs_spaced"
+"t
+o
+w
+e
+l
+h
+e
+a
+d
+
+l
+o
+s
+e
+r",1,"hate_speech_slurs_vertical"
 "t0w3lh3@d l0$3r",1,"hate_speech_slurs_leet"
-"t.o.w.e.l.h.e.a.d l.o.s.e.r",1,"hate_speech_slurs_obfuscated"
 "stupid paki get lost",1,"hate_speech_slurs"
 "$tup1d p@k1 g3t l0$t",1,"hate_speech_slurs_leet"
 "terrible beaner",1,"hate_speech_slurs"
+"t.e.r.r.i.b.l.e b.e.a.n.e.r",1,"hate_speech_slurs_dotted"
+"t...e...r...r...i...b...l...e b...e...a...n...e...r",1,"hate_speech_slurs_multidot"
+"t-e-r-r-i-b-l-e b-e-a-n-e-r",1,"hate_speech_slurs_hyphenated"
+"t*e*r*r*i*b*l*e b*e*a*n*e*r",1,"hate_speech_slurs_starred"
+"t e r r i b l e   b e a n e r",1,"hate_speech_slurs_spaced"
+"t
+e
+r
+r
+i
+b
+l
+e
+
+b
+e
+a
+n
+e
+r",1,"hate_speech_slurs_vertical"
 "t3rr1bl3 b3@n3r",1,"hate_speech_slurs_leet"
-"t.e.r.r.i.b.l.e b.e.a.n.e.r",1,"hate_speech_slurs_obfuscated"
 "fck you bhenchod",1,"hate_speech_slurs"
+"f.c.k y.o.u b.h.e.n.c.h.o.d",1,"hate_speech_slurs_dotted"
+"f...c...k y...o...u b...h...e...n...c...h...o...d",1,"hate_speech_slurs_multidot"
+"f-c-k y-o-u b-h-e-n-c-h-o-d",1,"hate_speech_slurs_hyphenated"
+"f*c*k y*o*u b*h*e*n*c*h*o*d",1,"hate_speech_slurs_starred"
+"f c k   y o u   b h e n c h o d",1,"hate_speech_slurs_spaced"
+"f
+c
+k
+
+y
+o
+u
+
+b
+h
+e
+n
+c
+h
+o
+d",1,"hate_speech_slurs_vertical"
 "fck y0u bh3nch0d",1,"hate_speech_slurs_leet"
-"f.c.k y.o.u b.h.e.n.c.h.o.d",1,"hate_speech_slurs_obfuscated"
 "madarchod teri maa ki",1,"hate_speech_slurs"
 "m@d@rch0d t3r1 m@@ k1",1,"hate_speech_slurs_leet"
 "chutiya saale bhag yaha se",1,"hate_speech_slurs"
@@ -135,71 +468,990 @@ text,label,category
 "bhosadike nikal yaha se",1,"hate_speech_slurs"
 "bh0$@d1k3 n1k@l y@h@ $3",1,"hate_speech_slurs_leet"
 "bhosdike chup kar",1,"hate_speech_slurs"
+"b.h.o.s.d.i.k.e c.h.u.p k.a.r",1,"hate_speech_slurs_dotted"
+"b...h...o...s...d...i...k...e c...h...u...p k...a...r",1,"hate_speech_slurs_multidot"
+"b-h-o-s-d-i-k-e c-h-u-p k-a-r",1,"hate_speech_slurs_hyphenated"
+"b*h*o*s*d*i*k*e c*h*u*p k*a*r",1,"hate_speech_slurs_starred"
+"b h o s d i k e   c h u p   k a r",1,"hate_speech_slurs_spaced"
+"b
+h
+o
+s
+d
+i
+k
+e
+
+c
+h
+u
+p
+
+k
+a
+r",1,"hate_speech_slurs_vertical"
 "bh0$d1k3 chup k@r",1,"hate_speech_slurs_leet"
-"b.h.o.s.d.i.k.e c.h.u.p k.a.r",1,"hate_speech_slurs_obfuscated"
 "randi ki aulad",1,"hate_speech_slurs"
+"r.a.n.d.i k.i a.u.l.a.d",1,"hate_speech_slurs_dotted"
+"r...a...n...d...i k...i a...u...l...a...d",1,"hate_speech_slurs_multidot"
+"r-a-n-d-i k-i a-u-l-a-d",1,"hate_speech_slurs_hyphenated"
+"r*a*n*d*i k*i a*u*l*a*d",1,"hate_speech_slurs_starred"
+"r a n d i   k i   a u l a d",1,"hate_speech_slurs_spaced"
+"r
+a
+n
+d
+i
+
+k
+i
+
+a
+u
+l
+a
+d",1,"hate_speech_slurs_vertical"
 "r@nd1 k1 @ul@d",1,"hate_speech_slurs_leet"
-"r.a.n.d.i k.i a.u.l.a.d",1,"hate_speech_slurs_obfuscated"
 "haramkhor kutte",1,"hate_speech_slurs"
+"h.a.r.a.m.k.h.o.r k.u.t.t.e",1,"hate_speech_slurs_dotted"
+"h...a...r...a...m...k...h...o...r k...u...t...t...e",1,"hate_speech_slurs_multidot"
+"h-a-r-a-m-k-h-o-r k-u-t-t-e",1,"hate_speech_slurs_hyphenated"
+"h*a*r*a*m*k*h*o*r k*u*t*t*e",1,"hate_speech_slurs_starred"
+"h a r a m k h o r   k u t t e",1,"hate_speech_slurs_spaced"
+"h
+a
+r
+a
+m
+k
+h
+o
+r
+
+k
+u
+t
+t
+e",1,"hate_speech_slurs_vertical"
 "h@r@mkh0r kutt3",1,"hate_speech_slurs_leet"
-"h.a.r.a.m.k.h.o.r k.u.t.t.e",1,"hate_speech_slurs_obfuscated"
 "kamine suar ki tarah",1,"hate_speech_slurs"
 "k@m1n3 $u@r k1 t@r@h",1,"hate_speech_slurs_leet"
 "bhadwe chup reh",1,"hate_speech_slurs"
+"b.h.a.d.w.e c.h.u.p r.e.h",1,"hate_speech_slurs_dotted"
+"b...h...a...d...w...e c...h...u...p r...e...h",1,"hate_speech_slurs_multidot"
+"b-h-a-d-w-e c-h-u-p r-e-h",1,"hate_speech_slurs_hyphenated"
+"b*h*a*d*w*e c*h*u*p r*e*h",1,"hate_speech_slurs_starred"
+"b h a d w e   c h u p   r e h",1,"hate_speech_slurs_spaced"
+"b
+h
+a
+d
+w
+e
+
+c
+h
+u
+p
+
+r
+e
+h",1,"hate_speech_slurs_vertical"
 "bh@dw3 chup r3h",1,"hate_speech_slurs_leet"
-"b.h.a.d.w.e c.h.u.p r.e.h",1,"hate_speech_slurs_obfuscated"
 "laude apna muh band kar",1,"hate_speech_slurs"
 "l@ud3 @pn@ muh b@nd k@r",1,"hate_speech_slurs_leet"
 "jhantu aadmi",1,"hate_speech_slurs"
+"j.h.a.n.t.u a.a.d.m.i",1,"hate_speech_slurs_dotted"
+"j...h...a...n...t...u a...a...d...m...i",1,"hate_speech_slurs_multidot"
+"j-h-a-n-t-u a-a-d-m-i",1,"hate_speech_slurs_hyphenated"
+"j*h*a*n*t*u a*a*d*m*i",1,"hate_speech_slurs_starred"
+"j h a n t u   a a d m i",1,"hate_speech_slurs_spaced"
+"j
+h
+a
+n
+t
+u
+
+a
+a
+d
+m
+i",1,"hate_speech_slurs_vertical"
 "jh@ntu @@dm1",1,"hate_speech_slurs_leet"
-"j.h.a.n.t.u a.a.d.m.i",1,"hate_speech_slurs_obfuscated"
 "eres un maricon de mierda",1,"hate_speech_slurs"
 "3r3$ un m@r1c0n d3 m13rd@",1,"hate_speech_slurs_leet"
 "hijo de puta vete al diablo",1,"hate_speech_slurs"
 "h1j0 d3 put@ v3t3 @l d1@bl0",1,"hate_speech_slurs_leet"
 "pinche pendejo culero",1,"hate_speech_slurs"
+"p.i.n.c.h.e p.e.n.d.e.j.o c.u.l.e.r.o",1,"hate_speech_slurs_dotted"
+"p...i...n...c...h...e p...e...n...d...e...j...o c...u...l...e...r...o",1,"hate_speech_slurs_multidot"
+"p-i-n-c-h-e p-e-n-d-e-j-o c-u-l-e-r-o",1,"hate_speech_slurs_hyphenated"
+"p*i*n*c*h*e p*e*n*d*e*j*o c*u*l*e*r*o",1,"hate_speech_slurs_starred"
+"p i n c h e   p e n d e j o   c u l e r o",1,"hate_speech_slurs_spaced"
+"p
+i
+n
+c
+h
+e
+
+p
+e
+n
+d
+e
+j
+o
+
+c
+u
+l
+e
+r
+o",1,"hate_speech_slurs_vertical"
 "p1nch3 p3nd3j0 cul3r0",1,"hate_speech_slurs_leet"
-"p.i.n.c.h.e p.e.n.d.e.j.o c.u.l.e.r.o",1,"hate_speech_slurs_obfuscated"
 "tu eres una puta",1,"hate_speech_slurs"
 "tu 3r3$ un@ put@",1,"hate_speech_slurs_leet"
 "b!tch stfu",1,"hate_speech_slurs"
+"b.!.t.c.h s.t.f.u",1,"hate_speech_slurs_dotted"
+"b...!...t...c...h s...t...f...u",1,"hate_speech_slurs_multidot"
+"b-!-t-c-h s-t-f-u",1,"hate_speech_slurs_hyphenated"
+"b*!*t*c*h s*t*f*u",1,"hate_speech_slurs_starred"
+"b ! t c h   s t f u",1,"hate_speech_slurs_spaced"
+"b
+!
+t
+c
+h
+
+s
+t
+f
+u",1,"hate_speech_slurs_vertical"
 "b!tch $tfu",1,"hate_speech_slurs_leet"
-"b.!.t.c.h s.t.f.u",1,"hate_speech_slurs_obfuscated"
 "c*nt gtfo",1,"hate_speech_slurs"
+"c.*.n.t g.t.f.o",1,"hate_speech_slurs_dotted"
+"c...*...n...t g...t...f...o",1,"hate_speech_slurs_multidot"
+"c-*-n-t g-t-f-o",1,"hate_speech_slurs_hyphenated"
+"c***n*t g*t*f*o",1,"hate_speech_slurs_starred"
+"c * n t   g t f o",1,"hate_speech_slurs_spaced"
+"c
+*
+n
+t
+
+g
+t
+f
+o",1,"hate_speech_slurs_vertical"
 "c*nt gtf0",1,"hate_speech_slurs_leet"
-"c.*.n.t g.t.f.o",1,"hate_speech_slurs_obfuscated"
 "wh0r3 die already",1,"hate_speech_slurs"
+"w.h.0.r.3 d.i.e a.l.r.e.a.d.y",1,"hate_speech_slurs_dotted"
+"w...h...0...r...3 d...i...e a...l...r...e...a...d...y",1,"hate_speech_slurs_multidot"
+"w-h-0-r-3 d-i-e a-l-r-e-a-d-y",1,"hate_speech_slurs_hyphenated"
+"w*h*0*r*3 d*i*e a*l*r*e*a*d*y",1,"hate_speech_slurs_starred"
+"w h 0 r 3   d i e   a l r e a d y",1,"hate_speech_slurs_spaced"
+"w
+h
+0
+r
+3
+
+d
+i
+e
+
+a
+l
+r
+e
+a
+d
+y",1,"hate_speech_slurs_vertical"
 "wh0r3 d13 @lr3@dy",1,"hate_speech_slurs_leet"
-"w.h.0.r.3 d.i.e a.l.r.e.a.d.y",1,"hate_speech_slurs_obfuscated"
 "n-i-g-g-a get out",1,"hate_speech_slurs"
+"n.-.i.-.g.-.g.-.a g.e.t o.u.t",1,"hate_speech_slurs_dotted"
+"n...-...i...-...g...-...g...-...a g...e...t o...u...t",1,"hate_speech_slurs_multidot"
+"n---i---g---g---a g-e-t o-u-t",1,"hate_speech_slurs_hyphenated"
+"n*-*i*-*g*-*g*-*a g*e*t o*u*t",1,"hate_speech_slurs_starred"
+"n - i - g - g - a   g e t   o u t",1,"hate_speech_slurs_spaced"
+"n
+-
+i
+-
+g
+-
+g
+-
+a
+
+g
+e
+t
+
+o
+u
+t",1,"hate_speech_slurs_vertical"
 "n-1-g-g-@ g3t 0ut",1,"hate_speech_slurs_leet"
-"n.-.i.-.g.-.g.-.a g.e.t o.u.t",1,"hate_speech_slurs_obfuscated"
 "f a g g o t",1,"hate_speech_slurs"
 "f @ g g 0 t",1,"hate_speech_slurs_leet"
 "kys loser nobody wants you here",1,"harassment_threats"
+"ky$ l0$3r n0b0dy w@nt$ y0u h3r3",1,"harassment_threats_leet"
 "kill yourself you worthless idiot",1,"harassment_threats"
+"k1ll y0ur$3lf y0u w0rthl3$$ 1d10t",1,"harassment_threats_leet"
 "you are ugly and stupid go die",1,"harassment_threats"
+"y0u @r3 ugly @nd $tup1d g0 d13",1,"harassment_threats_leet"
 "i hope you get cancer and die",1,"harassment_threats"
+"1 h0p3 y0u g3t c@nc3r @nd d13",1,"harassment_threats_leet"
 "nobody loves you, end it all",1,"harassment_threats"
+"n0b0dy l0v3$ y0u, 3nd 1t @ll",1,"harassment_threats_leet"
 "k.y.s trash",1,"harassment_threats"
+"k...y...s t.r.a.s.h",1,"harassment_threats_dotted"
+"k.......y.......s t...r...a...s...h",1,"harassment_threats_multidot"
+"k-.-y-.-s t-r-a-s-h",1,"harassment_threats_hyphenated"
+"k*.*y*.*s t*r*a*s*h",1,"harassment_threats_starred"
+"k . y . s   t r a s h",1,"harassment_threats_spaced"
+"k
+.
+y
+.
+s
+
+t
+r
+a
+s
+h",1,"harassment_threats_vertical"
+"k.y.$ tr@$h",1,"harassment_threats_leet"
 "i will find where you live and beat you up",1,"harassment_threats"
+"1 w1ll f1nd wh3r3 y0u l1v3 @nd b3@t y0u up",1,"harassment_threats_leet"
 "commit suicide idiot",1,"harassment_threats"
+"c.o.m.m.i.t s.u.i.c.i.d.e i.d.i.o.t",1,"harassment_threats_dotted"
+"c...o...m...m...i...t s...u...i...c...i...d...e i...d...i...o...t",1,"harassment_threats_multidot"
+"c-o-m-m-i-t s-u-i-c-i-d-e i-d-i-o-t",1,"harassment_threats_hyphenated"
+"c*o*m*m*i*t s*u*i*c*i*d*e i*d*i*o*t",1,"harassment_threats_starred"
+"c o m m i t   s u i c i d e   i d i o t",1,"harassment_threats_spaced"
+"c
+o
+m
+m
+i
+t
+
+s
+u
+i
+c
+i
+d
+e
+
+i
+d
+i
+o
+t",1,"harassment_threats_vertical"
+"c0mm1t $u1c1d3 1d10t",1,"harassment_threats_leet"
 "go jump off a bridge",1,"harassment_threats"
+"g0 jump 0ff @ br1dg3",1,"harassment_threats_leet"
 "i'm going to dox you and leak your address",1,"harassment_threats"
+"1'm g01ng t0 d0x y0u @nd l3@k y0ur @xxr3$$",1,"harassment_threats_leet"
 "m 18 looking for girl snapchat me",1,"solicitation"
+"m 18 l00k1ng f0r g1rl $n@pch@t m3",1,"solicitation_leet"
 "any female here? m19 horny",1,"solicitation"
+"@ny f3m@l3 h3r3? m19 h0rny",1,"solicitation_leet"
 "m16 looking for f",1,"solicitation"
+"m16 l00k1ng f0r f",1,"solicitation_leet"
 "send nudes or snap me",1,"solicitation"
+"$3nd nud3$ 0r $n@p m3",1,"solicitation_leet"
 "show boobies",1,"solicitation"
+"s.h.o.w b.o.o.b.i.e.s",1,"solicitation_dotted"
+"s...h...o...w b...o...o...b...i...e...s",1,"solicitation_multidot"
+"s-h-o-w b-o-o-b-i-e-s",1,"solicitation_hyphenated"
+"s*h*o*w b*o*o*b*i*e*s",1,"solicitation_starred"
+"s h o w   b o o b i e s",1,"solicitation_spaced"
+"s
+h
+o
+w
+
+b
+o
+o
+b
+i
+e
+s",1,"solicitation_vertical"
+"$h0w b00b13$",1,"solicitation_leet"
 "looking for dirty chat add my snap",1,"solicitation"
+"l00k1ng f0r d1rty ch@t @xx my $n@p",1,"solicitation_leet"
 "f15 looking for older guy",1,"solicitation"
+"f15 l00k1ng f0r 0ld3r guy",1,"solicitation_leet"
 "are you a boy or girl? send pic",1,"solicitation"
+"@r3 y0u @ b0y 0r g1rl? $3nd p1c",1,"solicitation_leet"
 "how old are you? are you a girl?",1,"solicitation"
+"h0w 0ld @r3 y0u? @r3 y0u @ g1rl?",1,"solicitation_leet"
 "m4f looking for naughty chat",1,"solicitation"
+"m4f l00k1ng f0r n@ughty ch@t",1,"solicitation_leet"
 "add my snap: coolguy_99",1,"contact_exchange"
+"@xx my $n@p: c00lguy_99",1,"contact_exchange_leet"
 "follow my insta @john_doe23",1,"contact_exchange"
+"f0ll0w my 1n$t@ @j0hn_d0323",1,"contact_exchange_leet"
 "hit me up on telegram @fastbucks",1,"contact_exchange"
+"h1t m3 up 0n t3l3gr@m @f@$tbuck$",1,"contact_exchange_leet"
 "whatsapp me at +14155552671",1,"contact_exchange"
+"wh@t$@pp m3 @t +14155552671",1,"contact_exchange_leet"
 "join my discord server discord.gg/abc1234",1,"contact_exchange"
+"j01n my d1$c0rd $3rv3r d1$c0rd.gg/@bc1234",1,"contact_exchange_leet"
 "insta in bio message me there",1,"contact_exchange"
+"1n$t@ 1n b10 m3$$@g3 m3 th3r3",1,"contact_exchange_leet"
 "add me on kik: user123",1,"contact_exchange"
+"@xx m3 0n k1k: u$3r123",1,"contact_exchange_leet"
+"dixxy",1,"predatory_slang_diddy"
+"d.i.x.x.y",1,"predatory_slang_diddy_dotted"
+"d...i...x...x...y",1,"predatory_slang_diddy_multidot"
+"d-i-x-x-y",1,"predatory_slang_diddy_hyphenated"
+"d*i*x*x*y",1,"predatory_slang_diddy_starred"
+"d i x x y",1,"predatory_slang_diddy_spaced"
+"d
+i
+x
+x
+y",1,"predatory_slang_diddy_vertical"
+"d1xxy",1,"predatory_slang_diddy_leet"
+"diddy",1,"predatory_slang_diddy"
+"d.i.d.d.y",1,"predatory_slang_diddy_dotted"
+"d...i...d...d...y",1,"predatory_slang_diddy_multidot"
+"d-i-d-d-y",1,"predatory_slang_diddy_hyphenated"
+"d*i*d*d*y",1,"predatory_slang_diddy_starred"
+"d i d d y",1,"predatory_slang_diddy_spaced"
+"d
+i
+d
+d
+y",1,"predatory_slang_diddy_vertical"
+"di...dd...y",1,"predatory_slang_diddy"
+"d.i.......d.d.......y",1,"predatory_slang_diddy_dotted"
+"d...i...............d...d...............y",1,"predatory_slang_diddy_multidot"
+"d-i-.-.-.-d-d-.-.-.-y",1,"predatory_slang_diddy_hyphenated"
+"d*i*.*.*.*d*d*.*.*.*y",1,"predatory_slang_diddy_starred"
+"d i . . . d d . . . y",1,"predatory_slang_diddy_spaced"
+"d
+i
+.
+.
+.
+d
+d
+.
+.
+.
+y",1,"predatory_slang_diddy_vertical"
+"d1...xx...y",1,"predatory_slang_diddy_leet"
+"diddi",1,"predatory_slang_diddy"
+"d.i.d.d.i",1,"predatory_slang_diddy_dotted"
+"d...i...d...d...i",1,"predatory_slang_diddy_multidot"
+"d-i-d-d-i",1,"predatory_slang_diddy_hyphenated"
+"d*i*d*d*i",1,"predatory_slang_diddy_starred"
+"d i d d i",1,"predatory_slang_diddy_spaced"
+"d
+i
+d
+d
+i",1,"predatory_slang_diddy_vertical"
+"d1xx1",1,"predatory_slang_diddy_leet"
+"diddler",1,"predatory_slang_diddy"
+"d.i.d.d.l.e.r",1,"predatory_slang_diddy_dotted"
+"d...i...d...d...l...e...r",1,"predatory_slang_diddy_multidot"
+"d-i-d-d-l-e-r",1,"predatory_slang_diddy_hyphenated"
+"d*i*d*d*l*e*r",1,"predatory_slang_diddy_starred"
+"d i d d l e r",1,"predatory_slang_diddy_spaced"
+"d
+i
+d
+d
+l
+e
+r",1,"predatory_slang_diddy_vertical"
+"d1xxl3r",1,"predatory_slang_diddy_leet"
+"diddling",1,"predatory_slang_diddy"
+"d.i.d.d.l.i.n.g",1,"predatory_slang_diddy_dotted"
+"d...i...d...d...l...i...n...g",1,"predatory_slang_diddy_multidot"
+"d-i-d-d-l-i-n-g",1,"predatory_slang_diddy_hyphenated"
+"d*i*d*d*l*i*n*g",1,"predatory_slang_diddy_starred"
+"d i d d l i n g",1,"predatory_slang_diddy_spaced"
+"d
+i
+d
+d
+l
+i
+n
+g",1,"predatory_slang_diddy_vertical"
+"d1xxl1ng",1,"predatory_slang_diddy_leet"
+"k
+y
+s",1,"harassment_vertical"
+"k y s",1,"harassment_vertical_dotted"
+"k   y   s",1,"harassment_vertical_spaced"
+"k
+
+y
+
+s",1,"harassment_vertical_vertical"
+"k
+y
+$",1,"harassment_vertical_leet"
+"f
+a
+g",1,"hate_speech_vertical"
+"f a g",1,"hate_speech_vertical_dotted"
+"f   a   g",1,"hate_speech_vertical_spaced"
+"f
+
+a
+
+g",1,"hate_speech_vertical_vertical"
+"f
+@
+g",1,"hate_speech_vertical_leet"
+"n
+i
+g
+g
+e
+r",1,"hate_speech_vertical"
+"n
+1
+g
+g
+3
+r",1,"hate_speech_vertical_leet"
+"f.a.g.g.o.t",1,"hate_speech_obfuscated"
+"f...a...g...g...o...t",1,"hate_speech_obfuscated_dotted"
+"f.......a.......g.......g.......o.......t",1,"hate_speech_obfuscated_multidot"
+"f-.-a-.-g-.-g-.-o-.-t",1,"hate_speech_obfuscated_hyphenated"
+"f*.*a*.*g*.*g*.*o*.*t",1,"hate_speech_obfuscated_starred"
+"f . a . g . g . o . t",1,"hate_speech_obfuscated_spaced"
+"f
+.
+a
+.
+g
+.
+g
+.
+o
+.
+t",1,"hate_speech_obfuscated_vertical"
+"f.@.g.g.0.t",1,"hate_speech_obfuscated_leet"
+"b.h.e.n.c.h.o.d",1,"hate_speech_obfuscated"
+"b...h...e...n...c...h...o...d",1,"hate_speech_obfuscated_dotted"
+"b.......h.......e.......n.......c.......h.......o.......d",1,"hate_speech_obfuscated_multidot"
+"b-.-h-.-e-.-n-.-c-.-h-.-o-.-d",1,"hate_speech_obfuscated_hyphenated"
+"b*.*h*.*e*.*n*.*c*.*h*.*o*.*d",1,"hate_speech_obfuscated_starred"
+"b . h . e . n . c . h . o . d",1,"hate_speech_obfuscated_spaced"
+"b
+.
+h
+.
+e
+.
+n
+.
+c
+.
+h
+.
+o
+.
+d",1,"hate_speech_obfuscated_vertical"
+"b.h.3.n.c.h.0.d",1,"hate_speech_obfuscated_leet"
+"m",1,"low_effort_probe"
+"f",1,"low_effort_probe"
+"m?",1,"low_effort_probe"
+"m.?",1,"low_effort_probe_dotted"
+"m...?",1,"low_effort_probe_multidot"
+"m-?",1,"low_effort_probe_hyphenated"
+"m*?",1,"low_effort_probe_starred"
+"m ?",1,"low_effort_probe_spaced"
+"m
+?",1,"low_effort_probe_vertical"
+"asl",1,"low_effort_probe"
+"a.s.l",1,"low_effort_probe_dotted"
+"a...s...l",1,"low_effort_probe_multidot"
+"a-s-l",1,"low_effort_probe_hyphenated"
+"a*s*l",1,"low_effort_probe_starred"
+"a s l",1,"low_effort_probe_spaced"
+"a
+s
+l",1,"low_effort_probe_vertical"
+"@$l",1,"low_effort_probe_leet"
+"18m",1,"low_effort_probe"
+"1.8.m",1,"low_effort_probe_dotted"
+"1...8...m",1,"low_effort_probe_multidot"
+"1-8-m",1,"low_effort_probe_hyphenated"
+"1*8*m",1,"low_effort_probe_starred"
+"1 8 m",1,"low_effort_probe_spaced"
+"1
+8
+m",1,"low_effort_probe_vertical"
+"f15",1,"low_effort_probe"
+"f.1.5",1,"low_effort_probe_dotted"
+"f...1...5",1,"low_effort_probe_multidot"
+"f-1-5",1,"low_effort_probe_hyphenated"
+"f*1*5",1,"low_effort_probe_starred"
+"f 1 5",1,"low_effort_probe_spaced"
+"f
+1
+5",1,"low_effort_probe_vertical"
+"snap?",1,"low_effort_probe"
+"s.n.a.p.?",1,"low_effort_probe_dotted"
+"s...n...a...p...?",1,"low_effort_probe_multidot"
+"s-n-a-p-?",1,"low_effort_probe_hyphenated"
+"s*n*a*p*?",1,"low_effort_probe_starred"
+"s n a p ?",1,"low_effort_probe_spaced"
+"s
+n
+a
+p
+?",1,"low_effort_probe_vertical"
+"$n@p?",1,"low_effort_probe_leet"
+"insta?",1,"low_effort_probe"
+"i.n.s.t.a.?",1,"low_effort_probe_dotted"
+"i...n...s...t...a...?",1,"low_effort_probe_multidot"
+"i-n-s-t-a-?",1,"low_effort_probe_hyphenated"
+"i*n*s*t*a*?",1,"low_effort_probe_starred"
+"i n s t a ?",1,"low_effort_probe_spaced"
+"i
+n
+s
+t
+a
+?",1,"low_effort_probe_vertical"
+"1n$t@?",1,"low_effort_probe_leet"
+"I'm gonna kill this exam!",0,"safe_idiom_exam"
+"i am going to kill this exam",0,"safe_idiom_exam"
+"gonna kill this exam today",0,"safe_idiom_exam"
+"i killed that test yesterday!",0,"safe_idiom_exam"
+"you killed that guitar solo",0,"safe_idiom_performance"
+"that joke killed me lol",0,"safe_idiom_humor"
+"my phone died earlier",0,"safe_idiom_battery"
+"my feet are killing me after running",0,"safe_idiom_fatigue"
+"where are you from? i am from canada",0,"safe_conversation"
+"good luck with your finals and exams!",0,"safe_conversation"
+"age",1,"warning"
+"a.g.e",1,"warning_dotted"
+"a...g...e",1,"warning_multidot"
+"a-g-e",1,"warning_hyphenated"
+"a*g*e",1,"warning_starred"
+"a g e",1,"warning_spaced"
+"a
+g
+e",1,"warning_vertical"
+"@g3",1,"warning_leet"
+"slut",1,"warning"
+"s.l.u.t",1,"warning_dotted"
+"s...l...u...t",1,"warning_multidot"
+"s-l-u-t",1,"warning_hyphenated"
+"s*l*u*t",1,"warning_starred"
+"s l u t",1,"warning_spaced"
+"s
+l
+u
+t",1,"warning_vertical"
+"$lut",1,"warning_leet"
+"bitch",1,"cooldown"
+"b.i.t.c.h",1,"cooldown_dotted"
+"b...i...t...c...h",1,"cooldown_multidot"
+"b-i-t-c-h",1,"cooldown_hyphenated"
+"b*i*t*c*h",1,"cooldown_starred"
+"b i t c h",1,"cooldown_spaced"
+"b
+i
+t
+c
+h",1,"cooldown_vertical"
+"b1tch",1,"cooldown_leet"
+"gandu",1,"warning"
+"g.a.n.d.u",1,"warning_dotted"
+"g...a...n...d...u",1,"warning_multidot"
+"g-a-n-d-u",1,"warning_hyphenated"
+"g*a*n*d*u",1,"warning_starred"
+"g a n d u",1,"warning_spaced"
+"g
+a
+n
+d
+u",1,"warning_vertical"
+"g@ndu",1,"warning_leet"
+"madarchod",1,"cooldown"
+"m.a.d.a.r.c.h.o.d",1,"cooldown_dotted"
+"m...a...d...a...r...c...h...o...d",1,"cooldown_multidot"
+"m-a-d-a-r-c-h-o-d",1,"cooldown_hyphenated"
+"m*a*d*a*r*c*h*o*d",1,"cooldown_starred"
+"m a d a r c h o d",1,"cooldown_spaced"
+"m
+a
+d
+a
+r
+c
+h
+o
+d",1,"cooldown_vertical"
+"m@d@rch0d",1,"cooldown_leet"
+"madar chod",1,"cooldown"
+"m.a.d.a.r c.h.o.d",1,"cooldown_dotted"
+"m...a...d...a...r c...h...o...d",1,"cooldown_multidot"
+"m-a-d-a-r c-h-o-d",1,"cooldown_hyphenated"
+"m*a*d*a*r c*h*o*d",1,"cooldown_starred"
+"m a d a r   c h o d",1,"cooldown_spaced"
+"m
+a
+d
+a
+r
+
+c
+h
+o
+d",1,"cooldown_vertical"
+"m@d@r ch0d",1,"cooldown_leet"
+"hi bitch",1,"warning"
+"h.i b.i.t.c.h",1,"warning_dotted"
+"h...i b...i...t...c...h",1,"warning_multidot"
+"h-i b-i-t-c-h",1,"warning_hyphenated"
+"h*i b*i*t*c*h",1,"warning_starred"
+"h i   b i t c h",1,"warning_spaced"
+"h
+i
+
+b
+i
+t
+c
+h",1,"warning_vertical"
+"h1 b1tch",1,"warning_leet"
+"d.-.i.-.d.-.d.-.y",1,"inappropriate_bad_conversation_dotted"
+"d...-...i...-...d...-...d...-...y",1,"inappropriate_bad_conversation_multidot"
+"d---i---d---d---y",1,"inappropriate_bad_conversation_hyphenated"
+"d*-*i*-*d*-*d*-*y",1,"inappropriate_bad_conversation_starred"
+"d - i - d - d - y",1,"inappropriate_bad_conversation_spaced"
+"d
+-
+i
+-
+d
+-
+d
+-
+y",1,"inappropriate_bad_conversation_vertical"
+"d-1-d-d-y",1,"inappropriate_bad_conversation_leet"
+"d.......i.......d.......d.......y",1,"inappropriate_bad_conversation_multidot"
+"d-.-i-.-d-.-d-.-y",1,"inappropriate_bad_conversation_hyphenated"
+"d*.*i*.*d*.*d*.*y",1,"inappropriate_bad_conversation_starred"
+"d . i . d . d . y",1,"inappropriate_bad_conversation_spaced"
+"d
+.
+i
+.
+d
+.
+d
+.
+y",1,"inappropriate_bad_conversation_vertical"
+"d.1.d.d.y",1,"inappropriate_bad_conversation_leet"
+"d.*.i.*.x.*.x.*.y",1,"inappropriate_bad_conversation_dotted"
+"d...*...i...*...x...*...x...*...y",1,"inappropriate_bad_conversation_multidot"
+"d-*-i-*-x-*-x-*-y",1,"inappropriate_bad_conversation_hyphenated"
+"d***i***x***x***y",1,"inappropriate_bad_conversation_starred"
+"d * i * x * x * y",1,"inappropriate_bad_conversation_spaced"
+"d
+*
+i
+*
+x
+*
+x
+*
+y",1,"inappropriate_bad_conversation_vertical"
+"d*1*x*x*y",1,"inappropriate_bad_conversation_leet"
+"d
+1
+d
+d
+y",1,"inappropriate_bad_conversation_leet"
+"d
+1
+x
+x
+y",1,"inappropriate_bad_conversation_leet"
+"d 1 d d y",1,"inappropriate_bad_conversation_leet"
+"d   i   x   x   y",1,"inappropriate_bad_conversation"
+"d   1   x   x   y",1,"inappropriate_bad_conversation_leet"
+"d1ddy",1,"inappropriate_bad_conversation"
+"d...1...d...d...y",1,"inappropriate_bad_conversation_multidot"
+"d*1*d*d*y",1,"inappropriate_bad_conversation_starred"
+"d.1.x.x.y",1,"inappropriate_bad_conversation_dotted"
+"d...1...x...x...y",1,"inappropriate_bad_conversation_multidot"
+"d-1-x-x-y",1,"inappropriate_bad_conversation_hyphenated"
+"d 1 x x y",1,"inappropriate_bad_conversation_spaced"
+"k.y.s",1,"cyberbullying_selfharm"
+"k...y...s",1,"cyberbullying_selfharm_dotted"
+"k.......y.......s",1,"cyberbullying_selfharm_multidot"
+"k-.-y-.-s",1,"cyberbullying_selfharm_hyphenated"
+"k*.*y*.*s",1,"cyberbullying_selfharm_starred"
+"k . y . s",1,"cyberbullying_selfharm_spaced"
+"k
+.
+y
+.
+s",1,"cyberbullying_selfharm_vertical"
+"k.y.$",1,"cyberbullying_selfharm_leet"
+"b h e n c h o d",1,"inappropriate_bad_conversation"
+"b h 3 n c h 0 d",1,"inappropriate_bad_conversation_leet"
+"f19",1,"low_effort_conversation"
+"f.1.9",1,"low_effort_conversation_dotted"
+"f...1...9",1,"low_effort_conversation_multidot"
+"f-1-9",1,"low_effort_conversation_hyphenated"
+"f*1*9",1,"low_effort_conversation_starred"
+"f 1 9",1,"low_effort_conversation_spaced"
+"f
+1
+9",1,"low_effort_conversation_vertical"
+"m or f",1,"low_effort_conversation"
+"m o.r f",1,"low_effort_conversation_dotted"
+"m o...r f",1,"low_effort_conversation_multidot"
+"m o-r f",1,"low_effort_conversation_hyphenated"
+"m o*r f",1,"low_effort_conversation_starred"
+"m   o r   f",1,"low_effort_conversation_spaced"
+"m
+
+o
+r
+
+f",1,"low_effort_conversation_vertical"
+"m 0r f",1,"low_effort_conversation_leet"
+"send pic",1,"low_effort_conversation"
+"s.e.n.d p.i.c",1,"low_effort_conversation_dotted"
+"s...e...n...d p...i...c",1,"low_effort_conversation_multidot"
+"s-e-n-d p-i-c",1,"low_effort_conversation_hyphenated"
+"s*e*n*d p*i*c",1,"low_effort_conversation_starred"
+"s e n d   p i c",1,"low_effort_conversation_spaced"
+"s
+e
+n
+d
+
+p
+i
+c",1,"low_effort_conversation_vertical"
+"$3nd p1c",1,"low_effort_conversation_leet"
+"asdfghjkl",1,"low_effort_conversation"
+"a.s.d.f.g.h.j.k.l",1,"low_effort_conversation_dotted"
+"a...s...d...f...g...h...j...k...l",1,"low_effort_conversation_multidot"
+"a-s-d-f-g-h-j-k-l",1,"low_effort_conversation_hyphenated"
+"a*s*d*f*g*h*j*k*l",1,"low_effort_conversation_starred"
+"a s d f g h j k l",1,"low_effort_conversation_spaced"
+"a
+s
+d
+f
+g
+h
+j
+k
+l",1,"low_effort_conversation_vertical"
+"@$dfghjkl",1,"low_effort_conversation_leet"
+"............",1,"low_effort_conversation"
+".......................",1,"low_effort_conversation_dotted"
+".............................................",1,"low_effort_conversation_multidot"
+".-.-.-.-.-.-.-.-.-.-.-.",1,"low_effort_conversation_hyphenated"
+".*.*.*.*.*.*.*.*.*.*.*.",1,"low_effort_conversation_starred"
+". . . . . . . . . . . .",1,"low_effort_conversation_spaced"
+".
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.",1,"low_effort_conversation_vertical"
+"????????",1,"low_effort_conversation"
+"?.?.?.?.?.?.?.?",1,"low_effort_conversation_dotted"
+"?...?...?...?...?...?...?...?",1,"low_effort_conversation_multidot"
+"?-?-?-?-?-?-?-?",1,"low_effort_conversation_hyphenated"
+"?*?*?*?*?*?*?*?",1,"low_effort_conversation_starred"
+"? ? ? ? ? ? ? ?",1,"low_effort_conversation_spaced"
+"?
+?
+?
+?
+?
+?
+?
+?",1,"low_effort_conversation_vertical"
+"hhhhhhh",1,"low_effort_conversation"
+"h.h.h.h.h.h.h",1,"low_effort_conversation_dotted"
+"h...h...h...h...h...h...h",1,"low_effort_conversation_multidot"
+"h-h-h-h-h-h-h",1,"low_effort_conversation_hyphenated"
+"h*h*h*h*h*h*h",1,"low_effort_conversation_starred"
+"h h h h h h h",1,"low_effort_conversation_spaced"
+"h
+h
+h
+h
+h
+h
+h",1,"low_effort_conversation_vertical"
+"k",1,"low_effort_conversation"
+"wbu?",1,"low_effort_conversation"
+"w.b.u.?",1,"low_effort_conversation_dotted"
+"w...b...u...?",1,"low_effort_conversation_multidot"
+"w-b-u-?",1,"low_effort_conversation_hyphenated"
+"w*b*u*?",1,"low_effort_conversation_starred"
+"w b u ?",1,"low_effort_conversation_spaced"
+"w
+b
+u
+?",1,"low_effort_conversation_vertical"
+"a
+b
+c
+d",1,"low_effort_conversation"
+"@
+b
+c
+d",1,"low_effort_conversation_leet"
+"test_violation_sample_1791023316253",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.0.2.3.3.1.6.2.5.3",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...0...2...3...3...1...6...2...5...3",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-0-2-3-3-1-6-2-5-3",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*0*2*3*3*1*6*2*5*3",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 0 2 3 3 1 6 2 5 3",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+1
+0
+2
+3
+3
+1
+6
+2
+5
+3",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1791023316253",1,"active_learning_test_leet"
+"test_violation_sample_1791023350815",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.0.2.3.3.5.0.8.1.5",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...0...2...3...3...5...0...8...1...5",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-0-2-3-3-5-0-8-1-5",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*0*2*3*3*5*0*8*1*5",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 0 2 3 3 5 0 8 1 5",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+1
+0
+2
+3
+3
+5
+0
+8
+1
+5",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1791023350815",1,"active_learning_test_leet"
+"You are a bitch",1,"inappropriate_bad_conversation"
+"Y0u @r3 @ b1tch",1,"inappropriate_bad_conversation_leet"
+"Shut up slut",1,"inappropriate_bad_conversation"
+"S.h.u.t u.p s.l.u.t",1,"inappropriate_bad_conversation_dotted"
+"S...h...u...t u...p s...l...u...t",1,"inappropriate_bad_conversation_multidot"
+"S-h-u-t u-p s-l-u-t",1,"inappropriate_bad_conversation_hyphenated"
+"S*h*u*t u*p s*l*u*t",1,"inappropriate_bad_conversation_starred"
+"S h u t   u p   s l u t",1,"inappropriate_bad_conversation_spaced"
+"S
+h
+u
+t
+
+u
+p
+
+s
+l
+u
+t",1,"inappropriate_bad_conversation_vertical"
+"$hut up $lut",1,"inappropriate_bad_conversation_leet"
+"fuck off gandu",1,"inappropriate_bad_conversation"
+"f.u.c.k o.f.f g.a.n.d.u",1,"inappropriate_bad_conversation_dotted"
+"f...u...c...k o...f...f g...a...n...d...u",1,"inappropriate_bad_conversation_multidot"
+"f-u-c-k o-f-f g-a-n-d-u",1,"inappropriate_bad_conversation_hyphenated"
+"f*u*c*k o*f*f g*a*n*d*u",1,"inappropriate_bad_conversation_starred"
+"f u c k   o f f   g a n d u",1,"inappropriate_bad_conversation_spaced"
+"f
+u
+c
+k
+
+o
+f
+f
+
+g
+a
+n
+d
+u",1,"inappropriate_bad_conversation_vertical"
+"fuck 0ff g@ndu",1,"inappropriate_bad_conversation_leet"

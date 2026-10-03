@@ -1,7 +1,9 @@
 // Chat moderation system - IN-MEMORY (for ephemeral file systems like Render free tier)
+const { analyzeConversationLine, isInnocentColloquialism, isVerticalLetterSpam } = require('../utils/conversationModerator');
+const { recordChatSampleForTraining } = require('../services/modelTrainer');
+
 // === MODERATION PATTERNS ===
 // Patterns for detecting gender/age questions - case-insensitive
-// Only target specific question patterns, NOT single letters or normal words
 const GENDER_PATTERNS = [
   // Standalone M or m (case-insensitive) as bad behavior / gender probing
   /^\s*m\s*\??\s*$/i,
@@ -67,7 +69,7 @@ const LOW_QUALITY_PATTERNS = [...GENDER_PATTERNS, ...AGE_PATTERNS];
 // === CONFIGURATION ===
 const MODERATION_CONFIG = {
   // Warning messages
-  WARNING_MESSAGE: "Please avoid asking about gender or age. Try starting a real conversation!",
+  WARNING_MESSAGE: "⚠️ Warning: Low-effort message detected. Please put effort into starting a real conversation!",
   REPLACEMENT_MESSAGE: "Try starting a real conversation",
   
   // Escalation thresholds
@@ -109,17 +111,43 @@ setInterval(() => {
 // === CORE DETECTION FUNCTIONS ===
 
 /**
- * Check if message contains low-quality patterns (gender/age questions)
+ * Check if message contains low-quality patterns (gender/age questions, one-word social leaks, low effort, vertical single letters)
  * Returns null if message is clean, or the matched pattern info if blocked
  */
 function detectLowQualityMessage(text) {
   if (!text || text.length < MODERATION_CONFIG.MIN_PATTERN_LENGTH) {
     return null;
   }
+
+  // Safe colloquial expressions are NEVER low-quality violations
+  if (isInnocentColloquialism(text)) {
+    return null;
+  }
   
   const lowerText = text.toLowerCase().trim();
+
+  // Check conversational NLP analyzer for low-effort text lines
+  const conv = analyzeConversationLine(text);
+  if (conv.isLowEffort) {
+    return {
+      detected: true,
+      pattern: conv.reason || 'low_effort',
+      matchedText: text,
+      warningMessage: conv.warningMessage || MODERATION_CONFIG.WARNING_MESSAGE
+    };
+  }
+
+  // Check vertical single-letter lines
+  if (isVerticalLetterSpam(text)) {
+    return {
+      detected: true,
+      pattern: 'vertical_letter_spam',
+      matchedText: text,
+      warningMessage: MODERATION_CONFIG.WARNING_MESSAGE
+    };
+  }
   
-  // Check against all patterns
+  // Check against all regex patterns
   for (const pattern of LOW_QUALITY_PATTERNS) {
     try {
       if (pattern.test(lowerText) || pattern.test(text)) {
@@ -127,10 +155,10 @@ function detectLowQualityMessage(text) {
           detected: true,
           pattern: pattern.toString(),
           matchedText: text,
+          warningMessage: MODERATION_CONFIG.WARNING_MESSAGE
         };
       }
     } catch (e) {
-      // Skip invalid patterns
       continue;
     }
   }
@@ -140,13 +168,23 @@ function detectLowQualityMessage(text) {
 
 /**
  * Check if message is a normal conversation (should never be blocked)
- * This is a safety check to ensure we don't block legitimate messages
  */
 function isNormalConversation(text) {
   if (!text) return false;
+
+  // Safe idioms like "I'm gonna kill this exam!" are always normal conversations
+  if (isInnocentColloquialism(text)) {
+    return true;
+  }
   
   const lower = text.toLowerCase().trim();
   if (lower === 'm' || lower === 'm?' || lower === 'f' || lower === 'f?' || lower === 'male' || lower === 'female') {
+    return false;
+  }
+
+  // Never treat threats, harassment or low-effort as normal conversation
+  const conv = analyzeConversationLine(text);
+  if (conv.isViolation || conv.isThreat || conv.isHarassment || conv.isLowEffort) {
     return false;
   }
   
@@ -161,10 +199,11 @@ function isNormalConversation(text) {
     'how are you', 'how\'s it going', 'how do you', 'what\'s going on',
     'what are you', 'what do you', 'where are you', 'where do you',
     'nice to', 'pleasure to', 'happy to', 'glad to',
-    'i am', 'i\'m', 'i am', 'my name is', 'call me',
+    'i am', 'i\'m', 'my name is', 'call me',
     'what should we', 'let\'s talk about', 'do you like', 'are you into',
     'tell me about', 'share something', 'what do you think', 'what\'s your',
     'any plans', 'what are you doing', 'how\'s your', 'what brings',
+    'good luck with', 'studying for', 'kill this exam', 'killed it',
   ];
   
   if (conversationStarters.some(s => lower.includes(s))) {
@@ -198,11 +237,9 @@ function addUserViolation(userId, message) {
     message: message.slice(0, 50),
   });
   
-  // Clean old violations outside the window
   const windowStart = Date.now() - MODERATION_CONFIG.VIOLATION_WINDOW_MS;
   violations[userId] = violations[userId].filter(v => v.timestamp > windowStart);
   
-  // Keep only last 20 violations per user
   if (violations[userId].length > 20) {
     violations[userId] = violations[userId].slice(-20);
   }
@@ -244,26 +281,27 @@ function getUserPenalty(userId) {
 
 /**
  * Process a message through the moderation system
- * Returns violations that can be applied as penalties but allows checking first
  * Returns: { allowed: boolean, action: string, message?: string, replacement?: string, duration?: number }
  */
 function moderateMessage(userId, text) {
-  // First, check if this is a normal conversation - never block these
   if (isNormalConversation(text)) {
     return { allowed: true, action: 'allowed' };
   }
   
-  // Check for low-quality patterns
   const detection = detectLowQualityMessage(text);
   
   if (!detection) {
-    // No problematic patterns found - allow message
     return { allowed: true, action: 'allowed' };
   }
   
-  // Problematic pattern detected - apply moderation
   const violationCount = addUserViolation(userId, text);
   const penalty = getUserPenalty(userId);
+
+  // Feed low quality pattern into model trainer
+  recordChatSampleForTraining(text, 1, 'low_effort_conversation', {
+    userId,
+    pattern: detection.pattern
+  });
   
   if (penalty) {
     return {
@@ -276,11 +314,10 @@ function moderateMessage(userId, text) {
     };
   }
   
-  // First violation - soft moderation (replace message)
   return {
-    allowed: true,
-    action: 'replaced',
-    replacement: MODERATION_CONFIG.REPLACEMENT_MESSAGE,
+    allowed: false,
+    action: 'warning',
+    message: MODERATION_CONFIG.WARNING_MESSAGE,
     violationCount,
     detectedPattern: detection.pattern,
   };

@@ -2,25 +2,42 @@
  * ─────────────────────────────────────────────────────────────
  * PRODUCTION MULTI-LAYER MODERATION ENGINE ($0 LOCAL AI & ONNX)
  * ─────────────────────────────────────────────────────────────
- * Layer 1: Advanced Regex, Leetspeak & Obfuscation De-anonymizer ($0, 0ms)
- *   - Normalizes leetspeak symbols (@, !, 1, 0, 3, 5, $, 7, +, etc.).
- *   - Strips separators (dots, hyphens, spaces, underscores, zero-width chars).
- *   - Catches immediate racial/homophobic/ethnic/gendered slurs, Hindi/Urdu slurs,
- *     age/gender solicitations (m18, f15, etc.), and contact leaks.
+ * Layer 0: Conversational Text-Line & Bad Behavior Analyzer ($0, 0ms)
+ *   - Semantic understanding of threats, doxxing, stalking, blackmail,
+ *     extortion, harassment, and predatory slang.
+ *   - Guaranteed zero false positives on idioms like "I'm gonna kill this exam!".
  *
- * Layer 2: Local Neural ONNX Model via @xenova/transformers ($0, ~10-15ms)
- *   - Runs 100% locally on CPU without any cloud API fees or rate limits.
- *   - Automatically detects custom fine-tuned ONNX weights in
- *     `src/data/models/custom_moderator` or `data/models/custom_moderator`.
- *   - If no custom weights are present, defaults to `Xenova/toxic-bert`.
+ * Layer 1: Advanced Multi-Format Obfuscation & Leetspeak De-anonymizer ($0, 0ms)
+ *   - Normalizes vertical multi-line text ("d\ni\nd\nd\ny").
+ *   - Strips separators and dots ("di...dd...y", "d-i-d-d-y", "d.i.d.d.y", "d*i*x*x*y").
+ *   - Resolves phonetic slang substitutions ("dixxy" -> "diddy").
+ *   - Normalizes homoglyphs (Cyrillic/Greek -> Latin) and leetspeak (@, 1, 0, 3, $, 7, etc.).
+ *   - Catches racial, homophobic, predatory, and violent slurs.
+ *
+ * Layer 2: Local Neural ONNX Model & Custom Model Classifier ($0, ~10ms)
+ *   - Evaluates custom model weights in `src/data/models/custom_moderator`
+ *     or Hugging Face ONNX models (`Xenova/toxic-bert`).
  *
  * Layer 3 (Optional Fallback): Gemini 2.5 Flash
- *   - Used only as a fallback if ONNX is completely unavailable and GEMINI_API_KEY exists.
+ *   - Used only as a fallback if local inference is unavailable and GEMINI_API_KEY exists.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { GoogleGenAI } = require('@google/genai');
+const { analyzeConversationLine, isInnocentColloquialism } = require('./conversationModerator');
+const {
+  normalizeHomoglyphs,
+  collapseVerticalText,
+  collapseSpacedLetters,
+  sanitizeMaskedText,
+  normalizePhoneticSubstitutions,
+  normalizeLeetspeak
+} = require('../data/slurFilter');
+
+function escapeRegExp(string) {
+  return String(string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 let pipeline = null;
 let classifier = null;
@@ -28,11 +45,32 @@ let modelLoadingPromise = null;
 let modelLoadError = null;
 let activeModelName = 'none';
 
-// Check if user has deployed a custom trained ONNX model
+// Custom model weights directory
 const CUSTOM_MODEL_PATHS = [
   path.join(__dirname, '../data/models/custom_moderator'),
   path.join(__dirname, '../../data/models/custom_moderator'),
 ];
+
+let customModelWeights = null;
+let lastModelWeightsMtime = 0;
+
+function loadCustomModelWeights(force = false) {
+  for (const p of CUSTOM_MODEL_PATHS) {
+    const weightsFile = path.join(p, 'model_weights.json');
+    if (fs.existsSync(weightsFile)) {
+      try {
+        const stats = fs.statSync(weightsFile);
+        if (force || !customModelWeights || stats.mtimeMs > lastModelWeightsMtime) {
+          lastModelWeightsMtime = stats.mtimeMs;
+          const raw = fs.readFileSync(weightsFile, 'utf8');
+          customModelWeights = JSON.parse(raw);
+        }
+        return customModelWeights;
+      } catch (_) {}
+    }
+  }
+  return null;
+}
 
 function getCustomModelPath() {
   for (const p of CUSTOM_MODEL_PATHS) {
@@ -47,6 +85,7 @@ function getCustomModelPath() {
  * Initializes the ONNX Transformer pipeline locally ($0 cost)
  */
 async function initOnnxClassifier() {
+  loadCustomModelWeights();
   if (classifier) return classifier;
   if (modelLoadingPromise) return modelLoadingPromise;
 
@@ -72,7 +111,7 @@ async function initOnnxClassifier() {
       modelLoadError = null;
       return classifier;
     } catch (err) {
-      console.warn('[Moderation] Local ONNX model failed to load:', err.message);
+      console.warn('[Moderation] Local ONNX model failed to load (will use fast pattern & custom weights):', err.message);
       modelLoadError = err.message;
       return null;
     } finally {
@@ -83,11 +122,14 @@ async function initOnnxClassifier() {
   return modelLoadingPromise;
 }
 
-// Background warm-up so the first chat message doesn't experience cold-start latency
+// Background warm-up
 initOnnxClassifier().catch(() => {});
 
 // Comprehensive pattern filters for Layer 1
 const BAD_PATTERNS = [
+  // Predatory slang & abusive grooming terms (diddy, dixxy, diddler, groomer, etc.)
+  /\b(diddy|dixxy|diddi|diddie|diddler|diddling|diddled|chomo|noncer|groomer|jailbait|paedo|pedophile|pedo)\b/i,
+
   // Age-sex combinations targeting minors or restricted tags (m18, f15, 18m, m4f, etc.)
   /\b(m|f|male|female|boy|girl|im|i'm|im\s*a|i'm\s*a)\s*([0-1]?[0-8])\b/i,
   /\b([0-1]?[0-8])\s*(m|f|male|female|boy|girl|y\/o|yo)\b/i,
@@ -131,41 +173,9 @@ function getAiClient() {
 }
 
 /**
- * Normalizes leetspeak symbols to canonical Latin letters
- */
-function normalizeLeetspeak(text) {
-  if (!text || typeof text !== 'string') return '';
-  return text
-    .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width
-    .replace(/[@4^]/g, 'a')
-    .replace(/[8]/g, 'b')
-    .replace(/[(\[<]/g, 'c')
-    .replace(/[3€]/g, 'e')
-    .replace(/[69]/g, 'g')
-    .replace(/[#]/g, 'h')
-    .replace(/[!1|]/g, 'i')
-    .replace(/[0]/g, 'o')
-    .replace(/[$5]/g, 's')
-    .replace(/[+7]/g, 't')
-    .replace(/[v]/g, 'u')
-    .replace(/(.)\1{2,}/g, '$1$1'); // collapse runs
-}
-
-/**
- * Sanitizes masked text by removing separators (dots, hyphens, spaces, underscores)
- */
-function sanitizeMaskedText(text) {
-  if (!text || typeof text !== 'string') return '';
-  return text
-    .toLowerCase()
-    .replace(/[\s\.\-_,\/\\]+/g, '');
-}
-
-/**
- * Validates message safety using Layer 1 (Regex + Obfuscation/Leetspeak) and Layer 2 (Local ONNX AI Model)
+ * Validates message safety across all multi-format layers
  * @param {string} text
- * @returns {Promise<{valid: boolean, reason?: string, action?: string, confidence?: number, model?: string, layer?: string}>}
+ * @returns {Promise<{valid: boolean, reason?: string, action?: string, confidence?: number, model?: string, layer?: string, warningMessage?: string}>}
  */
 async function checkMessageSafety(text) {
   if (!text || typeof text !== 'string') {
@@ -178,35 +188,106 @@ async function checkMessageSafety(text) {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // LAYER 1: Rapid Pattern & Obfuscation Sanitizer ($0, 0ms)
+  // STEP 0: Colloquial False Positive Shield ("I'm gonna kill this exam!")
   // ─────────────────────────────────────────────────────────────
-  for (const pattern of BAD_PATTERNS) {
-    if (pattern.test(cleaned)) {
-      return { valid: false, reason: 'severe_violation', action: 'ban_15min', layer: 'regex' };
+  if (isInnocentColloquialism(cleaned)) {
+    return { valid: true, confidence: 1.0, layer: 'colloquial_shield' };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // LAYER 0: Conversational Text-Line & Threat Analyzer ($0, 0ms)
+  // ─────────────────────────────────────────────────────────────
+  const convAnalysis = analyzeConversationLine(cleaned);
+  if (convAnalysis.isThreat || convAnalysis.isHarassment) {
+    return {
+      valid: false,
+      reason: convAnalysis.reason || 'threat_or_harassment',
+      action: 'ban_15min',
+      category: convAnalysis.category,
+      layer: 'conversation_threat_nlp',
+      warningMessage: convAnalysis.warningMessage
+    };
+  }
+  if (convAnalysis.isLowEffort) {
+    return {
+      valid: false,
+      reason: 'low_effort',
+      action: 'warn_low_effort',
+      category: convAnalysis.category,
+      layer: 'conversation_low_effort',
+      warningMessage: convAnalysis.warningMessage
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // LAYER 1: Multi-Format Obfuscation & Leetspeak Sanitizer ($0, 0ms)
+  // Catches "dixxy", "di...dd...y", "d\ni\nd\nd\ny", "d-i-d-d-y", homoglyphs
+  // ─────────────────────────────────────────────────────────────
+  const homoglyph = normalizeHomoglyphs(cleaned);
+  const vertical = collapseVerticalText(homoglyph);
+  const spaced = collapseSpacedLetters(homoglyph);
+  const leet = normalizeLeetspeak(homoglyph);
+  const stripped = sanitizeMaskedText(homoglyph);
+  const phonetic = normalizePhoneticSubstitutions(homoglyph);
+  const strippedPhonetic = normalizePhoneticSubstitutions(stripped);
+  const verticalPhonetic = normalizePhoneticSubstitutions(vertical);
+
+  const variations = [
+    cleaned,
+    homoglyph,
+    vertical,
+    spaced,
+    leet,
+    stripped,
+    phonetic,
+    strippedPhonetic,
+    verticalPhonetic
+  ];
+
+  for (const variation of variations) {
+    for (const pattern of BAD_PATTERNS) {
+      if (pattern.test(variation)) {
+        return {
+          valid: false,
+          reason: 'severe_obfuscation_violation',
+          action: 'ban_15min',
+          layer: 'multi_format_obfuscation_filter'
+        };
+      }
     }
   }
 
-  // Check leetspeak normalized version (e.g., f@gg0t, n!gg3r, k1k3, r3t@rd)
-  const leetNormalized = normalizeLeetspeak(cleaned);
-  for (const pattern of BAD_PATTERNS) {
-    if (pattern.test(leetNormalized)) {
-      return { valid: false, reason: 'leetspeak_violation', action: 'ban_15min', layer: 'leetspeak_normalized' };
-    }
-  }
+  // Check learned custom model knowledge base if available
+  loadCustomModelWeights();
+  if (customModelWeights?.phrases?.violations) {
+    const rawLower = cleaned.toLowerCase();
+    for (const vItem of customModelWeights.phrases.violations) {
+      if (!vItem.text) continue;
+      const vText = vItem.text.toLowerCase().trim();
+      
+      // Exact full match
+      if (rawLower === vText || vertical.toLowerCase() === vText || strippedPhonetic === vText.replace(/\s+/g, '')) {
+        return {
+          valid: false,
+          reason: 'custom_model_violation',
+          action: 'ban_15min',
+          layer: 'custom_model_knowledge'
+        };
+      }
 
-  // Check stripped spacer version (e.g., f.u.c.k, n.i.g.g.e.r, b h e n c h o d)
-  const sanitized = sanitizeMaskedText(cleaned);
-  for (const pattern of BAD_PATTERNS) {
-    if (pattern.test(sanitized)) {
-      return { valid: false, reason: 'masked_violation', action: 'ban_15min', layer: 'regex_sanitized' };
-    }
-  }
-
-  // Check sanitized leetspeak version
-  const sanitizedLeet = sanitizeMaskedText(leetNormalized);
-  for (const pattern of BAD_PATTERNS) {
-    if (pattern.test(sanitizedLeet)) {
-      return { valid: false, reason: 'masked_leetspeak_violation', action: 'ban_15min', layer: 'leetspeak_sanitized' };
+      // Word boundary match for multicharacter alphanumeric phrases (>= 3 chars)
+      if (vText.length >= 3 && /^[a-zA-Z0-9_\s]+$/.test(vText)) {
+        const escaped = escapeRegExp(vText);
+        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+        if (regex.test(rawLower) || regex.test(vertical) || regex.test(phonetic)) {
+          return {
+            valid: false,
+            reason: 'custom_model_violation',
+            action: 'ban_15min',
+            layer: 'custom_model_knowledge'
+          };
+        }
+      }
     }
   }
 
@@ -222,7 +303,6 @@ async function checkMessageSafety(text) {
         const label = String(top.label || '').toLowerCase();
         const score = Number(top.score) || 0;
 
-        // Custom model output (VIOLATION / LABEL_1) or toxic-bert (toxic, insult, etc.)
         const isViolation =
           (label === 'violation' && score > 0.60) ||
           (label === 'label_1' && score > 0.60) ||
@@ -239,12 +319,11 @@ async function checkMessageSafety(text) {
           };
         }
 
-        // Successfully verified as clean by neural model
         return { valid: true, confidence: score, model: activeModelName, layer: 'local_onnx' };
       }
     }
   } catch (onnxErr) {
-    console.warn('[Moderation] Local ONNX inference error:', onnxErr?.message);
+    // Fail-open to next layer
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -255,14 +334,14 @@ async function checkMessageSafety(text) {
     try {
       const response = await client.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `Analyze the following chat message for severe profanity, hate speech, explicit sexual solicitation, age solicitation involving minors, or off-platform handle sharing. Respond ONLY with "SAFE" or "VIOLATION". Message: "${cleaned}"`,
+        contents: `Analyze the following chat message for severe profanity, hate speech, explicit sexual solicitation, predatory slang, age solicitation involving minors, or off-platform handle sharing. Respond ONLY with "SAFE" or "VIOLATION". Message: "${cleaned}"`,
       });
       const resultText = response?.text?.trim()?.toUpperCase();
       if (resultText && resultText.includes('VIOLATION')) {
         return { valid: false, reason: 'ai_flagged_violation', action: 'ban_15min', layer: 'gemini_fallback' };
       }
     } catch (err) {
-      console.warn("Gemini moderation check warning:", err?.message);
+      // Ignore fallback error
     }
   }
 
@@ -274,7 +353,7 @@ function getModerationStatus() {
     onnxLoaded: Boolean(classifier),
     isModelLoading: Boolean(modelLoadingPromise),
     activeModelName,
-    customModelFound: Boolean(getCustomModelPath()),
+    customModelFound: Boolean(getCustomModelPath() || customModelWeights),
     modelLoadError
   };
 }
@@ -283,7 +362,9 @@ module.exports = {
   checkMessageSafety,
   normalizeLeetspeak,
   sanitizeMaskedText,
-  validateMessage: checkMessageSafety, // Alias for socket handlers
+  validateMessage: checkMessageSafety,
   initOnnxClassifier,
-  getModerationStatus
+  getModerationStatus,
+  escapeRegExp,
+  loadCustomModelWeights
 };

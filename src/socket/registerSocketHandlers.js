@@ -267,7 +267,12 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
   });
 
   if (violationCount < maxLimit) {
-    const warnMsg = `⚠️ Warning (${violationCount}/${maxLimit}): Inappropriate language detected. Message was not sent. ${violationCount >= maxLimit - 1 ? 'One more violation will result in a 15-minute ban!' : 'Please keep conversations respectful!'}`;
+    const isAgain = violationCount > 1;
+    const warnMsg = isDm
+      ? `⚠️ Warning (${violationCount}/${maxLimit}): Inappropriate language detected${isAgain ? ' again' : ''} in friend chat. Message was not sent. ${violationCount >= maxLimit - 1 ? 'One more violation will result in a 15-minute ban!' : 'Please keep conversations respectful!'}`
+      : (violationCount === 2
+        ? "⚠️ Warning (2/3): Inappropriate language detected again. Message was not sent. One more violation will result in a 15-minute ban!"
+        : "⚠️ Warning (1/3): Inappropriate language detected. Message was not sent. Please keep conversations respectful!");
     socket.emit("warning_message", {
       message: warnMsg,
       type: `strike_${violationCount}_warning`,
@@ -422,16 +427,18 @@ function validateAndModerateMessage(socket, userId, text) {
     socket.emit("warning_message", { message: "⚠️ please keep it appropriate 🙏", type: "slur_flag" });
   }
 
-  // Moderation (gender/age questions) - NEVER terminates session
+  // Moderation (gender/age questions / low effort) - NEVER terminates session
   const moderationResult = moderation.moderateMessage(userId, text);
 
   if (!moderationResult.allowed) {
     spamStore.addSpamViolation({ userId, type: "moderation_blocked", message: text.slice(0, 50), action: moderationResult.action, violationCount: moderationResult.violationCount });
     securityStore.addSecurityLog("moderation_blocked", { userId, message: text.slice(0, 100), action: moderationResult.action, violationCount: moderationResult.violationCount, severity: moderationResult.action === "mute" ? "high" : "medium" });
-    log("message_moderated", { userId, action: moderationResult.action, violationCount: moderationResult.violationCount, reason: "low_quality_question" });
+    log("message_moderated", { userId, action: moderationResult.action, violationCount: moderationResult.violationCount, reason: "low_effort" });
     slurFilter.applyPenalty(userId, moderationResult.action, moderationResult.duration);
+    socket.emit("warning_message", { message: moderationResult.message, type: "low_effort_warning", violationCount: moderationResult.violationCount });
+    socket.emit("message_rejected", { message: moderationResult.message, reason: "low_effort_warning", violationCount: moderationResult.violationCount });
     socket.emit("error_message", { message: moderationResult.message, action: moderationResult.action, duration: moderationResult.duration });
-    return { blocked: true, reason: "moderation_blocked", action: moderationResult.action };
+    return { blocked: true, reason: "low_effort_warning", action: moderationResult.action, message: moderationResult.message };
   }
 
   let finalMessage = text;
@@ -949,7 +956,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             handleInappropriateViolation(socket, io, userId, "slur_blocked", text, currentUser.roomId, false, ack);
             return;
           }
-          if (typeof ack === "function") ack({ ok: false, reason: modResult.reason, action: modResult.action });
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action, message: modResult.message });
           return;
         }
 
@@ -1128,7 +1135,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             handleInappropriateViolation(socket, io, userId, "slur_blocked", text, roomId, true, ack);
             return;
           }
-          if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action });
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action, message: modResult.message });
           return;
         }
 

@@ -1,13 +1,32 @@
-// Slur/Profanity filter storage - In-Memory with File Persistence
+// Slur/Profanity filter storage - In-Memory with File Persistence & Multi-Format Obfuscation Engine
 const fs = require('fs');
 const path = require('path');
+const { analyzeConversationLine, isInnocentColloquialism } = require('../utils/conversationModerator');
+const { recordChatSampleForTraining } = require('../services/modelTrainer');
 
 const PENALTIES_FILE = path.join(__dirname, '../../data/penalties.json');
 const VIOLATIONS_FILE = path.join(__dirname, '../../data/slur_violations.json');
 
 // === CONFIGURABLE BLOCKED WORDS LIST ===
-// Comprehensive slurs, severe hate speech, homophobic, racial, transphobic, ableist, misogynistic and abusive terms
+// Comprehensive slurs, severe hate speech, homophobic, racial, transphobic, ableist, misogynistic, predatory and abusive terms
 const DEFAULT_SLURS = [
+  // Predatory, grooming & sexual exploitation terms (including memes & variants)
+  "diddy",
+  "dixxy",
+  "diddi",
+  "diddie",
+  "diddler",
+  "diddling",
+  "diddled",
+  "epstein",
+  "chomo",
+  "noncer",
+  "groomer",
+  "pedophile",
+  "pedo",
+  "paedo",
+  "jailbait",
+
   // Racial/ethnic slurs (English & Global)
   "nigger",
   "nigga",
@@ -134,7 +153,12 @@ const SAFE_EXCEPTIONS = [
   "dickens",
   "cucumber",
   "canal",
-  "penistone"
+  "penistone",
+  "exam",
+  "test",
+  "quiz",
+  "interview",
+  "presentation"
 ];
 
 // === IN-MEMORY & PERSISTENT STORAGE ===
@@ -263,13 +287,94 @@ const SLUR_CONFIG = {
 };
 
 /**
+ * Normalizes text homoglyphs (Cyrillic, Greek, Math symbols -> Latin)
+ */
+function normalizeHomoglyphs(text) {
+  if (!text || typeof text !== 'string') return '';
+  const homoglyphMap = {
+    'а': 'a', 'а́': 'a', 'а̀': 'a', 'ą': 'a', 'ä': 'a', 'à': 'a', 'á': 'a', 'â': 'a', 'ã': 'a',
+    'в': 'b', 'Ь': 'b', 'Ъ': 'b',
+    'с': 'c', 'ć': 'c', 'ç': 'c', 'č': 'c',
+    'е': 'e', 'е́': 'e', 'ѐ': 'e', 'ę': 'e', 'ë': 'e', 'è': 'e', 'é': 'e', 'ê': 'e', 'з': 'e',
+    'і': 'i', 'ї': 'i', 'í': 'i', 'ì': 'i', 'ï': 'i', 'î': 'i',
+    'ј': 'j',
+    'к': 'k',
+    'о': 'o', 'о́': 'o', 'ò': 'o', 'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ø': 'o',
+    'р': 'p',
+    'ѕ': 's', 'ś': 's', 'š': 's', 'ş': 's',
+    'т': 't',
+    'у': 'y', 'ý': 'y', 'ÿ': 'y',
+    'х': 'x', 'ҳ': 'x',
+    'ѡ': 'w', 'ш': 'w',
+    'ѵ': 'v'
+  };
+
+  let result = text;
+  for (const [nonLatin, latin] of Object.entries(homoglyphMap)) {
+    result = result.replace(new RegExp(nonLatin, 'gi'), latin);
+  }
+  return result;
+}
+
+/**
+ * Collapses multi-line vertical text (e.g., "d\ni\nd\nd\ny" -> "diddy")
+ */
+function collapseVerticalText(text) {
+  if (!text || typeof text !== 'string') return '';
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length >= 2 && lines.every(l => l.length <= 3)) {
+    return lines.join('');
+  }
+  return text.replace(/([a-zA-Z0-9])[\r\n]+([a-zA-Z0-9])/g, '$1$2');
+}
+
+/**
+ * Collapses spaced single letters (e.g. "d i d d y" -> "diddy", "d  i  x  x  y" -> "dixxy")
+ */
+function collapseSpacedLetters(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.replace(/\b([a-zA-Z0-9])(?:\s+([a-zA-Z0-9]))+\b/g, (match) => {
+    return match.replace(/\s+/g, '');
+  });
+}
+
+/**
+ * Strips all masked spacer punctuation (dots, hyphens, underscores, slashes, tildes, asterisks)
+ * e.g., "di...dd...y" -> "diddy", "d-i-d-d-y" -> "diddy", "d*i*x*x*y" -> "dixxy"
+ */
+function sanitizeMaskedText(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .toLowerCase()
+    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F]/g, '') // strip invisible unicode
+    .replace(/[\s\.\-_,\/\\~\|\*\^#%+=:;'"!?`]+/g, '');
+}
+
+/**
+ * Normalizes phonetic and common slang substitutions (e.g., "dixxy" -> "diddy", "puxxy" -> "pussy")
+ */
+function normalizePhoneticSubstitutions(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .toLowerCase()
+    .replace(/\bdix+y\b/g, 'diddy')
+    .replace(/\bdid+i\b/g, 'diddy')
+    .replace(/\bdid+ie\b/g, 'diddy')
+    .replace(/\bdyd+y\b/g, 'diddy')
+    .replace(/\bd1x+y\b/g, 'diddy')
+    .replace(/\bpux+y\b/g, 'pussy')
+    .replace(/\bnix+a\b/g, 'nigga')
+    .replace(/\bbix+ch\b/g, 'bitch');
+}
+
+/**
  * Normalizes leetspeak, zero-width chars, and tricky symbol substitutions
  */
 function normalizeLeetspeak(text) {
   if (!text || typeof text !== 'string') return '';
   return text
     .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF]/g, '') // strip zero-width characters
+    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F]/g, '') // strip zero-width characters
     .replace(/[@4^]/g, 'a')
     .replace(/[8]/g, 'b')
     .replace(/[(\[<]/g, 'c')
@@ -318,18 +423,33 @@ function getBlockedWords() {
 // === CONTEXT-AWARE DETECTION ===
 
 /**
- * Detect if text contains slurs and analyze context
- * Returns: { hasSlur: boolean, isTargeting: boolean, matchedWords: string[] }
+ * Detect if text contains slurs or bad conversation attempts in ANY format:
+ * - "dixxy" (phonetic / slang for "diddy")
+ * - "di...dd...y", "d-i-d-d-y", "d.i.d.d.y", "d*i*x*x*y"
+ * - vertical multi-line: "d\ni\nd\nd\ny"
+ * - spaced out: "d i d d y"
+ * - homoglyphs & leetspeak
+ *
+ * Guaranteed 0 false positives for safe colloquial expressions like "I'm gonna kill this exam!".
+ *
+ * Returns: { hasSlur: boolean, isTargeting: boolean, matchedWords: string[], category?: string, warningMessage?: string }
  */
 function detectSlurWithContext(text) {
   if (!text || typeof text !== 'string') {
     return { hasSlur: false, isTargeting: false, matchedWords: [] };
   }
 
-  const rawLower = text.toLowerCase().trim();
-  if (!rawLower) {
+  const rawTrimmed = text.trim();
+  if (!rawTrimmed) {
     return { hasSlur: false, isTargeting: false, matchedWords: [] };
   }
+
+  // 1. Check if string is an innocent colloquialism (e.g., "I'm gonna kill this exam!")
+  if (isInnocentColloquialism(rawTrimmed)) {
+    return { hasSlur: false, isTargeting: false, matchedWords: [] };
+  }
+
+  const rawLower = rawTrimmed.toLowerCase();
 
   // Check if string is simply an innocent safe word
   for (const safeWord of SAFE_EXCEPTIONS) {
@@ -338,37 +458,71 @@ function detectSlurWithContext(text) {
     }
   }
 
+  // Conversational text-line understanding: threats, stalking, extortion, sexual harassment, cyberbullying, predatory slang
+  const conv = analyzeConversationLine(rawTrimmed);
+  if (conv.isThreat || conv.isHarassment) {
+    return {
+      hasSlur: true,
+      isTargeting: true,
+      matchedWords: [conv.reason || 'threat_or_harassment'],
+      category: conv.category,
+      warningMessage: conv.warningMessage
+    };
+  }
+
   const allBlocked = [...blockedWords.slurs, ...blockedWords.custom].map(w => w.toLowerCase());
   if (allBlocked.length === 0) {
     return { hasSlur: false, isTargeting: false, matchedWords: [] };
   }
 
-  const normalized = normalizeLeetspeak(rawLower);
-  const strippedSpacers = normalized.replace(/[\s\.\-_,\/\\]+/g, '');
-  const words = rawLower.split(/[\s,\.!?_\\/]+/).filter(Boolean);
-  const normalizedWords = normalized.split(/[\s,\.!?_\\/]+/).filter(Boolean);
+  // Build all normalized variations of the message for multi-format inspection
+  const homoglyphNormalized = normalizeHomoglyphs(rawLower);
+  const verticalCollapsed = collapseVerticalText(homoglyphNormalized);
+  const spacedCollapsed = collapseSpacedLetters(homoglyphNormalized);
+  const leetNormalized = normalizeLeetspeak(homoglyphNormalized);
+  const strippedSpacers = sanitizeMaskedText(homoglyphNormalized);
+  const phoneticNormalized = normalizePhoneticSubstitutions(homoglyphNormalized);
+  const strippedPhonetic = normalizePhoneticSubstitutions(strippedSpacers);
+  const verticalPhonetic = normalizePhoneticSubstitutions(verticalCollapsed);
+
+  const candidateRepresentations = [
+    rawLower,
+    homoglyphNormalized,
+    verticalCollapsed,
+    spacedCollapsed,
+    leetNormalized,
+    strippedSpacers,
+    phoneticNormalized,
+    strippedPhonetic,
+    verticalPhonetic
+  ];
 
   const matched = new Set();
 
-  // 1. Direct word matching
-  for (const w of [...words, ...normalizedWords]) {
-    if (w.length >= SLUR_CONFIG.MIN_WORD_LENGTH && allBlocked.includes(w)) {
-      matched.add(w);
+  // 1. Direct and normalized token matching
+  for (const rep of candidateRepresentations) {
+    const tokens = rep.split(/[\s,\.!?_\\/~|\*\^#%+=:;'"`]+/).filter(Boolean);
+    for (const t of tokens) {
+      if (t.length >= SLUR_CONFIG.MIN_WORD_LENGTH && allBlocked.includes(t)) {
+        matched.add(t);
+      }
     }
   }
 
-  // 2. Substring & masked spacer matching for severe slurs
+  // 2. Substring & masked spacer matching for severe slurs & bad conversation keywords
   for (const slur of allBlocked) {
     if (slur.length < 3) continue;
 
-    // Word boundary check in normalized text
     const regex = new RegExp(`\\b${slur}\\b`, 'i');
-    if (regex.test(normalized)) {
-      matched.add(slur);
+
+    for (const rep of candidateRepresentations) {
+      if (regex.test(rep)) {
+        matched.add(slur);
+      }
     }
 
-    // Stripped spacers check (e.g. n.i.g.g.e.r, f-a-g-g-o-t, b h e n c h o d)
-    if (strippedSpacers.includes(slur)) {
+    // Stripped spacers check (e.g. "di...dd...y", "n.i.g.g.e.r", "d-i-d-d-y", "b h e n c h o d")
+    if (strippedSpacers.includes(slur) || strippedPhonetic.includes(slur)) {
       // Ensure it's not a benign subword false positive
       const isBenignSubword = SAFE_EXCEPTIONS.some(safe => strippedSpacers.includes(safe));
       if (!isBenignSubword) {
@@ -382,12 +536,13 @@ function detectSlurWithContext(text) {
     return { hasSlur: false, isTargeting: false, matchedWords: [] };
   }
 
-  const isTargeting = SLUR_CONFIG.TARGETING_PATTERNS.some(pattern => pattern.test(text) || pattern.test(normalized));
+  const isTargeting = SLUR_CONFIG.TARGETING_PATTERNS.some(pattern => pattern.test(rawTrimmed) || pattern.test(leetNormalized));
 
   return {
     hasSlur: true,
     isTargeting,
     matchedWords,
+    category: 'inappropriate_bad_conversation'
   };
 }
 
@@ -401,7 +556,6 @@ function getScopedId(id, scope = 'explore') {
 function getUserSlurViolationCount(userId, scope = 'explore') {
   if (!userId) return 0;
   const scopedKey = getScopedId(userId, scope);
-  // Purely check scoped key for strict separation between explore and friend chats
   const userViolations = slurViolations[scopedKey] || [];
   const windowStart = Date.now() - SLUR_CONFIG.VIOLATION_WINDOW_MS;
   return userViolations.filter(v => v.timestamp > windowStart).length;
@@ -548,7 +702,7 @@ function moderateSlurMessage(userId, text, ip = null, scope = 'explore') {
     return { allowed: true, action: "allowed", hasSlur: false };
   }
   
-  // Slur detected - increment violation count for userId (and IP if provided) with scope
+  // Slur / Bad conversation detected - increment violation count
   const userCount = addSlurViolation(userId, text, detection.isTargeting, scope);
   let ipCount = 0;
   if (ip && ip !== userId && ip !== "127.0.0.1" && ip !== "::1") {
@@ -563,9 +717,16 @@ function moderateSlurMessage(userId, text, ip = null, scope = 'explore') {
       applyPenalty(ip, penalty.type, penalty.duration);
     }
   }
+
+  // Active learning: Feed the detected bad conversation attempt into the model trainer
+  recordChatSampleForTraining(text, 1, detection.category || 'bad_conversation_blocked', {
+    userId,
+    matchedWords: detection.matchedWords,
+    scope
+  });
   
   return {
-    allowed: false, // NEVER send the message when bad language/slur is detected!
+    allowed: false, // NEVER send the message when bad language/slur/bad conversation is detected!
     action: penalty?.type || "warning_1",
     message: penalty?.message || SLUR_CONFIG.WARNING_1_MESSAGE,
     duration: penalty?.duration || 0,
@@ -621,5 +782,10 @@ module.exports = {
   getActivePenalty,
   clearPenalty,
   normalizeLeetspeak,
+  normalizeHomoglyphs,
+  collapseVerticalText,
+  collapseSpacedLetters,
+  sanitizeMaskedText,
+  normalizePhoneticSubstitutions,
   SLUR_CONFIG,
 };

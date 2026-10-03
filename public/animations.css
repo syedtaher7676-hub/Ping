@@ -745,6 +745,35 @@
   animation: empty-glow 2.8s ease-in-out infinite !important;
 }
 
+/* ── HYPNOTIC CLICK RIPPLE ── */
+.hypno-click-ripple {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  border: 1.5px solid rgba(217, 70, 239, 0.85);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6), inset 0 0 10px rgba(6, 182, 212, 0.4);
+  animation: hypno-ripple-out 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes hypno-ripple-out {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    width: 240px;
+    height: 240px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 /* ── REDUCED MOTION ── */
 @media (prefers-reduced-motion:reduce) {
 

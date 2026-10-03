@@ -1,6 +1,28 @@
-// Security event storage - IN-MEMORY (for ephemeral file systems like Render free tier)
+// Security event storage - IN-MEMORY with Disk Persistence
+const fs = require('fs');
+const path = require('path');
+const { recordChatSampleForTraining } = require('../services/modelTrainer');
+
+const SECURITY_FILE = path.join(__dirname, '../../data/security.json');
+
 const events = [];
 const MAX_EVENTS = 2000;
+
+try {
+  if (fs.existsSync(SECURITY_FILE)) {
+    const raw = fs.readFileSync(SECURITY_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      events.push(...parsed.slice(-MAX_EVENTS));
+    }
+  }
+} catch (_) {}
+
+function saveSecurityEventsToFile() {
+  try {
+    fs.writeFileSync(SECURITY_FILE, JSON.stringify(events, null, 2), 'utf8');
+  } catch (_) {}
+}
 
 function addSecurityEvent(event) {
   const newEvent = {
@@ -10,9 +32,18 @@ function addSecurityEvent(event) {
   };
   events.push(newEvent);
   
-  // Keep only last 2000 events
   if (events.length > MAX_EVENTS) {
     events.splice(0, events.length - MAX_EVENTS);
+  }
+
+  saveSecurityEventsToFile();
+
+  const msg = event.message || event.originalMessage;
+  if (msg && typeof msg === 'string' && event.severity !== 'safe') {
+    recordChatSampleForTraining(msg, 1, event.type || 'security_event', {
+      userId: event.userId,
+      severity: event.severity
+    });
   }
   
   return newEvent;
@@ -35,16 +66,8 @@ function isUserFlagged(userId) {
 }
 
 function clearUserFlags(userId) {
-  // Not implemented for in-memory - would need to rebuild
+  // Clear flags for specific user if needed
 }
-
-module.exports = {
-  addSecurityEvent,
-  getSecurityEvents,
-  getUserSecurityEvents,
-  isUserFlagged,
-  clearUserFlags,
-};
 
 function addSecurityLog(type, details) {
   return addSecurityEvent({

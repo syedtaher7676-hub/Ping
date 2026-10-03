@@ -1343,5 +1343,38 @@
     ],
     "severity": "high",
     "createdAt": 1776691274662
+  },
+  {
+    "id": "sec_1791023365991_213v76",
+    "type": "bad_language_violation",
+    "userId": "u_d35a2c27-573a-4452-8b1d-648f1ed7a01a",
+    "message": "you are a bitch",
+    "violationCount": 1,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "medium",
+    "createdAt": 1791023365991
+  },
+  {
+    "id": "sec_1791023366966_f27pxh",
+    "type": "bad_language_violation",
+    "userId": "u_d35a2c27-573a-4452-8b1d-648f1ed7a01a",
+    "message": "shut up slut",
+    "violationCount": 2,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "high",
+    "createdAt": 1791023366966
+  },
+  {
+    "id": "sec_1791023367968_opwhu8",
+    "type": "bad_language_violation",
+    "userId": "u_d35a2c27-573a-4452-8b1d-648f1ed7a01a",
+    "message": "fuck off gandu",
+    "violationCount": 3,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "critical",
+    "createdAt": 1791023367968
   }
 ]

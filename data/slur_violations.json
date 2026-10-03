@@ -1,3 +1,306 @@
 {
-  "violations": {}
+  "violations": {
+    "test_user_obf:explore": [
+      {
+        "timestamp": 1791023289576,
+        "message": "d\ni\nx\nx\ny",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289578,
+        "message": "d i d d y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289580,
+        "message": "d   i   x   x   y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289598,
+        "message": "d1ddy",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289601,
+        "message": "d1xxy",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289602,
+        "message": "k\ny\ns",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289603,
+        "message": "k.y.s",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289605,
+        "message": "f\na\ng",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289608,
+        "message": "n\ni\ng\ng\ne\nr",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289611,
+        "message": "f.a.g.g.o.t",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289614,
+        "message": "b h e n c h o d",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023289617,
+        "message": "b.h.e.n.c.h.o.d",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314628,
+        "message": "dixxy",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314633,
+        "message": "diddy",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314637,
+        "message": "di...dd...y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314643,
+        "message": "d-i-d-d-y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314647,
+        "message": "d.i.d.d.y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314650,
+        "message": "d*i*x*x*y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314653,
+        "message": "d\ni\nd\nd\ny",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314663,
+        "message": "d\ni\nx\nx\ny",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314665,
+        "message": "d i d d y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314667,
+        "message": "d   i   x   x   y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314686,
+        "message": "d1ddy",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314689,
+        "message": "d1xxy",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314690,
+        "message": "k\ny\ns",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314692,
+        "message": "k.y.s",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314694,
+        "message": "f\na\ng",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314697,
+        "message": "n\ni\ng\ng\ne\nr",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314702,
+        "message": "f.a.g.g.o.t",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314706,
+        "message": "b h e n c h o d",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023314710,
+        "message": "b.h.e.n.c.h.o.d",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349147,
+        "message": "dixxy",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349152,
+        "message": "diddy",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349156,
+        "message": "di...dd...y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349159,
+        "message": "d-i-d-d-y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349162,
+        "message": "d.i.d.d.y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349170,
+        "message": "d*i*x*x*y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349172,
+        "message": "d\ni\nd\nd\ny",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349174,
+        "message": "d\ni\nx\nx\ny",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349175,
+        "message": "d i d d y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349177,
+        "message": "d   i   x   x   y",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349199,
+        "message": "d1ddy",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349203,
+        "message": "d1xxy",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349205,
+        "message": "k\ny\ns",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349208,
+        "message": "k.y.s",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349210,
+        "message": "f\na\ng",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349214,
+        "message": "n\ni\ng\ng\ne\nr",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349218,
+        "message": "f.a.g.g.o.t",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349221,
+        "message": "b h e n c h o d",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1791023349225,
+        "message": "b.h.e.n.c.h.o.d",
+        "isTargeting": false,
+        "scope": "explore"
+      }
+    ]
+  }
 }

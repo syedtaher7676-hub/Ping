@@ -10,10 +10,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css?v=1.1.2" />
-  <link rel="stylesheet" href="/animations.css?v=1.1.1" />
+  <link rel="stylesheet" href="/styles.css?v=1.2.0" />
+  <link rel="stylesheet" href="/animations.css?v=1.2.0" />
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
   <style>
     .emoji-picker-popup {
@@ -262,7 +262,7 @@
         </h1>
       </div>
 
-      <p class="hero-tagline">Talk to strangers.<br><strong>Stay anonymous.</strong></p>
+      <p class="hero-tagline">Step into the unknown.<br><strong class="hero-tagline-gradient">Pure spontaneous mystery.</strong></p>
 
       <!-- REAL-TIME online count -->
       <div class="live-count-row">
@@ -271,7 +271,7 @@
         <span class="live-label">online now</span>
       </div>
 
-      <div style="display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 10px; width: 100%; max-width: 480px;">
+      <div style="display: flex; gap: 16px; align-items: center; justify-content: center; margin-top: 6px; width: 100%; max-width: 440px;">
         <button id="startLandingBtn" class="cta-btn" style="justify-content: center; min-width: 220px;">
           <span class="cta-label">Start Chat</span>
           <span class="cta-icon">
@@ -286,7 +286,7 @@
       <p class="trust-line">
         <span>🔒 No account</span>
         <span class="tl-sep">·</span>
-        <span>👻 Zero data stored</span>
+        <span>👻 Zero logs</span>
         <span class="tl-sep">·</span>
         <span>⚡ Instant</span>
       </p>
@@ -373,36 +373,32 @@
       <div id="preChatView" class="view view-prechat">
         <div class="prechat-card glass-card">
 
-          <div class="prechat-anon-badge">
-            <span>👻</span><span>You're anonymous</span>
-          </div>
-
           <div class="prechat-orb-wrap" aria-hidden="true">
             <div class="prechat-orb-ring po-r1"></div>
             <div class="prechat-orb-ring po-r2"></div>
             <div class="prechat-orb-ring po-r3"></div>
-            <div class="prechat-orb-core">💬</div>
+            <div class="prechat-orb-core">⚡</div>
           </div>
 
-          <h2 class="prechat-title">Explore random chats</h2>
-          <p class="prechat-sub">Match instantly with someone new.</p>
+          <h2 class="prechat-title">The Void Awaits</h2>
+          <p class="prechat-sub">A stranger is waiting in the dark.</p>
 
           <div class="prechat-online">
             <span class="online-dot"></span>
             <span id="headerActiveUsers" class="online-count">—</span>
-            <span class="online-label">people online right now</span>
+            <span class="online-label">online now</span>
           </div>
 
           <div class="hero-actions">
             <button id="startBtn" class="btn btn-primary btn-lg">
-              <span>Start Chat</span>
+              <span>Connect Now</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </button>
           </div>
 
-          <p class="prechat-trust">🔒 No personal info · 🛡️ Moderated by AI</p>
+          <p class="prechat-trust">🔒 Ephemeral · Zero trace</p>
         </div>
       </div>
 
@@ -411,7 +407,7 @@
       <div id="waitingView" class="view view-waiting" style="display:none;">
         <div class="waiting-shell">
 
-          <!-- Top status bar -->
+          <!-- Top status bar with timer -->
           <div class="ws-topbar">
             <div class="ws-status-pill">
               <span class="wh-pulse"></span>
@@ -426,70 +422,45 @@
             </div>
           </div>
 
-          <!-- Content Container: Radar Left, Info Right -->
-          <div class="waiting-content-row">
-            <!-- Radar Left -->
-            <div class="radar-pane">
-              <div class="radar-wrap">
-                <div class="radar-ring rr-1"></div>
-                <div class="radar-ring rr-2"></div>
-                <div class="radar-ring rr-3"></div>
-                <div class="radar-ring rr-4"></div>
-                <div class="radar-sweep"></div>
-                <div class="radar-blip rb-1"></div>
-                <div class="radar-blip rb-2"></div>
-                <div class="radar-blip rb-3"></div>
-                <div class="radar-blip rb-4"></div>
-                <div class="radar-core">
-                  <div class="radar-core-inner">⚡</div>
-                </div>
-                <span class="radar-label rl-n">N</span>
-                <span class="radar-label rl-e">E</span>
-                <span class="radar-label rl-s">S</span>
-                <span class="radar-label rl-w">W</span>
+          <!-- Radar Core -->
+          <div class="radar-pane">
+            <div class="radar-wrap">
+              <div class="radar-ring rr-1"></div>
+              <div class="radar-ring rr-2"></div>
+              <div class="radar-ring rr-3"></div>
+              <div class="radar-ring rr-4"></div>
+              <div class="radar-sweep"></div>
+              <div class="radar-blip rb-1"></div>
+              <div class="radar-blip rb-2"></div>
+              <div class="radar-blip rb-3"></div>
+              <div class="radar-blip rb-4"></div>
+              <div class="radar-core">
+                <div class="radar-core-inner">⚡</div>
               </div>
             </div>
+          </div>
 
-            <!-- Info Right -->
-            <div class="waiting-info">
+          <!-- Clean Info -->
+          <div class="waiting-info">
+            <h2 class="waiting-title">Seeking Presence</h2>
+            <p class="waiting-sub">
+              <span id="waitingSubText">Scanning frequencies</span>
+              <span class="dot-trail"><span>.</span><span>.</span><span>.</span></span>
+            </p>
 
-              <h2 class="waiting-title">Finding your match</h2>
-              <p class="waiting-sub">
-                <span id="waitingSubText">Searching across the globe</span>
-                <span class="dot-trail"><span>.</span><span>.</span><span>.</span></span>
-              </p>
-
-              <div class="ws-stats-row">
-                <div class="ws-stat-item">
-                  <span class="ws-stat-icon">🌍</span>
-                  <div class="ws-stat-info">
-                    <span class="ws-stat-val" id="wsCount">—</span>
-                    <span class="ws-stat-lbl">online now</span>
-                  </div>
-                </div>
-                <div class="ws-stat-divider"></div>
-                <div class="ws-stat-item">
-                  <span class="ws-stat-icon">⚡</span>
-                  <div class="ws-stat-info">
-                    <span class="ws-stat-val">~10s</span>
-                    <span class="ws-stat-lbl">avg match</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="ws-fun-fact">
-                <span class="ff-icon" id="ffIcon">💡</span>
-                <span class="ff-text" id="funFactText">Average match time is under 10 seconds</span>
-              </div>
-
-              <div class="ws-trust-row">
-                <span class="ws-trust-chip">👻 Anonymous</span>
-                <span class="ws-trust-chip">🔒 Private</span>
-                <span class="ws-trust-chip">🤝 Safe</span>
-              </div>
-
-              <button id="cancelWaitBtn" class="ws-cancel-btn">✕ Cancel Search</button>
+            <div class="ws-online-line">
+              <span class="online-dot"></span>
+              <span class="ws-stat-val" id="wsCount">—</span>
+              <span class="ws-stat-lbl">online now</span>
             </div>
+
+            <!-- Hidden semantic hooks to maintain JS compatibility -->
+            <div class="sr-only" aria-hidden="true" style="display:none;">
+              <span id="ffIcon">💡</span>
+              <span id="funFactText">Ephemeral chat</span>
+            </div>
+
+            <button id="cancelWaitBtn" class="ws-cancel-btn">✕ Cancel</button>
           </div>
 
         </div>
@@ -513,8 +484,8 @@
               <span class="partner-online-dot"></span>
             </div>
             <div class="ch-info">
-              <span class="ch-label">Chatting with</span>
               <span class="ch-name" id="partnerCountryMeta">Stranger</span>
+              <span class="ch-status-indicator">Connected</span>
               <span id="partnerCountryLabel" class="sr-only" style="display:none;">Stranger</span>
             </div>
           </div>
@@ -565,8 +536,8 @@
         <div class="messages-area" id="chatBox">
           <div class="msgs-empty">
             <div class="msgs-empty-pulse" aria-hidden="true"></div>
-            <span class="msgs-empty-icon">💭</span>
-            <p>Say hi — they're waiting!</p>
+            <span class="msgs-empty-icon">✨</span>
+            <p>Break the silence — say something tempting...</p>
           </div>
         </div>
 
@@ -611,7 +582,7 @@
                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                   </svg>
                 </button>
-                <textarea id="messageInput" class="message-input" placeholder="Type a message…" autocomplete="off"
+                <textarea id="messageInput" class="message-input" placeholder="Whisper something tempting…" autocomplete="off"
                   maxlength="500" rows="1" disabled></textarea>
               </div>
               <div class="char-counter-wrap">

@@ -97,7 +97,7 @@
     }
   }
 
-  // ── CURSOR TRAIL ──────────────────────────────────────────────
+  // ── CURSOR TRAIL & MOUSE ILLUMINATION ────────────────────────
   const trail = [];
   const TN = rm ? 0 : 12; // Reduced segments
   let mX = -999, mY = -999;
@@ -108,7 +108,22 @@
       d.style.cssText=`background:${TC[i%TC.length]};opacity:${((TN-i)/TN*.6).toFixed(2)};width:${Math.max(2,7-i*.5)}px;height:${Math.max(2,7-i*.5)}px`;
       document.body.appendChild(d); trail.push({el:d, x:-999, y:-999});
     }
-    addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
+    addEventListener('mousemove', e => { 
+      mX = e.clientX; 
+      mY = e.clientY; 
+      document.documentElement.style.setProperty('--mouse-x', `${(mX / window.innerWidth * 100).toFixed(1)}%`);
+      document.documentElement.style.setProperty('--mouse-y', `${(mY / window.innerHeight * 100).toFixed(1)}%`);
+    });
+
+    // Hypnotic click shockwave ripple
+    addEventListener('pointerdown', e => {
+      const ripple = document.createElement('div');
+      ripple.className = 'hypno-click-ripple';
+      ripple.style.left = `${e.clientX}px`;
+      ripple.style.top = `${e.clientY}px`;
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 700);
+    });
   }
 
   // ── MAGNETIC CTA ──────────────────────────────────────────────
@@ -294,14 +309,15 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  FUN FACTS ROTATOR
+  //  FUN FACTS ROTATOR (Tempting & Hypnotic)
   // ─────────────────────────────────────────────────────────────
   const FACTS = [
-    ['💡','Match time is usually < 10s'],
-    ['🌍','Connecting 150+ countries'],
-    ['🔒','No messages are ever stored'],
-    ['👻','Zero accounts, 100% anonymous'],
-    ['⚡','Real-time WebSocket chat'],
+    ['✨', 'A stranger is waiting on the other side of this screen'],
+    ['🔒', 'Every conversation self-destructs the second you disconnect'],
+    ['🌍', 'Connecting wanderers across Tokyo, London, NYC & 150+ countries'],
+    ['⚡', 'Average match takes less than 3 seconds'],
+    ['👻', 'Zero registration, zero records, 100% ephemeral'],
+    ['🎭', 'Speak freely — no one knows who you are'],
   ];
   let fi=0, ft=null;
   function rotateFact() {

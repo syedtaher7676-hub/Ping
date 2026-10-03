@@ -3,9 +3,12 @@
 Free Model Training & ONNX Export Script (Run in Google Colab with free T4 GPU)
 -------------------------------------------------------------------------------
 This script:
-1. Loads the chat moderation dataset (training_dataset_ready.json or moderation_dataset.json).
+1. Loads the chat moderation dataset (training_dataset_ready.json or moderation_dataset.json),
+   which includes active learning data from the chat app, multi-format obfuscations
+   (e.g., "dixxy", "di...dd...y", "d\\ni\\nd\\nd\\ny", "k\\ny\\ns"), low-effort probes,
+   and safe colloquial phrases ("I'm gonna kill this exam!").
 2. Tokenizes text using DistilBERT tokenizer.
-3. Fine-tunes DistilBERT for binary classification (0 = Safe, 1 = Toxic/Slur Violation).
+3. Fine-tunes DistilBERT for binary classification (0 = Safe, 1 = Violation).
 4. Computes accuracy, precision, recall, and F1 score.
 5. Exports the trained model to quantized ONNX format.
 6. Saves all assets ready to drop directly into the Node.js backend.
@@ -46,7 +49,7 @@ def compute_metrics(eval_pred):
 
 def main():
     print("=" * 65)
-    print("🚀 Starting AI Text & Slur Moderation Training Pipeline")
+    print("🚀 Starting AI Text, Slur & Obfuscation Moderation Training Pipeline")
     print("=" * 65)
 
     # 1. Check GPU availability
@@ -71,9 +74,14 @@ def main():
         print("⚠️ No local dataset file found, using built-in seed dataset...")
         samples = [
             {"text": "hey! how are you doing?", "label": 0},
+            {"text": "I'm gonna kill this exam!", "label": 0},
             {"text": "just working on a school project", "label": 0},
             {"text": "that was a killer workout session!", "label": 0},
             {"text": "the weather is so nice today", "label": 0},
+            {"text": "dixxy", "label": 1},
+            {"text": "diddy", "label": 1},
+            {"text": "di...dd...y", "label": 1},
+            {"text": "d\ni\nd\nd\ny", "label": 1},
             {"text": "kys loser nobody likes you", "label": 1},
             {"text": "kill yourself idiot", "label": 1},
             {"text": "m18 looking for girl snapchat me", "label": 1},

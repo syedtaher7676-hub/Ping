@@ -3583,7 +3583,16 @@ function sendMessage(overrideText = null) {
       if (ack && (ack.ok || ack.success)) {
         updateMsgStatus(msgId, 'sent');
       } else {
-        if (ack?.reason && (ack.reason.startsWith('strike_') || ack.reason === 'banned_15min' || ack.reason === 'slur_blocked')) {
+        const isModBlock = ack?.reason && (
+          ack.reason.startsWith('strike_') ||
+          ack.reason.includes('warning') ||
+          ack.reason.includes('blocked') ||
+          ack.reason === 'banned_15min' ||
+          ack.reason === 'low_effort_warning' ||
+          ack.reason === 'slur_blocked' ||
+          ack.reason === 'moderation_blocked'
+        );
+        if (isModBlock) {
           const el = (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
                      (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`));
           if (el) el.remove();
@@ -3653,7 +3662,16 @@ function sendFriendMessage(overrideText = null) {
       if (ack && (ack.ok || ack.success)) {
         updateMsgStatus(msgId, 'sent');
       } else {
-        if (ack?.reason && (ack.reason.startsWith('strike_') || ack.reason === 'banned_15min' || ack.reason === 'slur_blocked')) {
+        const isModBlock = ack?.reason && (
+          ack.reason.startsWith('strike_') ||
+          ack.reason.includes('warning') ||
+          ack.reason.includes('blocked') ||
+          ack.reason === 'banned_15min' ||
+          ack.reason === 'low_effort_warning' ||
+          ack.reason === 'slur_blocked' ||
+          ack.reason === 'moderation_blocked'
+        );
+        if (isModBlock) {
           const el = (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
                      (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`));
           if (el) el.remove();
