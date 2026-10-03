@@ -11,8 +11,11 @@ export const OnlineCounter = memo(function OnlineCounter() {
   const targetCountRef = useRef(0);
   const currentValRef = useRef(0);
   const rafIdRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     // Smooth RAF easing count-up without parent component overhead
     const animateCount = (newTarget) => {
       targetCountRef.current = newTarget;
@@ -24,6 +27,7 @@ export const OnlineCounter = memo(function OnlineCounter() {
       const startTime = performance.now();
 
       const step = (now) => {
+        if (!isMountedRef.current) return;
         const progress = Math.min((now - startTime) / duration, 1);
         // Cubic ease out
         const eased = 1 - Math.pow(1 - progress, 3);
@@ -47,6 +51,7 @@ export const OnlineCounter = memo(function OnlineCounter() {
     });
 
     return () => {
+      isMountedRef.current = false;
       unsubscribe();
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };

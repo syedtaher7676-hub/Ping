@@ -50,8 +50,13 @@ export function subscribeToOnlineCount(callback) {
     callback(count);
   };
 
+  const handleConnect = () => {
+    socket.emit('get_online_count');
+  };
+
   socket.on('onlineCount', handler);
   socket.on('count', handler);
+  socket.on('connect', handleConnect);
 
   // Request initial count if connected
   if (socket.connected) {
@@ -62,6 +67,7 @@ export function subscribeToOnlineCount(callback) {
   return () => {
     socket.off('onlineCount', handler);
     socket.off('count', handler);
+    socket.off('connect', handleConnect);
   };
 }
 
