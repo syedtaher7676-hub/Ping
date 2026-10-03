@@ -17,11 +17,10 @@ if (!persistentUserId) {
 }
 
 // ── SOCKET ───────────────────────────────────────────────────
-// Start with HTTP polling for instant handshake through iframe/proxy environments,
-// then automatically upgrade seamlessly to high-speed WebSockets.
+// Enforce WebSocket transport directly to prevent polling fallback socket reconnect loops
 const socket = io(backendUrl, {
-  transports: ['polling', 'websocket'],
-  upgrade: true,
+  transports: ['websocket'],
+  upgrade: false,
   rememberUpgrade: true,
   timeout: 25000,
   reconnection: true,

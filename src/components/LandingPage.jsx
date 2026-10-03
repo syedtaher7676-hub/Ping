@@ -1,0 +1,287 @@
+import React, { memo, useCallback } from 'react';
+import OnlineCounter from './OnlineCounter';
+
+/**
+ * Isolated Static Logo Component
+ * Guaranteed zero re-renders when online counter state fluctuates
+ */
+const LandingLogo = memo(function LandingLogo() {
+  return (
+    <div
+      className="logo-lockup"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '16px',
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+      }}
+    >
+      <div
+        className="logo-mark"
+        style={{
+          position: 'relative',
+          width: '72px',
+          height: '72px',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '16px',
+          background: 'transparent',
+          border: 'none',
+          boxShadow: 'none',
+          padding: 0,
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+        }}
+      >
+        <img
+          src="/logo.svg"
+          alt="Ping Logo"
+          className="brand-logo-img"
+          width="72"
+          height="72"
+          loading="eager"
+          decoding="async"
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '16px',
+            border: 'none',
+            boxShadow: 'none',
+            willChange: 'transform, opacity',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+          }}
+        />
+      </div>
+      <h1
+        className="logo-wordmark"
+        style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: 'clamp(3rem, 9vw, 5.5rem)',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          lineHeight: 1,
+          margin: 0,
+          background: 'linear-gradient(160deg, #fff 20%, #c4b5fd 60%, #f472b6 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}
+      >
+        Ping
+      </h1>
+    </div>
+  );
+});
+
+/**
+ * Isolated Static Hero Copy
+ */
+const HeroCopy = memo(function HeroCopy() {
+  return (
+    <p
+      className="hero-tagline"
+      style={{
+        fontFamily: "'Space Grotesk', sans-serif",
+        fontSize: 'clamp(1.1rem, 3.5vw, 1.5rem)',
+        fontWeight: 400,
+        color: '#cbd5e1',
+        lineHeight: 1.55,
+        margin: 0,
+      }}
+    >
+      Talk to strangers.
+      <br />
+      <strong style={{ color: '#ffffff', fontWeight: 600 }}>Stay anonymous.</strong>
+    </p>
+  );
+});
+
+/**
+ * Isolated Static Trust Line
+ */
+const TrustLine = memo(function TrustLine() {
+  return (
+    <p
+      className="trust-line"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+        fontSize: '0.85rem',
+        color: '#94a3b8',
+        margin: 0,
+      }}
+    >
+      <span>🔒 No account</span>
+      <span className="tl-sep">·</span>
+      <span>👻 Zero data stored</span>
+      <span className="tl-sep">·</span>
+      <span>⚡ Instant</span>
+    </p>
+  );
+});
+
+/**
+ * Isolated Action Buttons Row
+ */
+const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }) {
+  return (
+    <div
+      className="landing-actions-row"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '14px',
+        flexWrap: 'wrap',
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+      }}
+    >
+      <button
+        id="startLandingBtn"
+        className="cta-btn"
+        onClick={onStartChat}
+        type="button"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          minWidth: '200px',
+          padding: '18px 44px',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
+          border: 'none',
+          borderRadius: '9999px',
+          color: '#fff',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: '1.15rem',
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 4px 24px rgba(124, 58, 237, 0.55)',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+        }}
+      >
+        <span className="cta-label">Start Chat</span>
+        <span className="cta-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button
+        id="downloadLandingBtn"
+        className="download-app-btn"
+        onClick={onDownloadApp}
+        type="button"
+        title="Download & Install Ping"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          padding: '16px 28px',
+          background: 'rgba(255, 255, 255, 0.055)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '9999px',
+          color: '#fff',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: '1.05rem',
+          fontWeight: 600,
+          cursor: 'pointer',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+        }}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+        </svg>
+        <span className="download-label">Download App</span>
+      </button>
+    </div>
+  );
+});
+
+/**
+ * Production-Ready LandingPage Component
+ * Stably decoupled state hierarchy with zero layout thrashing
+ */
+export function LandingPage({ onStartChat, onDownloadApp }) {
+  const handleStart = useCallback(() => {
+    if (onStartChat) onStartChat();
+  }, [onStartChat]);
+
+  const handleDownload = useCallback(() => {
+    if (onDownloadApp) onDownloadApp();
+  }, [onDownloadApp]);
+
+  return (
+    <div
+      id="landingPage"
+      className="landing"
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '32px 20px',
+        position: 'relative',
+        overflow: 'hidden',
+        willChange: 'opacity',
+        transform: 'translateZ(0)',
+      }}
+    >
+      <div
+        className="landing-content"
+        style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          textAlign: 'center',
+          gap: '28px',
+          maxWidth: '560px',
+          width: '100%',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+        }}
+      >
+        {/* Memoized Static Logo Lockup */}
+        <LandingLogo />
+
+        {/* Memoized Static Tagline */}
+        <HeroCopy />
+
+        {/* Dynamic Leaf Component: Only this node updates when online count changes */}
+        <OnlineCounter />
+
+        {/* Memoized Static CTA Action Buttons */}
+        <ActionButtons onStartChat={handleStart} onDownloadApp={handleDownload} />
+
+        {/* Memoized Static Trust Footer */}
+        <TrustLine />
+      </div>
+    </div>
+  );
+}
+
+export default LandingPage;

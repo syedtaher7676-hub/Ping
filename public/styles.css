@@ -175,26 +175,20 @@ input {
 
 .splash-logo {
   position: relative;
-  width: 130px;
-  height: 130px;
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 36px;
-  background: radial-gradient(circle at 30% 30%, #2e1065 0%, #0d061c 70%, #050510 100%);
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 40px rgba(124, 58, 237, 0.6), 0 0 90px rgba(6, 182, 212, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.4);
-  padding: 14px;
+  border-radius: 24px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .splash-logo-ring {
-  position: absolute;
-  inset: -12px;
-  border: 2px solid rgba(124, 58, 237, 0.25);
-  border-radius: 44px;
-  border-top-color: var(--purple-l);
-  border-right-color: var(--pink-l);
-  animation: splash-spin 3s linear infinite;
+  display: none !important;
 }
 
 .splash-logo-ring::after {
@@ -504,35 +498,27 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 22px;
-  background: radial-gradient(circle at 30% 30%, #2e1065 0%, #0d061c 70%, #050510 100%);
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 35px rgba(124, 58, 237, 0.5), 0 0 70px rgba(6, 182, 212, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4);
-  padding: 8px;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 16px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .logo-mark:hover {
-  transform: scale(1.08) rotate(2deg);
-  box-shadow: 0 0 50px rgba(236, 72, 153, 0.7), 0 0 90px rgba(0, 245, 255, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.7);
-  border-color: rgba(236, 72, 153, 0.85);
+  transform: scale(1.08) translateZ(0);
+  box-shadow: none;
+  border: none;
 }
 
 .logo-mark-ring {
-  position: absolute;
-  inset: -8px;
-  border-radius: 28px;
-  border: 2px solid rgba(124, 58, 237, 0.3);
-  border-top-color: var(--purple-l);
-  border-right-color: var(--pink-l);
-  border-bottom-color: var(--cyan);
-  animation: logo-ring-spin 6s linear infinite;
-  box-shadow: 0 0 25px rgba(124, 58, 237, 0.3);
-}
-
-@keyframes logo-ring-spin {
-  to { transform: rotate(360deg); }
+  display: none !important;
 }
 
 .logo-mark-icon {
@@ -543,6 +529,8 @@ input {
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .brand-logo-img {
@@ -552,14 +540,19 @@ input {
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.65));
+  border: none;
+  box-shadow: none;
+  filter: none;
   transition: transform 0.3s ease, filter 0.3s ease;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .logo-mark:hover .brand-logo-img {
-  transform: scale(1.05);
-  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.85)) drop-shadow(0 0 35px rgba(236, 72, 153, 0.7));
+  transform: scale(1.05) translateZ(0);
+  filter: drop-shadow(0 0 16px rgba(255, 42, 133, 0.6));
 }
 
 .splash-logo-img {
@@ -568,34 +561,37 @@ input {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 26px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  filter: drop-shadow(0 0 20px rgba(124, 58, 237, 0.8));
+  border-radius: 24px;
+  border: none;
+  box-shadow: none;
+  filter: none;
 }
 
 .header-logo-img {
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
   object-fit: cover;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.7));
+  box-shadow: none;
+  filter: none;
   transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .header-center:hover .header-logo-img {
-  transform: scale(1.12) rotate(4deg);
-  filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.9));
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(255, 42, 133, 0.7));
 }
 
 .install-app-logo {
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 14px;
+  border: none;
   object-fit: cover;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-  filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.7));
+  box-shadow: none;
+  filter: none;
 }
 
 .logo-wordmark {
@@ -638,6 +634,10 @@ input {
   border-radius: var(--r-full);
   backdrop-filter: blur(24px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .live-dot {
@@ -647,6 +647,8 @@ input {
   background: var(--green);
   box-shadow: 0 0 12px rgba(34, 197, 94, .9);
   flex-shrink: 0;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .live-num {
@@ -655,6 +657,10 @@ input {
   font-weight: 700;
   color: var(--t-hi);
   font-variant-numeric: tabular-nums;
+  display: inline-block;
+  min-width: 1.5ch;
+  will-change: transform, opacity;
+  transform: translateZ(0);
 }
 
 .live-label {
@@ -682,12 +688,14 @@ input {
   transition: transform .2s var(--spring), box-shadow .2s var(--ease), background .2s var(--ease);
   opacity: 1 !important;
   visibility: visible !important;
-  will-change: transform, box-shadow;
+  will-change: transform, opacity;
+  transform: translateZ(0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .cta-btn:hover {
-  transform: translateY(-3px) scale(1.02);
+  transform: translateY(-3px) scale(1.02) translateZ(0);
   box-shadow: var(--sh-btn-h);
   opacity: 1 !important;
   visibility: visible !important;
@@ -1620,12 +1628,13 @@ input {
 }
 
 .prechat-orb-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
   object-fit: cover;
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.6), 0 0 30px rgba(6, 182, 212, 0.4);
-  filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.8));
+  box-shadow: none;
+  filter: none;
   display: block;
 }
 
@@ -7171,14 +7180,14 @@ body.privacy-blur #chatApp {
 .install-logo-wrap {
   width: 56px;
   height: 56px;
-  border-radius: 16px;
-  background: #050510;
-  border: 1px solid rgba(124, 58, 237, 0.4);
-  padding: 6px;
+  border-radius: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+  box-shadow: none;
 }
 
 .install-app-logo {

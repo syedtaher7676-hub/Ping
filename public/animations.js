@@ -119,17 +119,23 @@
   const ctaBtn = document.getElementById('startLandingBtn');
   if (ctaBtn && !rm) {
     let bR = null;
+    let ctaRaf = null;
     const rbr = () => { bR = ctaBtn.getBoundingClientRect(); };
     ctaBtn.addEventListener('mouseenter', rbr);
     ctaBtn.addEventListener('mousemove', e => {
-      if (!bR) bR = ctaBtn.getBoundingClientRect();
-      if (!bR || bR.width === 0 || bR.height === 0) return;
-      const xPercent = Math.min(100, Math.max(0, ((e.clientX - bR.left) / bR.width) * 100));
-      const yPercent = Math.min(100, Math.max(0, ((e.clientY - bR.top) / bR.height) * 100));
-      ctaBtn.style.setProperty('--mx', xPercent.toFixed(1) + '%');
-      ctaBtn.style.setProperty('--my', yPercent.toFixed(1) + '%');
+      if (ctaRaf) return;
+      ctaRaf = requestAnimationFrame(() => {
+        ctaRaf = null;
+        if (!bR) bR = ctaBtn.getBoundingClientRect();
+        if (!bR || bR.width === 0 || bR.height === 0) return;
+        const xPercent = Math.min(100, Math.max(0, ((e.clientX - bR.left) / bR.width) * 100));
+        const yPercent = Math.min(100, Math.max(0, ((e.clientY - bR.top) / bR.height) * 100));
+        ctaBtn.style.setProperty('--mx', xPercent.toFixed(1) + '%');
+        ctaBtn.style.setProperty('--my', yPercent.toFixed(1) + '%');
+      });
     });
     ctaBtn.addEventListener('mouseleave', () => {
+      if (ctaRaf) { cancelAnimationFrame(ctaRaf); ctaRaf = null; }
       bR = null;
       ctaBtn.style.setProperty('--mx', '50%');
       ctaBtn.style.setProperty('--my', '50%');
@@ -258,8 +264,12 @@
   // ─────────────────────────────────────────────────────────────
   //  ANIMATED COUNTER
   // ─────────────────────────────────────────────────────────────
-  window.__pingCountUp = (el, target, dur=600) => {
+  window.__pingCountUp = (el, target, dur=500) => {
     if (!el || typeof target !== 'number') return;
+    if (el._countUpRaf) {
+      cancelAnimationFrame(el._countUpRaf);
+      el._countUpRaf = null;
+    }
     const currentVal = parseInt((el.textContent || '').replace(/[^\d]/g, ''), 10) || 0;
     if (currentVal === target) {
       el.textContent = target > 0 ? target.toLocaleString() : '—';
@@ -271,9 +281,13 @@
       const p = Math.min((now - t0) / dur, 1);
       const val = Math.round(start + (target - start) * (1 - Math.pow(1 - p, 3)));
       el.textContent = val > 0 ? val.toLocaleString() : '—';
-      if (p < 1) requestAnimationFrame(step);
+      if (p < 1) {
+        el._countUpRaf = requestAnimationFrame(step);
+      } else {
+        el._countUpRaf = null;
+      }
     };
-    requestAnimationFrame(step);
+    el._countUpRaf = requestAnimationFrame(step);
   };
 
   // ─────────────────────────────────────────────────────────────
