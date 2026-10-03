@@ -34,13 +34,18 @@
 
   function revealLanding() {
     if (splash) {
-      splash.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+      splash.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
       splash.style.opacity = '0';
+      splash.style.transform = 'scale(1.02) translateZ(0)';
+      splash.style.filter = 'blur(8px)';
       splash.style.pointerEvents = 'none';
+
       if (landing) {
-        landing.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+        landing.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
         landing.style.opacity = '1';
+        landing.style.transform = 'scale(1) translateZ(0)';
       }
+
       setTimeout(() => {
         splash.style.display = 'none';
         const sl = document.getElementById('scanLine');
@@ -351,7 +356,7 @@
     lastTs = ts;
 
     const chatActive    = chatApp && chatApp.style.display !== 'none';
-    const landingActive = landing && landing.style.display !== 'none' && landing.style.opacity !== '0';
+    const landingActive = landing && landing.style.display !== 'none';
 
     if (landingActive && lCtx && !rm) {
       lCtx.clearRect(0,0,LW,LH);

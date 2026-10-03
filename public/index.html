@@ -574,11 +574,28 @@
           </div>
         </div>
 
-        <!-- Auto Search Bar -->
+        <!-- Auto Search Bar (Floating Glass Card) -->
         <div id="autoSearchBar" class="auto-search-bar" style="display:none;">
-          <span class="asb-icon">🔍</span>
-          <span id="autoSearchStatus">Stranger left. Auto-searching in 30s...</span>
-          <button id="autoSearchNowBtn" class="btn-xs btn-primary">Search Now</button>
+          <div class="asb-content-wrap">
+            <div class="asb-info-group">
+              <span class="asb-pulse-dot" aria-hidden="true"></span>
+              <span class="asb-icon" aria-hidden="true">👋</span>
+              <div class="asb-text-stack">
+                <span id="autoSearchStatus" class="asb-status-text">Stranger left the screen</span>
+                <span class="asb-sub-text">Auto-matching in background</span>
+              </div>
+            </div>
+            <div class="asb-action-group">
+              <div id="autoSearchTimerPill" class="asb-timer-pill" title="Auto search countdown">
+                <svg class="asb-timer-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span id="autoSearchTimerCount">15s</span>
+              </div>
+              <button id="autoSearchNowBtn" class="asb-search-btn" type="button">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <span>Search Now</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Messages area -->

@@ -2951,24 +2951,40 @@ window.forceNextChat = () => {
 };
 
 let autoSearchInterval = null;
+let autoSearchTimerSeconds = 15;
 
 let userInitiatedLeave = false;
 let userInitiatedSkip = false;
 
-function showStrangerDisconnectedPopup() {
-  closeModal();
-  showConfirm(
-    'Stranger Disconnected',
-    '<div style="line-height:1.5; margin-top:4px;"><p style="font-size:0.95rem; color:var(--t-med);">Stranger has disconnected.</p></div>',
-    () => {
-      closeModal();
-      showView('prechat');
-    },
-    null,
-    'OK',
-    null,
-    '👋'
-  );
+function startAutoSearch(seconds = 15) {
+  stopAutoSearch();
+  autoSearchTimerSeconds = seconds;
+
+  const bar = document.getElementById('autoSearchBar');
+  const statusText = document.getElementById('autoSearchStatus');
+  const timerCount = document.getElementById('autoSearchTimerCount');
+
+  if (bar) bar.style.display = 'flex';
+  if (statusText) {
+    statusText.textContent = 'Stranger left the screen';
+  }
+  if (timerCount) {
+    timerCount.textContent = `${autoSearchTimerSeconds}s`;
+  }
+
+  autoSearchInterval = setInterval(() => {
+    autoSearchTimerSeconds -= 1;
+    const remaining = Math.max(0, autoSearchTimerSeconds);
+    if (timerCount) {
+      timerCount.textContent = `${remaining}s`;
+    }
+
+    if (autoSearchTimerSeconds <= 0) {
+      stopAutoSearch();
+      showToast('🔍 Searching for a new stranger...', 'info', 2000);
+      forceNextChat();
+    }
+  }, 1000);
 }
 
 function stopAutoSearch() {
@@ -2976,6 +2992,13 @@ function stopAutoSearch() {
     clearInterval(autoSearchInterval);
     autoSearchInterval = null;
   }
+  const bar = document.getElementById('autoSearchBar');
+  if (bar) bar.style.display = 'none';
+}
+
+function showStrangerDisconnectedPopup() {
+  closeModal();
+  startAutoSearch(15);
 }
 
 let isHandlingTimeExpired = false;
@@ -3022,7 +3045,6 @@ function handleTimeExpired() {
 function handleSkippedChat(reason, rawReason) {
   if (isReconnecting) return;
   stopTimer();
-  stopAutoSearch();
 
   const wasInChat = inChat || AppState.explore.inChat || activeRoomId;
   inChat = false;
@@ -3034,24 +3056,26 @@ function handleSkippedChat(reason, rawReason) {
   isWaiting = false;
 
   stopWaitingScreen();
-  if (autoSearchBar) autoSearchBar.style.display = 'none';
-  clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  showView('prechat');
   syncButtons();
 
-  // If local user skipped/left, do NOT show popup to them
+  // If local user skipped/left, go to prechat immediately
   if (userInitiatedLeave || userInitiatedSkip) {
     userInitiatedLeave = false;
     userInitiatedSkip = false;
+    stopAutoSearch();
     closeModal();
+    clearChat();
+    showView('prechat');
     return;
   }
 
-  // Show a SINGLE popup to the opponent that stranger has disconnected
+  // When stranger skips/leaves, show 15s auto-search countdown banner for opponent
   if (wasInChat) {
-    showStrangerDisconnectedPopup();
+    startAutoSearch(15);
+  } else {
+    showView('prechat');
   }
 }
 
@@ -3059,7 +3083,6 @@ function handleChatEnd(reason, rawReason) {
   if (isReconnecting) return;
   closeModal();
   stopTimer();
-  stopAutoSearch();
 
   // Reset UI states
   if (friendBtn) friendBtn.disabled = true;
@@ -3075,31 +3098,33 @@ function handleChatEnd(reason, rawReason) {
   AppState.explore.timerEndMs = 0;
   syncButtons();
 
-  if (autoSearchBar) autoSearchBar.style.display = 'none';
-  clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  showView('prechat');
-
-  // If local user left/skipped, do NOT show popup to them
+  // If local user left/skipped, go to prechat immediately
   if (userInitiatedLeave || userInitiatedSkip) {
     userInitiatedLeave = false;
     userInitiatedSkip = false;
+    stopAutoSearch();
+    clearChat();
+    showView('prechat');
     return;
   }
 
   const reasonStr = String(reason || rawReason || '').toLowerCase();
   if (reasonStr.includes('queue') || reasonStr === 'left_queue' || reasonStr === 'you_ended') {
+    showView('prechat');
     return;
   }
   if (reasonStr.includes("time's up") || reasonStr.includes('time_expired')) {
+    showView('prechat');
     return;
   }
 
-  // Show popup only to the opponent that stranger has disconnected
+  // When stranger leaves/disconnects, show 15s auto-search countdown banner
   if (wasInChat) {
-    appendMsg('⚠️ Stranger has disconnected.', { isSystem: true, variant: 'warn' });
-    showStrangerDisconnectedPopup();
+    startAutoSearch(15);
+  } else {
+    showView('prechat');
   }
 }
 
@@ -3149,11 +3174,10 @@ socket.on('chat_ended', handleGenericChatEnd);
 socket.off('partner_disconnected');
 socket.on('partner_disconnected', ({ roomId, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  // Grace period: show reconnection warning banner / status message instead of abruptly ending chat
-  appendMsg(message || "⚡ Stranger's connection dropped. Waiting for them to reconnect...", { isSystem: true, variant: 'warn' });
+  startAutoSearch(15);
   if (messageInput) {
     messageInput.disabled = true;
-    messageInput.placeholder = 'Waiting for stranger to reconnect...';
+    messageInput.placeholder = 'Stranger left the screen...';
   }
 });
 
