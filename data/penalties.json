@@ -1,28 +1,16 @@
 {
   "penalties": {
-    "u_8595c364-df39-4b91-9a90-c60d772c6f33": {
-      "type": "ban_15min",
-      "startTime": 1791022471556,
-      "duration": 900000,
-      "expiresAt": 1791023371556
-    },
-    "u_587094cc-5d24-49f5-a49c-ab0c263f143c": {
-      "type": "ban_15min",
-      "startTime": 1791022530799,
-      "duration": 900000,
-      "expiresAt": 1791023430799
-    },
     "test_user_obf": {
       "type": "ban_15min",
-      "startTime": 1791023349226,
+      "startTime": 1791025174139,
       "duration": 900000,
-      "expiresAt": 1791024249226
+      "expiresAt": 1791026074139
     },
-    "u_d35a2c27-573a-4452-8b1d-648f1ed7a01a": {
+    "u_90a1b2d2-10a6-4e24-9e8d-bc382a93a5da": {
       "type": "ban_15min",
-      "startTime": 1791023367970,
+      "startTime": 1791025182100,
       "duration": 900000,
-      "expiresAt": 1791024267970
+      "expiresAt": 1791026082100
     }
   }
 }

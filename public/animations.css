@@ -4,18 +4,6 @@
    ===================================================== */
 
 /* ── SPLASH ── */
-.splash-screen {
-  animation: splash-exit .55s var(--ease) 1.9s both;
-  pointer-events: none;
-}
-
-@keyframes splash-exit {
-  to {
-    opacity: 0;
-    transform: scale(1.05);
-  }
-}
-
 .splash-logo {
   animation: splash-logo-in .65s var(--spring) both;
 }
@@ -162,39 +150,6 @@
   }
 }
 
-/* ── LANDING ENTRANCE stagger ── */
-.logo-lockup {
-  animation: section-rise .7s var(--ease) 2.0s both;
-}
-
-.hero-tagline {
-  animation: section-rise .7s var(--ease) 2.15s both;
-}
-
-.live-count-row {
-  animation: section-rise .7s var(--ease) 2.28s both;
-}
-
-.cta-btn {
-  animation: section-rise .7s var(--ease) 2.38s both, btn-breathe 2.8s ease-in-out 3s infinite;
-}
-
-.trust-line {
-  animation: section-rise .7s var(--ease) 2.5s both;
-}
-
-@keyframes section-rise {
-  from {
-    opacity: 0;
-    transform: translateY(34px)
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0)
-  }
-}
-
 /* ── LIVE DOT rainbow ── */
 @keyframes live-rainbow {
 
@@ -249,16 +204,20 @@
 
   0%,
   100% {
-    box-shadow: var(--sh-btn)
+    box-shadow: var(--sh-btn);
   }
 
   50% {
-    box-shadow: 0 8px 56px rgba(124, 58, 237, .85), 0 0 0 6px rgba(124, 58, 237, .1)
+    box-shadow: 0 8px 48px rgba(124, 58, 237, .85), 0 0 25px rgba(219, 39, 119, .35);
   }
 }
 
+.cta-btn {
+  animation: btn-breathe 2.8s ease-in-out infinite;
+}
+
 .cta-btn:hover {
-  animation: none;
+  animation-play-state: paused;
 }
 
 /* ── SCAN LINE ── */
@@ -743,35 +702,6 @@
 
 .msgs-empty-pulse {
   animation: empty-glow 2.8s ease-in-out infinite !important;
-}
-
-/* ── HYPNOTIC CLICK RIPPLE ── */
-.hypno-click-ripple {
-  position: fixed;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
-  transform: translate(-50%, -50%);
-  border: 1.5px solid rgba(217, 70, 239, 0.85);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.6), inset 0 0 10px rgba(6, 182, 212, 0.4);
-  animation: hypno-ripple-out 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes hypno-ripple-out {
-  0% {
-    width: 0px;
-    height: 0px;
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    width: 240px;
-    height: 240px;
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1);
-  }
 }
 
 /* ── REDUCED MOTION ── */

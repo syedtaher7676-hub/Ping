@@ -15,28 +15,32 @@
     if (!splashBar) return;
     let progress = 0;
     const interval = setInterval(() => {
-      progress += Math.random() * 15;
+      progress += Math.random() * 20 + 5;
       if (progress >= 100) {
         progress = 100;
         clearInterval(interval);
-        setTimeout(revealLanding, 500);
+        splashBar.style.width = '100%';
+        setTimeout(revealLanding, 250);
+      } else {
+        splashBar.style.width = progress + '%';
       }
-      splashBar.style.width = progress + '%';
-    }, 150);
+    }, 100);
   }
 
   function revealLanding() {
     if (splash) {
+      splash.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
       splash.style.opacity = '0';
+      splash.style.pointerEvents = 'none';
+      if (landing) {
+        landing.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        landing.style.opacity = '1';
+      }
       setTimeout(() => {
         splash.style.display = 'none';
-        if (landing) {
-          landing.style.transition = 'opacity 1s cubic-bezier(0.4, 0, 0.2, 1)';
-          landing.style.opacity = '1';
-        }
         const sl = document.getElementById('scanLine');
-        if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 300);
-      }, 800);
+        if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 200);
+      }, 600);
     }
   }
 
@@ -97,7 +101,7 @@
     }
   }
 
-  // ── CURSOR TRAIL & MOUSE ILLUMINATION ────────────────────────
+  // ── CURSOR TRAIL ──────────────────────────────────────────────
   const trail = [];
   const TN = rm ? 0 : 12; // Reduced segments
   let mX = -999, mY = -999;
@@ -108,40 +112,27 @@
       d.style.cssText=`background:${TC[i%TC.length]};opacity:${((TN-i)/TN*.6).toFixed(2)};width:${Math.max(2,7-i*.5)}px;height:${Math.max(2,7-i*.5)}px`;
       document.body.appendChild(d); trail.push({el:d, x:-999, y:-999});
     }
-    addEventListener('mousemove', e => { 
-      mX = e.clientX; 
-      mY = e.clientY; 
-      document.documentElement.style.setProperty('--mouse-x', `${(mX / window.innerWidth * 100).toFixed(1)}%`);
-      document.documentElement.style.setProperty('--mouse-y', `${(mY / window.innerHeight * 100).toFixed(1)}%`);
-    });
-
-    // Hypnotic click shockwave ripple
-    addEventListener('pointerdown', e => {
-      const ripple = document.createElement('div');
-      ripple.className = 'hypno-click-ripple';
-      ripple.style.left = `${e.clientX}px`;
-      ripple.style.top = `${e.clientY}px`;
-      document.body.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 700);
-    });
+    addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
   }
 
-  // ── MAGNETIC CTA ──────────────────────────────────────────────
+  // ── GLOW TRACKING CTA ─────────────────────────────────────────
   const ctaBtn = document.getElementById('startLandingBtn');
   if (ctaBtn && !rm) {
-    let bR; const rbr = () => bR = ctaBtn.getBoundingClientRect();
-    rbr(); addEventListener('resize', rbr);
+    let bR = null;
+    const rbr = () => { bR = ctaBtn.getBoundingClientRect(); };
     ctaBtn.addEventListener('mouseenter', rbr);
     ctaBtn.addEventListener('mousemove', e => {
-      if (!bR) return;
-      const cx=bR.left+bR.width/2, cy=bR.top+bR.height/2;
-      ctaBtn.style.transform=`translate(${(e.clientX-cx)*.2}px,${(e.clientY-cy)*.2}px) scale(1.02)`;
-      ctaBtn.style.setProperty('--mx',((e.clientX-bR.left)/bR.width*100).toFixed(0)+'%');
-      ctaBtn.style.setProperty('--my',((e.clientY-bR.top)/bR.height*100).toFixed(0)+'%');
+      if (!bR) bR = ctaBtn.getBoundingClientRect();
+      if (!bR || bR.width === 0 || bR.height === 0) return;
+      const xPercent = Math.min(100, Math.max(0, ((e.clientX - bR.left) / bR.width) * 100));
+      const yPercent = Math.min(100, Math.max(0, ((e.clientY - bR.top) / bR.height) * 100));
+      ctaBtn.style.setProperty('--mx', xPercent.toFixed(1) + '%');
+      ctaBtn.style.setProperty('--my', yPercent.toFixed(1) + '%');
     });
     ctaBtn.addEventListener('mouseleave', () => {
-      ctaBtn.style.transition='transform .4s var(--ease)';
-      ctaBtn.style.transform=''; setTimeout(()=>ctaBtn.style.transition='',410);
+      bR = null;
+      ctaBtn.style.setProperty('--mx', '50%');
+      ctaBtn.style.setProperty('--my', '50%');
     });
   }
 
@@ -309,15 +300,14 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  FUN FACTS ROTATOR (Tempting & Hypnotic)
+  //  FUN FACTS ROTATOR
   // ─────────────────────────────────────────────────────────────
   const FACTS = [
-    ['✨', 'A stranger is waiting on the other side of this screen'],
-    ['🔒', 'Every conversation self-destructs the second you disconnect'],
-    ['🌍', 'Connecting wanderers across Tokyo, London, NYC & 150+ countries'],
-    ['⚡', 'Average match takes less than 3 seconds'],
-    ['👻', 'Zero registration, zero records, 100% ephemeral'],
-    ['🎭', 'Speak freely — no one knows who you are'],
+    ['💡','Match time is usually < 10s'],
+    ['🌍','Connecting 150+ countries'],
+    ['🔒','No messages are ever stored'],
+    ['👻','Zero accounts, 100% anonymous'],
+    ['⚡','Real-time WebSocket chat'],
   ];
   let fi=0, ft=null;
   function rotateFact() {

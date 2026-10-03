@@ -3548,5 +3548,45 @@
     "text": "fuck 0ff g@ndu",
     "label": 1,
     "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "test_violation_sample_1791025176058",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.0.2.5.1.7.6.0.5.8",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...0...2...5...1...7...6...0...5...8",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-0-2-5-1-7-6-0-5-8",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*0*2*5*1*7*6*0*5*8",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 0 2 5 1 7 6 0 5 8",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n0\n2\n5\n1\n7\n6\n0\n5\n8",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791025176058",
+    "label": 1,
+    "category": "active_learning_test_leet"
   }
 ]

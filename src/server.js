@@ -117,9 +117,9 @@ app.use((req, res, next) => {
 // retaining HTTP long-polling fallback for constrained client proxies.
 const io = new Server(server, {
   cors: SOCKET_CORS,
-  transports: ["websocket", "polling"],
+  transports: ["polling", "websocket"],
   pingInterval: 10000,        // 10s keep-alive prevents cloud proxy / reverse proxy idle drops
-  pingTimeout: 20000,         // 20s timeout before considering connection dropped
+  pingTimeout: 25000,         // 25s timeout before considering connection dropped
   connectTimeout: 45000,      // Generous connection timeout
   maxHttpBufferSize: 1e6,     // 1MB max payload
   allowUpgrades: true,        // Allow seamless polling to websocket upgrade

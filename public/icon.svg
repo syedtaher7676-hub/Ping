@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Deep Obsidian Space Radial Gradient -->
+    <radialGradient id="obsidianCore" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#1e0b36" />
+      <stop offset="45%" stop-color="#100720" />
+      <stop offset="80%" stop-color="#07030f" />
+      <stop offset="100%" stop-color="#030108" />
+    </radialGradient>
+
+    <!-- Addictive Hypnotic Neon Gradient: Violet -> Hot Pink -> Cyan -->
+    <linearGradient id="hypnoPingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="30%" stop-color="#9333ea" />
+      <stop offset="65%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#00f5ff" />
+    </linearGradient>
+
+    <!-- Electric Cyan to Pure White Bolt Gradient -->
+    <linearGradient id="electricBolt" x1="15%" y1="0%" x2="85%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="25%" stop-color="#f472b6" />
+      <stop offset="60%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <!-- Glass Rim Specular Highlight -->
+    <linearGradient id="glassRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6" />
+      <stop offset="40%" stop-color="#a855f7" stop-opacity="0.4" />
+      <stop offset="70%" stop-color="#ec4899" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#00f5ff" stop-opacity="0.6" />
+    </linearGradient>
+
+    <!-- Glow Filters for Hyper-Vibrant Neon Blur -->
+    <filter id="hyperGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur2" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="40" result="blur3" />
+      <feMerge>
+        <feMergeNode in="blur3" />
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="softPulseGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Base Container -->
+  <rect width="512" height="512" rx="116" fill="url(#obsidianCore)" />
+  
+  <!-- Outer Metallic Glass Bezel -->
+  <rect width="504" height="504" x="4" y="4" rx="112" fill="none" stroke="url(#glassRim)" stroke-width="3" />
+
+  <!-- Ambient Background Aura Orbs -->
+  <circle cx="160" cy="160" r="140" fill="#7c3aed" fill-opacity="0.25" filter="url(#hyperGlow)" />
+  <circle cx="360" cy="360" r="130" fill="#ec4899" fill-opacity="0.2" filter="url(#hyperGlow)" />
+  <circle cx="340" cy="180" r="100" fill="#06b6d4" fill-opacity="0.2" filter="url(#hyperGlow)" />
+
+  <!-- Concentric Sonar Ping Radar Waves (Expanding Outward) -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-opacity="0.15" stroke-dasharray="6 8" />
+  <circle cx="256" cy="256" r="175" fill="none" stroke="#ec4899" stroke-width="2" stroke-opacity="0.3" stroke-dasharray="12 6" />
+  <circle cx="256" cy="256" r="135" fill="none" stroke="#00f5ff" stroke-width="2.5" stroke-opacity="0.45" filter="url(#softPulseGlow)" />
+  <circle cx="256" cy="256" r="95" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-opacity="0.6" filter="url(#softPulseGlow)" />
+
+  <!-- Dynamic Radar Wave Arcs -->
+  <path d="M 120 180 A 160 160 0 0 1 392 180" fill="none" stroke="url(#hypnoPingGrad)" stroke-width="4.5" stroke-linecap="round" stroke-opacity="0.8" filter="url(#hyperGlow)" />
+  <path d="M 155 350 A 145 145 0 0 0 357 350" fill="none" stroke="#00f5ff" stroke-width="4" stroke-linecap="round" stroke-opacity="0.8" filter="url(#hyperGlow)" />
+
+  <!-- Central Hypnotic Core Disc -->
+  <circle cx="256" cy="256" r="75" fill="url(#hypnoPingGrad)" fill-opacity="0.18" />
+
+  <!-- ── ICON EMBLEM: THE HYPER-ELECTRIC PING "P" + LIGHTNING SIGNAL ── -->
+  <!-- Stylized Lightning "P" Monogram & Signal Pulse -->
+  <g filter="url(#hyperGlow)">
+    <!-- Back Outer Glow Path -->
+    <path d="M 200 105 
+             L 300 105 
+             C 365 105, 385 145, 375 195 
+             C 365 240, 325 265, 270 265 
+             L 248 265 
+             L 218 425 
+             L 172 425 
+             L 225 155 
+             L 200 155 
+             Z" 
+          fill="url(#hypnoPingGrad)" 
+          opacity="0.4" />
+
+    <!-- Sharp Electric Lightning Bolt P Core -->
+    <path d="M 285 92 
+             L 182 258 
+             L 254 258 
+             L 216 422 
+             L 348 238 
+             L 276 238 
+             L 326 92 
+             Z" 
+          fill="url(#electricBolt)" />
+
+    <!-- Top Loop Accent of the "P" -->
+    <path d="M 268 115 
+             C 335 115, 360 148, 350 188 
+             C 340 225, 305 242, 260 242 
+             L 245 242 
+             L 262 152 
+             L 272 115 Z" 
+          fill="none" 
+          stroke="#ffffff" 
+          stroke-width="5" 
+          stroke-linecap="round" 
+          stroke-opacity="0.9" />
+  </g>
+
+  <!-- Specular Sparkle Accents -->
+  <circle cx="285" cy="92" r="7" fill="#ffffff" filter="url(#softPulseGlow)" />
+  <circle cx="216" cy="422" r="6" fill="#00f5ff" filter="url(#softPulseGlow)" />
+  <circle cx="348" cy="238" r="5.5" fill="#f472b6" filter="url(#softPulseGlow)" />
+  <circle cx="182" cy="258" r="5" fill="#c084fc" />
+
+  <!-- Ambient Signal Sparks -->
+  <circle cx="110" cy="256" r="3.5" fill="#00f5ff" opacity="0.8" filter="url(#softPulseGlow)" />
+  <circle cx="402" cy="256" r="3.5" fill="#ec4899" opacity="0.8" filter="url(#softPulseGlow)" />
+  <circle cx="256" cy="80" r="3" fill="#c084fc" opacity="0.7" />
+  <circle cx="256" cy="432" r="3" fill="#00f5ff" opacity="0.7" />
+</svg>

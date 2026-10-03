@@ -17,17 +17,17 @@ if (!persistentUserId) {
 }
 
 // ── SOCKET ───────────────────────────────────────────────────
-// Configured with prioritized websocket transport for instant low-latency connections
-// and fallback polling for proxy and iframe environments.
+// Start with HTTP polling for instant handshake through iframe/proxy environments,
+// then automatically upgrade seamlessly to high-speed WebSockets.
 const socket = io(backendUrl, {
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   upgrade: true,
   rememberUpgrade: true,
-  timeout: 10000,
+  timeout: 25000,
   reconnection: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 500,
-  reconnectionDelayMax: 2500,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 4000,
   randomizationFactor: 0.3,
   auth: { userId: persistentUserId },
   autoConnect: true,
@@ -2432,13 +2432,43 @@ function goToChat() {
   if (landingPage) landingPage.style.display = 'none';
   if (chatApp) chatApp.style.display = 'flex';
   showView('prechat');
+  switchHomeTab('random');
   const ac = $('appCanvas');
   if (ac) { ac.width = ac.offsetWidth || innerWidth; ac.height = ac.offsetHeight || innerHeight; }
 }
+
 function goToLanding() {
-  if (chatApp) chatApp.style.display = 'none';
-  if (landingPage) landingPage.style.display = 'flex';
+  if (inChat || activeRoomId) {
+    showConfirm('Leave Chat?', 'Going back home will end your current conversation. Are you sure?', () => {
+      if (activeRoomId) {
+        socket.emit('end_chat', { roomId: activeRoomId });
+      }
+      endCurrentChat();
+      executeGoToLanding();
+    });
+    return;
+  }
+  if (isWaiting || AppState.explore.isWaiting) {
+    if (typeof cancelWaitBtn?.click === 'function') {
+      cancelWaitBtn.click();
+    } else {
+      socket.emit('cancel_wait');
+      stopWaitingScreen();
+    }
+  }
+  executeGoToLanding();
 }
+
+function executeGoToLanding() {
+  if (chatApp) chatApp.style.display = 'none';
+  if (landingPage) {
+    landingPage.style.display = 'flex';
+    landingPage.style.opacity = '1';
+  }
+}
+
+startLandingBtn?.addEventListener('click', goToChat);
+backBtn?.addEventListener('click', goToLanding);
 
 // ── HOME TAB SWITCHING ────────────────────────────────────────
 function switchHomeTab(tab) {
@@ -4128,7 +4158,134 @@ function setupCompactChatUI() {
 // Clean compact chat UI setup
 setupCompactChatUI();
 
-// Note: 2-minute guest login popup removed per lean MVP requirements.
+// ═══════════════════════════════════════════════════════════════
+// PWA INSTALLATION & DOWNLOAD PROMPT MANAGER
+// ═══════════════════════════════════════════════════════════════
+let deferredPWAInstallPrompt = null;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator && window.navigator.standalone === true);
+const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+// Register Service Worker for offline capability & fast precaching
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      console.log('[PWA] ServiceWorker registered with scope:', registration.scope);
+    }).catch((err) => {
+      console.warn('[PWA] ServiceWorker registration failed:', err?.message);
+    });
+  });
+}
+
+// Listen for browser native install prompt
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPWAInstallPrompt = e;
+  console.log('[PWA] captured beforeinstallprompt event');
+  updatePWAInstallUI();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPWAInstallPrompt = null;
+  console.log('[PWA] Ping app installed successfully!');
+  showToast('🎉 Ping installed successfully! Launch it anytime from your home screen.', 'success', 5000);
+  hidePWAInstallModal();
+  updatePWAInstallUI();
+});
+
+function updatePWAInstallUI() {
+  const downloadLandingBtn = $('downloadLandingBtn');
+  const headerDownloadBtn = $('headerDownloadBtn');
+
+  if (isStandalone) {
+    if (downloadLandingBtn) downloadLandingBtn.style.display = 'none';
+    if (headerDownloadBtn) headerDownloadBtn.style.display = 'none';
+  } else {
+    if (downloadLandingBtn) downloadLandingBtn.style.display = 'inline-flex';
+    if (headerDownloadBtn) headerDownloadBtn.style.display = 'inline-flex';
+  }
+}
+
+function openPWAInstallModal() {
+  const installModal = $('installModal');
+  const confirmInstallBtn = $('confirmInstallBtn');
+  const iosInstallGuide = $('iosInstallGuide');
+  const desktopInstallGuide = $('desktopInstallGuide');
+
+  if (!installModal) return;
+
+  if (isIOS) {
+    if (confirmInstallBtn) confirmInstallBtn.style.display = 'none';
+    if (iosInstallGuide) iosInstallGuide.style.display = 'block';
+    if (desktopInstallGuide) desktopInstallGuide.style.display = 'none';
+  } else if (deferredPWAInstallPrompt) {
+    if (confirmInstallBtn) confirmInstallBtn.style.display = 'flex';
+    if (iosInstallGuide) iosInstallGuide.style.display = 'none';
+    if (desktopInstallGuide) desktopInstallGuide.style.display = 'none';
+  } else {
+    // Desktop Chrome / Edge or manual browser install
+    if (confirmInstallBtn) confirmInstallBtn.style.display = 'none';
+    if (iosInstallGuide) iosInstallGuide.style.display = 'none';
+    if (desktopInstallGuide) desktopInstallGuide.style.display = 'block';
+  }
+
+  installModal.style.display = 'flex';
+}
+
+function hidePWAInstallModal() {
+  const installModal = $('installModal');
+  if (installModal) installModal.style.display = 'none';
+}
+
+async function triggerPWAInstall() {
+  if (deferredPWAInstallPrompt) {
+    deferredPWAInstallPrompt.prompt();
+    const { outcome } = await deferredPWAInstallPrompt.userChoice;
+    console.log('[PWA] Install prompt outcome:', outcome);
+    if (outcome === 'accepted') {
+      showToast('⚡ Installing Ping to your device...', 'info', 3000);
+    }
+    deferredPWAInstallPrompt = null;
+    hidePWAInstallModal();
+  } else if (isIOS) {
+    openPWAInstallModal();
+  } else {
+    openPWAInstallModal();
+  }
+}
+
+// Bind PWA buttons
+$('downloadLandingBtn')?.addEventListener('click', () => {
+  if (deferredPWAInstallPrompt) {
+    triggerPWAInstall();
+  } else {
+    openPWAInstallModal();
+  }
+});
+
+$('headerDownloadBtn')?.addEventListener('click', () => {
+  if (deferredPWAInstallPrompt) {
+    triggerPWAInstall();
+  } else {
+    openPWAInstallModal();
+  }
+});
+
+$('confirmInstallBtn')?.addEventListener('click', () => {
+  triggerPWAInstall();
+});
+
+$('closeInstallModal')?.addEventListener('click', () => {
+  hidePWAInstallModal();
+});
+
+$('installModal')?.addEventListener('click', (e) => {
+  if (e.target === $('installModal')) {
+    hidePWAInstallModal();
+  }
+});
+
+updatePWAInstallUI();
+
 
 
 
