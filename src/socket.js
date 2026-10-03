@@ -1,7 +1,7 @@
 /**
- * Ping WebSocket Client Singleton (Socket.io)
- * Enforces single connection lifecycle outside of the React component tree
- * Prevents reconnection thrashing and duplicate event listeners
+ * Ping Production-Ready WebSocket Client Singleton
+ * Enforces a single WebSocket connection across both global window and React component tree.
+ * Prevents multiple concurrent connections, listener stacking, and reconnect loops.
  */
 import { io } from 'socket.io-client';
 
@@ -10,7 +10,7 @@ const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:3000');
 
-// Persistent anonymous User ID
+// Persistent Anonymous User ID
 const getPersistentUserId = () => {
   if (typeof window === 'undefined') return 'u_ssr';
   let uid = localStorage.getItem('ping_user_id');
@@ -22,52 +22,102 @@ const getPersistentUserId = () => {
 };
 
 /**
- * Singleton Socket Instance
- * transports: ['websocket'] explicitly avoids polling handshake fallback loops
+ * Step 1 & 2: Global Singleton Socket Factory
+ * Ensures exactly ONE persistent WebSocket connection per browser context.
  */
-export const socket = io(BACKEND_URL, {
-  transports: ['websocket'],
-  autoConnect: true,
-  reconnection: true,
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  randomizationFactor: 0.2,
-  timeout: 20000,
-  auth: {
-    userId: typeof window !== 'undefined' ? getPersistentUserId() : 'u_init'
+export const getSocket = () => {
+  if (typeof window === 'undefined') return null;
+
+  // 1. Check for existing global socket instance (prevents multiple concurrent connections)
+  if (window.__PING_SOCKET__) {
+    return window.__PING_SOCKET__;
   }
-});
+
+  if (window.socket && typeof window.socket.on === 'function') {
+    window.__PING_SOCKET__ = window.socket;
+    return window.__PING_SOCKET__;
+  }
+
+  const userId = getPersistentUserId();
+
+  // 2. Instantiate singleton strictly outside component scope
+  const socketInstance = io(BACKEND_URL, {
+    transports: ['websocket'], // Explicitly enforce WebSocket transport to prevent polling fallback loops
+    upgrade: false,
+    autoConnect: true,
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    randomizationFactor: 0.2,
+    timeout: 20000,
+    auth: { userId }
+  });
+
+  // Step 3: Container-side graceful disconnect handling
+  socketInstance.on('disconnect', (reason) => {
+    console.warn('[WebSocket Singleton] Disconnected from container backend:', reason);
+    // Maintain DOM state without unmounting/remounting; auto-reconnect will resume session seamlessly
+  });
+
+  socketInstance.on('connect_error', (error) => {
+    console.error('[WebSocket Singleton] Connection error:', error.message);
+  });
+
+  socketInstance.on('connect', () => {
+    console.log('[WebSocket Singleton] Connected to backend. ID:', socketInstance.id);
+  });
+
+  window.__PING_SOCKET__ = socketInstance;
+  window.socket = socketInstance;
+
+  return socketInstance;
+};
+
+// Export singleton instance initialized once globally outside React lifecycle
+export const socket = typeof window !== 'undefined' ? getSocket() : null;
 
 /**
- * Helper to subscribe to onlineCount with clean teardown
+ * Step 3: Robust Event Subscription Helper with Clean Teardown
+ * Guarantees event listeners are attached once and cleanly removed in useEffect returns.
  */
 export function subscribeToOnlineCount(callback) {
   if (!callback || typeof callback !== 'function') return () => {};
 
+  const activeSocket = getSocket();
+  if (!activeSocket) return () => {};
+
+  let lastCount = null;
+
   const handler = (data) => {
     const count = typeof data === 'number' ? data : (data?.count ?? 0);
-    callback(count);
+    if (count !== lastCount) {
+      lastCount = count;
+      callback(count);
+    }
   };
 
   const handleConnect = () => {
-    socket.emit('get_online_count');
+    if (activeSocket.connected) {
+      activeSocket.emit('get_online_count');
+    }
   };
 
-  socket.on('onlineCount', handler);
-  socket.on('count', handler);
-  socket.on('connect', handleConnect);
+  // Attach listeners
+  activeSocket.on('onlineCount', handler);
+  activeSocket.on('count', handler);
+  activeSocket.on('connect', handleConnect);
 
-  // Request initial count if connected
-  if (socket.connected) {
-    socket.emit('get_online_count');
+  // Fetch initial count if connected
+  if (activeSocket.connected) {
+    activeSocket.emit('get_online_count');
   }
 
-  // Teardown function for React useEffect cleanup
+  // Teardown function for useEffect cleanup
   return () => {
-    socket.off('onlineCount', handler);
-    socket.off('count', handler);
-    socket.off('connect', handleConnect);
+    activeSocket.off('onlineCount', handler);
+    activeSocket.off('count', handler);
+    activeSocket.off('connect', handleConnect);
   };
 }
 

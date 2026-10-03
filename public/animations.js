@@ -14,33 +14,38 @@
   function updateLoadingProgress() {
     if (!splashBar) return;
     let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20 + 5;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-        splashBar.style.width = '100%';
-        setTimeout(revealLanding, 250);
+    const startMs = performance.now();
+    const durationMs = 500;
+
+    const step = (now) => {
+      const elapsed = now - startMs;
+      progress = Math.min(100, (elapsed / durationMs) * 100);
+      splashBar.style.width = progress.toFixed(1) + '%';
+
+      if (progress < 100) {
+        requestAnimationFrame(step);
       } else {
-        splashBar.style.width = progress + '%';
+        setTimeout(revealLanding, 150);
       }
-    }, 100);
+    };
+
+    requestAnimationFrame(step);
   }
 
   function revealLanding() {
     if (splash) {
-      splash.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+      splash.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
       splash.style.opacity = '0';
       splash.style.pointerEvents = 'none';
       if (landing) {
-        landing.style.transition = 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+        landing.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
         landing.style.opacity = '1';
       }
       setTimeout(() => {
         splash.style.display = 'none';
         const sl = document.getElementById('scanLine');
-        if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 200);
-      }, 600);
+        if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 150);
+      }, 500);
     }
   }
 

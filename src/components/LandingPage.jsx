@@ -16,6 +16,8 @@ const LandingLogo = memo(function LandingLogo() {
         gap: '16px',
         willChange: 'transform, opacity',
         transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}
     >
       <div
@@ -75,6 +77,10 @@ const LandingLogo = memo(function LandingLogo() {
           background: 'linear-gradient(160deg, #fff 20%, #c4b5fd 60%, #f472b6 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
         Ping
@@ -97,6 +103,10 @@ const HeroCopy = memo(function HeroCopy() {
         color: '#cbd5e1',
         lineHeight: 1.55,
         margin: 0,
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}
     >
       Talk to strangers.
@@ -121,6 +131,10 @@ const TrustLine = memo(function TrustLine() {
         fontSize: '0.85rem',
         color: '#94a3b8',
         margin: 0,
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}
     >
       <span>🔒 No account</span>
@@ -223,7 +237,7 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
  * Production-Ready LandingPage Component
  * Stably decoupled state hierarchy with zero layout thrashing
  */
-export function LandingPage({ onStartChat, onDownloadApp }) {
+export const LandingPage = memo(function LandingPage({ onStartChat, onDownloadApp }) {
   const handleStart = useCallback(() => {
     if (onStartChat) onStartChat();
   }, [onStartChat]);
@@ -245,8 +259,10 @@ export function LandingPage({ onStartChat, onDownloadApp }) {
         padding: '32px 20px',
         position: 'relative',
         overflow: 'hidden',
-        willChange: 'opacity',
+        willChange: 'transform, opacity',
         transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
       }}
     >
       <div
@@ -263,6 +279,8 @@ export function LandingPage({ onStartChat, onDownloadApp }) {
           width: '100%',
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
         {/* Memoized Static Logo Lockup */}
@@ -282,6 +300,6 @@ export function LandingPage({ onStartChat, onDownloadApp }) {
       </div>
     </div>
   );
-}
+});
 
 export default LandingPage;

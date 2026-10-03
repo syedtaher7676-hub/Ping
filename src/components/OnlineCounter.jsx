@@ -1,61 +1,26 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { subscribeToOnlineCount } from '../socket';
 
 /**
- * OnlineCounter Micro-Component
- * Completely decouples the real-time online counter from the parent Landing Page.
- * Socket updates trigger re-renders ONLY inside this leaf node.
+ * OnlineCounter Standalone Micro-Component
+ * Decouples the online user count state and glowing dot badge from the parent component tree.
+ * Prop `count` is optional; if omitted, subscribes directly to socket updates.
  */
-export const OnlineCounter = memo(function OnlineCounter() {
-  const [displayCount, setDisplayCount] = useState(0);
-  const targetCountRef = useRef(0);
-  const currentValRef = useRef(0);
-  const rafIdRef = useRef(null);
-  const isMountedRef = useRef(true);
+export const OnlineCounter = memo(function OnlineCounter({ count }) {
+  const [internalCount, setInternalCount] = useState(0);
+  const displayCount = count !== undefined ? count : internalCount;
 
   useEffect(() => {
-    isMountedRef.current = true;
+    if (count !== undefined) return;
 
-    // Smooth RAF easing count-up without parent component overhead
-    const animateCount = (newTarget) => {
-      targetCountRef.current = newTarget;
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-
-      const start = currentValRef.current;
-      const target = newTarget;
-      const duration = 400; // ms
-      const startTime = performance.now();
-
-      const step = (now) => {
-        if (!isMountedRef.current) return;
-        const progress = Math.min((now - startTime) / duration, 1);
-        // Cubic ease out
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const nextVal = Math.round(start + (target - start) * eased);
-        currentValRef.current = nextVal;
-        setDisplayCount(nextVal);
-
-        if (progress < 1) {
-          rafIdRef.current = requestAnimationFrame(step);
-        } else {
-          rafIdRef.current = null;
-        }
-      };
-
-      rafIdRef.current = requestAnimationFrame(step);
-    };
-
-    // Clean subscription teardown
-    const unsubscribe = subscribeToOnlineCount((count) => {
-      animateCount(count);
+    const unsubscribe = subscribeToOnlineCount((newCount) => {
+      setInternalCount(newCount);
     });
 
     return () => {
-      isMountedRef.current = false;
       unsubscribe();
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
-  }, []);
+  }, [count]);
 
   return (
     <div
@@ -75,6 +40,8 @@ export const OnlineCounter = memo(function OnlineCounter() {
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
+        contentVisibility: 'auto',
+        containIntrinsicSize: '0 48px',
       }}
     >
       <span
@@ -88,6 +55,8 @@ export const OnlineCounter = memo(function OnlineCounter() {
           flexShrink: 0,
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
         aria-hidden="true"
       />
@@ -99,18 +68,25 @@ export const OnlineCounter = memo(function OnlineCounter() {
           fontWeight: 700,
           color: '#ffffff',
           fontVariantNumeric: 'tabular-nums',
-          minWidth: '1.5ch',
+          minWidth: '2ch',
+          textAlign: 'center',
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        {displayCount > 0 ? displayCount.toLocaleString() : '—'}
+        {displayCount > 0 ? Number(displayCount).toLocaleString() : '—'}
       </span>
       <span
         className="live-label"
         style={{
           fontSize: '0.88rem',
           color: '#cbd5e1',
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
         }}
       >
         online now

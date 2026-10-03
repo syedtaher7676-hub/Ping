@@ -5,18 +5,22 @@
 
 /* ── SPLASH ── */
 .splash-logo {
-  animation: splash-logo-in .65s var(--spring) both;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: splash-logo-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes splash-logo-in {
   from {
     opacity: 0;
-    transform: scale(.3) rotate(-30deg)
+    transform: scale(0.7) translateZ(0);
   }
 
   to {
     opacity: 1;
-    transform: scale(1) rotate(0)
+    transform: scale(1) translateZ(0);
   }
 }
 
@@ -38,27 +42,39 @@
 }
 
 .splash-wordmark {
-  animation: splash-word-in .5s var(--ease) .3s both;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: splash-word-in .5s var(--ease) .2s both;
 }
 
 .splash-bar-wrap {
-  animation: splash-word-in .4s var(--ease) .5s both;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: splash-word-in .4s var(--ease) .35s both;
 }
 
 @keyframes splash-word-in {
   from {
     opacity: 0;
-    transform: translateY(10px)
+    transform: translateY(8px) translateZ(0);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0)
+    transform: translateY(0) translateZ(0);
   }
 }
 
 .splash-bar-fill {
-  animation: splash-bar 1.3s var(--ease) .6s both;
+  will-change: width, transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: splash-bar 1.0s cubic-bezier(0.16, 1, 0.3, 1) .45s both;
 }
 
 @keyframes splash-bar {
@@ -73,12 +89,16 @@
 
 /* ── VORTEX ── */
 .vortex-wheel {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   animation: vortex-spin 22s linear infinite, vortex-hue 18s ease-in-out infinite;
 }
 
 @keyframes vortex-spin {
   to {
-    transform: rotate(360deg);
+    transform: rotate(360deg) translateZ(0);
   }
 }
 
@@ -105,12 +125,14 @@
   border-radius: inherit;
   background: conic-gradient(from 180deg at 50% 50%, rgba(219, 39, 119, .09) 0deg, transparent 60deg, rgba(6, 182, 212, .08) 120deg, transparent 180deg, rgba(124, 58, 237, .09) 240deg, transparent 300deg, rgba(219, 39, 119, .09) 360deg);
   filter: blur(60px);
+  will-change: transform;
+  transform: translateZ(0);
   animation: vortex-counter 35s linear infinite;
 }
 
 @keyframes vortex-counter {
   to {
-    transform: rotate(-360deg);
+    transform: rotate(-360deg) translateZ(0);
   }
 }
 
@@ -133,20 +155,25 @@
   animation: logo-ring-hue 2.8s ease-in-out infinite !important;
 }
 
-/* Letter cascade */
+/* Letter cascade: Seamless GPU 2D transform without 3D text-clip distortion */
 .lw-char {
-  animation: lw-cascade .65s var(--spring) calc(var(--i)*.08s + 2.0s) both;
+  display: inline-block;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  animation: lw-cascade 0.5s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--i) * 0.06s + 0.35s) both;
 }
 
 @keyframes lw-cascade {
   from {
     opacity: 0;
-    transform: translateY(-22px) rotateX(90deg)
+    transform: translateY(-10px) scale(0.96) translateZ(0);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) rotateX(0deg)
+    transform: translateY(0) scale(1) translateZ(0);
   }
 }
 
@@ -201,23 +228,44 @@
 }
 
 @keyframes btn-breathe {
-
   0%,
   100% {
     box-shadow: var(--sh-btn);
+    transform: translateZ(0) scale(1);
   }
 
   50% {
-    box-shadow: 0 8px 48px rgba(124, 58, 237, .85), 0 0 25px rgba(219, 39, 119, .35);
+    box-shadow: 0 8px 36px rgba(124, 58, 237, .75);
+    transform: translateZ(0) scale(1.015);
   }
 }
 
 .cta-btn {
-  animation: btn-breathe 2.8s ease-in-out infinite;
+  animation: btn-breathe 3.5s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .cta-btn:hover {
   animation-play-state: paused;
+}
+
+/* Mobile GPU optimization: Stop heavy infinite keyframe repaints on mobile touch devices */
+@media (max-width: 768px), (hover: none) {
+  .cta-btn {
+    animation: none !important;
+    box-shadow: 0 4px 24px rgba(124, 58, 237, 0.55) !important;
+    will-change: transform, opacity !important;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+  }
+  .cta-btn::before {
+    animation: none !important;
+    display: none !important;
+  }
 }
 
 /* ── SCAN LINE ── */

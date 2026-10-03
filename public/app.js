@@ -17,8 +17,8 @@ if (!persistentUserId) {
 }
 
 // ── SOCKET ───────────────────────────────────────────────────
-// Enforce WebSocket transport directly to prevent polling fallback socket reconnect loops
-const socket = io(backendUrl, {
+// Enforce singleton WebSocket connection across window scope to prevent multiple concurrent sockets
+const socket = window.__PING_SOCKET__ || io(backendUrl, {
   transports: ['websocket'],
   upgrade: false,
   rememberUpgrade: true,
@@ -31,6 +31,7 @@ const socket = io(backendUrl, {
   auth: { userId: persistentUserId },
   autoConnect: true,
 });
+window.__PING_SOCKET__ = socket;
 window.socket = socket;
 
 // ── DOM REFS ─────────────────────────────────────────────────
