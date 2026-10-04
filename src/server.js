@@ -142,7 +142,7 @@ io.use((socket, next) => {
       return next(new Error("Invalid authentication payload format"));
     }
 
-    // 2. Sanitize and validate client-provided userId
+    // 2. Sanitize and validate client-provided userId and deviceHash
     const rawUserId = auth?.userId;
     let verifiedUserId = null;
 
@@ -159,8 +159,22 @@ io.use((socket, next) => {
       verifiedUserId = createId("u");
     }
 
+    const rawDeviceHash = auth?.deviceHash || auth?.deviceId;
+    let verifiedDeviceHash = null;
+    if (
+      typeof rawDeviceHash === "string" &&
+      rawDeviceHash.length >= 8 &&
+      rawDeviceHash.length <= 128 &&
+      /^[a-zA-Z0-9_-]+$/.test(rawDeviceHash)
+    ) {
+      verifiedDeviceHash = rawDeviceHash;
+    } else {
+      verifiedDeviceHash = "dev_" + verifiedUserId;
+    }
+
     // 3. Attach verified session identity to socket.data
     socket.data.userId = verifiedUserId;
+    socket.data.deviceHash = verifiedDeviceHash;
     socket.data.country = getCountryFromSocket(socket);
     socket.data.authenticatedAt = Date.now();
 

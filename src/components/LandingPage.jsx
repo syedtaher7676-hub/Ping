@@ -157,8 +157,9 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: '14px',
+        gap: '16px',
         flexWrap: 'wrap',
+        width: '100%',
         willChange: 'transform, opacity',
         transform: 'translateZ(0)',
       }}
@@ -173,14 +174,15 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
           alignItems: 'center',
           justifyContent: 'center',
           gap: '12px',
-          minWidth: '200px',
-          padding: '18px 44px',
+          minWidth: '210px',
+          height: '56px',
+          padding: '0 32px',
           background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
           border: 'none',
           borderRadius: '9999px',
           color: '#fff',
           fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: '1.15rem',
+          fontSize: '1.08rem',
           fontWeight: 700,
           cursor: 'pointer',
           boxShadow: '0 4px 24px rgba(124, 58, 237, 0.55)',
@@ -188,10 +190,11 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
+          boxSizing: 'border-box',
         }}
       >
         <span className="cta-label">Start Chat</span>
-        <span className="cta-icon" aria-hidden="true">
+        <span className="cta-icon" aria-hidden="true" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -208,26 +211,32 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8px',
-          padding: '16px 28px',
+          gap: '12px',
+          minWidth: '210px',
+          height: '56px',
+          padding: '0 32px',
           background: 'rgba(255, 255, 255, 0.055)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(124, 58, 237, 0.4)',
           borderRadius: '9999px',
           color: '#fff',
           fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: '1.05rem',
-          fontWeight: 600,
+          fontSize: '1.08rem',
+          fontWeight: 700,
           cursor: 'pointer',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
+          boxSizing: 'border-box',
         }}
       >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-        </svg>
         <span className="download-label">Download App</span>
+        <span className="download-icon-wrap" aria-hidden="true" style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(6, 182, 212, 0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg className="download-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2.4">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+          </svg>
+        </span>
       </button>
     </div>
   );

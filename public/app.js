@@ -9,11 +9,17 @@ const defaultBackendUrl =
     : window.location.origin;
 const backendUrl = configuredBackendUrl || defaultBackendUrl;
 
-// ── PERSISTENT USER ID ───────────────────────────────────────
+// ── PERSISTENT USER ID & DEVICE HASH ─────────────────────────
 let persistentUserId = localStorage.getItem('ping_user_id');
 if (!persistentUserId) {
   persistentUserId = 'u_' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
   localStorage.setItem('ping_user_id', persistentUserId);
+}
+
+let persistentDeviceHash = localStorage.getItem('ping_device_hash');
+if (!persistentDeviceHash) {
+  persistentDeviceHash = 'dh_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  localStorage.setItem('ping_device_hash', persistentDeviceHash);
 }
 
 // ── SOCKET ───────────────────────────────────────────────────
@@ -28,7 +34,7 @@ const socket = window.__PING_SOCKET__ || io(backendUrl, {
   reconnectionDelay: 1000,
   reconnectionDelayMax: 4000,
   randomizationFactor: 0.3,
-  auth: { userId: persistentUserId },
+  auth: { userId: persistentUserId, deviceHash: persistentDeviceHash },
   autoConnect: true,
 });
 window.__PING_SOCKET__ = socket;
@@ -840,9 +846,9 @@ socket.on('dm_deleted', ({ msgId }) => {
 
 // ── TIME EXTENSION EVENTS ─────────────────────────────────────────────
 const waitingTexts = [
-  'Searching the globe 🌎', 'Tuning frequencies 📶',
-  'Aligning stars ✨', 'Finding a match 🤝', 'Hold tight bestie 💖',
-  'Scanning vibes... 📶', 'Locating strangers 👣'
+  'Searching across the globe 🌎', 'Scanning the vibes... 📶',
+  'Finding your match ⚡', 'Matching frequencies ✨',
+  'Hold tight bestie 💖', 'Locating cool strangers 👣'
 ];
 let waitingTextIdx = 0;
 let waitingTextInterval = null;
@@ -1024,14 +1030,27 @@ function setScreenIndicator(step) {
 
 // ── REAL-TIME ONLINE COUNT ───────────────────────────────────
 function setOnlineCount(n) {
-  const display = n > 0 ? n.toLocaleString() : '—';
-  if (liveUsersEl && window.__pingCountUp) window.__pingCountUp(liveUsersEl, n);
+  const num = Math.max(1, Number(n) || 1);
+  const display = num.toLocaleString();
+  if (liveUsersEl && window.__pingCountUp) window.__pingCountUp(liveUsersEl, num);
   else if (liveUsersEl) liveUsersEl.textContent = display;
   if (headerActiveUsers) headerActiveUsers.textContent = display;
   if (headerOnlineCount) headerOnlineCount.textContent = display;
   if (actionBarOnline) actionBarOnline.textContent = display;
   const ws = $('wsCount'); if (ws) ws.textContent = display;
 }
+
+// Fetch initial stats immediately on page load
+try {
+  fetch('/api/stats')
+    .then(r => r.json())
+    .then(data => {
+      if (data && typeof data.activeUsers === 'number') {
+        setOnlineCount(data.activeUsers);
+      }
+    })
+    .catch(() => {});
+} catch (_) {}
 
 // ── REUSABLE OPTIMIZED INSTAGRAM-STYLE LONG-PRESS HANDLER ──
 function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, isSelf, sentAt }) {
@@ -1527,17 +1546,17 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
         </div>
         <div class="ping-ig-item-text">
           <span class="ping-ig-item-title">Report User</span>
-          <span class="ping-ig-item-sub">15m ban & end chat</span>
+          <span class="ping-ig-item-sub">Disconnect & warn user</span>
         </div>
       </div>
     `;
     reportItem.onclick = (evt) => {
       evt.stopPropagation();
       closeAll();
-      showConfirm('Report User?', 'This user will be banned for 15 minutes and the chat will end immediately.', () => {
+      showConfirm('Report User?', 'The chat will end immediately and the user will receive a warning.', () => {
         socket.emit('report_user', { roomId: activeRoomId, reason: 'inappropriate' });
         endCurrentChat();
-        showToast('User reported and banned for 15 minutes.', 'success', 3000);
+        showToast('User reported. Returned to home screen.', 'info', 3000);
       });
     };
     menu.appendChild(reportItem);
@@ -1676,15 +1695,15 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     backdrop.classList.add('closing');
     pill.style.opacity = '0';
     pill.style.transform = 'scale(0.8)';
-    pill.style.transition = 'all 0.15s ease';
+    pill.style.transition = 'all 0.08s cubic-bezier(0, 0, 0.2, 1)';
     menu.style.opacity = '0';
     menu.style.transform = 'scale(0.85)';
-    menu.style.transition = 'all 0.15s ease';
+    menu.style.transition = 'all 0.08s cubic-bezier(0, 0, 0.2, 1)';
     setTimeout(() => {
       backdrop.remove();
       pill.remove();
       menu.remove();
-    }, 160);
+    }, 90);
     cleanup();
   }
 
@@ -2182,7 +2201,7 @@ function showView(which) {
       el.style.display = 'flex';
       if (viewChanged) {
         el.classList.remove('view-enter');
-        void el.offsetWidth; // single hardware-accelerated reflow
+        void el.offsetWidth;
         el.classList.add('view-enter');
       }
     } else {
@@ -2430,7 +2449,10 @@ function renderFriendsList(friends) {
 // ── NAVIGATION ───────────────────────────────────────────────
 function goToChat() {
   if (landingPage) landingPage.style.display = 'none';
-  if (chatApp) chatApp.style.display = 'flex';
+  if (chatApp) {
+    chatApp.style.display = 'flex';
+    chatApp.style.opacity = '1';
+  }
   showView('prechat');
   switchHomeTab('random');
   const ac = $('appCanvas');
@@ -2748,8 +2770,20 @@ socket.on('queue_rejected', ({ reason, message }) => {
 
 socket.off('system_metrics');
 socket.on('system_metrics', m => {
-  const u = Number(m.activeUsers ?? m.liveUsers ?? 0);
+  const u = Number(m?.activeUsers ?? m?.liveUsers ?? 1);
   setOnlineCount(u);
+});
+
+socket.off('onlineCount');
+socket.on('onlineCount', c => {
+  const u = typeof c === 'number' ? c : (c?.count ?? 1);
+  setOnlineCount(u);
+});
+
+socket.off('count');
+socket.on('count', c => {
+  const u = typeof c === 'number' ? c : (c?.count ?? 1);
+  setOnlineCount(c);
 });
 
 socket.off('matched');
@@ -3050,10 +3084,8 @@ function handleSkippedChat(reason, rawReason) {
   inChat = false;
   activeRoomId = null;
   AppState.explore.inChat = false;
-  AppState.explore.isWaiting = false;
   AppState.explore.roomId = null;
   AppState.explore.timerEndMs = 0;
-  isWaiting = false;
 
   stopWaitingScreen();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
@@ -3071,12 +3103,24 @@ function handleSkippedChat(reason, rawReason) {
     return;
   }
 
-  // When stranger skips/leaves, show 15s auto-search countdown banner for opponent
-  if (wasInChat) {
-    startAutoSearch(15);
-  } else {
-    showView('prechat');
-  }
+  // When stranger skips, notify opponent that the stranger has skipped and load the searching screen
+  stopAutoSearch();
+  closeModal();
+  clearChat();
+  showToast("Stranger skipped the chat. Finding a new match... 🔍", "info", 3500);
+
+  isWaiting = true;
+  AppState.explore.isWaiting = true;
+  pendingStart = true;
+  showView('waiting');
+  startWaitingScreen();
+  syncButtons();
+  socket.emit('start_chat');
+
+  setTimeout(() => {
+    pendingStart = false;
+    syncButtons();
+  }, 1000);
 }
 
 function handleChatEnd(reason, rawReason) {
@@ -3111,6 +3155,20 @@ function handleChatEnd(reason, rawReason) {
   }
 
   const reasonStr = String(reason || rawReason || '').toLowerCase();
+  if (reasonStr.includes('user_reported_warning')) {
+    showToast('⚠️ You were reported by your chat partner. Returned to home screen.', 'warn', 5000);
+    showView('prechat');
+    return;
+  }
+  if (reasonStr.includes('report_submitted') || reasonStr === 'user_reported') {
+    showToast('User reported. Returned to home screen.', 'info', 3500);
+    showView('prechat');
+    return;
+  }
+  if (reasonStr.includes('next_clicked') || reasonStr.includes('skipped') || reasonStr.includes('skip')) {
+    handleSkippedChat(reason, rawReason);
+    return;
+  }
   if (reasonStr.includes('queue') || reasonStr === 'left_queue' || reasonStr === 'you_ended') {
     showView('prechat');
     return;
@@ -3134,6 +3192,42 @@ let lastEndChatHandledMs = 0;
 const handleGenericChatEnd = ({ reason, rawReason, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
   const endReason = reason || rawReason;
+  if (endReason === 'user_reported_warning' || rawReason === 'user_reported_warning' || String(endReason).includes('user_reported_warning')) {
+    stopTimer();
+    stopAutoSearch();
+    closeModal();
+    inChat = false;
+    activeRoomId = null;
+    AppState.explore.inChat = false;
+    AppState.explore.isWaiting = false;
+    AppState.explore.roomId = null;
+    AppState.explore.timerEndMs = 0;
+    isWaiting = false;
+    stopWaitingScreen();
+    clearChat();
+    syncButtons();
+    showView('prechat');
+    showToast('⚠️ You were reported by your chat partner. Please follow community guidelines.', 'warn', 5000);
+    return;
+  }
+  if (endReason === 'report_submitted' || endReason === 'user_reported' || rawReason === 'report_submitted' || rawReason === 'user_reported') {
+    stopTimer();
+    stopAutoSearch();
+    closeModal();
+    inChat = false;
+    activeRoomId = null;
+    AppState.explore.inChat = false;
+    AppState.explore.isWaiting = false;
+    AppState.explore.roomId = null;
+    AppState.explore.timerEndMs = 0;
+    isWaiting = false;
+    stopWaitingScreen();
+    clearChat();
+    syncButtons();
+    showView('prechat');
+    showToast('User reported. Returned to home screen.', 'info', 3500);
+    return;
+  }
   if (endReason === 'left_queue' || rawReason === 'left_queue' || String(endReason).toLowerCase().includes('queue')) {
     stopTimer();
     stopAutoSearch();
@@ -3586,7 +3680,7 @@ reportSkipBtn?.addEventListener('click', (e) => {
   stopAutoSearch();
   socket.emit('report_user', { roomId: AppState.explore.roomId || activeRoomId, reason: 'inappropriate' });
   endCurrentChat();
-  showToast('User reported and banned for 15 minutes.', 'success', 3000);
+  showToast('User reported. Returned to home screen.', 'info', 3000);
 });
 
 cancelWaitBtn?.addEventListener('click', () => {
@@ -3795,6 +3889,23 @@ messageInput?.addEventListener('keydown', function (e) {
   }
 });
 
+// ── DISABLE LINK & TEXT PASTING (ANTI-SPAM / ANTI-BOT) ────────
+function handleChatInputPaste(e) {
+  e.preventDefault();
+  showToast('📋 Pasting links or text is disabled to prevent spam bots.', 'info', 3000);
+}
+
+messageInput?.addEventListener('paste', handleChatInputPaste);
+friendMessageInput?.addEventListener('paste', handleChatInputPaste);
+
+document.addEventListener('paste', (e) => {
+  const target = e.target;
+  if (target && (target.id === 'messageInput' || target.id === 'friendMessageInput' || target.classList?.contains('chat-input') || (target.tagName === 'TEXTAREA' && target.closest('.chat-input-bar, .chat-input-wrap, .view-chat, .view-friend-dm')))) {
+    e.preventDefault();
+    showToast('📋 Pasting links or text is disabled to prevent spam bots.', 'info', 3000);
+  }
+}, true);
+
 messageInput?.addEventListener('input', function () {
   this.style.height = 'auto';
   const newH = Math.min(this.scrollHeight, 160);
@@ -3865,10 +3976,10 @@ friendMessageInput?.addEventListener('input', function () {
 });
 
 reportBtn?.addEventListener('click', () => {
-  showConfirm('Report User?', "This user will be banned for 15 minutes and the chat will end immediately.", () => {
+  showConfirm('Report User?', "The chat will end immediately and the user will receive a warning.", () => {
     socket.emit('report_user', { roomId: activeRoomId, reason: 'inappropriate' });
     endCurrentChat();
-    showToast('User reported and banned for 15 minutes.', 'success', 3000);
+    showToast('User reported. Returned to home screen.', 'info', 3000);
   });
 });
 
@@ -4309,6 +4420,39 @@ $('installModal')?.addEventListener('click', (e) => {
 });
 
 updatePWAInstallUI();
+
+// ── IN-APP BROWSER (IAB) PROMPT BANNER HANDLER ────────────────
+function initIabBanner() {
+  const isInApp = document.documentElement.classList.contains('is-inapp-browser');
+  const banner = document.getElementById('iabBanner');
+  const closeBtn = document.getElementById('closeIabBannerBtn');
+
+  if (isInApp && banner) {
+    let dismissed = false;
+    try {
+      dismissed = sessionStorage.getItem('ping_iab_dismissed') === 'true';
+    } catch (_) {}
+
+    if (!dismissed) {
+      banner.style.display = 'flex';
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        banner.style.display = 'none';
+        try {
+          sessionStorage.setItem('ping_iab_dismissed', 'true');
+        } catch (_) {}
+      });
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initIabBanner);
+} else {
+  initIabBanner();
+}
 
 
 

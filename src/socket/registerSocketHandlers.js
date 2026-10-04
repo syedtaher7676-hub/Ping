@@ -48,6 +48,17 @@ const recentReports = new Map();         // reporterId_reportedUserId -> timesta
 
 const exploreViolations = new Map();     // userId -> array of timestamps for Explore chat
 const friendViolations = new Map();      // userId -> array of timestamps for Friends chat
+const reportsByTarget = new Map();       // targetKey -> Array of { reporterId, reporterDeviceHash, reportedAt }
+const rapidReportsByReporter = new Map(); // reporterKey -> Array of rapid report timestamps
+const rapidBurstTimestamps = new Map();   // socketId -> Array of timestamps for rapid spam detection (10 msgs threshold)
+
+// Link and URL detector for Telegram, Discord, NSFW, and general link spam
+const URL_REGEX = /(https?:\/\/|www\d{0,3}\.|\.com\/|\.org\/|\.net\/|\.io\/|\.gg\/|\.xyz\/|\.me\/|t\.me\/|telegram\.me|discord\.gg|wa\.me|bit\.ly|tinyurl\.com|linktr\.ee|[a-z0-9-]+\.(com|net|org|io|gg|xyz|me|ru|cn|top|site|club|vip|online|live)\b)/i;
+
+function hasBlockedLinks(text) {
+  if (typeof text !== "string") return false;
+  return URL_REGEX.test(text);
+}
 
 function getSocketIp(socket) {
   if (!socket) return null;
@@ -91,6 +102,11 @@ function isUserBanned(socket, userId) {
       addTemporaryBan(userId, penalty.expiresAt - now);
       return { banned: true, remaining: penalty.expiresAt - now };
     }
+  }
+  const deviceHash = socket?.data?.deviceHash;
+  if (deviceHash && temporaryBans.has(deviceHash)) {
+    const expiry = temporaryBans.get(deviceHash);
+    if (now < expiry) return { banned: true, remaining: expiry - now };
   }
   const isExempt = userId && exemptPartnerUsers.has(userId);
   if (!isExempt) {
@@ -396,6 +412,13 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
 
 // Shared message validation (slur filter, moderation, spam)
 function validateAndModerateMessage(socket, userId, text) {
+  // Block link and URL spam
+  if (hasBlockedLinks(text)) {
+    log("message_blocked_link", { userId, text: text.slice(0, 50) });
+    socket.emit("error_message", { message: "🚫 Sharing links, URLs, or handles is disabled to prevent spam bots." });
+    return { blocked: true, reason: "links_disabled", action: "block", message: "🚫 Sharing links, URLs, or handles is disabled to prevent spam bots." };
+  }
+
   // Slur filter - NEVER terminates session immediately
   const slurResult = slurFilter.moderateSlurMessage(userId, text);
 
@@ -464,13 +487,19 @@ function notifyFriendsOfStatusChange(io, userId, online) {
   });
 }
 
+function broadcastOnlineMetrics(io) {
+  if (!io) return;
+  const metrics = getMetrics(io);
+  io.emit("system_metrics", metrics);
+  io.emit("onlineCount", metrics.activeUsers);
+  io.emit("count", metrics.activeUsers);
+}
+
 function registerSocketHandlers(io, getCountryFromSocket) {
-  // Periodic metrics broadcast
+  // Frequent metrics broadcast every 3 seconds for real-time online count sync
   const metricsInterval = setInterval(() => {
-    const metrics = getMetrics();
-    log("system_metrics", metrics);
-    io.emit("system_metrics", metrics);
-  }, METRICS_LOG_INTERVAL_MS);
+    broadcastOnlineMetrics(io);
+  }, 3000);
   metricsInterval.unref();
 
   // Cleanup inactive users
@@ -878,6 +907,25 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         const now = Date.now();
 
+        // ═══════════════════════════════════════════════════════════════
+        // MESSAGE RATE LIMITING:
+        // - Max 3 messages per 2 seconds
+        // - Auto-disconnect on 10 rapid messages within 5s
+        // ═══════════════════════════════════════════════════════════════
+        let rapidTimes = rapidBurstTimestamps.get(socket.id) || [];
+        rapidTimes = rapidTimes.filter(t => (now - t) < 5000);
+        rapidTimes.push(now);
+        rapidBurstTimestamps.set(socket.id, rapidTimes);
+
+        if (rapidTimes.length >= 10) {
+          log("user_auto_disconnected_for_rapid_spam", { userId, socketId: socket.id, count: rapidTimes.length });
+          socket.emit("error_message", { message: "🚫 Disconnected due to rapid message spamming." });
+          terminateSession(io, currentUser.roomId, "spam_disconnected");
+          try { socket.disconnect(true); } catch (_) {}
+          if (typeof ack === "function") ack({ ok: false, reason: "spam_disconnected" });
+          return;
+        }
+
         // Check if silenced due to spam
         const silenceEndTime = silencedSockets.get(socket.id);
         if (silenceEndTime && now < silenceEndTime) {
@@ -887,24 +935,19 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // Track and check message rate (< 1000ms window)
+        // Track and check message rate (< 2000ms window, max 3 messages)
         let userTimes = messageTimestamps.get(socket.id) || [];
-        userTimes = userTimes.filter(t => now - t < 1000);
+        userTimes = userTimes.filter(t => now - t < 2000);
         userTimes.push(now);
         messageTimestamps.set(socket.id, userTimes);
 
         if (userTimes.length > 3) {
-          silencedSockets.set(socket.id, now + 10000);
+          silencedSockets.set(socket.id, now + 5000); // 5 seconds silence
           const vCount = (silenceViolationCounts.get(socket.id) || 0) + 1;
           silenceViolationCounts.set(socket.id, vCount);
-          log("socket_rate_limited_and_silenced", { userId, socketId: socket.id, vCount });
+          log("socket_rate_limited_and_silenced", { userId, socketId: socket.id, count: userTimes.length, vCount });
 
-          if (vCount >= 3) {
-            socket.emit("error_message", { message: "🚫 Terminating session due to repeated spamming." });
-            terminateSession(io, currentUser.roomId, "system_rate_limit_exceeded");
-          } else {
-            socket.emit("error_message", { message: "⏳ Slow down! Sending messages too fast. You have been silenced for 10 seconds." });
-          }
+          socket.emit("error_message", { message: "⏳ Slow down! Maximum 3 messages per 2 seconds allowed." });
           if (typeof ack === "function") ack({ ok: false, reason: "rate_limited" });
           return;
         }
@@ -1095,6 +1138,31 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         if (!text) {
           if (typeof ack === "function") ack({ ok: false, success: false, reason: "empty_message" });
+          return;
+        }
+
+        const now = Date.now();
+        // Rate limit for DMs (max 3 per 2s, auto-disconnect on 10 rapid)
+        let dmRapidTimes = rapidBurstTimestamps.get(socket.id) || [];
+        dmRapidTimes = dmRapidTimes.filter(t => (now - t) < 5000);
+        dmRapidTimes.push(now);
+        rapidBurstTimestamps.set(socket.id, dmRapidTimes);
+
+        if (dmRapidTimes.length >= 10) {
+          socket.emit("error_message", { message: "🚫 Disconnected due to rapid message spamming." });
+          try { socket.disconnect(true); } catch (_) {}
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: "spam_disconnected" });
+          return;
+        }
+
+        let dmUserTimes = messageTimestamps.get(socket.id) || [];
+        dmUserTimes = dmUserTimes.filter(t => now - t < 2000);
+        dmUserTimes.push(now);
+        messageTimestamps.set(socket.id, dmUserTimes);
+
+        if (dmUserTimes.length > 3) {
+          socket.emit("error_message", { message: "⏳ Slow down! Maximum 3 messages per 2 seconds allowed." });
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: "rate_limited" });
           return;
         }
 
@@ -1901,9 +1969,21 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    socket.on("get_online_count", (_rawPayload, ack) => {
+      try {
+        const metrics = getMetrics(io);
+        const count = metrics.activeUsers;
+        if (typeof ack === "function") ack(count);
+        socket.emit("onlineCount", count);
+        socket.emit("count", count);
+      } catch (err) {
+        log("get_online_count_error", { userId, message: err.message });
+      }
+    });
+
     socket.on("get_metrics", (_rawPayload, ack) => {
       try {
-        if (typeof ack === "function") ack(getMetrics());
+        if (typeof ack === "function") ack(getMetrics(io));
       } catch (err) {
         log("get_metrics_error", { userId, message: err.message });
       }
@@ -1912,11 +1992,11 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     socket.on("get_stats", (_rawPayload, ack) => {
       try {
         const currentUser = users.get(userId);
-        const metrics = getMetrics();
+        const metrics = getMetrics(io);
         const statsPayload = {
           status: currentUser?.status || "idle",
           roomId: currentUser?.roomId || null,
-          activeUsers: metrics?.activeUsers || 0,
+          activeUsers: metrics?.activeUsers || 1,
           totalMatches: metrics?.totalMatches || 0,
           totalChats: metrics?.totalMatches || 0,
         };
@@ -1994,6 +2074,8 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
     // ═══════════════════════════════════════════════
     //  REPORT & END CHAT
+    //  - 2 Reports in 30 Minutes = 15-Minute Ban
+    //  - "False Reporter" Counter-Ban (Rapid report abuse <5s)
     // ═══════════════════════════════════════════════
 
     socket.on("report_user", (rawPayload) => {
@@ -2008,7 +2090,89 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const room = rooms.get(targetRoomId) || Array.from(friendRooms.values()).find(r => r.roomId === targetRoomId);
         const partnerId = room?.users ? room.users.find(id => id !== userId) : (room?.userIds ? room.userIds.find(id => id !== userId) : null);
         const partner = partnerId ? users.get(partnerId) : null;
+        const partnerSocket = partner?.socketId ? io.sockets.sockets.get(partner.socketId) : null;
 
+        const reporterDeviceHash = socket.data?.deviceHash || userId;
+        const reporterIp = getSocketIp(socket);
+        const partnerDeviceHash = partnerSocket?.data?.deviceHash || partner?.deviceHash || partnerId;
+        const partnerIp = partnerSocket ? getSocketIp(partnerSocket) : null;
+
+        const now = Date.now();
+        const REPORT_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+        const BAN_DURATION_MS = 15 * 60 * 1000;   // 15 minutes
+        const RAPID_REPORT_THRESHOLD_MS = 5000;  // 5 seconds
+        const chatDurationMs = room?.createdAt ? Math.max(0, now - room.createdAt) : 0;
+
+        // ═══════════════════════════════════════════════════════════════
+        // 1. "FALSE REPORTER" COUNTER-BAN
+        // If a user repeatedly clicks "Report" within 5 seconds of entering
+        // every single chat, flag their device as a bad actor and apply the
+        // 15-minute ban to them instead.
+        // ═══════════════════════════════════════════════════════════════
+        if (chatDurationMs < RAPID_REPORT_THRESHOLD_MS) {
+          const reporterKey = reporterDeviceHash;
+          let history = rapidReportsByReporter.get(reporterKey) || [];
+          history = history.filter(ts => (now - ts) <= REPORT_WINDOW_MS);
+          history.push(now);
+          rapidReportsByReporter.set(reporterKey, history);
+
+          if (history.length >= 2) {
+            // Bad actor detected: repeated false reporting abuse
+            log("false_reporter_counter_ban_applied", { userId, reporterDeviceHash, rapidCount: history.length });
+            const banExpiry = now + BAN_DURATION_MS;
+            temporaryBans.set(userId, banExpiry);
+            temporaryBans.set(reporterDeviceHash, banExpiry);
+            if (reporterIp && reporterIp !== "127.0.0.1" && reporterIp !== "::1") {
+              temporaryBans.set(reporterIp, banExpiry);
+              temporaryBans.set(`ip_${reporterIp}`, banExpiry);
+            }
+            addTemporaryBan(userId, BAN_DURATION_MS);
+            addTemporaryBan(reporterDeviceHash, BAN_DURATION_MS);
+
+            // Terminate session cleanly
+            terminateSession(io, targetRoomId, "partner_left");
+
+            currentUser.status = "idle";
+            currentUser.roomId = null;
+            if (typeof redisSetUser === "function") redisSetUser(userId, currentUser).catch(() => {});
+
+            if (partner) {
+              partner.status = "idle";
+              partner.roomId = null;
+              if (typeof redisSetUser === "function") redisSetUser(partnerId, partner).catch(() => {});
+            }
+
+            // Send ban notification to the false reporter and disconnect
+            const banMsg = "⚠️ You have been banned for 15 minutes for false reporting abuse (repeatedly reporting users immediately upon entering chats).";
+            socket.emit("chat_ended_banned", {
+              isOffender: true,
+              message: banMsg,
+              banExpiresAt: banExpiry,
+              remainingMs: BAN_DURATION_MS
+            });
+            socket.emit("error_message", { message: banMsg });
+            emitState(socket, currentUser);
+            try { socket.disconnect(true); } catch (_) {}
+
+            // Send innocent partner back to home screen without penalty
+            if (partnerSocket) {
+              partnerSocket.emit("chat_ended", {
+                reason: "partner_left",
+                rawReason: "partner_left",
+                friendlyReason: "Chat ended. Your partner was removed for report abuse.",
+                message: "Your partner was removed for report abuse."
+              });
+              emitState(partnerSocket, partner);
+            }
+            return;
+          }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // 2. VALID REPORT RECORDING & 2-REPORTS IN 30 MIN BAN CHECK
+        // Require at least two distinct users to report the same device hash
+        // within a 30-minute window before triggering the full 15-minute lock.
+        // ═══════════════════════════════════════════════════════════════
         const reason = safeString(payload.reason, 120) || "user_reported";
 
         const report = reportStore.addReport({
@@ -2045,10 +2209,24 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           reportedAt: Date.now(), roomCreatedAt: room?.createdAt,
         });
 
-        // Terminate session cleanly (terminateSession will broadcast chat_ended once to the room and leave sockets)
-        terminateSession(io, currentUser.roomId, "user_reported");
+        // Track reports in 30-minute window for target device hash / user
+        const targetKey = partnerDeviceHash || partnerId;
+        let targetReports = reportsByTarget.get(targetKey) || [];
+        targetReports = targetReports.filter(r => (now - r.reportedAt) <= REPORT_WINDOW_MS);
+        targetReports.push({
+          reporterId: userId,
+          reporterDeviceHash,
+          reportedAt: now
+        });
+        reportsByTarget.set(targetKey, targetReports);
 
-        // Cleanly reset both users' states in memory
+        // Count distinct reporters in 30-minute window
+        const distinctReporters = new Set(targetReports.map(r => r.reporterDeviceHash || r.reporterId));
+
+        // Terminate session cleanly (terminateSession will broadcast chat_ended once to the room and leave sockets)
+        terminateSession(io, targetRoomId, "user_reported");
+
+        // Cleanly reset both users' states in memory to idle
         currentUser.status = "idle";
         currentUser.roomId = null;
         if (typeof redisSetUser === "function") {
@@ -2062,42 +2240,60 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           }
         }
 
-        socket.emit("chat_end", { reason: "user_reported" });
-
-        // Immediately ban the reported user for 15 mins from starting a chat (same like slurs when detected)
-        if (partnerId && partnerId !== "unknown") {
-          const now = Date.now();
-          const banExpiry = now + 900000; // 15 minutes ban (15 * 60 * 1000)
-          temporaryBans.set(partnerId, banExpiry);
-          addTemporaryBan(partnerId, 900000);
-
-          if (partner && partner.socketId) {
-            const partnerSocket = io.sockets.sockets.get(partner.socketId);
-            if (partnerSocket) {
-              const ip = partnerSocket.handshake.headers["x-forwarded-for"] || partnerSocket.handshake.address;
-              if (ip) {
-                temporaryBans.set(ip, banExpiry);
-                addTemporaryBan(ip, 900000);
-                log("ip_banned_via_reports", { ip, partnerId });
-              }
-              const banMsg = "⚠️ You have been banned for 15 minutes due to a user report for inappropriate behavior.";
-              partnerSocket.emit("chat_ended_banned", {
-                isOffender: true,
-                message: banMsg,
-                banExpiresAt: banExpiry,
-                remainingMs: 900000
-              });
-              partnerSocket.emit("error_message", { message: banMsg });
-              try { partnerSocket.disconnect(true); } catch (e) {}
-            }
+        if (distinctReporters.size >= 2) {
+          // 2 Reports within 30 Minutes = 15-Minute Ban triggered!
+          const banExpiry = now + BAN_DURATION_MS;
+          if (partnerId) {
+            temporaryBans.set(partnerId, banExpiry);
+            addTemporaryBan(partnerId, BAN_DURATION_MS);
           }
-          log("temporary_ban_applied_report", { partnerId, banExpiry });
+          if (partnerDeviceHash) {
+            temporaryBans.set(partnerDeviceHash, banExpiry);
+            addTemporaryBan(partnerDeviceHash, BAN_DURATION_MS);
+          }
+          if (partnerIp && partnerIp !== "127.0.0.1" && partnerIp !== "::1") {
+            temporaryBans.set(partnerIp, banExpiry);
+            temporaryBans.set(`ip_${partnerIp}`, banExpiry);
+            addTemporaryBan(partnerIp, BAN_DURATION_MS);
+          }
+
+          log("two_reports_ban_applied", { partnerId, partnerDeviceHash, distinctReporters: distinctReporters.size });
+
+          if (partnerSocket) {
+            const banMsg = "⚠️ You have been banned for 15 minutes due to receiving multiple reports from different users for inappropriate behavior.";
+            partnerSocket.emit("chat_ended_banned", {
+              isOffender: true,
+              message: banMsg,
+              banExpiresAt: banExpiry,
+              remainingMs: BAN_DURATION_MS
+            });
+            partnerSocket.emit("error_message", { message: banMsg });
+            emitState(partnerSocket, partner);
+            try { partnerSocket.disconnect(true); } catch (_) {}
+          }
+        } else {
+          // 1 Report = Instant Disconnect + Warning (No Ban yet)
+          if (partnerSocket) {
+            const warningMsg = "⚠️ Warning: You were reported by your chat partner for inappropriate behavior. Please follow community guidelines.";
+            partnerSocket.emit("warning_message", { message: warningMsg });
+            partnerSocket.emit("chat_ended", {
+              reason: "user_reported_warning",
+              rawReason: "user_reported_warning",
+              message: warningMsg,
+              friendlyReason: warningMsg
+            });
+            emitState(partnerSocket, partner);
+          }
         }
 
-        // Cleanly auto-requeue reporting user
-        setTimeout(() => {
-          queueUserForMatch(socket, io, userId);
-        }, 500);
+        // Notify reporter and send back to home screen (no auto-requeue)
+        socket.emit("chat_ended", {
+          reason: "report_submitted",
+          rawReason: "report_submitted",
+          message: "User reported. You have been returned to the home screen.",
+          friendlyReason: "User reported. You have been returned to the home screen."
+        });
+        emitState(socket, currentUser);
       } catch (err) {
         log("report_user_error", { userId, message: err.message });
       }
@@ -2217,6 +2413,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         messageTimestamps.delete(socket.id);
         silencedSockets.delete(socket.id);
         silenceViolationCounts.delete(socket.id);
+        rapidBurstTimestamps.delete(socket.id);
 
         disconnectedUser.isActive = false;
         disconnectedUser.lastDisconnect = Date.now();

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="neonMagentaMark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2A85"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+
+    <linearGradient id="electricGoldMark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFEC00"/>
+      <stop offset="100%" stop-color="#FF9E00"/>
+    </linearGradient>
+
+    <filter id="glowMark" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g filter="url(#glowMark)">
+    <!-- Outer Sonic Pulse Arc -->
+    <path d="M 290 100 A 150 150 0 0 1 410 220 A 150 150 0 0 1 290 340" 
+          fill="none" 
+          stroke="url(#neonMagentaMark)" 
+          stroke-width="24" 
+          stroke-linecap="round" 
+          opacity="0.55"/>
+
+    <!-- Main Bold P Contour -->
+    <path d="M 150 110 H 260 C 315 110, 355 150, 355 205 C 355 260, 315 300, 260 300 H 210 V 400" 
+          fill="none" 
+          stroke="url(#neonMagentaMark)" 
+          stroke-width="36" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+
+    <path d="M 150 110 V 400" 
+          fill="none" 
+          stroke="url(#neonMagentaMark)" 
+          stroke-width="36" 
+          stroke-linecap="round"/>
+
+    <!-- High-Impact Lightning Bolt overlay -->
+    <path d="M 265 150 L 200 245 H 245 L 225 320 L 295 220 H 250 Z" 
+          fill="url(#electricGoldMark)"/>
+  </g>
+</svg>

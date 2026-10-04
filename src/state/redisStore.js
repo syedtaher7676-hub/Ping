@@ -753,13 +753,28 @@ function incrementTotalMatches() {
   totalMatchesCount++;
 }
 
-function getMetrics() {
+function getMetrics(io = null) {
   let activeCount = 0;
-  for (const user of memoryUsers.values()) {
-    if (user.isActive) activeCount++;
+  if (io && io.sockets && io.sockets.sockets) {
+    const connectedUserIds = new Set();
+    for (const socket of io.sockets.sockets.values()) {
+      if (socket.connected) {
+        const uid = socket.data?.userId || socket.id;
+        connectedUserIds.add(uid);
+      }
+    }
+    activeCount = connectedUserIds.size;
+  } else {
+    for (const user of memoryUsers.values()) {
+      if (user.isActive) activeCount++;
+    }
   }
+
+  // Ensure active count reflects at least 1 connected user
+  const finalActive = Math.max(1, activeCount);
+
   return {
-    activeUsers: activeCount,
+    activeUsers: finalActive,
     queueSize: memoryWaitingQueue.length,
     activeRooms: memoryRooms.size,
     averageMatchmakingTime: getAverageMatchmakingTime(),

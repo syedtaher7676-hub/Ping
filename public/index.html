@@ -7,6 +7,30 @@
   <meta name="description" content="Ping – anonymous chat. No login, no data stored, instant connection." />
   <meta name="ping-backend-url" content="" />
   <title>Ping — Anonymous Chat</title>
+
+  <!-- Step 1: Synchronous In-App Browser (IAB) Auto-Detection -->
+  <script>
+    (function() {
+      var ua = navigator.userAgent || navigator.vendor || window.opera || "";
+      var isInApp = (ua.indexOf("Instagram") > -1) || 
+                     (ua.indexOf("FBAN") > -1) || 
+                     (ua.indexOf("FBAV") > -1) || 
+                     (ua.indexOf("FB_IAB") > -1) ||
+                     (ua.indexOf("TikTok") > -1) ||
+                     (ua.indexOf("Snapchat") > -1) ||
+                     (ua.indexOf("Line/") > -1) ||
+                     (ua.indexOf("MicroMessenger") > -1) ||
+                     (ua.indexOf("ByteLocale") > -1);
+      if (isInApp) {
+        document.documentElement.classList.add("is-inapp-browser");
+      }
+    })();
+  </script>
+
+  <!-- Step 3: Critical Asset Preloading for Instant FOUC-Free Paint -->
+  <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" fetchpriority="high" />
+  <link rel="preload" href="/styles.css?v=1.1.2" as="style" fetchpriority="high" />
+
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" type="image/svg+xml" href="/icon.svg" />
   <link rel="alternate icon" type="image/png" href="/favicon.png" />
@@ -226,10 +250,19 @@
 
 <body>
 
+  <!-- ═══ IN-APP BROWSER FALLBACK PROMPT BANNER ═══ -->
+  <div id="iabBanner" class="iab-banner" style="display:none;" role="banner">
+    <div class="iab-banner-content">
+      <span class="iab-icon">💡</span>
+      <span class="iab-text">For the smoothest experience, tap <strong>⋮</strong> or <strong>•••</strong> and choose <strong>Open in External Browser</strong>.</span>
+    </div>
+    <button id="closeIabBannerBtn" class="iab-close-btn" type="button" aria-label="Dismiss banner">✕</button>
+  </div>
+
   <!-- ═══ SPLASH ═══ -->
   <div id="splashScreen" class="splash-screen">
     <div class="splash-logo">
-      <img src="/logo.svg" alt="Ping" class="splash-logo-img" />
+      <img src="/logo.svg" alt="Ping" class="splash-logo-img" width="120" height="120" fetchpriority="high" />
     </div>
     <p class="splash-wordmark">Ping</p>
     <div class="splash-bar-wrap">
@@ -261,7 +294,7 @@
     <div class="landing-content">
       <div class="logo-lockup">
         <div class="logo-mark">
-          <img src="/logo.svg" alt="Ping Logo" class="brand-logo-img" />
+          <img src="/logo.svg" alt="Ping Logo" class="brand-logo-img" width="72" height="72" fetchpriority="high" />
         </div>
         <h1 class="logo-wordmark">
           <span class="lw-char" style="--i:0">P</span><span class="lw-char" style="--i:1">i</span><span class="lw-char"
@@ -279,9 +312,9 @@
       </div>
 
       <div class="landing-actions-row">
-        <button id="startLandingBtn" class="cta-btn" style="justify-content: center; min-width: 200px; will-change: transform, opacity; transform: translateZ(0); backface-visibility: hidden; -webkit-backface-visibility: hidden;">
+        <button id="startLandingBtn" class="cta-btn" type="button">
           <span class="cta-label">Start Chat</span>
-          <span class="cta-icon">
+          <span class="cta-icon" aria-hidden="true">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -290,10 +323,12 @@
         </button>
 
         <button id="downloadLandingBtn" class="download-app-btn" type="button" title="Download & Install Ping from Browser">
-          <svg class="download-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-          </svg>
           <span class="download-label">Download App</span>
+          <span class="download-icon-wrap" aria-hidden="true">
+            <svg class="download-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+          </span>
         </button>
       </div>
 
@@ -330,7 +365,7 @@
       </button>
 
       <div class="header-center">
-        <img src="/logo.svg" alt="Ping" class="header-logo-img" />
+        <img src="/logo-mark.svg" alt="Ping Logo" class="header-logo-img" width="24" height="24" />
         <span class="header-wordmark">Ping</span>
       </div>
 
@@ -392,37 +427,53 @@
 
       <!-- PRE-CHAT VIEW -->
       <div id="preChatView" class="view view-prechat">
-        <div class="prechat-card glass-card">
+        <div class="waiting-shell prechat-card glass-card">
 
-          <div class="prechat-anon-badge">
-            <span>👻</span><span>You're anonymous</span>
-          </div>
-
-          <div class="prechat-orb-wrap" aria-hidden="true">
-            <div class="prechat-orb-core">
-              <img src="/logo.svg" alt="Ping" class="prechat-orb-logo" />
+          <!-- Top status bar -->
+          <div class="ws-topbar prechat-topbar">
+            <div class="ws-status-pill prechat-status-pill">
+              <span class="wh-pulse"></span>
+              <span class="ws-status-text">Anonymous</span>
+            </div>
+            <div class="ws-elapsed-badge prechat-mode-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span>Instant</span>
             </div>
           </div>
 
-          <h2 class="prechat-title">Explore random chats</h2>
-          <p class="prechat-sub">Match instantly with someone new.</p>
-
-          <div class="prechat-online">
-            <span class="online-dot"></span>
-            <span id="headerActiveUsers" class="online-count">—</span>
-            <span class="online-label">people online right now</span>
+          <!-- Ping Logo Hero Centerpiece -->
+          <div class="prechat-logo-hero" aria-hidden="true">
+            <div class="prechat-logo-wrap">
+              <div class="prechat-logo-glow"></div>
+              <div class="prechat-logo-ring plr-1"></div>
+              <div class="prechat-logo-ring plr-2"></div>
+              <div class="prechat-logo-core">
+                <img src="/logo-mark.svg" alt="Ping Logo" class="prechat-hero-logo-img" width="56" height="56" />
+              </div>
+            </div>
           </div>
 
-          <div class="hero-actions">
-            <button id="startBtn" class="btn btn-primary btn-lg">
+          <!-- Info Section -->
+          <div class="waiting-info prechat-info">
+            <h2 class="waiting-title prechat-title">Explore random chats</h2>
+            <p class="waiting-sub prechat-sub">Match instantly with someone new.</p>
+
+            <div class="ws-live-row prechat-online">
+              <span class="ws-live-dot"></span>
+              <span id="headerActiveUsers" class="ws-live-num">—</span>
+              <span class="ws-live-label">people online right now</span>
+            </div>
+
+            <button id="startBtn" class="ws-cancel-btn prechat-start-btn" type="button" aria-label="Start Chat">
               <span>Start Chat</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg class="start-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </button>
           </div>
 
-          <p class="prechat-trust">🔒 No personal info · 🛡️ Moderated by AI</p>
         </div>
       </div>
 
@@ -435,10 +486,15 @@
           <div class="ws-topbar">
             <div class="ws-status-pill">
               <span class="wh-pulse"></span>
+              <div class="ws-signal-eq" aria-hidden="true">
+                <span class="eq-bar"></span>
+                <span class="eq-bar"></span>
+                <span class="eq-bar"></span>
+              </div>
               <span class="ws-status-text">Searching</span>
             </div>
             <div class="ws-elapsed-badge">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 6v6l4 2" />
               </svg>
@@ -446,70 +502,51 @@
             </div>
           </div>
 
-          <!-- Content Container: Radar Left, Info Right -->
-          <div class="waiting-content-row">
-            <!-- Radar Left -->
-            <div class="radar-pane">
-              <div class="radar-wrap">
-                <div class="radar-ring rr-1"></div>
-                <div class="radar-ring rr-2"></div>
-                <div class="radar-ring rr-3"></div>
-                <div class="radar-ring rr-4"></div>
-                <div class="radar-sweep"></div>
-                <div class="radar-blip rb-1"></div>
-                <div class="radar-blip rb-2"></div>
-                <div class="radar-blip rb-3"></div>
-                <div class="radar-blip rb-4"></div>
-                <div class="radar-core">
-                  <div class="radar-core-inner">⚡</div>
+          <!-- Radar Section -->
+          <div class="radar-pane">
+            <div class="radar-wrap">
+              <div class="radar-grid-crosshair-h" aria-hidden="true"></div>
+              <div class="radar-grid-crosshair-v" aria-hidden="true"></div>
+              <div class="radar-sonar-wave rsw-1"></div>
+              <div class="radar-sonar-wave rsw-2"></div>
+              <div class="radar-sonar-wave rsw-3"></div>
+              <div class="radar-ring rr-1"></div>
+              <div class="radar-ring rr-2"></div>
+              <div class="radar-ring rr-3"></div>
+              <div class="radar-ring rr-4"></div>
+              <div class="radar-sweep"></div>
+              <div class="radar-blip rb-1"><span class="blip-ping"></span></div>
+              <div class="radar-blip rb-2"><span class="blip-ping"></span></div>
+              <div class="radar-blip rb-3"><span class="blip-ping"></span></div>
+              <div class="radar-blip rb-4"><span class="blip-ping"></span></div>
+              <div class="radar-core">
+                <div class="radar-core-inner">
+                  <img src="/logo-mark.svg" alt="Ping Logo" class="radar-core-logo" width="32" height="32" />
                 </div>
-                <span class="radar-label rl-n">N</span>
-                <span class="radar-label rl-e">E</span>
-                <span class="radar-label rl-s">S</span>
-                <span class="radar-label rl-w">W</span>
               </div>
             </div>
+          </div>
 
-            <!-- Info Right -->
-            <div class="waiting-info">
+          <!-- Info Section -->
+          <div class="waiting-info">
+            <h2 class="waiting-title">Finding your match</h2>
+            <p class="waiting-sub">
+              <span id="waitingSubText">Searching across the globe</span>
+              <span class="dot-trail"><span>.</span><span>.</span><span>.</span></span>
+            </p>
 
-              <h2 class="waiting-title">Finding your match</h2>
-              <p class="waiting-sub">
-                <span id="waitingSubText">Searching across the globe</span>
-                <span class="dot-trail"><span>.</span><span>.</span><span>.</span></span>
-              </p>
-
-              <div class="ws-stats-row">
-                <div class="ws-stat-item">
-                  <span class="ws-stat-icon">🌍</span>
-                  <div class="ws-stat-info">
-                    <span class="ws-stat-val" id="wsCount">—</span>
-                    <span class="ws-stat-lbl">online now</span>
-                  </div>
-                </div>
-                <div class="ws-stat-divider"></div>
-                <div class="ws-stat-item">
-                  <span class="ws-stat-icon">⚡</span>
-                  <div class="ws-stat-info">
-                    <span class="ws-stat-val">~10s</span>
-                    <span class="ws-stat-lbl">avg match</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="ws-fun-fact">
-                <span class="ff-icon" id="ffIcon">💡</span>
-                <span class="ff-text" id="funFactText">Average match time is under 10 seconds</span>
-              </div>
-
-              <div class="ws-trust-row">
-                <span class="ws-trust-chip">👻 Anonymous</span>
-                <span class="ws-trust-chip">🔒 Private</span>
-                <span class="ws-trust-chip">🤝 Safe</span>
-              </div>
-
-              <button id="cancelWaitBtn" class="ws-cancel-btn">✕ Cancel Search</button>
+            <div class="ws-live-row">
+              <span class="ws-live-dot"></span>
+              <span id="wsCount" class="ws-live-num">—</span>
+              <span class="ws-live-label">people online right now</span>
             </div>
+
+            <button id="cancelWaitBtn" class="ws-cancel-btn" type="button" aria-label="Cancel Search">
+              <svg class="ws-cancel-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+              <span class="ws-cancel-label">Cancel Search</span>
+            </button>
           </div>
 
         </div>

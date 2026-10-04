@@ -359,114 +359,153 @@
 }
 
 .prechat-card {
-  animation: card-glow 4.5s ease-in-out infinite, view-in .3s var(--ease) both;
+  animation: card-glow 4.5s ease-in-out infinite;
 }
 
-/* ── RADAR ── */
+/* ── RADAR & SONAR ANIMATIONS ── */
 @keyframes radar-expand {
   0% {
-    transform: scale(.25);
-    opacity: .95
+    transform: scale(.2);
+    opacity: .95;
+    border-color: rgba(167, 139, 250, .9);
+  }
+
+  50% {
+    opacity: .6;
   }
 
   100% {
     transform: scale(1.6);
-    opacity: 0
+    opacity: 0;
+    border-color: rgba(6, 182, 212, 0);
   }
 }
 
 .rr-1 {
-  animation: radar-expand 3.2s ease-out 0s infinite;
+  animation: radar-expand 3s cubic-bezier(0.1, 0.8, 0.3, 1) 0s infinite;
 }
 
 .rr-2 {
-  animation: radar-expand 3.2s ease-out .65s infinite;
+  animation: radar-expand 3s cubic-bezier(0.1, 0.8, 0.3, 1) .65s infinite;
 }
 
 .rr-3 {
-  animation: radar-expand 3.2s ease-out 1.3s infinite;
+  animation: radar-expand 3s cubic-bezier(0.1, 0.8, 0.3, 1) 1.3s infinite;
 }
 
 .rr-4 {
-  animation: radar-expand 3.2s ease-out 1.95s infinite;
+  animation: radar-expand 3s cubic-bezier(0.1, 0.8, 0.3, 1) 1.95s infinite;
 }
 
 @keyframes radar-rotate {
   from {
-    transform: rotate(0)
+    transform: rotate(0deg);
   }
 
   to {
-    transform: rotate(360deg)
+    transform: rotate(360deg);
   }
 }
 
 .radar-sweep {
-  background: conic-gradient(from 0deg, rgba(124, 58, 237, .9) 0deg, rgba(124, 58, 237, .4) 35deg, transparent 75deg, transparent 360deg);
-  animation: radar-rotate 2.2s linear infinite;
+  background: conic-gradient(from 0deg, rgba(167, 139, 250, 0.8) 0deg, rgba(236, 72, 153, 0.4) 30deg, rgba(6, 182, 212, 0.2) 60deg, transparent 110deg, transparent 360deg);
+  animation: radar-rotate 2s linear infinite;
   will-change: transform;
 }
 
 @keyframes blip-appear {
-
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0;
-    transform: scale(0)
+    transform: scale(0);
   }
 
-  8% {
+  12% {
     opacity: 1;
-    transform: scale(1.6)
+    transform: scale(1.5);
   }
 
-  25% {
-    opacity: .9;
-    transform: scale(1)
+  30% {
+    opacity: 0.95;
+    transform: scale(1);
   }
 
-  55% {
-    opacity: 0
+  65% {
+    opacity: 0;
+    transform: scale(0.6);
   }
 }
 
-.rb-1 {
-  animation: blip-appear 3.2s ease-in-out .9s infinite;
+.rb-1 { animation: blip-appear 3.2s ease-in-out .6s infinite; }
+.rb-2 { animation: blip-appear 3.2s ease-in-out 1.8s infinite; }
+.rb-3 { animation: blip-appear 3.2s ease-in-out 0.2s infinite; }
+.rb-4 { animation: blip-appear 3.2s ease-in-out 2.5s infinite; }
+
+@keyframes blip-ring-expand {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
 }
 
-.rb-2 {
-  animation: blip-appear 3.2s ease-in-out 2.1s infinite;
-}
-
-.rb-3 {
-  animation: blip-appear 3.2s ease-in-out .4s infinite;
-}
-
-.rb-4 {
-  animation: blip-appear 3.2s ease-in-out 3.0s infinite;
+.blip-ping {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid var(--green);
+  animation: blip-ring-expand 1.5s ease-out infinite;
 }
 
 @keyframes core-hue {
-
-  0%,
-  100% {
+  0%, 100% {
     filter: hue-rotate(0deg);
-    box-shadow: 0 0 30px rgba(124, 58, 237, .8), 0 0 70px rgba(219, 39, 119, .4)
+    box-shadow: 0 0 35px rgba(124, 58, 237, .9), 0 0 75px rgba(219, 39, 119, .5);
   }
 
   33% {
     filter: hue-rotate(50deg);
-    box-shadow: 0 0 40px rgba(219, 39, 119, .9), 0 0 90px rgba(6, 182, 212, .3)
+    box-shadow: 0 0 45px rgba(219, 39, 119, .95), 0 0 95px rgba(6, 182, 212, .4);
   }
 
   66% {
     filter: hue-rotate(90deg);
-    box-shadow: 0 0 30px rgba(6, 182, 212, .8), 0 0 70px rgba(124, 58, 237, .4)
+    box-shadow: 0 0 35px rgba(6, 182, 212, .9), 0 0 75px rgba(124, 58, 237, .5);
   }
 }
 
 .radar-core {
-  animation: core-hue 4.5s ease-in-out infinite !important;
+  animation: core-hue 4s ease-in-out infinite !important;
+}
+
+/* Equalizer Bars in Top Status Pill */
+.ws-signal-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 10px;
+  margin-left: 2px;
+}
+
+.eq-bar {
+  width: 2.5px;
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  box-shadow: 0 0 6px var(--green);
+  transform-origin: bottom;
+  animation: eq-height 1s ease-in-out infinite alternate;
+}
+
+.eq-bar:nth-child(1) { animation-duration: 0.8s; }
+.eq-bar:nth-child(2) { animation-duration: 1.2s; animation-delay: -0.4s; }
+.eq-bar:nth-child(3) { animation-duration: 0.9s; animation-delay: -0.2s; }
+
+@keyframes eq-height {
+  0% { transform: scaleY(0.2); }
+  100% { transform: scaleY(1); }
 }
 
 @keyframes core-spin {
@@ -563,7 +602,7 @@
 @keyframes bubble-self {
   from {
     opacity: 0;
-    transform: translateX(24px) scale(.9)
+    transform: translateX(10px) scale(.96)
   }
 
   to {
@@ -575,7 +614,7 @@
 @keyframes bubble-partner {
   from {
     opacity: 0;
-    transform: translateX(-24px) scale(.9)
+    transform: translateX(-10px) scale(.96)
   }
 
   to {
@@ -587,7 +626,7 @@
 @keyframes bubble-system {
   from {
     opacity: 0;
-    transform: scale(.85)
+    transform: scale(.92)
   }
 
   to {
@@ -597,15 +636,15 @@
 }
 
 .msg.self {
-  animation: bubble-self .28s var(--spring) both !important;
+  animation: bubble-self .12s cubic-bezier(0, 0, 0.2, 1) both !important;
 }
 
 .msg.partner {
-  animation: bubble-partner .28s var(--spring) both !important;
+  animation: bubble-partner .12s cubic-bezier(0, 0, 0.2, 1) both !important;
 }
 
 .msg.system {
-  animation: bubble-system .22s var(--ease) both !important;
+  animation: bubble-system .12s cubic-bezier(0, 0, 0.2, 1) both !important;
 }
 
 @keyframes match-pop {
@@ -691,7 +730,7 @@
 @keyframes toast-up {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(.9)
+    transform: translateY(10px) scale(.95)
   }
 
   to {
@@ -701,14 +740,14 @@
 }
 
 .toast {
-  animation: toast-up .3s var(--spring) both !important;
+  animation: toast-up .14s cubic-bezier(0, 0, 0.2, 1) both !important;
 }
 
 /* ── TYPING BAR ── */
 @keyframes typing-in {
   from {
     opacity: 0;
-    transform: translateY(8px)
+    transform: translateY(4px)
   }
 
   to {
@@ -718,7 +757,7 @@
 }
 
 .typing-bar.visible {
-  animation: typing-in .2s var(--ease) both;
+  animation: typing-in .1s cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 /* ── CURSOR TRAIL ── */

@@ -15,7 +15,7 @@
     if (!splashBar) return;
     let progress = 0;
     const startMs = performance.now();
-    const durationMs = 500;
+    const durationMs = 220;
 
     const step = (now) => {
       const elapsed = now - startMs;
@@ -25,7 +25,7 @@
       if (progress < 100) {
         requestAnimationFrame(step);
       } else {
-        setTimeout(revealLanding, 150);
+        setTimeout(revealLanding, 60);
       }
     };
 
@@ -34,14 +34,14 @@
 
   function revealLanding() {
     if (splash) {
-      splash.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+      splash.style.transition = 'opacity 0.2s cubic-bezier(0, 0, 0.2, 1), transform 0.2s cubic-bezier(0, 0, 0.2, 1), filter 0.2s cubic-bezier(0, 0, 0.2, 1)';
       splash.style.opacity = '0';
-      splash.style.transform = 'scale(1.02) translateZ(0)';
-      splash.style.filter = 'blur(8px)';
+      splash.style.transform = 'scale(1.01) translateZ(0)';
+      splash.style.filter = 'blur(4px)';
       splash.style.pointerEvents = 'none';
 
       if (landing) {
-        landing.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+        landing.style.transition = 'opacity 0.2s cubic-bezier(0, 0, 0.2, 1), transform 0.2s cubic-bezier(0, 0, 0.2, 1)';
         landing.style.opacity = '1';
         landing.style.transform = 'scale(1) translateZ(0)';
       }
@@ -49,8 +49,8 @@
       setTimeout(() => {
         splash.style.display = 'none';
         const sl = document.getElementById('scanLine');
-        if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 150);
-      }, 500);
+        if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 60);
+      }, 200);
     }
   }
 
@@ -352,7 +352,8 @@
   let lastTs = 0;
   function loop(ts) {
     requestAnimationFrame(loop);
-    if (ts - lastTs < 20) return; // ~50fps cap for stability
+    if (document.hidden) return;
+    if (ts - lastTs < 16) return; // Smooth 60fps refresh rate
     lastTs = ts;
 
     const chatActive    = chatApp && chatApp.style.display !== 'none';
