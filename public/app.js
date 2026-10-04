@@ -2714,6 +2714,35 @@ socket.on('disconnect', (reason) => {
 socket.off('connect_error');
 socket.on('connect_error', (error) => {
   const msg = error?.message || error;
+  if (typeof msg === 'string' && msg.includes('TEMPORARY_BAN:')) {
+    const minutes = parseInt(msg.split('TEMPORARY_BAN:')[1], 10) || 15;
+    let overlay = document.getElementById('temporaryBanOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'temporaryBanOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background-color:rgba(5,5,14,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
+      overlay.innerHTML = `
+        <div style="max-width:460px;width:100%;background-color:#0c0c1e;border:1px solid rgba(239,68,68,0.35);border-radius:20px;padding:36px 28px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(239,68,68,0.15);display:flex;flex-direction:column;align-items:center;gap:16px;">
+          <div style="width:60px;height:60px;border-radius:50%;background-color:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);display:flex;align-items:center;justify-content:center;font-size:28px;">🚫</div>
+          <h2 style="color:#ffffff;font-family:'Space Grotesk',sans-serif;font-size:1.45rem;font-weight:700;margin:0;">Access Suspended</h2>
+          <p id="temporaryBanMsgText" style="color:#f87171;font-family:'Space Grotesk',sans-serif;font-size:1.1rem;line-height:1.5;margin:0;font-weight:600;">Suspended for ${minutes} minutes due to community reports</p>
+          <p style="color:#94a3b8;font-size:0.875rem;line-height:1.5;margin:0;">Matchmaking and chatting are temporarily disabled. Your access will automatically resume when this suspension expires.</p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    } else {
+      const msgText = document.getElementById('temporaryBanMsgText');
+      if (msgText) msgText.textContent = `Suspended for ${minutes} minutes due to community reports`;
+      overlay.style.display = 'flex';
+    }
+    document.querySelectorAll('#start-chat-btn, #startBtn, #startLandingBtn, #findChatBtn').forEach((btn) => {
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      btn.style.cursor = 'not-allowed';
+      btn.style.pointerEvents = 'none';
+    });
+    return;
+  }
   if (msg === 'websocket error') {
     console.warn('[Ping] Socket connection notice (polling fallback active):', msg);
   } else {

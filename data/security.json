@@ -1409,5 +1409,15 @@
     "ip": "127.0.0.1",
     "severity": "critical",
     "createdAt": 1791025182099
+  },
+  {
+    "id": "sec_1791129152847_teuw1q",
+    "type": "user_reported",
+    "userId": "u_alice",
+    "reportedUserId": "u_bob",
+    "roomId": "room_valid_test",
+    "reportId": "rpt_1791129152840_asjbq3",
+    "severity": "medium",
+    "createdAt": 1791129152847
   }
 ]

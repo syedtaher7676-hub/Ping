@@ -1497,3 +1497,23 @@ _
 5
 8",1,"active_learning_test_vertical"
 "t3$t_v10l@t10n_$@mpl3_1791025176058",1,"active_learning_test_leet"
+"user_reported",1,"user_report_violation"
+"u.s.e.r._.r.e.p.o.r.t.e.d",1,"user_report_violation_dotted"
+"u...s...e...r..._...r...e...p...o...r...t...e...d",1,"user_report_violation_multidot"
+"u-s-e-r-_-r-e-p-o-r-t-e-d",1,"user_report_violation_hyphenated"
+"u*s*e*r*_*r*e*p*o*r*t*e*d",1,"user_report_violation_starred"
+"u s e r _ r e p o r t e d",1,"user_report_violation_spaced"
+"u
+s
+e
+r
+_
+r
+e
+p
+o
+r
+t
+e
+d",1,"user_report_violation_vertical"
+"u$3r_r3p0rt3d",1,"user_report_violation_leet"

@@ -13,6 +13,7 @@ const { terminateSession } = require("./services/sessionManager");
 const { rooms, redisClient } = require("./state/store");
 const { createId } = require("./utils/ids");
 const { log } = require("./utils/logger");
+const { isDeviceBanned } = require("./state/reports");
 
 // Memoization cache for geoip lookups to avoid event-loop blocking under high load
 const geoCache = new Map();
@@ -177,6 +178,12 @@ io.use((socket, next) => {
     socket.data.deviceHash = verifiedDeviceHash;
     socket.data.country = getCountryFromSocket(socket);
     socket.data.authenticatedAt = Date.now();
+
+    // Check if device is temporarily banned
+    const minutesLeft = isDeviceBanned(socket.data.deviceHash);
+    if (minutesLeft > 0) {
+      return next(new Error("TEMPORARY_BAN:" + minutesLeft));
+    }
 
     next();
   } catch (err) {

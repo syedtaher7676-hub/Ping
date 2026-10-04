@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import OnlineCounter from './OnlineCounter';
-import { subscribeToOnlineCount } from '../socket';
+import { subscribeToOnlineCount, getSocket, socket } from '../socket';
 
 /**
  * 1. Strictly Memoized Logo & Hero Title Section
@@ -119,14 +119,15 @@ export const HeroSection = memo(function HeroSection() {
 
 /**
  * 2. Strictly Memoized "Start Chat" CTA Button
- * Isolated from parent render triggers so it stays 100% paint-stable.
+ * Supports disabled state when user is suspended.
  */
-export const StartChatButton = memo(function StartChatButton({ onClick }) {
+export const StartChatButton = memo(function StartChatButton({ onClick, disabled }) {
   return (
     <button
       id="startLandingBtn"
       className="cta-btn"
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       type="button"
       style={{
         display: 'inline-flex',
@@ -135,22 +136,24 @@ export const StartChatButton = memo(function StartChatButton({ onClick }) {
         gap: '12px',
         minWidth: '200px',
         padding: '18px 44px',
-        background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
+        background: disabled ? '#374151' : 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
         border: 'none',
         borderRadius: '9999px',
-        color: '#fff',
+        color: disabled ? '#9ca3af' : '#fff',
         fontFamily: "'Space Grotesk', sans-serif",
         fontSize: '1.15rem',
         fontWeight: 700,
-        cursor: 'pointer',
-        boxShadow: '0 4px 24px rgba(124, 58, 237, 0.55)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        boxShadow: disabled ? 'none' : '0 4px 24px rgba(124, 58, 237, 0.55)',
         willChange: 'transform, opacity',
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
+        opacity: disabled ? 0.6 : 1,
+        pointerEvents: disabled ? 'none' : 'auto',
       }}
     >
-      <span className="cta-label">Start Chat</span>
+      <span className="cta-label">{disabled ? 'Chat Suspended' : 'Start Chat'}</span>
       <span className="cta-icon" aria-hidden="true">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M5 12h14M12 5l7 7-7 7" />
@@ -166,19 +169,41 @@ export const StartChatButton = memo(function StartChatButton({ onClick }) {
  */
 export function Home({ onStartChat }) {
   const [onlineUserCount, setOnlineUserCount] = useState(0);
+  const [banMinutes, setBanMinutes] = useState(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToOnlineCount((count) => {
       setOnlineUserCount(count);
     });
+
+    const activeSocket = typeof getSocket === 'function' ? getSocket() : socket;
+    const handleConnectError = (error) => {
+      const msg = (error && (error.message || (typeof error === 'string' ? error : ''))) || '';
+      if (msg.includes('TEMPORARY_BAN:')) {
+        const parts = msg.split('TEMPORARY_BAN:');
+        const minutes = parseInt(parts[1], 10) || 15;
+        setBanMinutes(minutes);
+      }
+    };
+
+    if (activeSocket) {
+      activeSocket.on('connect_error', handleConnectError);
+    }
+
     return () => {
       unsubscribe();
+      if (activeSocket) {
+        activeSocket.off('connect_error', handleConnectError);
+      }
     };
   }, []);
 
   const handleStartChat = useCallback(() => {
+    if (banMinutes) return;
     if (onStartChat) onStartChat();
-  }, [onStartChat]);
+  }, [onStartChat, banMinutes]);
+
+  const isBanned = banMinutes !== null;
 
   return (
     <div
@@ -224,8 +249,94 @@ export function Home({ onStartChat }) {
         <OnlineCounter count={onlineUserCount} />
 
         {/* Step 1 & 3 Optimizations: Memoized & GPU-accelerated CTA button */}
-        <StartChatButton onClick={handleStartChat} />
+        <StartChatButton onClick={handleStartChat} disabled={isBanned} />
       </div>
+
+      {/* Clean Dark Overlay for Temporary Ban */}
+      {isBanned && (
+        <div
+          id="temporaryBanOverlay"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(5, 5, 14, 0.92)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '460px',
+              width: '100%',
+              backgroundColor: '#0c0c1e',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              borderRadius: '20px',
+              padding: '36px 28px',
+              textAlign: 'center',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(239, 68, 68, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+              }}
+            >
+              🚫
+            </div>
+            <h2
+              style={{
+                color: '#ffffff',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '1.45rem',
+                fontWeight: 700,
+                margin: 0,
+              }}
+            >
+              Access Suspended
+            </h2>
+            <p
+              id="temporaryBanMessage"
+              style={{
+                color: '#f87171',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '1.1rem',
+                lineHeight: 1.5,
+                margin: 0,
+                fontWeight: 600,
+              }}
+            >
+              Suspended for {banMinutes} minutes due to community reports
+            </p>
+            <p
+              style={{
+                color: '#94a3b8',
+                fontSize: '0.875rem',
+                lineHeight: 1.5,
+                margin: 0,
+              }}
+            >
+              Matchmaking and chatting are temporarily disabled. Your access will automatically resume when this suspension expires.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

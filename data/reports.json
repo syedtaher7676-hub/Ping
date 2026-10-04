@@ -48,5 +48,14 @@
     "roomId": "room_4ee0e7c8-0688-4755-a471-c8a3167735a6",
     "reason": "user_reported",
     "createdAt": 1776687988827
+  },
+  {
+    "id": "rpt_1791129152840_asjbq3",
+    "reporterId": "u_alice",
+    "reportedUserId": "u_bob",
+    "reportedUserCountry": "unknown",
+    "roomId": "room_valid_test",
+    "reason": "user_reported",
+    "createdAt": 1791129152840
   }
 ]
