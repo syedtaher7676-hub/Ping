@@ -2081,7 +2081,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     //  REPORT & END CHAT
     //  - Block report if room active < 5s
     //  - recordReport: >3 clicks in 1 min -> 15m reporter ban
-    //  - 2 reports -> 15m target ban
+    //  - 3 reports -> 15m target ban
     //  - Instant session termination & disconnect if banned
     // ═══════════════════════════════════════════════
 
@@ -2191,7 +2191,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // Disconnect the target user if they hit the ban threshold (2 reports)
+        // Disconnect the target user if they hit the ban threshold (3 reports)
         if (reportResult.targetBanned) {
           const minutesLeft = reportResult.minutesLeft || 15;
           const banMsg = `Suspended for ${minutesLeft} minutes due to community reports`;

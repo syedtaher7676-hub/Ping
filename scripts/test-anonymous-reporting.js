@@ -27,15 +27,21 @@ assert.strictEqual(res1.reporterBanned, false, "Reporter should not be banned");
 assert.strictEqual(isDeviceBanned("target_bad"), 0, "Target not banned after 1 report");
 console.log("✅ Check 2 passed: Single report does not ban target");
 
-// 4. Second report on target (reaches 2 total reports -> ban 15 minutes)
+// 4. Second report on target (under threshold of 3 -> still not banned)
 const res2 = recordReport("reporter_2", "target_bad");
-assert.strictEqual(res2.targetBanned, true, "2nd report must ban target for 15 minutes");
-assert.strictEqual(res2.minutesLeft, 15, "Ban duration should be 15 minutes");
+assert.strictEqual(res2.targetBanned, false, "2nd report should not ban target yet");
+assert.strictEqual(isDeviceBanned("target_bad"), 0, "Target not banned after 2 reports");
+console.log("✅ Check 3 passed: 2nd report does not ban target yet");
+
+// 5. Third report on target (reaches 3 total reports -> ban 15 minutes)
+const res3 = recordReport("reporter_3", "target_bad");
+assert.strictEqual(res3.targetBanned, true, "3rd report must ban target for 15 minutes");
+assert.strictEqual(res3.minutesLeft, 15, "Ban duration should be 15 minutes");
 const remainingMinutes = isDeviceBanned("target_bad");
 assert.strictEqual(remainingMinutes, 15, "Target device should have 15 minutes remaining");
-console.log("✅ Check 3 passed: 2nd report bans target device for 15 minutes");
+console.log("✅ Check 4 passed: 3rd report bans target device for 15 minutes");
 
-// 5. Reporter fake report spam (>3 reports in 1 minute -> 15 min ban)
+// 6. Reporter fake report spam (>3 reports in 1 minute -> 15 min ban)
 clearAllReportsAndBans();
 const repHash = "spammer_device";
 

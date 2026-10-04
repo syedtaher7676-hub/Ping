@@ -7,7 +7,7 @@ const BAN_DURATION_MS = 15 * 60 * 1000;    // 15 minutes
 const REPORTER_WINDOW_MS = 60 * 1000;      // 1 minute window for rapid clicks
 const TARGET_WINDOW_MS = 60 * 60 * 1000;   // 1 hour window for target flags
 const REPORTER_MAX_REPORTS = 3;            // > 3 clicks in 1 min triggers ban
-const TARGET_BAN_THRESHOLD = 2;            // 2 total reports triggers ban
+const TARGET_BAN_THRESHOLD = 3;            // 3 total reports triggers ban
 
 // In-memory JavaScript Maps
 const bans = new Map();             // deviceHash -> banExpiresAt (epoch ms)
@@ -40,7 +40,7 @@ function isDeviceBanned(deviceHash) {
  * Record a report from reporterHash against targetHash.
  * a. If the reporter clicks report more than 3 times in 1 minute, ban the reporter for 15 minutes.
  * b. Add 1 report flag to targetHash. Reset flags after 1 hour.
- * c. If targetHash reaches 2 total reports, ban targetHash for 15 minutes.
+ * c. If targetHash reaches 3 total reports, ban targetHash for 15 minutes.
  *
  * @param {string} reporterHash
  * @param {string} targetHash
@@ -143,4 +143,5 @@ module.exports = {
   BAN_DURATION_MS,
   REPORTER_WINDOW_MS,
   TARGET_WINDOW_MS,
+  TARGET_BAN_THRESHOLD,
 };
