@@ -844,6 +844,102 @@ socket.on('dm_deleted', ({ msgId }) => {
   if (textNode) textNode.textContent = 'Message deleted 🗑️';
 });
 
+// ── INSTAGRAM-STYLE ATTACHED EMOJI REACTIONS ────────────────────────
+const messageReactions = new Map(); // msgId -> { [userId]: emoji }
+
+function renderMessageReactions(msgId) {
+  if (!msgId) return;
+  const reactionsMap = messageReactions.get(msgId) || {};
+  const selector = `[data-msg-id="${msgId}"]`;
+  const msgEls = document.querySelectorAll(selector);
+  if (!msgEls.length) return;
+
+  // Calculate counts for each emoji (each user contributes at most 1 count)
+  const counts = {};
+  Object.values(reactionsMap).forEach(emo => {
+    if (emo) counts[emo] = (counts[emo] || 0) + 1;
+  });
+
+  const emojis = Object.keys(counts);
+
+  msgEls.forEach(msgEl => {
+    let tray = msgEl.querySelector('.msg-reactions-tray');
+    if (emojis.length === 0) {
+      if (tray) tray.remove();
+      msgEl.classList.remove('has-reactions');
+      return;
+    }
+
+    if (!tray) {
+      tray = document.createElement('div');
+      tray.className = 'msg-reactions-tray';
+      msgEl.appendChild(tray);
+      msgEl.classList.add('has-reactions');
+    }
+
+    tray.innerHTML = '';
+    emojis.forEach(emo => {
+      const badge = document.createElement('div');
+      badge.className = 'msg-reaction-badge';
+      badge.dataset.emoji = emo;
+      const myId = selfUserId || persistentUserId;
+      if (myId && reactionsMap[myId] === emo) {
+        badge.classList.add('self-reacted');
+      }
+      const count = counts[emo];
+      badge.innerHTML = `<span class="rxn-emoji">${emo}</span>${count > 1 ? `<span class="rxn-count">${count}</span>` : ''}`;
+      badge.onclick = (e) => {
+        e.stopPropagation();
+        badge.style.transform = 'scale(1.3)';
+        setTimeout(() => { badge.style.transform = ''; }, 160);
+      };
+      tray.appendChild(badge);
+    });
+  });
+}
+
+function attachOrToggleReaction(msgId, emoji, isFriend) {
+  const roomId = isFriend ? friendRoomId : activeRoomId;
+  if (!roomId || !msgId || !emoji) return;
+
+  const currentUserId = selfUserId || persistentUserId || 'local_user';
+  if (!messageReactions.has(msgId)) {
+    messageReactions.set(msgId, {});
+  }
+  const currentMap = messageReactions.get(msgId);
+
+  // Single emoji per user: updates/replaces any previous emoji reaction for this user
+  currentMap[currentUserId] = emoji;
+
+  // 1. Emit reaction event to socket server
+  socket.emit('react_message', { roomId, msgId, emoji, isFriend });
+
+  // 2. Re-render badges with accurate single count
+  renderMessageReactions(msgId);
+
+  // 3. Fun visual feedback
+  if (emoji === '❤️') triggerEffect('hearts');
+  else if (emoji === '🔥') triggerEffect('fire');
+  else if (emoji === '👍' || emoji === '✨') triggerEffect('confetti');
+}
+
+socket.off('message_reaction');
+socket.on('message_reaction', ({ msgId, emoji, fromUserId, roomId }) => {
+  if (!msgId || !emoji || !fromUserId) return;
+  if (!messageReactions.has(msgId)) {
+    messageReactions.set(msgId, {});
+  }
+  const currentMap = messageReactions.get(msgId);
+  currentMap[fromUserId] = emoji; // Store exactly one emoji per user ID
+  renderMessageReactions(msgId);
+
+  const isMe = (fromUserId === selfUserId || fromUserId === persistentUserId);
+  if (!isMe) {
+    if (emoji === '❤️') triggerEffect('hearts');
+    else if (emoji === '🔥') triggerEffect('fire');
+  }
+});
+
 // ── TIME EXTENSION EVENTS ─────────────────────────────────────────────
 const waitingTexts = [
   'Searching across the globe 🌎', 'Scanning the vibes... 📶',
@@ -1286,10 +1382,9 @@ function appendMsg(text, opts = {}) {
   // Double tap to heart
   el.ondblclick = (e) => {
     e.stopPropagation();
-    window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
-    if (currentChatType === 'friend') sendFriendMessage('❤️');
-    else sendMessage('❤️');
-    if (window.__pingMatchBurst) window.__pingMatchBurst();
+    if (msgId) {
+      attachOrToggleReaction(msgId, '❤️', false);
+    }
   };
 
   // Message appending without inline hover reactions or reply buttons (handled via Instagram-style long-press)
@@ -1320,7 +1415,7 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     targetBubble.classList.add('ping-msg-highlighted');
   }
 
-  // 1. Fullscreen frosted backdrop
+  // 1. Transparent/darkened backdrop (no blur so keyboard stays sharp)
   const backdrop = document.createElement('div');
   backdrop.className = 'ping-ig-backdrop';
   document.body.appendChild(backdrop);
@@ -1328,6 +1423,14 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
   // 2. Floating Instagram reaction pill (capsule)
   const pill = document.createElement('div');
   pill.className = 'ping-ig-reaction-pill';
+
+  // Prevent buttons in pill from taking focus away from keyboard
+  pill.addEventListener('pointerdown', (evt) => {
+    evt.stopPropagation();
+    if (evt.target.closest('button')) {
+      evt.preventDefault();
+    }
+  });
 
   const primaryEmojis = ['❤️', '😂', '😮', '😢', '🔥', '👍'];
   primaryEmojis.forEach(emo => {
@@ -1340,13 +1443,9 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
       evt.stopPropagation();
       if (navigator.vibrate) navigator.vibrate(18);
       closeAll();
-      window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
-      if (isFriend) sendFriendMessage(emo);
-      else sendMessage(emo);
-      if (emo === '❤️') triggerEffect('hearts');
-      else if (emo === '🔥') triggerEffect('fire');
-      else if (emo === '👍') triggerEffect('confetti');
-      // No toast popup on emoji reaction per user requirement
+      attachOrToggleReaction(msgId, emo, isFriend);
+      const targetInput = isFriend ? $('friendMessageInput') : $('messageInput');
+      if (targetInput) targetInput.focus({ preventScroll: true });
     };
     pill.appendChild(btn);
   });
@@ -1365,10 +1464,9 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
       evt.stopPropagation();
       if (navigator.vibrate) navigator.vibrate(18);
       closeAll();
-      window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
-      if (isFriend) sendFriendMessage(emo);
-      else sendMessage(emo);
-      // No toast popup on emoji reaction per user requirement
+      attachOrToggleReaction(msgId, emo, isFriend);
+      const targetInput = isFriend ? $('friendMessageInput') : $('messageInput');
+      if (targetInput) targetInput.focus({ preventScroll: true });
     };
     moreTray.appendChild(btn);
   });
@@ -1391,30 +1489,30 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
 
   document.body.appendChild(pill);
 
-  // 3. Floating Instagram Action Menu with Ping UI
+  // 3. Floating Instagram Action Menu with Ping UI (Clean & uncluttered)
   const menu = document.createElement('div');
   menu.className = 'ping-ig-menu';
+
+  // Prevent buttons in menu from taking focus away from keyboard
+  menu.addEventListener('pointerdown', (evt) => {
+    evt.stopPropagation();
+    if (evt.target.closest('button')) {
+      evt.preventDefault();
+    }
+  });
 
   // Primary Action: Reply
   const replyItem = document.createElement('button');
   replyItem.type = 'button';
   replyItem.className = 'ping-ig-item ping-ig-reply-item';
-  const partnerLabel = isFriend ? 'Friend' : 'Stranger';
-  const replySubtitle = isPartner ? `Reply to ${partnerLabel}` : 'Reply to your message';
   replyItem.innerHTML = `
-    <div class="ping-ig-item-left">
-      <div class="ping-ig-item-icon">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 14 4 9 9 4"/>
-          <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
-        </svg>
-      </div>
-      <div class="ping-ig-item-text">
-        <span class="ping-ig-item-title">Reply</span>
-        <span class="ping-ig-item-sub">${replySubtitle}</span>
-      </div>
+    <div class="ping-ig-item-icon">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 14 4 9 9 4"/>
+        <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+      </svg>
     </div>
-    <span class="ping-ig-shortcut">↩ Reply</span>
+    <span class="ping-ig-item-title">Reply</span>
   `;
   replyItem.onclick = (evt) => {
     evt.stopPropagation();
@@ -1431,7 +1529,7 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     }
     const targetInput = isFriend ? $('friendMessageInput') : $('messageInput');
     if (targetInput) {
-      targetInput.focus();
+      targetInput.focus({ preventScroll: true });
       targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   };
@@ -1442,18 +1540,13 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
   copyItem.type = 'button';
   copyItem.className = 'ping-ig-item';
   copyItem.innerHTML = `
-    <div class="ping-ig-item-left">
-      <div class="ping-ig-item-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-        </svg>
-      </div>
-      <div class="ping-ig-item-text">
-        <span class="ping-ig-item-title">Copy Text</span>
-        <span class="ping-ig-item-sub">Copy to clipboard</span>
-      </div>
+    <div class="ping-ig-item-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
     </div>
+    <span class="ping-ig-item-title">Copy</span>
   `;
   copyItem.onclick = async (evt) => {
     evt.stopPropagation();
@@ -1478,6 +1571,8 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     } catch (err) {
       showToast('📋 Copied to clipboard!', 'info', 1500);
     }
+    const targetInput = isFriend ? $('friendMessageInput') : $('messageInput');
+    if (targetInput) targetInput.focus({ preventScroll: true });
   };
   menu.appendChild(copyItem);
 
@@ -1487,18 +1582,13 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     editItem.type = 'button';
     editItem.className = 'ping-ig-item';
     editItem.innerHTML = `
-      <div class="ping-ig-item-left">
-        <div class="ping-ig-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </div>
-        <div class="ping-ig-item-text">
-          <span class="ping-ig-item-title">Edit Message</span>
-          <span class="ping-ig-item-sub">Modify your message</span>
-        </div>
+      <div class="ping-ig-item-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
       </div>
+      <span class="ping-ig-item-title">Edit</span>
     `;
     editItem.onclick = (evt) => {
       evt.stopPropagation();
@@ -1511,17 +1601,12 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     deleteItem.type = 'button';
     deleteItem.className = 'ping-ig-item danger';
     deleteItem.innerHTML = `
-      <div class="ping-ig-item-left">
-        <div class="ping-ig-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-          </svg>
-        </div>
-        <div class="ping-ig-item-text">
-          <span class="ping-ig-item-title">Delete Message</span>
-          <span class="ping-ig-item-sub">Remove for everyone</span>
-        </div>
+      <div class="ping-ig-item-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
       </div>
+      <span class="ping-ig-item-title">Delete</span>
     `;
     deleteItem.onclick = (evt) => {
       evt.stopPropagation();
@@ -1537,18 +1622,13 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     reportItem.type = 'button';
     reportItem.className = 'ping-ig-item danger';
     reportItem.innerHTML = `
-      <div class="ping-ig-item-left">
-        <div class="ping-ig-item-icon">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-            <line x1="4" y1="22" x2="4" y2="15"/>
-          </svg>
-        </div>
-        <div class="ping-ig-item-text">
-          <span class="ping-ig-item-title">Report User</span>
-          <span class="ping-ig-item-sub">Disconnect & warn user</span>
-        </div>
+      <div class="ping-ig-item-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+          <line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
       </div>
+      <span class="ping-ig-item-title">Report</span>
     `;
     reportItem.onclick = (evt) => {
       evt.stopPropagation();
@@ -1564,17 +1644,22 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
 
   document.body.appendChild(menu);
 
-  // Dynamic positioning calculation
+  // Dynamic positioning calculation respecting on-screen virtual keyboard and visual viewport
   function reposition() {
-    // Reset max-height so we get accurate native scroll/bounding rect
     menu.style.maxHeight = '';
     menu.style.overflowY = '';
 
+    const vv = window.visualViewport;
+    const winW = vv ? vv.width : window.innerWidth;
+    const winH = vv ? vv.height : window.innerHeight;
+    const vTop = vv ? vv.offsetTop : 0;
+    const vLeft = vv ? vv.offsetLeft : 0;
+
     const bRect = targetBubble ? targetBubble.getBoundingClientRect() : {
-      top: touchY || 200,
-      bottom: (touchY || 200) + 40,
-      left: touchX || 100,
-      right: (touchX || 100) + 120,
+      top: touchY || (vTop + 150),
+      bottom: (touchY || (vTop + 150)) + 40,
+      left: touchX || (vLeft + 100),
+      right: (touchX || (vLeft + 100)) + 120,
       width: 120,
       height: 40
     };
@@ -1587,93 +1672,72 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
     const mW = mRect.width || 224;
     const mH = mRect.height || 180;
 
-    const winW = window.innerWidth;
-    const winH = window.innerHeight;
-    const topPadding = 12;
-    const bottomBarPadding = 80;
-    const maxBottom = Math.max(topPadding + 100, winH - bottomBarPadding);
-    const GAP = 8;
+    // The chat-bottom-wrapper (input row) sits at the bottom of the visible visual viewport
+    const topPadding = vTop + 54;
+    const bottomBarPadding = 62;
+    const maxBottom = Math.max(topPadding + 100, vTop + winH - bottomBarPadding);
+    const GAP = 6;
 
-    // ── HORIZONTAL ALIGNMENT ──────────────────────────────
-    // Coordinate alignment between emoji tab and reply options
+    // ── HORIZONTAL ALIGNMENT (PREVENT RIGHT-SIDE CUTOFF) ──
+    const minLeft = vLeft + 12;
+    const maxPillLeft = Math.max(minLeft, vLeft + winW - pW - 12);
+    const maxMenuLeft = Math.max(minLeft, vLeft + winW - mW - 12);
+
     const targetCenterX = bRect.left + (bRect.width / 2);
     let pLeft, mLeft;
 
-    if (winW < 480) {
-      // On mobile screens, center both cleanly over the message bubble
+    if (winW < 540) {
       pLeft = Math.round(targetCenterX - (pW / 2));
       mLeft = Math.round(targetCenterX - (mW / 2));
     } else if (isSelf) {
-      // User's messages (right-aligned): align right edges with message bubble
       pLeft = Math.round(bRect.right - pW);
       mLeft = Math.round(bRect.right - mW);
     } else {
-      // Partner/Stranger messages (left-aligned): align left edges with message bubble
       pLeft = Math.round(bRect.left);
       mLeft = Math.round(bRect.left);
     }
 
-    // Viewport boundary guardrails (ensures fully visible horizontally)
-    pLeft = Math.max(10, Math.min(pLeft, winW - pW - 10));
-    mLeft = Math.max(10, Math.min(mLeft, winW - mW - 10));
+    // Viewport boundary guardrails (ensures fully visible horizontally without cutoffs)
+    pLeft = Math.max(minLeft, Math.min(pLeft, maxPillLeft));
+    mLeft = Math.max(minLeft, Math.min(mLeft, maxMenuLeft));
 
-    // ── VERTICAL ALIGNMENT (EMOJI TAB ALWAYS ABOVE REPLY OPTIONS) ──
+    // ── VERTICAL ALIGNMENT (OVERLAPS CLEANLY ABOVE KEYBOARD) ──
     let pTop, mTop;
+    const spaceAbove = bRect.top - topPadding;
+    const spaceBelow = maxBottom - bRect.bottom;
 
-    // 1. Can emoji pill fit comfortably above the bubble?
-    const pillFitsAboveBubble = (bRect.top - pH - GAP >= topPadding);
-    // 2. Can menu fit comfortably below the bubble?
-    const menuFitsBelowBubble = (bRect.bottom + GAP + mH <= maxBottom);
-
-    if (pillFitsAboveBubble && menuFitsBelowBubble) {
-      // Standard layout: Emoji pill directly above bubble, Reply menu directly below bubble
-      // Emoji tab is strictly above the reply menu
+    if (spaceAbove >= pH + GAP && spaceBelow >= mH + GAP) {
+      // Natural: Emoji pill directly above bubble, Reply menu directly below bubble
       pTop = bRect.top - pH - GAP;
       mTop = bRect.bottom + GAP;
-    } else if (!menuFitsBelowBubble && (bRect.top - pH - GAP - mH - GAP >= topPadding)) {
-      // Bubble is near the bottom: place BOTH above the bubble!
-      // Emoji tab on top, Reply menu in the middle, Bubble on bottom
+    } else if (spaceAbove >= pH + mH + (GAP * 2)) {
+      // Bubble is near bottom (above keyboard): place both above bubble
       mTop = bRect.top - mH - GAP;
       pTop = mTop - pH - GAP;
-    } else if (!pillFitsAboveBubble && (bRect.bottom + GAP + pH + GAP + 60 <= maxBottom)) {
-      // Bubble is near the top: place BOTH below the bubble!
-      // Bubble on top, Emoji tab in the middle, Reply menu on bottom
+    } else if (spaceBelow >= pH + mH + (GAP * 2)) {
+      // Bubble is near top: place both below bubble
       pTop = bRect.bottom + GAP;
       mTop = pTop + pH + GAP;
+    } else if (spaceAbove >= spaceBelow) {
+      pTop = Math.max(topPadding, bRect.top - pH - GAP);
+      mTop = pTop + pH + GAP;
     } else {
-      // Clamped fallback: prioritize emoji pill visibility at top, stack reply menu directly below it
-      const spaceAbove = bRect.top - topPadding;
-      const spaceBelow = maxBottom - bRect.bottom;
-
-      if (spaceAbove > spaceBelow && spaceAbove >= pH + 80) {
-        // Position both above the bubble
-        mTop = Math.max(topPadding + pH + GAP, bRect.top - mH - GAP);
-        pTop = mTop - pH - GAP;
-        if (pTop < topPadding) {
-          pTop = topPadding;
-          mTop = pTop + pH + GAP;
-        }
-      } else {
-        // Position both below the bubble (or start at topPadding if bubble is huge)
-        pTop = Math.max(topPadding, Math.min(bRect.bottom + GAP, maxBottom - pH - 80));
-        mTop = pTop + pH + GAP;
-      }
+      pTop = Math.max(topPadding, Math.min(bRect.bottom + GAP, maxBottom - pH - 60));
+      mTop = pTop + pH + GAP;
     }
 
-    // ── ABSOLUTE INVARIANTS ──────────────────────────────
-    // 1. Emoji tab must ALWAYS be fully visible (never clipped at top)
+    // ── ABSOLUTE INVARIANTS ──
     pTop = Math.max(topPadding, pTop);
-
-    // 2. Emoji tab MUST ALWAYS be strictly above the reply options
     if (mTop < pTop + pH + GAP) {
       mTop = pTop + pH + GAP;
     }
 
-    // 3. Reply options menu must fit on screen (scrollable if needed on small viewports)
+    // Reply options menu must fit on screen above the keyboard
     if (mTop + mH > maxBottom) {
-      const allowedHeight = Math.max(110, maxBottom - mTop);
+      const allowedHeight = Math.max(64, maxBottom - mTop);
       menu.style.maxHeight = `${allowedHeight}px`;
       menu.style.overflowY = 'auto';
+      menu.style.webkitOverflowScrolling = 'touch';
     }
 
     pill.style.position = 'fixed';
@@ -1714,20 +1778,37 @@ function showInstagramMsgMenu(e, msgId, text, isPartner, isFriend, isSelf, sentA
   const handleKeyDown = (evt) => {
     if (evt.key === 'Escape') closeAll();
   };
+
+  const scrollTarget = isFriend ? friendChatBox : chatBox;
+  const initialScrollTop = scrollTarget ? scrollTarget.scrollTop : 0;
+
   const handleScroll = () => {
-    closeAll();
+    if (!scrollTarget) return;
+    if (Math.abs(scrollTarget.scrollTop - initialScrollTop) > 35) {
+      closeAll();
+    } else {
+      reposition();
+    }
+  };
+
+  const handleResize = () => {
+    reposition();
   };
 
   backdrop.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('keydown', handleKeyDown);
-  chatBox?.addEventListener('scroll', handleScroll, { passive: true });
-  friendChatBox?.addEventListener('scroll', handleScroll, { passive: true });
+  scrollTarget?.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('resize', handleResize);
+  window.visualViewport?.addEventListener('resize', handleResize);
+  window.visualViewport?.addEventListener('scroll', handleResize);
 
   function cleanup() {
     backdrop.removeEventListener('pointerdown', handlePointerDown);
     window.removeEventListener('keydown', handleKeyDown);
-    chatBox?.removeEventListener('scroll', handleScroll);
-    friendChatBox?.removeEventListener('scroll', handleScroll);
+    scrollTarget?.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', handleResize);
+    window.visualViewport?.removeEventListener('resize', handleResize);
+    window.visualViewport?.removeEventListener('scroll', handleResize);
   }
 }
 window.showInstagramMsgMenu = showInstagramMsgMenu;
@@ -1946,8 +2027,9 @@ function appendFriendMsg(text, opts = {}) {
   // Double tap to heart
   el.ondblclick = (e) => {
     e.stopPropagation();
-    window.currentReplyTarget = { text: text.slice(0, 100), wasSender: !isPartner, isPartner };
-    sendFriendMessage('❤️');
+    if (msgId) {
+      attachOrToggleReaction(msgId, '❤️', true);
+    }
   };
 
   // Friend message appending without inline hover reactions or reply buttons (handled via Instagram-style long-press)
@@ -2164,7 +2246,7 @@ window.startReply = (text, isPartner, msgId) => {
   }
 
   const input = isFriend ? friendMessageInput : messageInput;
-  if (input) input.focus();
+  if (input) input.focus({ preventScroll: true });
 };
 
 window.cancelReply = () => {
@@ -2173,10 +2255,21 @@ window.cancelReply = () => {
   const frp = $('friendReplyPreview');
   if (rp) rp.style.display = 'none';
   if (frp) frp.style.display = 'none';
+  const input = currentChatType === 'friend' ? friendMessageInput : messageInput;
+  if (input) input.focus({ preventScroll: true });
 };
 
-if ($('cancelReplyBtn')) $('cancelReplyBtn').addEventListener('click', window.cancelReply);
-if ($('cancelFriendReplyBtn')) $('cancelFriendReplyBtn').addEventListener('click', window.cancelReply);
+const cancelReplyBtn = $('cancelReplyBtn');
+const cancelFriendReplyBtn = $('cancelFriendReplyBtn');
+
+if (cancelReplyBtn) {
+  cancelReplyBtn.addEventListener('pointerdown', (e) => e.preventDefault());
+  cancelReplyBtn.addEventListener('click', window.cancelReply);
+}
+if (cancelFriendReplyBtn) {
+  cancelFriendReplyBtn.addEventListener('pointerdown', (e) => e.preventDefault());
+  cancelFriendReplyBtn.addEventListener('click', window.cancelReply);
+}
 
 // ── VIEWS (ZERO-FLICKER HARDWARE ACCELERATED) ─────────────────
 let currentActiveView = 'prechat';
@@ -3508,6 +3601,14 @@ socket.on('friend_dm_opened', ({ roomId, friendId, friendCountry, friendOnline, 
       isEdited: msg.isEdited,
       msgId: msg.msgId
     });
+    if (msg.reactions && msg.msgId) {
+      const msgEl = friendChatBox.querySelector(`[data-msg-id="${msg.msgId}"]`);
+      if (msgEl) {
+        Object.entries(msg.reactions).forEach(([uId, emo]) => {
+          attachReactionBadge(msgEl, emo, uId);
+        });
+      }
+    }
   });
 
   // Ensure friend input is ready
@@ -3904,10 +4005,15 @@ messageForm?.addEventListener('submit', e => {
   e.preventDefault();
 });
 
+// Prevent soft keyboard from dismissing on mobile send button tap
+sendBtn?.addEventListener('pointerdown', e => {
+  e.preventDefault();
+});
+
 sendBtn?.addEventListener('click', e => {
   e.preventDefault();
   sendMessage();
-  messageInput?.focus();
+  messageInput?.focus({ preventScroll: true });
 });
 
 messageInput?.addEventListener('keydown', function (e) {
@@ -3965,10 +4071,14 @@ friendMessageForm?.addEventListener('submit', e => {
   e.preventDefault();
 });
 
+friendSendBtn?.addEventListener('pointerdown', e => {
+  e.preventDefault();
+});
+
 friendSendBtn?.addEventListener('click', e => {
   e.preventDefault();
   sendFriendMessage();
-  friendMessageInput?.focus();
+  friendMessageInput?.focus({ preventScroll: true });
 });
 
 friendMessageInput?.addEventListener('keydown', function (e) {
@@ -4003,6 +4113,17 @@ friendMessageInput?.addEventListener('input', function () {
     typingTimeout = setTimeout(() => socket.emit('dm_typing', { roomId: friendRoomId, isTyping: false }), 2000);
   }
 });
+
+// Explicit background tap allows user to dismiss the keyboard on demand
+const handleChatBackgroundTap = (e) => {
+  if (e.target === chatBox || e.target === friendChatBox || e.target.classList?.contains('msgs-empty') || e.target.closest?.('.msgs-empty')) {
+    if (document.activeElement === messageInput || document.activeElement === friendMessageInput) {
+      document.activeElement.blur();
+    }
+  }
+};
+chatBox?.addEventListener('click', handleChatBackgroundTap);
+friendChatBox?.addEventListener('click', handleChatBackgroundTap);
 
 reportBtn?.addEventListener('click', () => {
   showConfirm('Report User?', "The chat will end immediately and the user will receive a warning.", () => {
@@ -4174,6 +4295,10 @@ function triggerFlash(isFriend = false) {
   }
 }
 
+flashToggleBtn?.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+});
+
 flashToggleBtn?.addEventListener('click', toggleFlash);
 
 function toggleFlash(e) {
@@ -4185,6 +4310,10 @@ function toggleFlash(e) {
     triggerFlash(false);
   }
 }
+
+friendFlashToggleBtn?.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+});
 
 friendFlashToggleBtn?.addEventListener('click', (e) => {
   e.preventDefault();
@@ -4203,9 +4332,17 @@ function triggerPing(isFriend = false) {
   // No popup/toast when sending a ping per user requirement
 }
 
+pingBtn?.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+});
+
 pingBtn?.addEventListener('click', (e) => {
   e.preventDefault();
   triggerPing(false);
+});
+
+friendPingBtn?.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
 });
 
 friendPingBtn?.addEventListener('click', (e) => {
@@ -4293,11 +4430,24 @@ function setupCompactChatUI() {
 
   if (threeDotsMenu) {
     if (threeDotsBtn) {
+      // Prevent keyboard from closing when tapping three dots button
+      threeDotsBtn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+      });
+
       threeDotsBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         threeDotsMenu.classList.toggle('hidden');
       });
     }
+
+    // Prevent non-destructive items in three dots menu from collapsing keyboard
+    threeDotsMenu.addEventListener('pointerdown', (e) => {
+      const targetBtn = e.target.closest('button');
+      if (targetBtn && targetBtn.id !== 'endChatBtn' && targetBtn.id !== 'reportSkipBtn') {
+        e.preventDefault();
+      }
+    });
 
     threeDotsMenu.addEventListener('click', (e) => {
       const targetBtn = e.target.closest('button');
@@ -4308,6 +4458,12 @@ function setupCompactChatUI() {
         e.stopPropagation();
       } else {
         threeDotsMenu.classList.add('hidden');
+      }
+
+      // Re-focus message input to ensure keyboard stays open
+      if (targetBtn.id !== 'endChatBtn' && targetBtn.id !== 'reportSkipBtn') {
+        const activeInput = currentChatType === 'friend' ? friendMessageInput : messageInput;
+        activeInput?.focus({ preventScroll: true });
       }
     });
 
@@ -4373,13 +4529,17 @@ function openPWAInstallModal() {
   const installModal = $('installModal');
   const confirmInstallBtn = $('confirmInstallBtn');
   const iosInstallGuide = $('iosInstallGuide');
+  const iosInAppWarning = $('iosInAppWarning');
   const desktopInstallGuide = $('desktopInstallGuide');
+  const isInApp = document.documentElement.classList.contains('is-inapp-browser');
+  const isIOSPlatform = isIOS || document.documentElement.classList.contains('is-ios');
 
   if (!installModal) return;
 
-  if (isIOS) {
+  if (isIOSPlatform) {
     if (confirmInstallBtn) confirmInstallBtn.style.display = 'none';
     if (iosInstallGuide) iosInstallGuide.style.display = 'block';
+    if (iosInAppWarning) iosInAppWarning.style.display = isInApp ? 'block' : 'none';
     if (desktopInstallGuide) desktopInstallGuide.style.display = 'none';
   } else if (deferredPWAInstallPrompt) {
     if (confirmInstallBtn) confirmInstallBtn.style.display = 'flex';
@@ -4401,6 +4561,7 @@ function hidePWAInstallModal() {
 }
 
 async function triggerPWAInstall() {
+  const isIOSPlatform = isIOS || document.documentElement.classList.contains('is-ios');
   if (deferredPWAInstallPrompt) {
     deferredPWAInstallPrompt.prompt();
     const { outcome } = await deferredPWAInstallPrompt.userChoice;
@@ -4410,7 +4571,7 @@ async function triggerPWAInstall() {
     }
     deferredPWAInstallPrompt = null;
     hidePWAInstallModal();
-  } else if (isIOS) {
+  } else if (isIOSPlatform) {
     openPWAInstallModal();
   } else {
     openPWAInstallModal();
@@ -4449,6 +4610,121 @@ $('installModal')?.addEventListener('click', (e) => {
 });
 
 updatePWAInstallUI();
+
+// ═══════════════════════════════════════════════════════════════
+// MOBILE VIRTUAL KEYBOARD VIEWPORT RESIZING & OVERLAP CONTROLLER
+// Uses window.visualViewport to dynamically shrink the view to
+// fit above the keyboard without covering input or screen content
+// ═══════════════════════════════════════════════════════════════
+function initMobileKeyboardViewportHandler() {
+  let isKeyboardCurrentlyOpen = false;
+
+  const getActiveChatScrollContainer = () => {
+    if (AppState.activeTab === 'FRIENDS' && friendDMView && friendDMView.style.display !== 'none') {
+      return friendChatBox;
+    }
+    return chatBox;
+  };
+
+  const scrollActiveChatToBottom = (instant = false) => {
+    const activeBox = getActiveChatScrollContainer();
+    if (activeBox) {
+      if (instant) {
+        activeBox.scrollTop = activeBox.scrollHeight;
+      } else {
+        requestAnimationFrame(() => {
+          activeBox.scrollTop = activeBox.scrollHeight;
+        });
+      }
+    }
+  };
+
+  const updateViewportMetrics = () => {
+    let visibleHeight = window.innerHeight;
+    let keyboardHeight = 0;
+
+    if (window.visualViewport) {
+      visibleHeight = Math.round(window.visualViewport.height);
+      keyboardHeight = Math.max(0, window.innerHeight - visibleHeight);
+    }
+
+    document.documentElement.style.setProperty('--visual-viewport-height', `${visibleHeight}px`);
+    document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+
+    const openState = keyboardHeight > 100;
+    if (openState !== isKeyboardCurrentlyOpen) {
+      isKeyboardCurrentlyOpen = openState;
+      if (openState) {
+        document.documentElement.classList.add('keyboard-open');
+        document.body.classList.add('keyboard-open');
+        scrollActiveChatToBottom();
+      } else {
+        document.documentElement.classList.remove('keyboard-open');
+        document.body.classList.remove('keyboard-open');
+      }
+    }
+
+    // On iOS Safari, pin document scroll to top 0 to avoid container displacement
+    if (window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
+    if (document.body.scrollTop !== 0) {
+      document.body.scrollTop = 0;
+    }
+  };
+
+  // Immediate sync
+  updateViewportMetrics();
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      updateViewportMetrics();
+      scrollActiveChatToBottom();
+    });
+
+    window.visualViewport.addEventListener('scroll', () => {
+      if (window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    });
+  }
+
+  window.addEventListener('resize', updateViewportMetrics);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(updateViewportMetrics, 150);
+  });
+
+  // Attach focus & blur listeners to all chat textareas/inputs
+  const inputElements = [messageInput, friendMessageInput];
+  inputElements.forEach(inp => {
+    if (!inp) return;
+
+    inp.addEventListener('focus', () => {
+      // Delay slightly so mobile OS keyboard slide animation begins
+      setTimeout(() => {
+        updateViewportMetrics();
+        inp.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        scrollActiveChatToBottom(true);
+        window.scrollTo(0, 0);
+      }, 60);
+
+      setTimeout(() => {
+        updateViewportMetrics();
+        scrollActiveChatToBottom(true);
+        window.scrollTo(0, 0);
+      }, 250);
+    });
+
+    inp.addEventListener('blur', () => {
+      setTimeout(() => {
+        updateViewportMetrics();
+        window.scrollTo(0, 0);
+      }, 100);
+    });
+  });
+}
+
+initMobileKeyboardViewportHandler();
 
 // ── IN-APP BROWSER (IAB) PROMPT BANNER HANDLER ────────────────
 function initIabBanner() {

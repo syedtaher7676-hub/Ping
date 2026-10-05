@@ -1,5 +1,5 @@
 // Ping App Service Worker - Offline Shell & Fast Asset Precache
-const CACHE_NAME = 'ping-v1.2.0';
+const CACHE_NAME = 'ping-v1.3.0';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

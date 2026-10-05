@@ -68,6 +68,36 @@ export const getSocket = () => {
     console.log('[WebSocket Singleton] Connected to backend. ID:', socketInstance.id);
   });
 
+  // Attach background reconnection & visibilitychange listener (iOS fix)
+  if (typeof document !== 'undefined' && !window.__PING_VISIBILITY_ATTACHED__) {
+    window.__PING_VISIBILITY_ATTACHED__ = true;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (!socketInstance.connected) {
+          console.log('[WebSocket Singleton] App resumed to visible foreground. Reconnecting immediately...');
+          socketInstance.connect();
+        }
+      }
+    });
+
+    window.addEventListener('online', () => {
+      if (!socketInstance.connected) {
+        console.log('[WebSocket Singleton] Device back online. Reconnecting immediately...');
+        socketInstance.connect();
+      }
+    });
+  }
+
+  // 15-second heartbeat ping mechanism to prevent mobile socket sleep
+  if (!window.__PING_HEARTBEAT_ACTIVE__) {
+    window.__PING_HEARTBEAT_ACTIVE__ = true;
+    setInterval(() => {
+      if (socketInstance && socketInstance.connected) {
+        socketInstance.emit('heartbeat');
+      }
+    }, 15000);
+  }
+
   window.__PING_SOCKET__ = socketInstance;
   window.socket = socketInstance;
 

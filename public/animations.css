@@ -288,7 +288,7 @@
   }
 
   100% {
-    top: 100vh;
+    top: 100dvh;
     opacity: 0
   }
 }

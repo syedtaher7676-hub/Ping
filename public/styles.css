@@ -52,6 +52,10 @@
   --header-h: 54px;
   --indicator-h: 36px;
   --action-h: 56px;
+
+  /* Dynamic visual viewport & mobile virtual keyboard sizing */
+  --visual-viewport-height: 100dvh;
+  --keyboard-height: 0px;
 }
 
 /* ── RESET ── */
@@ -901,11 +905,16 @@ input {
    ================================================================ */
 .chat-app {
   height: 100dvh;
+  height: var(--visual-viewport-height, 100dvh);
+  max-height: 100dvh;
+  max-height: var(--visual-viewport-height, 100dvh);
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--bg);
   overflow: hidden;
   position: relative;
+  width: 100%;
 }
 
 /* App canvas */
@@ -1493,6 +1502,7 @@ input {
 /* ── MAIN AREA ── */
 .app-main {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1517,6 +1527,7 @@ input {
   position: relative;
   z-index: 1;
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1541,6 +1552,7 @@ input {
   padding: 0;
   align-items: stretch;
   overflow: hidden;
+  min-height: 0;
 }
 
 @keyframes view-in {
@@ -2959,7 +2971,7 @@ input:checked+.slider-round:before {
 /* ── CHAT HEADER (New Enhanced Version) ── */
 .chat-header {
   position: relative;
-  z-index: 10;
+  z-index: 1000;
   top: 0;
   display: flex;
   align-items: center;
@@ -3207,7 +3219,9 @@ input:checked+.slider-round:before {
   position: relative;
   z-index: 2;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 16px 16px 8px;
   display: flex;
   flex-direction: column;
@@ -4028,17 +4042,21 @@ input:checked+.slider-round:before {
 /* 3-Dot Overflow Dropdown Menu */
 .dropdown-menu {
   position: absolute;
-  top: 48px;
+  top: calc(100% + 6px);
   right: 0;
-  min-width: 180px;
-  background: rgba(15, 12, 30, 0.95);
+  min-width: 190px;
+  max-height: calc(var(--visual-viewport-height, 100dvh) - 75px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(18, 14, 36, 0.97);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(124, 58, 237, 0.35);
-  border-radius: 14px;
-  padding: 6px 0;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(124, 58, 237, 0.15);
-  z-index: 100;
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(124, 58, 237, 0.25);
+  z-index: 100005 !important;
 }
 
 .dropdown-menu.hidden {
@@ -5384,18 +5402,18 @@ input:checked+.slider-round:before {
    PING × INSTAGRAM-STYLE LONG-PRESS & REPLY SUITE
    ═════════════════════════════════════════════════════════════ */
 
-/* 1. Backdrop Overlay */
+/* 1. Backdrop Overlay (No blur to keep keyboard & text sharp) */
 .ping-ig-backdrop {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(5, 5, 16, 0.76);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 99990;
   opacity: 0;
-  animation: ping-ig-fade-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: ping-ig-fade-in 0.16s ease-out forwards;
   pointer-events: auto;
   touch-action: manipulation;
 }
@@ -5406,7 +5424,7 @@ input:checked+.slider-round:before {
 }
 
 .ping-ig-backdrop.closing {
-  animation: ping-ig-fade-out 0.16s ease-in forwards;
+  animation: ping-ig-fade-out 0.12s ease-in forwards;
 }
 
 @keyframes ping-ig-fade-out {
@@ -5418,9 +5436,9 @@ input:checked+.slider-round:before {
 .msg.ping-msg-highlighted {
   position: relative !important;
   z-index: 99995 !important;
-  transform: scale(1.028) !important;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease !important;
-  box-shadow: 0 0 32px rgba(139, 92, 246, 0.55), 0 16px 40px rgba(0, 0, 0, 0.8) !important;
+  transform: scale(1.02) !important;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease !important;
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.5), 0 8px 30px rgba(0, 0, 0, 0.85) !important;
   pointer-events: auto !important;
 }
 
@@ -5432,10 +5450,8 @@ input:checked+.slider-round:before {
 /* 3. Floating Instagram Reaction Capsule (Ping UI) */
 .ping-ig-reaction-pill {
   position: fixed;
-  z-index: 100001;
-  background: rgba(18, 14, 38, 0.96);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  z-index: 100002;
+  background: rgba(18, 14, 38, 0.98);
   border: 1px solid rgba(139, 92, 246, 0.45);
   border-radius: 9999px;
   padding: 4px 6px;
@@ -5443,28 +5459,29 @@ input:checked+.slider-round:before {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(124, 58, 237, 0.35);
-  animation: ping-ig-pill-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 20px rgba(124, 58, 237, 0.3);
+  animation: ping-ig-pill-pop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   touch-action: manipulation;
   user-select: none;
   box-sizing: border-box;
-  max-width: calc(100vw - 20px);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: calc(100vw - 24px);
   will-change: transform, top, left;
+  white-space: nowrap;
 }
 
 .ping-ig-reaction-pill.expanded {
-  border-radius: 22px;
+  border-radius: 20px;
   flex-wrap: wrap;
-  max-width: 290px;
-  padding: 8px 10px;
-  gap: 6px;
+  max-width: min(290px, calc(100vw - 24px));
+  padding: 6px 8px;
+  gap: 4px;
+  white-space: normal;
 }
 
 @keyframes ping-ig-pill-pop {
   0% {
     opacity: 0;
-    transform: scale(0.7) translateY(8px);
+    transform: scale(0.75) translateY(6px);
   }
   100% {
     opacity: 1;
@@ -5475,10 +5492,10 @@ input:checked+.slider-round:before {
 .ping-ig-rxn-btn {
   background: transparent;
   border: none;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   line-height: 1;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   margin: 0;
   border-radius: 50%;
@@ -5486,32 +5503,31 @@ input:checked+.slider-round:before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, filter 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease;
   user-select: none;
   flex-shrink: 0;
 }
 
 .ping-ig-rxn-btn:hover,
 .ping-ig-rxn-btn:active {
-  transform: scale(1.35) translateY(-3px);
+  transform: scale(1.35) translateY(-2px);
   background: rgba(139, 92, 246, 0.3);
-  filter: drop-shadow(0 4px 10px rgba(124, 58, 237, 0.7));
 }
 
 .ping-ig-rxn-more {
   color: var(--t-med, #94a3b8);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: all 0.15s ease;
   margin-left: 2px;
   flex-shrink: 0;
 }
@@ -5520,41 +5536,39 @@ input:checked+.slider-round:before {
 .ping-ig-rxn-more:active {
   background: rgba(139, 92, 246, 0.45);
   color: #ffffff;
-  transform: scale(1.12);
+  transform: scale(1.1);
 }
 
 .ping-ig-more-tray {
   display: none;
   align-items: center;
   gap: 3px;
-  animation: ping-ig-fade-in 0.18s ease forwards;
+  animation: ping-ig-fade-in 0.15s ease forwards;
 }
 
 .ping-ig-more-tray.open {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
-/* 4. Floating Action Menu (Instagram Menu with Ping UI) */
+/* 4. Floating Action Menu (Clean & Uncluttered) */
 .ping-ig-menu {
   position: fixed;
-  z-index: 100000;
-  background: rgba(18, 14, 38, 0.97);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(139, 92, 246, 0.38);
-  border-radius: 18px;
-  padding: 6px;
-  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85), 0 0 25px rgba(124, 58, 237, 0.25);
-  min-width: 224px;
-  max-width: calc(100vw - 24px);
+  z-index: 100001;
+  background: rgba(18, 14, 38, 0.98);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 14px;
+  padding: 5px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(124, 58, 237, 0.25);
+  min-width: 170px;
+  max-width: 230px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  animation: ping-ig-menu-pop 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  gap: 2px;
+  animation: ping-ig-menu-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
   touch-action: manipulation;
   user-select: none;
   scrollbar-width: thin;
@@ -5565,7 +5579,7 @@ input:checked+.slider-round:before {
 @keyframes ping-ig-menu-pop {
   0% {
     opacity: 0;
-    transform: scale(0.88) translateY(-6px);
+    transform: scale(0.9) translateY(-4px);
   }
   100% {
     opacity: 1;
@@ -5579,94 +5593,61 @@ input:checked+.slider-round:before {
   border: none;
   outline: none;
   font-family: inherit;
-  padding: 9px 12px;
-  font-size: 0.9rem;
+  padding: 8px 10px;
+  font-size: 0.86rem;
   font-weight: 500;
   color: #f1f5f9;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  justify-content: flex-start;
+  gap: 9px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .ping-ig-item:hover,
 .ping-ig-item:active {
-  background: rgba(139, 92, 246, 0.22);
+  background: rgba(139, 92, 246, 0.25);
   color: #ffffff;
 }
 
-.ping-ig-item-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .ping-ig-item-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.07);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--purple-l, #a78bfa);
   flex-shrink: 0;
-  transition: background 0.15s ease;
+  transition: background 0.12s ease;
 }
 
 .ping-ig-item:hover .ping-ig-item-icon {
-  background: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.45);
   color: #ffffff;
 }
 
-.ping-ig-item-text {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
 .ping-ig-item-title {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #f8fafc;
-}
-
-.ping-ig-item-sub {
-  font-size: 0.72rem;
-  color: var(--t-low, #64748b);
-  margin-top: 1px;
+  flex: 1;
+  text-align: left;
 }
 
 /* Featured Reply item highlight */
 .ping-ig-item.ping-ig-reply-item {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(236, 72, 153, 0.18));
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.28), rgba(236, 72, 153, 0.2));
   border: 1px solid rgba(139, 92, 246, 0.4);
-  margin-bottom: 2px;
 }
 
 .ping-ig-item.ping-ig-reply-item:hover,
 .ping-ig-item.ping-ig-reply-item:active {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.45), rgba(236, 72, 153, 0.35));
-  border-color: rgba(167, 139, 250, 0.7);
-  transform: translateY(-1px);
-}
-
-.ping-ig-item.ping-ig-reply-item .ping-ig-item-icon {
-  background: rgba(124, 58, 237, 0.45);
-  color: #ffffff;
-}
-
-.ping-ig-shortcut {
-  font-size: 0.75rem;
-  color: var(--purple-l, #a78bfa);
-  background: rgba(124, 58, 237, 0.22);
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.48), rgba(236, 72, 153, 0.38));
+  border-color: rgba(167, 139, 250, 0.8);
 }
 
 .ping-ig-item.danger {
@@ -5679,13 +5660,80 @@ input:checked+.slider-round:before {
 
 .ping-ig-item.danger:hover,
 .ping-ig-item.danger:active {
-  background: rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
 }
 
-.ping-ig-item.danger:hover .ping-ig-item-icon {
-  background: rgba(239, 68, 68, 0.3);
-  color: #ffffff;
+/* ── ATTACHED INSTAGRAM-STYLE EMOJI REACTIONS (UNDERNEATH TEXT BUBBLE) ── */
+.msg-reactions-tray {
+  position: absolute;
+  bottom: -10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 15;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.msg.partner .msg-reactions-tray {
+  left: 10px;
+}
+
+.msg.self .msg-reactions-tray {
+  right: 10px;
+}
+
+.msg-reaction-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(22, 18, 42, 0.96);
+  border: 1.5px solid rgba(139, 92, 246, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(124, 58, 237, 0.25);
+  border-radius: 9999px;
+  padding: 1px 6px;
+  font-size: 0.88rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, border-color 0.15s ease;
+  animation: rxn-badge-pop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.msg-reaction-badge:hover,
+.msg-reaction-badge:active {
+  transform: scale(1.16);
+  border-color: rgba(167, 139, 250, 0.85);
+  background: rgba(35, 28, 68, 0.98);
+}
+
+.msg-reaction-badge .rxn-emoji {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.msg-reaction-badge .rxn-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+@keyframes rxn-badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(5px);
+  }
+  70% {
+    transform: scale(1.15) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.msg.has-reactions {
+  margin-bottom: 14px !important;
 }
 
 /* Reply Preview Flash Confirmation */
@@ -7596,5 +7644,161 @@ html.is-inapp-browser .asb-search-btn {
 .iab-close-btn:hover {
   background: rgba(255, 255, 255, 0.35);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   FAST MODE & SAFARI / IOS PROMOTION GPU ACCELERATION
+   Ensures Safari and iOS run with the exact same 60fps/120Hz speed
+   as the Instagram in-app browser version without changing any UI
+   ═══════════════════════════════════════════════════════════════ */
+
+/* 1. Eliminate heavy live Gaussian blur rasterization passes in Safari/iOS/fast-mode */
+html.fast-mode body::before,
+html.is-ios body::before,
+html.is-safari body::before {
+  filter: none !important;
+  background: radial-gradient(circle at 10% 10%, rgba(124, 58, 237, 0.16) 0%, transparent 60%) !important;
+  animation: none !important;
+  position: absolute !important;
+}
+
+html.fast-mode body::after,
+html.is-ios body::after,
+html.is-safari body::after {
+  filter: none !important;
+  background: radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.12) 0%, transparent 60%) !important;
+  animation: none !important;
+  position: absolute !important;
+}
+
+/* 2. Optimize continuous background keyframe animations on mobile/iOS/Safari */
+html.fast-mode .vortex-wheel,
+html.is-ios .vortex-wheel,
+html.is-safari .vortex-wheel,
+html.fast-mode .nebula-field,
+html.is-ios .nebula-field,
+html.is-safari .nebula-field,
+html.fast-mode .aurora-canvas,
+html.is-ios .aurora-canvas,
+html.is-safari .aurora-canvas,
+html.fast-mode .app-vortex,
+html.is-ios .app-vortex,
+html.is-safari .app-vortex,
+html.fast-mode .app-nebula,
+html.is-ios .app-nebula,
+html.is-safari .app-nebula,
+html.fast-mode .chat-glow-orb,
+html.is-ios .chat-glow-orb,
+html.is-safari .chat-glow-orb,
+html.fast-mode .chat-grid-overlay,
+html.is-ios .chat-grid-overlay,
+html.is-safari .chat-grid-overlay {
+  animation: none !important;
+  filter: none !important;
+  opacity: 0.12 !important;
+}
+
+/* 3. Hardware acceleration on Safari and WebKit */
+html.is-ios *,
+html.is-safari * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.is-ios .chat-app,
+html.is-safari .chat-app,
+html.is-ios .view-chat,
+html.is-safari .view-chat,
+html.is-ios .messages-area,
+html.is-safari .messages-area,
+html.is-ios .chat-bottom-wrapper,
+html.is-safari .chat-bottom-wrapper,
+html.fast-mode .chat-app,
+html.fast-mode .view-chat,
+html.fast-mode .messages-area,
+html.fast-mode .chat-bottom-wrapper {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE KEYBOARD OVERLAP BUG FIX
+   Shrinks view to fit above virtual on-screen keyboard
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Prevent iOS Safari from auto-zooming into input fields on mobile */
+@media (max-width: 768px) {
+  .message-input,
+  #messageInput,
+  #friendMessageInput,
+  .input-pill textarea,
+  .input-pill input,
+  .input-row textarea,
+  .input-row input {
+    font-size: 16px !important;
+  }
+}
+
+/* When virtual keyboard pops up */
+.keyboard-open {
+  overflow: hidden !important;
+}
+
+.keyboard-open body {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.keyboard-open .screen-indicator {
+  display: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.keyboard-open .chat-header {
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+  min-height: 48px !important;
+  z-index: 1000 !important;
+}
+
+.keyboard-open .dropdown-menu {
+  max-height: calc(var(--visual-viewport-height, 100dvh) - 60px) !important;
+  z-index: 100005 !important;
+}
+
+.keyboard-open .chat-bottom-wrapper {
+  padding-bottom: 6px !important;
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.5) !important;
+  z-index: 50 !important;
+}
+
+.keyboard-open .emoji-picker-popup {
+  display: none !important;
+}
+
+.keyboard-open .chat-app {
+  height: var(--visual-viewport-height, 100dvh) !important;
+  max-height: var(--visual-viewport-height, 100dvh) !important;
+}
+
+.keyboard-open .messages-area {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.keyboard-open .ping-ig-reaction-pill {
+  z-index: 100001 !important;
+}
+
+.keyboard-open .ping-ig-menu {
+  z-index: 100000 !important;
+}
+
 
 

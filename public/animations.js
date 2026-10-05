@@ -112,11 +112,12 @@
   }
 
   // ── CURSOR TRAIL ──────────────────────────────────────────────
+  const isTouchDevice = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
   const trail = [];
-  const TN = rm ? 0 : 12; // Reduced segments
+  const TN = (rm || isTouchDevice) ? 0 : 10; // Optimized segments for desktop only
   let mX = -999, mY = -999;
   const TC = ['#9d5ffa','#c084fc','#e879f9','#f472b6','#fb7185','#a78bfa','#60a5fa','#34d399'];
-  if (!rm) {
+  if (!rm && !isTouchDevice) {
     for (let i=0;i<TN;i++) {
       const d = document.createElement('div'); d.className='cursor-dot';
       d.style.cssText=`background:${TC[i%TC.length]};opacity:${((TN-i)/TN*.6).toFixed(2)};width:${Math.max(2,7-i*.5)}px;height:${Math.max(2,7-i*.5)}px`;
@@ -257,17 +258,20 @@
 
   function drawApp() {
     if (!aCtx) return;
+    const isFast = document.documentElement.classList.contains('fast-mode') ||
+                   document.documentElement.classList.contains('is-ios') ||
+                   document.documentElement.classList.contains('is-safari');
     aCtx.clearRect(0,0,AW,AH);
     if (appMode==='prechat') {
       aParticles.forEach(p=>{p.step();p.draw(aCtx);});
-      drawConstellation(aCtx, aParticles, 85, .1);
+      if (!isFast) drawConstellation(aCtx, aParticles, 85, .1);
     } else if (appMode==='waiting') {
       aParticles.forEach(p=>{p.step();p.draw(aCtx);});
       warpPool.forEach(p=>{p.step();p.draw(aCtx);});
       neuralLines(aCtx, warpPool,  120, .25);
     } else {
       aParticles.forEach(p=>{p.step();p.draw(aCtx);});
-      drawConstellation(aCtx, aParticles, 100, .15);
+      if (!isFast) drawConstellation(aCtx, aParticles, 100, .15);
     }
   }
 
@@ -358,6 +362,7 @@
 
     const chatActive    = chatApp && chatApp.style.display !== 'none';
     const landingActive = landing && landing.style.display !== 'none';
+    const keyboardOpen  = document.documentElement.classList.contains('keyboard-open');
 
     if (landingActive && lCtx && !rm) {
       lCtx.clearRect(0,0,LW,LH);
@@ -365,7 +370,7 @@
       drawConstellation(lCtx, stars, 100, .12);
     }
 
-    if (chatActive && aCtx && !rm) drawApp();
+    if (chatActive && aCtx && !rm && !keyboardOpen) drawApp();
 
     if (!rm && trail.length && mX > 0) {
       trail[0].x+=(mX-trail[0].x)*.35; trail[0].y+=(mY-trail[0].y)*.35;

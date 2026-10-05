@@ -1450,6 +1450,24 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
+    socket.on("react_message", (rawPayload) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const roomId = safeId(payload.roomId);
+        const msgId = safeId(payload.msgId) || safeString(payload.msgId, 64);
+        const emoji = safeString(payload.emoji, 16);
+
+        if (!roomId || !msgId || !emoji) return;
+        const room = rooms.get(roomId) || Array.from(friendRooms.values()).find(r => r.roomId === roomId);
+        const members = room?.users || room?.userIds || [];
+        if (room && members.includes(userId)) {
+          io.to(roomId).emit("message_reaction", { msgId, emoji, fromUserId: userId, roomId });
+        }
+      } catch (err) {
+        log("react_message_error", { userId, message: err.message });
+      }
+    });
+
     socket.on("mark_read", (rawPayload) => {
       try {
         const payload = safeObject(rawPayload);

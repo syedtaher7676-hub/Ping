@@ -1,5 +1,6 @@
 import React, { useState, useEffect, memo, useCallback } from 'react';
 import OnlineCounter from './OnlineCounter';
+import IOSInstallBanner from './IOSInstallBanner';
 import { subscribeToOnlineCount, getSocket, socket } from '../socket';
 
 /**
@@ -135,13 +136,13 @@ export const StartChatButton = memo(function StartChatButton({ onClick, disabled
         justifyContent: 'center',
         gap: '12px',
         minWidth: '200px',
-        padding: '18px 44px',
+        padding: 'clamp(12px, 2.5dvh, 18px) clamp(24px, 6vw, 44px)',
         background: disabled ? '#374151' : 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
         border: 'none',
         borderRadius: '9999px',
         color: disabled ? '#9ca3af' : '#fff',
         fontFamily: "'Space Grotesk', sans-serif",
-        fontSize: '1.15rem',
+        fontSize: 'clamp(15px, 4vw, 18px)',
         fontWeight: 700,
         cursor: disabled ? 'not-allowed' : 'pointer',
         boxShadow: disabled ? 'none' : '0 4px 24px rgba(124, 58, 237, 0.55)',
@@ -215,7 +216,7 @@ export function Home({ onStartChat }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '32px 20px',
+        padding: 'clamp(16px, 4dvh, 32px) clamp(14px, 4vw, 24px)',
         position: 'relative',
         overflow: 'hidden',
         willChange: 'transform, opacity',
@@ -233,8 +234,8 @@ export function Home({ onStartChat }) {
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
-          gap: '28px',
-          maxWidth: '560px',
+          gap: 'clamp(18px, 4dvh, 28px)',
+          maxWidth: '480px',
           width: '100%',
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
@@ -251,6 +252,9 @@ export function Home({ onStartChat }) {
         {/* Step 1 & 3 Optimizations: Memoized & GPU-accelerated CTA button */}
         <StartChatButton onClick={handleStartChat} disabled={isBanned} />
       </div>
+
+      {/* iOS PWA Install Guidance Banner */}
+      <IOSInstallBanner />
 
       {/* Clean Dark Overlay for Temporary Ban */}
       {isBanned && (

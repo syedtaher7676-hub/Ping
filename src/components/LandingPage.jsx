@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import OnlineCounter from './OnlineCounter';
+import IOSInstallBanner from './IOSInstallBanner';
 
 /**
  * Isolated Static Logo Component
@@ -174,15 +175,15 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
           alignItems: 'center',
           justifyContent: 'center',
           gap: '12px',
-          minWidth: '210px',
-          height: '56px',
-          padding: '0 32px',
+          minWidth: '180px',
+          height: 'clamp(48px, 6.5dvh, 56px)',
+          padding: '0 clamp(20px, 5vw, 32px)',
           background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
           border: 'none',
           borderRadius: '9999px',
           color: '#fff',
           fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: '1.08rem',
+          fontSize: 'clamp(14px, 3.8vw, 17px)',
           fontWeight: 700,
           cursor: 'pointer',
           boxShadow: '0 4px 24px rgba(124, 58, 237, 0.55)',
@@ -212,15 +213,15 @@ const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }
           alignItems: 'center',
           justifyContent: 'center',
           gap: '12px',
-          minWidth: '210px',
-          height: '56px',
-          padding: '0 32px',
+          minWidth: '180px',
+          height: 'clamp(48px, 6.5dvh, 56px)',
+          padding: '0 clamp(20px, 5vw, 32px)',
           background: 'rgba(255, 255, 255, 0.055)',
           border: '1px solid rgba(124, 58, 237, 0.4)',
           borderRadius: '9999px',
           color: '#fff',
           fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: '1.08rem',
+          fontSize: 'clamp(14px, 3.8vw, 17px)',
           fontWeight: 700,
           cursor: 'pointer',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -265,7 +266,7 @@ export const LandingPage = memo(function LandingPage({ onStartChat, onDownloadAp
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '32px 20px',
+        padding: 'clamp(16px, 4dvh, 32px) clamp(14px, 4vw, 24px)',
         position: 'relative',
         overflow: 'hidden',
         willChange: 'transform, opacity',
@@ -283,8 +284,8 @@ export const LandingPage = memo(function LandingPage({ onStartChat, onDownloadAp
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
-          gap: '28px',
-          maxWidth: '560px',
+          gap: 'clamp(18px, 4dvh, 28px)',
+          maxWidth: '480px',
           width: '100%',
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
@@ -307,6 +308,9 @@ export const LandingPage = memo(function LandingPage({ onStartChat, onDownloadAp
         {/* Memoized Static Trust Footer */}
         <TrustLine />
       </div>
+
+      {/* iOS PWA Install Guidance Banner */}
+      <IOSInstallBanner />
     </div>
   );
 });
