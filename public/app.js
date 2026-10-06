@@ -3073,6 +3073,25 @@ const GENERAL_ICEBREAKERS_LIST = [
   "What's a random habit or quirk you have that most people don't know?"
 ];
 
+const ALL_KNOWN_ICEBREAKERS_SET = new Set();
+GENERAL_ICEBREAKERS_LIST.forEach(p => ALL_KNOWN_ICEBREAKERS_SET.add(p.trim()));
+for (const cat in TAG_ICEBREAKERS) {
+  if (Array.isArray(TAG_ICEBREAKERS[cat])) {
+    TAG_ICEBREAKERS[cat].forEach(p => ALL_KNOWN_ICEBREAKERS_SET.add(p.trim()));
+  }
+}
+
+let activeDicePromptText = "";
+let lastDiceSentTime = 0;
+
+function isTextIcebreakerPrompt(text) {
+  if (!text) return false;
+  const clean = text.trim();
+  if (activeDicePromptText && clean === activeDicePromptText) return true;
+  if (ALL_KNOWN_ICEBREAKERS_SET.has(clean)) return true;
+  return false;
+}
+
 function initDicePromptHandler() {
   const diceBtn = document.getElementById('dicePromptBtn');
   if (!diceBtn) return;
@@ -3110,6 +3129,7 @@ function initDicePromptHandler() {
     }
 
     messageInput.value = randomPrompt;
+    activeDicePromptText = randomPrompt.trim();
     messageInput.dispatchEvent(new Event('input'));
     if (sendBtn) sendBtn.disabled = false;
     messageInput.focus();
@@ -3194,6 +3214,9 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc, matchedI
   }
 
   appendMsg(`Connected to ${displayLocation}. Say hi! 👋✨`, { isSystem: true, variant: 'success' });
+
+  // Trigger Ping chime sound so both users know they have been matched
+  playPingChime();
 
   // If cross-tag fallback intermatch occurred, display inline notice on screen (no popup)
   if (fallbackMessage) {
@@ -3505,7 +3528,8 @@ function handleSkippedChat(reason, rawReason) {
     return;
   }
 
-  // When stranger skips, load the searching screen without duplicate popup
+  // When stranger skips, notify opponent with a single toast that stranger skipped
+  showToast("Stranger has skipped the chat.", "info", 3500);
   stopAutoSearch();
   closeModal();
   clearChat();
@@ -3554,6 +3578,9 @@ function handleChatEnd(reason, rawReason) {
     showView('prechat');
     return;
   }
+
+  // Single toast notification when stranger leaves/skips
+  showToast("Stranger has skipped the chat.", "info", 3500);
 
   const reasonStr = String(reason || rawReason || '').toLowerCase();
   if (reasonStr.includes('user_reported_warning')) {
@@ -4104,6 +4131,19 @@ function sendMessage(overrideText = null) {
   const text = (overrideText || messageInput?.value || "").trim();
   if (!text || (!inChat && !autoSearchInterval)) return;
 
+  // Enforce 30s cooldown on sending dice icebreakers
+  if (isTextIcebreakerPrompt(text)) {
+    const elapsed = Date.now() - lastDiceSentTime;
+    if (elapsed < 30000) {
+      const rem = Math.ceil((30000 - elapsed) / 1000);
+      showToast(`⚠️ You can send a dice icebreaker once every 30s (${rem}s left)`, "warn", 2500);
+      if (sendBtn) sendBtn.disabled = false;
+      return;
+    }
+    lastDiceSentTime = Date.now();
+    activeDicePromptText = "";
+  }
+
   // Remove icebreaker card from screen once a message is sent
   const banner = document.getElementById('matchedInterestBanner');
   if (banner) banner.remove();
@@ -4325,6 +4365,9 @@ document.addEventListener('paste', (e) => {
 }, true);
 
 messageInput?.addEventListener('input', function () {
+  if (activeDicePromptText && this.value.trim() !== activeDicePromptText) {
+    activeDicePromptText = "";
+  }
   this.style.height = 'auto';
   const newH = Math.min(this.scrollHeight, 160);
   this.style.height = newH + 'px';
@@ -4608,11 +4651,90 @@ friendFlashToggleBtn?.addEventListener('click', (e) => {
   }
 });
 
+// Upgraded Crystal Chime Web Audio Generator for Ping
+function playPingChime() {
+  try {
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    // Master Gain Envelope
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.22, now);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+    masterGain.connect(ctx.destination);
+
+    // Primary High Crystal Chime (E6 -> B6)
+    const osc1 = ctx.createOscillator();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(1318.5, now); // E6
+    osc1.frequency.exponentialRampToValueAtTime(1975.5, now + 0.09); // B6
+    osc1.connect(masterGain);
+
+    // Secondary Harmonics Oscillator (G#6 shimmer)
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(1661.2, now); // G#6
+    const gain2 = ctx.createGain();
+    gain2.gain.setValueAtTime(0.12, now);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+
+    osc1.start(now);
+    osc1.stop(now + 0.65);
+    osc2.start(now + 0.02);
+    osc2.stop(now + 0.5);
+  } catch (e) {}
+}
+
+let lastPingSentTime = 0;
+let pingCooldownInterval = null;
+
+function startPingCooldownUI() {
+  const pBtn = document.getElementById('pingBtn');
+  const fpBtn = document.getElementById('friendPingBtn');
+
+  if (pingCooldownInterval) clearInterval(pingCooldownInterval);
+
+  const update = () => {
+    const elapsed = Date.now() - lastPingSentTime;
+    const rem = Math.ceil((30000 - elapsed) / 1000);
+    if (rem <= 0) {
+      clearInterval(pingCooldownInterval);
+      pingCooldownInterval = null;
+      if (pBtn) { pBtn.classList.remove('cooling-down'); pBtn.title = 'Send Ping ⚡'; }
+      if (fpBtn) { fpBtn.classList.remove('cooling-down'); fpBtn.title = 'Send Ping ⚡'; }
+    } else {
+      if (pBtn) { pBtn.classList.add('cooling-down'); pBtn.title = `Ping (${rem}s)`; }
+      if (fpBtn) { fpBtn.classList.add('cooling-down'); fpBtn.title = `Ping (${rem}s)`; }
+    }
+  };
+  update();
+  pingCooldownInterval = setInterval(update, 1000);
+}
+
 function triggerPing(isFriend = false) {
-  const rid = isFriend ? friendRoomId : activeRoomId;
-  if (!rid) return;
+  const rid = isFriend ? (AppState.friends.activeRoomId || friendRoomId) : (AppState.explore.roomId || activeRoomId);
+  if (!rid || (!inChat && !AppState.explore.inChat)) {
+    showToast("⚠️ You must be in a live chat to send a Ping", "warn", 2000);
+    return;
+  }
+
+  const elapsed = Date.now() - lastPingSentTime;
+  if (elapsed < 30000) {
+    const rem = Math.ceil((30000 - elapsed) / 1000);
+    showToast(`⚡ Ping available in ${rem}s`, 'warn', 2500);
+    if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
+    return;
+  }
+
+  lastPingSentTime = Date.now();
   socket.emit('send_ping', { roomId: rid });
-  // No popup/toast when sending a ping per user requirement
+  playPingChime();
+  if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+
+  startPingCooldownUI();
 }
 
 pingBtn?.addEventListener('pointerdown', (e) => {
@@ -4640,23 +4762,8 @@ socket.on('incoming_ping', () => {
     container.classList.add('ping-shake');
     setTimeout(() => container.classList.remove('ping-shake'), 400);
   }
-  // Optional: Play subtle sound if allowed using shared AudioContext singleton
-  try {
-    const context = getSharedAudioContext();
-    if (context) {
-      const osc = context.createOscillator();
-      const gain = context.createGain();
-      osc.connect(gain);
-      gain.connect(context.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, context.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(110, context.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.1, context.currentTime);
-      gain.gain.linearRampToValueAtTime(0, context.currentTime + 0.2);
-      osc.start();
-      osc.stop(context.currentTime + 0.2);
-    }
-  } catch (e) { }
+  playPingChime();
+  if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
 });
 
 // ── REAL-TIME PRIVACY & STATUS ────────────────────────────────

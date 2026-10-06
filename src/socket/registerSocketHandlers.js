@@ -2243,7 +2243,6 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           // Warning sent to target user when under threshold
           if (partnerSocket) {
             const warningMsg = "⚠️ Warning: You were reported by your chat partner for inappropriate behavior.";
-            partnerSocket.emit("warning_message", { message: warningMsg });
             partnerSocket.emit("chat_ended", {
               reason: "user_reported_warning",
               rawReason: "user_reported_warning",
