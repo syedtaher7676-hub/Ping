@@ -1391,6 +1391,20 @@ function appendMsg(text, opts = {}) {
   chatBox.appendChild(el);
   scrollToBottom(chatBox);
 
+  // Auto-disappear green text, warning signs, system messages or notices after 7 seconds
+  if (isSystem || variant || opts.extraClass) {
+    setTimeout(() => {
+      if (el && el.parentNode) {
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'scale(0.95) translateY(-4px)';
+        setTimeout(() => {
+          if (el && el.parentNode) el.remove();
+        }, 650);
+      }
+    }, 7000);
+  }
+
   if (isPartner) {
     if (document.hasFocus() && !invisibleToggle?.checked) {
       socket.emit('message_read', { roomId: activeRoomId, msgId });
@@ -2035,6 +2049,20 @@ function appendFriendMsg(text, opts = {}) {
   // Friend message appending without inline hover reactions or reply buttons (handled via Instagram-style long-press)
   friendChatBox.appendChild(el);
   scrollToBottom(friendChatBox);
+
+  // Auto-disappear green text, warning signs, system messages or notices after 7 seconds
+  if (isSystem || variant) {
+    setTimeout(() => {
+      if (el && el.parentNode) {
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'scale(0.95) translateY(-4px)';
+        setTimeout(() => {
+          if (el && el.parentNode) el.remove();
+        }, 650);
+      }
+    }, 7000);
+  }
 
   if (isPartner) {
     if (document.hasFocus() && !invisibleToggle?.checked) {
@@ -2908,10 +2936,249 @@ socket.on('count', c => {
   setOnlineCount(c);
 });
 
+// ── INTEREST TAGS & ICEBREAKERS ────────────────────────────────
+let selectedInterests = new Set();
+let currentMatchedInterestTag = null;
+
+try {
+  const saved = localStorage.getItem('ping_selected_interests');
+  if (saved) {
+    const arr = JSON.parse(saved);
+    if (Array.isArray(arr)) arr.slice(0, 3).forEach(t => selectedInterests.add(t));
+  }
+} catch (e) {}
+
+function initInterestGridUI() {
+  const grid = document.getElementById('interestPillGrid');
+  if (!grid) return;
+  const pills = grid.querySelectorAll('.interest-pill');
+  pills.forEach(pill => {
+    const tag = pill.dataset.tag;
+    if (tag && selectedInterests.has(tag)) {
+      pill.classList.add('active');
+    }
+    pill.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (selectedInterests.has(tag)) {
+        selectedInterests.delete(tag);
+        pill.classList.remove('active');
+      } else {
+        if (selectedInterests.size >= 3) {
+          showToast("⚠️ Can't select more than 3 tags", "warn", 2500);
+          if (navigator.vibrate) navigator.vibrate([25, 40, 25]);
+          return;
+        }
+        selectedInterests.add(tag);
+        pill.classList.add('active');
+      }
+      try {
+        localStorage.setItem('ping_selected_interests', JSON.stringify([...selectedInterests]));
+      } catch (err) {}
+      if (navigator.vibrate) navigator.vibrate(15);
+    });
+  });
+}
+
+const TAG_ICEBREAKERS = {
+  movies: [
+    "What's a movie you can rewatch 100 times without getting bored?",
+    "What's the best movie plot twist you never saw coming?",
+    "What movie soundtrack or score gives you chills every time?",
+    "If you could live inside any movie universe, which one would it be?",
+    "What's an overrated movie that everyone loves but you secretly dislike?",
+    "Who is your absolute favorite actor or movie director of all time?",
+    "What's the scariest or most intense horror movie you've ever seen?",
+    "If they made a movie about your life, who should play you?"
+  ],
+  music: [
+    "Who is your top artist or favorite album right now?",
+    "What's a song that always puts you in a good mood instantly?",
+    "What was the first concert or live music event you ever attended?",
+    "What's a genre or song you secretly love but don't tell many people about?",
+    "If you could see any musician live, dead or alive, who would it be?",
+    "What song lyrics hit you the hardest personally?",
+    "Do you prefer listening to music on headphones or speakers?",
+    "What's the late-night song you listen to when you're introspective?"
+  ],
+  gaming: [
+    "PC, Console, or Mobile? What game are you playing lately?",
+    "What's a game you have put 100+ hours into?",
+    "What's your all-time favorite video game storyline or character?",
+    "Co-op multiplayer or single-player story mode?",
+    "What's the hardest video game boss or level you ever beat?",
+    "What's a nostalgic game from your childhood you miss playing?",
+    "If you could live in any video game world, which game would it be?",
+    "What upcoming video game release are you most excited for?"
+  ],
+  tech: [
+    "What's the coolest gadget or AI tool you've used recently?",
+    "If you could invent any futuristic technology today, what would it be?",
+    "What app on your phone do you use the most every single day?",
+    "Do you think AI will replace smartphones in 10 years?",
+    "What's the most useful tech hack or shortcut you use daily?",
+    "Apple or Android? Defend your choice in one sentence!",
+    "If you could telepathically control one device in your room, what is it?",
+    "What's the most mind-blowing piece of technology you've seen recently?"
+  ],
+  studies: [
+    "What field or subject are you studying or super passionate about?",
+    "What's a fascinating fact you learned recently that blew your mind?",
+    "If you could master any skill or degree overnight, what would it be?",
+    "What was your favorite subject in high school or college?",
+    "Do you study better late at night or early in the morning?",
+    "What's a topic you could give an impromptu 15-minute presentation on?",
+    "What's the hardest exam or subject you ever successfully passed?",
+    "What's an underrated area of science or history you find super cool?"
+  ],
+  sports: [
+    "What sport or team do you follow most passionately?",
+    "What's the most legendary sporting moment you've ever watched live?",
+    "Do you prefer playing sports or watching them?",
+    "Who is your favorite athlete or sports icon of all time?",
+    "What workout or exercise routine keeps you most active?",
+    "What's an extreme sport you would love to try if safety was guaranteed?",
+    "Football/Soccer, Basketball, or F1? Which one takes top priority?",
+    "What's the best stadium or arena environment you've ever experienced?"
+  ],
+  food: [
+    "What's your ultimate go-to comfort food at 2 AM?",
+    "What's a food everyone loves that you personally can't stand?",
+    "If you could only eat one cuisine for the rest of your life, what is it?",
+    "What's the most unique or unusual dish you've ever tried?",
+    "Are you a master chef or do you struggle with basic microwave meals?",
+    "Sweet or savory snacks when you're binge-watching something?",
+    "What's your dream 3-course meal if price didn't matter?",
+    "Coffee, Tea, or Boba? What's your daily caffeine fix?"
+  ],
+  travel: [
+    "If you could hop on a plane anywhere right now, where would you go?",
+    "What's the most beautiful place you've ever visited in person?",
+    "Do you prefer relaxing beach vacations or exploring big cities?",
+    "What's top 1 on your travel bucket list?",
+    "What's the craziest or funniest travel story you have?",
+    "Solo traveling or group trip with best friends?",
+    "What culture or country's tradition do you find most interesting?",
+    "Mountains and nature, or historical historic cities?"
+  ]
+};
+
+const GENERAL_ICEBREAKERS_LIST = [
+  "What's the most underrated thing that happened to you this week?",
+  "If you could have any superpower for 24 hours, what would it be?",
+  "What's your ultimate comfort show or movie?",
+  "What's something you're really looking forward to right now?",
+  "Tell me one true story and one lie about your day!",
+  "What's the funniest meme or video you've seen recently?",
+  "If you could ask a time-traveler from 2050 one question, what would it be?",
+  "What's a random habit or quirk you have that most people don't know?"
+];
+
+function initDicePromptHandler() {
+  const diceBtn = document.getElementById('dicePromptBtn');
+  if (!diceBtn) return;
+  diceBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!messageInput || messageInput.disabled) return;
+
+    // Trigger instant roll animation on every click
+    diceBtn.classList.remove('rolling');
+    void diceBtn.offsetWidth; // force reflow
+    diceBtn.classList.add('rolling');
+
+    let pool = [];
+    if (currentMatchedInterestTag && TAG_ICEBREAKERS[currentMatchedInterestTag]) {
+      pool = TAG_ICEBREAKERS[currentMatchedInterestTag];
+    } else {
+      const userSelected = Array.from(selectedInterests);
+      if (userSelected.length > 0) {
+        userSelected.forEach(tag => {
+          if (TAG_ICEBREAKERS[tag]) pool.push(...TAG_ICEBREAKERS[tag]);
+        });
+      }
+    }
+
+    if (pool.length === 0) {
+      pool = GENERAL_ICEBREAKERS_LIST;
+    }
+
+    let randomPrompt = pool[Math.floor(Math.random() * pool.length)];
+    if (pool.length > 1 && randomPrompt === messageInput.value) {
+      const filtered = pool.filter(p => p !== messageInput.value);
+      if (filtered.length > 0) {
+        randomPrompt = filtered[Math.floor(Math.random() * filtered.length)];
+      }
+    }
+
+    messageInput.value = randomPrompt;
+    messageInput.dispatchEvent(new Event('input'));
+    if (sendBtn) sendBtn.disabled = false;
+    messageInput.focus();
+    if (navigator.vibrate) navigator.vibrate(18);
+
+    setTimeout(() => {
+      diceBtn.classList.remove('rolling');
+    }, 450);
+  });
+}
+
+function renderMatchedInterestBanner(label, icebreaker) {
+  if (!chatBox) return;
+  const existing = document.getElementById('matchedInterestBanner');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.id = 'matchedInterestBanner';
+  banner.className = 'matched-interest-banner glass-card';
+
+  const titleText = label ? `Matched via ${label}` : `✨ Conversation Starter`;
+
+  banner.innerHTML = `
+    <div class="mib-top">
+      <span class="mib-sparkle">✨</span>
+      <span>${escapeHtml(titleText)}</span>
+    </div>
+    <p class="mib-icebreaker">"${escapeHtml(icebreaker)}"</p>
+    <button type="button" class="mib-use-btn" id="useIcebreakerBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      <span>Use Icebreaker</span>
+    </button>
+  `;
+
+  const useBtn = banner.querySelector('#useIcebreakerBtn');
+  const applyIcebreaker = () => {
+    if (messageInput && !messageInput.disabled) {
+      messageInput.value = icebreaker;
+      messageInput.dispatchEvent(new Event('input'));
+      if (sendBtn) sendBtn.disabled = false;
+      messageInput.focus();
+      banner.remove(); // Remove conversation starter card once used
+    }
+  };
+
+  if (useBtn) useBtn.addEventListener('click', applyIcebreaker);
+  banner.addEventListener('click', (e) => {
+    if (e.target !== useBtn && !useBtn.contains(e.target)) {
+      applyIcebreaker();
+    }
+  });
+
+  const empty = chatBox.querySelector('.msgs-empty');
+  if (empty) empty.remove();
+
+  chatBox.appendChild(banner);
+  scrollToBottom(chatBox);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initInterestGridUI();
+  initDicePromptHandler();
+});
+
 socket.off('matched');
-socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc }) => {
+socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc, matchedInterest, matchedInterestLabel, icebreaker, fallbackMessage }) => {
   pendingStart = false;
   clearChat();
+  currentMatchedInterestTag = matchedInterest || null;
   AppState.explore.roomId = roomId;
   AppState.explore.inChat = true;
   AppState.explore.isWaiting = false;
@@ -2928,6 +3195,16 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc }) => {
 
   appendMsg(`Connected to ${displayLocation}. Say hi! 👋✨`, { isSystem: true, variant: 'success' });
 
+  // If cross-tag fallback intermatch occurred, display inline notice on screen (no popup)
+  if (fallbackMessage) {
+    appendMsg(`ℹ️ ${fallbackMessage}`, { isSystem: true, variant: 'warn' });
+  }
+
+  // Render Matched Interest Banner if available
+  if (icebreaker) {
+    renderMatchedInterestBanner(matchedInterestLabel, icebreaker);
+  }
+
   startTimer(AppState.explore.timerEndMs);
   if (window.__pingMatchBurst) window.__pingMatchBurst();
 });
@@ -2938,6 +3215,10 @@ socket.on('new_message', (payload) => {
   const { from, message, roomId } = payload;
   const isMe = (from === socket.id || from === persistentUserId || from === selfUserId || (AppState.user.id && from === AppState.user.id));
   if (isMe) return; // Optimistically rendered.
+
+  // Remove icebreaker banner as soon as conversation starts from either partner
+  const banner = document.getElementById('matchedInterestBanner');
+  if (banner) banner.remove();
 
   let processedReplyTo = null;
   if (payload.replyTo) {
@@ -3187,7 +3468,6 @@ function handleTimeExpired() {
   clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  showToast("⏳ Time's up! Click Start Chat to chat again.", "info", 4000);
   appendMsg("⏳ Time's up! Room closed. Click Start Chat to chat again.", { isSystem: true, variant: 'warn' });
 
   // Return to prechat view and let the user click Start Chat to chat again
@@ -3225,11 +3505,10 @@ function handleSkippedChat(reason, rawReason) {
     return;
   }
 
-  // When stranger skips, notify opponent that the stranger has skipped and load the searching screen
+  // When stranger skips, load the searching screen without duplicate popup
   stopAutoSearch();
   closeModal();
   clearChat();
-  showToast("Stranger skipped the chat. Finding a new match... 🔍", "info", 3500);
 
   isWaiting = true;
   AppState.explore.isWaiting = true;
@@ -3648,7 +3927,7 @@ window.forceNextChat = () => {
   syncButtons();
   showToast('Searching for a new stranger... 🔍', 'info', 2500);
 
-  socket.emit('next_chat', { autoStart: true });
+  socket.emit('next_chat', { autoStart: true, interests: Array.from(selectedInterests) });
 };
 
 autoSearchNowBtn?.addEventListener('click', () => window.forceNextChat());
@@ -3675,7 +3954,7 @@ findChatBtn?.addEventListener('click', () => {
   switchHomeTab('random');
   showView('waiting');
   syncButtons();
-  socket.emit('start_chat');
+  socket.emit('start_chat', { interests: Array.from(selectedInterests) });
 });
 
 backBtn?.addEventListener('click', () => {
@@ -3723,7 +4002,7 @@ function triggerStartChat() {
   AppState.explore.isWaiting = true;
   showView('waiting');
   syncButtons();
-  socket.emit('start_chat');
+  socket.emit('start_chat', { interests: Array.from(selectedInterests) });
 
   // Safeguard: auto-clear pending lock after 1.5s
   setTimeout(() => {
@@ -3824,6 +4103,10 @@ const messageRetryQueue = new Map(); // msgId -> { payload, timer, retries, chat
 function sendMessage(overrideText = null) {
   const text = (overrideText || messageInput?.value || "").trim();
   if (!text || (!inChat && !autoSearchInterval)) return;
+
+  // Remove icebreaker card from screen once a message is sent
+  const banner = document.getElementById('matchedInterestBanner');
+  if (banner) banner.remove();
 
   if (sendBtn) sendBtn.disabled = true;
 

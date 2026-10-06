@@ -179,8 +179,45 @@ async function attemptMatchmaking(io) {
     sanitizeQueue(io);
 
     while (waitingQueue.length >= 2) {
-      const firstUserId = dequeueUser();
-      const secondUserId = dequeueUser();
+      let firstUserId = null;
+      let secondUserId = null;
+
+      // Scan waiting queue to see if any pair shares at least 1 interest
+      for (let i = 0; i < waitingQueue.length; i++) {
+        const uAId = waitingQueue[i];
+        const uA = users.get(uAId);
+        if (!uA || !isUserAvailableForMatch(uAId, io)) continue;
+
+        const interestsA = Array.isArray(uA.interests) ? uA.interests : [];
+        if (interestsA.length > 0) {
+          for (let j = i + 1; j < waitingQueue.length; j++) {
+            const uBId = waitingQueue[j];
+            const uB = users.get(uBId);
+            if (!uB || uB.socketId === uA.socketId || !isUserAvailableForMatch(uBId, io)) continue;
+
+            const interestsB = Array.isArray(uB.interests) ? uB.interests : [];
+            const hasMatch = interestsA.some(tag => interestsB.includes(tag));
+
+            if (hasMatch) {
+              firstUserId = uAId;
+              secondUserId = uBId;
+              // Remove uB and uA from waitingQueue
+              waitingQueue.splice(j, 1);
+              waitingQueue.splice(i, 1);
+              waitingSet.delete(uAId);
+              waitingSet.delete(uBId);
+              break;
+            }
+          }
+        }
+        if (firstUserId && secondUserId) break;
+      }
+
+      // If no interest match was found, dequeue the first two users as fallback
+      if (!firstUserId || !secondUserId) {
+        firstUserId = dequeueUser();
+        secondUserId = dequeueUser();
+      }
 
       if (!firstUserId || !secondUserId || firstUserId === secondUserId) {
         if (firstUserId) {

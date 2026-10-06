@@ -480,6 +480,44 @@
             <h2 class="waiting-title prechat-title">Explore random chats</h2>
             <p class="waiting-sub prechat-sub">Match instantly with someone new.</p>
 
+            <!-- Interest Selection Grid -->
+            <div class="interest-grid-section">
+              <div class="interest-pill-grid" id="interestPillGrid">
+                <button type="button" class="interest-pill" data-tag="movies">
+                  <span class="ip-emoji">🎬</span>
+                  <span class="ip-label">Movies</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="music">
+                  <span class="ip-emoji">🎧</span>
+                  <span class="ip-label">Music</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="gaming">
+                  <span class="ip-emoji">🎮</span>
+                  <span class="ip-label">Gaming</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="tech">
+                  <span class="ip-emoji">💻</span>
+                  <span class="ip-label">Tech</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="studies">
+                  <span class="ip-emoji">📚</span>
+                  <span class="ip-label">Studies</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="sports">
+                  <span class="ip-emoji">⚽</span>
+                  <span class="ip-label">Sports</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="food">
+                  <span class="ip-emoji">🍕</span>
+                  <span class="ip-label">Food</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="travel">
+                  <span class="ip-emoji">✈️</span>
+                  <span class="ip-label">Travel</span>
+                </button>
+              </div>
+            </div>
+
             <div class="ws-live-row prechat-online">
               <span class="ws-live-dot"></span>
               <span id="headerActiveUsers" class="ws-live-num">—</span>
@@ -712,6 +750,10 @@
                 <span class="char-counter" id="charCounter"></span>
               </div>
             </div>
+
+            <button type="button" class="dice-prompt-btn" id="dicePromptBtn" title="Get a conversation starter" aria-label="Insert random icebreaker">
+              🎲
+            </button>
 
             <button type="submit" id="sendBtn" class="send-btn" disabled aria-label="Send message">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">

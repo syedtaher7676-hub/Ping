@@ -834,9 +834,14 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     //  MATCHMAKING
     // ═══════════════════════════════════════════════
 
-    socket.on("start_chat", async () => {
+    socket.on("start_chat", async (rawPayload) => {
       try {
         if (!socket.connected) return;
+        const payload = safeObject(rawPayload);
+        const rawInterests = Array.isArray(payload.interests) ? payload.interests : [];
+        const validTags = ["movies", "music", "gaming", "tech", "studies", "sports", "food", "travel"];
+        const interests = rawInterests.filter(tag => typeof tag === "string" && validTags.includes(tag.toLowerCase()));
+
         let currentUser = users.get(userId);
         if (!currentUser) {
           currentUser = {
@@ -854,6 +859,8 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           };
           users.set(userId, currentUser);
         }
+
+        currentUser.interests = interests;
 
         // Verify if user or IP is currently in a 15-minute ban cooldown
         const banCheck = isUserBanned(socket, userId);
@@ -1890,8 +1897,16 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       try {
         const payload = safeObject(rawPayload);
         const autoStart = safeBoolean(payload.autoStart, false);
+        const rawInterests = Array.isArray(payload.interests) ? payload.interests : [];
+        const validTags = ["movies", "music", "gaming", "tech", "studies", "sports", "food", "travel"];
+        const interests = rawInterests.filter(tag => typeof tag === "string" && validTags.includes(tag.toLowerCase()));
+
         const currentUser = users.get(userId);
         if (!currentUser) return;
+
+        if (interests.length > 0) {
+          currentUser.interests = interests;
+        }
 
         currentUser.lastActionAt = Date.now();
 
