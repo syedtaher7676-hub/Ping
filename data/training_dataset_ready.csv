@@ -1497,23 +1497,911 @@ _
 5
 8",1,"active_learning_test_vertical"
 "t3$t_v10l@t10n_$@mpl3_1791025176058",1,"active_learning_test_leet"
-"user_reported",1,"user_report_violation"
-"u.s.e.r._.r.e.p.o.r.t.e.d",1,"user_report_violation_dotted"
-"u...s...e...r..._...r...e...p...o...r...t...e...d",1,"user_report_violation_multidot"
-"u-s-e-r-_-r-e-p-o-r-t-e-d",1,"user_report_violation_hyphenated"
-"u*s*e*r*_*r*e*p*o*r*t*e*d",1,"user_report_violation_starred"
-"u s e r _ r e p o r t e d",1,"user_report_violation_spaced"
-"u
+"test_violation_sample_1791311878234",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.1.8.7.8.2.3.4",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...1...8...7...8...2...3...4",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-1-8-7-8-2-3-4",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*1*8*7*8*2*3*4",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 1 8 7 8 2 3 4",1,"active_learning_test_spaced"
+"t
+e
 s
-e
-r
+t
 _
-r
-e
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
 p
+l
+e
+_
+1
+7
+9
+1
+3
+1
+1
+8
+7
+8
+2
+3
+4",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1791311878234",1,"active_learning_test_leet"
+"n
+i
+g
+g
+a",1,"inappropriate_bad_conversation"
+"n
+1
+g
+g
+@",1,"inappropriate_bad_conversation_leet"
+"////nigga",1,"inappropriate_bad_conversation"
+"/./././.n.i.g.g.a",1,"inappropriate_bad_conversation_dotted"
+"/.../.../.../...n...i...g...g...a",1,"inappropriate_bad_conversation_multidot"
+"/-/-/-/-n-i-g-g-a",1,"inappropriate_bad_conversation_hyphenated"
+"/*/*/*/*n*i*g*g*a",1,"inappropriate_bad_conversation_starred"
+"/ / / / n i g g a",1,"inappropriate_bad_conversation_spaced"
+"/
+/
+/
+/
+n
+i
+g
+g
+a",1,"inappropriate_bad_conversation_vertical"
+"////n1gg@",1,"inappropriate_bad_conversation_leet"
+"////n/i/g/g/a",1,"inappropriate_bad_conversation"
+"/./././.n./.i./.g./.g./.a",1,"inappropriate_bad_conversation_dotted"
+"/.../.../.../...n.../...i.../...g.../...g.../...a",1,"inappropriate_bad_conversation_multidot"
+"/-/-/-/-n-/-i-/-g-/-g-/-a",1,"inappropriate_bad_conversation_hyphenated"
+"/*/*/*/*n*/*i*/*g*/*g*/*a",1,"inappropriate_bad_conversation_starred"
+"/ / / / n / i / g / g / a",1,"inappropriate_bad_conversation_spaced"
+"/
+/
+/
+/
+n
+/
+i
+/
+g
+/
+g
+/
+a",1,"inappropriate_bad_conversation_vertical"
+"////n/1/g/g/@",1,"inappropriate_bad_conversation_leet"
+"thevidiya",1,"inappropriate_bad_conversation"
+"t.h.e.v.i.d.i.y.a",1,"inappropriate_bad_conversation_dotted"
+"t...h...e...v...i...d...i...y...a",1,"inappropriate_bad_conversation_multidot"
+"t-h-e-v-i-d-i-y-a",1,"inappropriate_bad_conversation_hyphenated"
+"t*h*e*v*i*d*i*y*a",1,"inappropriate_bad_conversation_starred"
+"t h e v i d i y a",1,"inappropriate_bad_conversation_spaced"
+"t
+h
+e
+v
+i
+d
+i
+y
+a",1,"inappropriate_bad_conversation_vertical"
+"th3v1d1y@",1,"inappropriate_bad_conversation_leet"
+"punda",1,"inappropriate_bad_conversation"
+"p.u.n.d.a",1,"inappropriate_bad_conversation_dotted"
+"p...u...n...d...a",1,"inappropriate_bad_conversation_multidot"
+"p-u-n-d-a",1,"inappropriate_bad_conversation_hyphenated"
+"p*u*n*d*a",1,"inappropriate_bad_conversation_starred"
+"p u n d a",1,"inappropriate_bad_conversation_spaced"
+"p
+u
+n
+d
+a",1,"inappropriate_bad_conversation_vertical"
+"pund@",1,"inappropriate_bad_conversation_leet"
+"otha",1,"inappropriate_bad_conversation"
+"o.t.h.a",1,"inappropriate_bad_conversation_dotted"
+"o...t...h...a",1,"inappropriate_bad_conversation_multidot"
+"o-t-h-a",1,"inappropriate_bad_conversation_hyphenated"
+"o*t*h*a",1,"inappropriate_bad_conversation_starred"
+"o t h a",1,"inappropriate_bad_conversation_spaced"
+"o
+t
+h
+a",1,"inappropriate_bad_conversation_vertical"
+"0th@",1,"inappropriate_bad_conversation_leet"
+"t.......h.......e.......v.......i.......d.......i.......y.......a",1,"inappropriate_bad_conversation_multidot"
+"t-.-h-.-e-.-v-.-i-.-d-.-i-.-y-.-a",1,"inappropriate_bad_conversation_hyphenated"
+"t*.*h*.*e*.*v*.*i*.*d*.*i*.*y*.*a",1,"inappropriate_bad_conversation_starred"
+"t . h . e . v . i . d . i . y . a",1,"inappropriate_bad_conversation_spaced"
+"t
+.
+h
+.
+e
+.
+v
+.
+i
+.
+d
+.
+i
+.
+y
+.
+a",1,"inappropriate_bad_conversation_vertical"
+"t.h.3.v.1.d.1.y.@",1,"inappropriate_bad_conversation_leet"
+"p
+u
+n
+d
+@",1,"inappropriate_bad_conversation_leet"
+"lanja",1,"inappropriate_bad_conversation"
+"l.a.n.j.a",1,"inappropriate_bad_conversation_dotted"
+"l...a...n...j...a",1,"inappropriate_bad_conversation_multidot"
+"l-a-n-j-a",1,"inappropriate_bad_conversation_hyphenated"
+"l*a*n*j*a",1,"inappropriate_bad_conversation_starred"
+"l a n j a",1,"inappropriate_bad_conversation_spaced"
+"l
+a
+n
+j
+a",1,"inappropriate_bad_conversation_vertical"
+"l@nj@",1,"inappropriate_bad_conversation_leet"
+"lanjakodaka",1,"inappropriate_bad_conversation"
+"l.a.n.j.a.k.o.d.a.k.a",1,"inappropriate_bad_conversation_dotted"
+"l...a...n...j...a...k...o...d...a...k...a",1,"inappropriate_bad_conversation_multidot"
+"l-a-n-j-a-k-o-d-a-k-a",1,"inappropriate_bad_conversation_hyphenated"
+"l*a*n*j*a*k*o*d*a*k*a",1,"inappropriate_bad_conversation_starred"
+"l a n j a k o d a k a",1,"inappropriate_bad_conversation_spaced"
+"l
+a
+n
+j
+a
+k
+o
+d
+a
+k
+a",1,"inappropriate_bad_conversation_vertical"
+"l@nj@k0d@k@",1,"inappropriate_bad_conversation_leet"
+"l/a/n/j/a",1,"inappropriate_bad_conversation"
+"l./.a./.n./.j./.a",1,"inappropriate_bad_conversation_dotted"
+"l.../...a.../...n.../...j.../...a",1,"inappropriate_bad_conversation_multidot"
+"l-/-a-/-n-/-j-/-a",1,"inappropriate_bad_conversation_hyphenated"
+"l*/*a*/*n*/*j*/*a",1,"inappropriate_bad_conversation_starred"
+"l / a / n / j / a",1,"inappropriate_bad_conversation_spaced"
+"l
+/
+a
+/
+n
+/
+j
+/
+a",1,"inappropriate_bad_conversation_vertical"
+"l/@/n/j/@",1,"inappropriate_bad_conversation_leet"
+"s
+u
+l
+l
+i",1,"inappropriate_bad_conversation"
+"$
+u
+l
+l
+1",1,"inappropriate_bad_conversation_leet"
+"sule",1,"inappropriate_bad_conversation"
+"s.u.l.e",1,"inappropriate_bad_conversation_dotted"
+"s...u...l...e",1,"inappropriate_bad_conversation_multidot"
+"s-u-l-e",1,"inappropriate_bad_conversation_hyphenated"
+"s*u*l*e",1,"inappropriate_bad_conversation_starred"
+"s u l e",1,"inappropriate_bad_conversation_spaced"
+"s
+u
+l
+e",1,"inappropriate_bad_conversation_vertical"
+"$ul3",1,"inappropriate_bad_conversation_leet"
+"sulemaga",1,"inappropriate_bad_conversation"
+"s.u.l.e.m.a.g.a",1,"inappropriate_bad_conversation_dotted"
+"s...u...l...e...m...a...g...a",1,"inappropriate_bad_conversation_multidot"
+"s-u-l-e-m-a-g-a",1,"inappropriate_bad_conversation_hyphenated"
+"s*u*l*e*m*a*g*a",1,"inappropriate_bad_conversation_starred"
+"s u l e m a g a",1,"inappropriate_bad_conversation_spaced"
+"s
+u
+l
+e
+m
+a
+g
+a",1,"inappropriate_bad_conversation_vertical"
+"$ul3m@g@",1,"inappropriate_bad_conversation_leet"
+"$
+u
+l
+3",1,"inappropriate_bad_conversation_leet"
+"t-h-i-k-a",1,"inappropriate_bad_conversation"
+"t.-.h.-.i.-.k.-.a",1,"inappropriate_bad_conversation_dotted"
+"t...-...h...-...i...-...k...-...a",1,"inappropriate_bad_conversation_multidot"
+"t---h---i---k---a",1,"inappropriate_bad_conversation_hyphenated"
+"t*-*h*-*i*-*k*-*a",1,"inappropriate_bad_conversation_starred"
+"t - h - i - k - a",1,"inappropriate_bad_conversation_spaced"
+"t
+-
+h
+-
+i
+-
+k
+-
+a",1,"inappropriate_bad_conversation_vertical"
+"t-h-1-k-@",1,"inappropriate_bad_conversation_leet"
+"test_violation_sample_1791312073939",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.2.0.7.3.9.3.9",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...2...0...7...3...9...3...9",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-2-0-7-3-9-3-9",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*2*0*7*3*9*3*9",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 2 0 7 3 9 3 9",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+1
+3
+1
+2
+0
+7
+3
+9
+3
+9",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1791312073939",1,"active_learning_test_leet"
+"tullu",1,"inappropriate_bad_conversation"
+"t.u.l.l.u",1,"inappropriate_bad_conversation_dotted"
+"t...u...l...l...u",1,"inappropriate_bad_conversation_multidot"
+"t-u-l-l-u",1,"inappropriate_bad_conversation_hyphenated"
+"t*u*l*l*u",1,"inappropriate_bad_conversation_starred"
+"t u l l u",1,"inappropriate_bad_conversation_spaced"
+"t
+u
+l
+l
+u",1,"inappropriate_bad_conversation_vertical"
+"shata",1,"inappropriate_bad_conversation"
+"s.h.a.t.a",1,"inappropriate_bad_conversation_dotted"
+"s...h...a...t...a",1,"inappropriate_bad_conversation_multidot"
+"s-h-a-t-a",1,"inappropriate_bad_conversation_hyphenated"
+"s*h*a*t*a",1,"inappropriate_bad_conversation_starred"
+"s h a t a",1,"inappropriate_bad_conversation_spaced"
+"s
+h
+a
+t
+a",1,"inappropriate_bad_conversation_vertical"
+"$h@t@",1,"inappropriate_bad_conversation_leet"
+"nin amman",1,"inappropriate_bad_conversation"
+"n.i.n a.m.m.a.n",1,"inappropriate_bad_conversation_dotted"
+"n...i...n a...m...m...a...n",1,"inappropriate_bad_conversation_multidot"
+"n-i-n a-m-m-a-n",1,"inappropriate_bad_conversation_hyphenated"
+"n*i*n a*m*m*a*n",1,"inappropriate_bad_conversation_starred"
+"n i n   a m m a n",1,"inappropriate_bad_conversation_spaced"
+"n
+i
+n
+
+a
+m
+m
+a
+n",1,"inappropriate_bad_conversation_vertical"
+"n1n @mm@n",1,"inappropriate_bad_conversation_leet"
+"sulay magane",1,"inappropriate_bad_conversation"
+"s.u.l.a.y m.a.g.a.n.e",1,"inappropriate_bad_conversation_dotted"
+"s...u...l...a...y m...a...g...a...n...e",1,"inappropriate_bad_conversation_multidot"
+"s-u-l-a-y m-a-g-a-n-e",1,"inappropriate_bad_conversation_hyphenated"
+"s*u*l*a*y m*a*g*a*n*e",1,"inappropriate_bad_conversation_starred"
+"s u l a y   m a g a n e",1,"inappropriate_bad_conversation_spaced"
+"s
+u
+l
+a
+y
+
+m
+a
+g
+a
+n
+e",1,"inappropriate_bad_conversation_vertical"
+"$ul@y m@g@n3",1,"inappropriate_bad_conversation_leet"
+"tikka",1,"inappropriate_bad_conversation"
+"t.i.k.k.a",1,"inappropriate_bad_conversation_dotted"
+"t...i...k...k...a",1,"inappropriate_bad_conversation_multidot"
+"t-i-k-k-a",1,"inappropriate_bad_conversation_hyphenated"
+"t*i*k*k*a",1,"inappropriate_bad_conversation_starred"
+"t i k k a",1,"inappropriate_bad_conversation_spaced"
+"t
+i
+k
+k
+a",1,"inappropriate_bad_conversation_vertical"
+"t1kk@",1,"inappropriate_bad_conversation_leet"
+"myre",1,"inappropriate_bad_conversation"
+"m.y.r.e",1,"inappropriate_bad_conversation_dotted"
+"m...y...r...e",1,"inappropriate_bad_conversation_multidot"
+"m-y-r-e",1,"inappropriate_bad_conversation_hyphenated"
+"m*y*r*e",1,"inappropriate_bad_conversation_starred"
+"m y r e",1,"inappropriate_bad_conversation_spaced"
+"m
+y
+r
+e",1,"inappropriate_bad_conversation_vertical"
+"myr3",1,"inappropriate_bad_conversation_leet"
+"thaayoli",1,"inappropriate_bad_conversation"
+"t.h.a.a.y.o.l.i",1,"inappropriate_bad_conversation_dotted"
+"t...h...a...a...y...o...l...i",1,"inappropriate_bad_conversation_multidot"
+"t-h-a-a-y-o-l-i",1,"inappropriate_bad_conversation_hyphenated"
+"t*h*a*a*y*o*l*i",1,"inappropriate_bad_conversation_starred"
+"t h a a y o l i",1,"inappropriate_bad_conversation_spaced"
+"t
+h
+a
+a
+y
+o
+l
+i",1,"inappropriate_bad_conversation_vertical"
+"th@@y0l1",1,"inappropriate_bad_conversation_leet"
+"thendi",1,"inappropriate_bad_conversation"
+"t.h.e.n.d.i",1,"inappropriate_bad_conversation_dotted"
+"t...h...e...n...d...i",1,"inappropriate_bad_conversation_multidot"
+"t-h-e-n-d-i",1,"inappropriate_bad_conversation_hyphenated"
+"t*h*e*n*d*i",1,"inappropriate_bad_conversation_starred"
+"t h e n d i",1,"inappropriate_bad_conversation_spaced"
+"t
+h
+e
+n
+d
+i",1,"inappropriate_bad_conversation_vertical"
+"th3nd1",1,"inappropriate_bad_conversation_leet"
+"pulayadi",1,"inappropriate_bad_conversation"
+"p.u.l.a.y.a.d.i",1,"inappropriate_bad_conversation_dotted"
+"p...u...l...a...y...a...d...i",1,"inappropriate_bad_conversation_multidot"
+"p-u-l-a-y-a-d-i",1,"inappropriate_bad_conversation_hyphenated"
+"p*u*l*a*y*a*d*i",1,"inappropriate_bad_conversation_starred"
+"p u l a y a d i",1,"inappropriate_bad_conversation_spaced"
+"p
+u
+l
+a
+y
+a
+d
+i",1,"inappropriate_bad_conversation_vertical"
+"pul@y@d1",1,"inappropriate_bad_conversation_leet"
+"kunna",1,"inappropriate_bad_conversation"
+"k.u.n.n.a",1,"inappropriate_bad_conversation_dotted"
+"k...u...n...n...a",1,"inappropriate_bad_conversation_multidot"
+"k-u-n-n-a",1,"inappropriate_bad_conversation_hyphenated"
+"k*u*n*n*a",1,"inappropriate_bad_conversation_starred"
+"k u n n a",1,"inappropriate_bad_conversation_spaced"
+"k
+u
+n
+n
+a",1,"inappropriate_bad_conversation_vertical"
+"kunn@",1,"inappropriate_bad_conversation_leet"
+"kundi",1,"inappropriate_bad_conversation"
+"k.u.n.d.i",1,"inappropriate_bad_conversation_dotted"
+"k...u...n...d...i",1,"inappropriate_bad_conversation_multidot"
+"k-u-n-d-i",1,"inappropriate_bad_conversation_hyphenated"
+"k*u*n*d*i",1,"inappropriate_bad_conversation_starred"
+"k u n d i",1,"inappropriate_bad_conversation_spaced"
+"k
+u
+n
+d
+i",1,"inappropriate_bad_conversation_vertical"
+"kund1",1,"inappropriate_bad_conversation_leet"
+"pooru",1,"inappropriate_bad_conversation"
+"p.o.o.r.u",1,"inappropriate_bad_conversation_dotted"
+"p...o...o...r...u",1,"inappropriate_bad_conversation_multidot"
+"p-o-o-r-u",1,"inappropriate_bad_conversation_hyphenated"
+"p*o*o*r*u",1,"inappropriate_bad_conversation_starred"
+"p o o r u",1,"inappropriate_bad_conversation_spaced"
+"p
+o
 o
 r
+u",1,"inappropriate_bad_conversation_vertical"
+"p00ru",1,"inappropriate_bad_conversation_leet"
+"gaandu",1,"inappropriate_bad_conversation"
+"g.a.a.n.d.u",1,"inappropriate_bad_conversation_dotted"
+"g...a...a...n...d...u",1,"inappropriate_bad_conversation_multidot"
+"g-a-a-n-d-u",1,"inappropriate_bad_conversation_hyphenated"
+"g*a*a*n*d*u",1,"inappropriate_bad_conversation_starred"
+"g a a n d u",1,"inappropriate_bad_conversation_spaced"
+"g
+a
+a
+n
+d
+u",1,"inappropriate_bad_conversation_vertical"
+"g@@ndu",1,"inappropriate_bad_conversation_leet"
+"gxxndu",1,"inappropriate_bad_conversation"
+"g.x.x.n.d.u",1,"inappropriate_bad_conversation_dotted"
+"g...x...x...n...d...u",1,"inappropriate_bad_conversation_multidot"
+"g-x-x-n-d-u",1,"inappropriate_bad_conversation_hyphenated"
+"g*x*x*n*d*u",1,"inappropriate_bad_conversation_starred"
+"g x x n d u",1,"inappropriate_bad_conversation_spaced"
+"g
+x
+x
+n
+d
+u",1,"inappropriate_bad_conversation_vertical"
+"g*ndu",1,"inappropriate_bad_conversation"
+"g.*.n.d.u",1,"inappropriate_bad_conversation_dotted"
+"g...*...n...d...u",1,"inappropriate_bad_conversation_multidot"
+"g-*-n-d-u",1,"inappropriate_bad_conversation_hyphenated"
+"g***n*d*u",1,"inappropriate_bad_conversation_starred"
+"g * n d u",1,"inappropriate_bad_conversation_spaced"
+"g
+*
+n
+d
+u",1,"inappropriate_bad_conversation_vertical"
+"bxxch",1,"inappropriate_bad_conversation"
+"b.x.x.c.h",1,"inappropriate_bad_conversation_dotted"
+"b...x...x...c...h",1,"inappropriate_bad_conversation_multidot"
+"b-x-x-c-h",1,"inappropriate_bad_conversation_hyphenated"
+"b*x*x*c*h",1,"inappropriate_bad_conversation_starred"
+"b x x c h",1,"inappropriate_bad_conversation_spaced"
+"b
+x
+x
+c
+h",1,"inappropriate_bad_conversation_vertical"
+"nxxga",1,"inappropriate_bad_conversation"
+"n.x.x.g.a",1,"inappropriate_bad_conversation_dotted"
+"n...x...x...g...a",1,"inappropriate_bad_conversation_multidot"
+"n-x-x-g-a",1,"inappropriate_bad_conversation_hyphenated"
+"n*x*x*g*a",1,"inappropriate_bad_conversation_starred"
+"n x x g a",1,"inappropriate_bad_conversation_spaced"
+"n
+x
+x
+g
+a",1,"inappropriate_bad_conversation_vertical"
+"nxxg@",1,"inappropriate_bad_conversation_leet"
+"pxxda",1,"inappropriate_bad_conversation"
+"p.x.x.d.a",1,"inappropriate_bad_conversation_dotted"
+"p...x...x...d...a",1,"inappropriate_bad_conversation_multidot"
+"p-x-x-d-a",1,"inappropriate_bad_conversation_hyphenated"
+"p*x*x*d*a",1,"inappropriate_bad_conversation_starred"
+"p x x d a",1,"inappropriate_bad_conversation_spaced"
+"p
+x
+x
+d
+a",1,"inappropriate_bad_conversation_vertical"
+"pxxd@",1,"inappropriate_bad_conversation_leet"
+"txxlu",1,"inappropriate_bad_conversation"
+"t.x.x.l.u",1,"inappropriate_bad_conversation_dotted"
+"t...x...x...l...u",1,"inappropriate_bad_conversation_multidot"
+"t-x-x-l-u",1,"inappropriate_bad_conversation_hyphenated"
+"t*x*x*l*u",1,"inappropriate_bad_conversation_starred"
+"t x x l u",1,"inappropriate_bad_conversation_spaced"
+"t
+x
+x
+l
+u",1,"inappropriate_bad_conversation_vertical"
+"sxxle",1,"inappropriate_bad_conversation"
+"s.x.x.l.e",1,"inappropriate_bad_conversation_dotted"
+"s...x...x...l...e",1,"inappropriate_bad_conversation_multidot"
+"s-x-x-l-e",1,"inappropriate_bad_conversation_hyphenated"
+"s*x*x*l*e",1,"inappropriate_bad_conversation_starred"
+"s x x l e",1,"inappropriate_bad_conversation_spaced"
+"s
+x
+x
+l
+e",1,"inappropriate_bad_conversation_vertical"
+"$xxl3",1,"inappropriate_bad_conversation_leet"
+"lxxja",1,"inappropriate_bad_conversation"
+"l.x.x.j.a",1,"inappropriate_bad_conversation_dotted"
+"l...x...x...j...a",1,"inappropriate_bad_conversation_multidot"
+"l-x-x-j-a",1,"inappropriate_bad_conversation_hyphenated"
+"l*x*x*j*a",1,"inappropriate_bad_conversation_starred"
+"l x x j a",1,"inappropriate_bad_conversation_spaced"
+"l
+x
+x
+j
+a",1,"inappropriate_bad_conversation_vertical"
+"lxxj@",1,"inappropriate_bad_conversation_leet"
+"shxta",1,"inappropriate_bad_conversation"
+"s.h.x.t.a",1,"inappropriate_bad_conversation_dotted"
+"s...h...x...t...a",1,"inappropriate_bad_conversation_multidot"
+"s-h-x-t-a",1,"inappropriate_bad_conversation_hyphenated"
+"s*h*x*t*a",1,"inappropriate_bad_conversation_starred"
+"s h x t a",1,"inappropriate_bad_conversation_spaced"
+"s
+h
+x
 t
+a",1,"inappropriate_bad_conversation_vertical"
+"$hxt@",1,"inappropriate_bad_conversation_leet"
+"mxxre",1,"inappropriate_bad_conversation"
+"m.x.x.r.e",1,"inappropriate_bad_conversation_dotted"
+"m...x...x...r...e",1,"inappropriate_bad_conversation_multidot"
+"m-x-x-r-e",1,"inappropriate_bad_conversation_hyphenated"
+"m*x*x*r*e",1,"inappropriate_bad_conversation_starred"
+"m x x r e",1,"inappropriate_bad_conversation_spaced"
+"m
+x
+x
+r
+e",1,"inappropriate_bad_conversation_vertical"
+"mxxr3",1,"inappropriate_bad_conversation_leet"
+"test_violation_sample_1791313274812",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.3.2.7.4.8.1.2",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...3...2...7...4...8...1...2",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-3-2-7-4-8-1-2",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*3*2*7*4*8*1*2",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 3 2 7 4 8 1 2",1,"active_learning_test_spaced"
+"t
 e
-d",1,"user_report_violation_vertical"
-"u$3r_r3p0rt3d",1,"user_report_violation_leet"
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+1
+3
+1
+3
+2
+7
+4
+8
+1
+2",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1791313274812",1,"active_learning_test_leet"
+"sule magane",1,"inappropriate_bad_conversation"
+"s.u.l.e m.a.g.a.n.e",1,"inappropriate_bad_conversation_dotted"
+"s...u...l...e m...a...g...a...n...e",1,"inappropriate_bad_conversation_multidot"
+"s-u-l-e m-a-g-a-n-e",1,"inappropriate_bad_conversation_hyphenated"
+"s*u*l*e m*a*g*a*n*e",1,"inappropriate_bad_conversation_starred"
+"s u l e   m a g a n e",1,"inappropriate_bad_conversation_spaced"
+"s
+u
+l
+e
+
+m
+a
+g
+a
+n
+e",1,"inappropriate_bad_conversation_vertical"
+"$ul3 m@g@n3",1,"inappropriate_bad_conversation_leet"
+"bolimaga",1,"inappropriate_bad_conversation"
+"b.o.l.i.m.a.g.a",1,"inappropriate_bad_conversation_dotted"
+"b...o...l...i...m...a...g...a",1,"inappropriate_bad_conversation_multidot"
+"b-o-l-i-m-a-g-a",1,"inappropriate_bad_conversation_hyphenated"
+"b*o*l*i*m*a*g*a",1,"inappropriate_bad_conversation_starred"
+"b o l i m a g a",1,"inappropriate_bad_conversation_spaced"
+"b
+o
+l
+i
+m
+a
+g
+a",1,"inappropriate_bad_conversation_vertical"
+"b0l1m@g@",1,"inappropriate_bad_conversation_leet"
+"baddimaga",1,"inappropriate_bad_conversation"
+"b.a.d.d.i.m.a.g.a",1,"inappropriate_bad_conversation_dotted"
+"b...a...d...d...i...m...a...g...a",1,"inappropriate_bad_conversation_multidot"
+"b-a-d-d-i-m-a-g-a",1,"inappropriate_bad_conversation_hyphenated"
+"b*a*d*d*i*m*a*g*a",1,"inappropriate_bad_conversation_starred"
+"b a d d i m a g a",1,"inappropriate_bad_conversation_spaced"
+"b
+a
+d
+d
+i
+m
+a
+g
+a",1,"inappropriate_bad_conversation_vertical"
+"b@xx1m@g@",1,"inappropriate_bad_conversation_leet"
+"bevarsi nan maga",1,"inappropriate_bad_conversation"
+"b.e.v.a.r.s.i n.a.n m.a.g.a",1,"inappropriate_bad_conversation_dotted"
+"b...e...v...a...r...s...i n...a...n m...a...g...a",1,"inappropriate_bad_conversation_multidot"
+"b-e-v-a-r-s-i n-a-n m-a-g-a",1,"inappropriate_bad_conversation_hyphenated"
+"b*e*v*a*r*s*i n*a*n m*a*g*a",1,"inappropriate_bad_conversation_starred"
+"b e v a r s i   n a n   m a g a",1,"inappropriate_bad_conversation_spaced"
+"b
+e
+v
+a
+r
+s
+i
+
+n
+a
+n
+
+m
+a
+g
+a",1,"inappropriate_bad_conversation_vertical"
+"b3v@r$1 n@n m@g@",1,"inappropriate_bad_conversation_leet"
+"pundamavane",1,"inappropriate_bad_conversation"
+"p.u.n.d.a.m.a.v.a.n.e",1,"inappropriate_bad_conversation_dotted"
+"p...u...n...d...a...m...a...v...a...n...e",1,"inappropriate_bad_conversation_multidot"
+"p-u-n-d-a-m-a-v-a-n-e",1,"inappropriate_bad_conversation_hyphenated"
+"p*u*n*d*a*m*a*v*a*n*e",1,"inappropriate_bad_conversation_starred"
+"p u n d a m a v a n e",1,"inappropriate_bad_conversation_spaced"
+"p
+u
+n
+d
+a
+m
+a
+v
+a
+n
+e",1,"inappropriate_bad_conversation_vertical"
+"pund@m@v@n3",1,"inappropriate_bad_conversation_leet"
+"oombu",1,"inappropriate_bad_conversation"
+"o.o.m.b.u",1,"inappropriate_bad_conversation_dotted"
+"o...o...m...b...u",1,"inappropriate_bad_conversation_multidot"
+"o-o-m-b-u",1,"inappropriate_bad_conversation_hyphenated"
+"o*o*m*b*u",1,"inappropriate_bad_conversation_starred"
+"o o m b u",1,"inappropriate_bad_conversation_spaced"
+"o
+o
+m
+b
+u",1,"inappropriate_bad_conversation_vertical"
+"00mbu",1,"inappropriate_bad_conversation_leet"
+"dengu",1,"inappropriate_bad_conversation"
+"d.e.n.g.u",1,"inappropriate_bad_conversation_dotted"
+"d...e...n...g...u",1,"inappropriate_bad_conversation_multidot"
+"d-e-n-g-u",1,"inappropriate_bad_conversation_hyphenated"
+"d*e*n*g*u",1,"inappropriate_bad_conversation_starred"
+"d e n g u",1,"inappropriate_bad_conversation_spaced"
+"d
+e
+n
+g
+u",1,"inappropriate_bad_conversation_vertical"
+"d3ngu",1,"inappropriate_bad_conversation_leet"
+"modda gudu",1,"inappropriate_bad_conversation"
+"m.o.d.d.a g.u.d.u",1,"inappropriate_bad_conversation_dotted"
+"m...o...d...d...a g...u...d...u",1,"inappropriate_bad_conversation_multidot"
+"m-o-d-d-a g-u-d-u",1,"inappropriate_bad_conversation_hyphenated"
+"m*o*d*d*a g*u*d*u",1,"inappropriate_bad_conversation_starred"
+"m o d d a   g u d u",1,"inappropriate_bad_conversation_spaced"
+"m
+o
+d
+d
+a
+
+g
+u
+d
+u",1,"inappropriate_bad_conversation_vertical"
+"m0xx@ gudu",1,"inappropriate_bad_conversation_leet"
+"gudha cheeku",1,"inappropriate_bad_conversation"
+"g.u.d.h.a c.h.e.e.k.u",1,"inappropriate_bad_conversation_dotted"
+"g...u...d...h...a c...h...e...e...k...u",1,"inappropriate_bad_conversation_multidot"
+"g-u-d-h-a c-h-e-e-k-u",1,"inappropriate_bad_conversation_hyphenated"
+"g*u*d*h*a c*h*e*e*k*u",1,"inappropriate_bad_conversation_starred"
+"g u d h a   c h e e k u",1,"inappropriate_bad_conversation_spaced"
+"g
+u
+d
+h
+a
+
+c
+h
+e
+e
+k
+u",1,"inappropriate_bad_conversation_vertical"
+"gudh@ ch33ku",1,"inappropriate_bad_conversation_leet"
+"poorimone",1,"inappropriate_bad_conversation"
+"p.o.o.r.i.m.o.n.e",1,"inappropriate_bad_conversation_dotted"
+"p...o...o...r...i...m...o...n...e",1,"inappropriate_bad_conversation_multidot"
+"p-o-o-r-i-m-o-n-e",1,"inappropriate_bad_conversation_hyphenated"
+"p*o*o*r*i*m*o*n*e",1,"inappropriate_bad_conversation_starred"
+"p o o r i m o n e",1,"inappropriate_bad_conversation_spaced"
+"p
+o
+o
+r
+i
+m
+o
+n
+e",1,"inappropriate_bad_conversation_vertical"
+"p00r1m0n3",1,"inappropriate_bad_conversation_leet"
+"t*llu",1,"inappropriate_bad_conversation"
+"t.*.l.l.u",1,"inappropriate_bad_conversation_dotted"
+"t...*...l...l...u",1,"inappropriate_bad_conversation_multidot"
+"t-*-l-l-u",1,"inappropriate_bad_conversation_hyphenated"
+"t***l*l*u",1,"inappropriate_bad_conversation_starred"
+"t * l l u",1,"inappropriate_bad_conversation_spaced"
+"t
+*
+l
+l
+u",1,"inappropriate_bad_conversation_vertical"
+"sxxle mxgxne",1,"inappropriate_bad_conversation"
+"s.x.x.l.e m.x.g.x.n.e",1,"inappropriate_bad_conversation_dotted"
+"s...x...x...l...e m...x...g...x...n...e",1,"inappropriate_bad_conversation_multidot"
+"s-x-x-l-e m-x-g-x-n-e",1,"inappropriate_bad_conversation_hyphenated"
+"s*x*x*l*e m*x*g*x*n*e",1,"inappropriate_bad_conversation_starred"
+"s x x l e   m x g x n e",1,"inappropriate_bad_conversation_spaced"
+"s
+x
+x
+l
+e
+
+m
+x
+g
+x
+n
+e",1,"inappropriate_bad_conversation_vertical"
+"$xxl3 mxgxn3",1,"inappropriate_bad_conversation_leet"
+"nxx ammxx",1,"inappropriate_bad_conversation"
+"n.x.x a.m.m.x.x",1,"inappropriate_bad_conversation_dotted"
+"n...x...x a...m...m...x...x",1,"inappropriate_bad_conversation_multidot"
+"n-x-x a-m-m-x-x",1,"inappropriate_bad_conversation_hyphenated"
+"n*x*x a*m*m*x*x",1,"inappropriate_bad_conversation_starred"
+"n x x   a m m x x",1,"inappropriate_bad_conversation_spaced"
+"n
+x
+x
+
+a
+m
+m
+x
+x",1,"inappropriate_bad_conversation_vertical"
+"nxx @mmxx",1,"inappropriate_bad_conversation_leet"
+"txkka",1,"inappropriate_bad_conversation"
+"t.x.k.k.a",1,"inappropriate_bad_conversation_dotted"
+"t...x...k...k...a",1,"inappropriate_bad_conversation_multidot"
+"t-x-k-k-a",1,"inappropriate_bad_conversation_hyphenated"
+"t*x*k*k*a",1,"inappropriate_bad_conversation_starred"
+"t x k k a",1,"inappropriate_bad_conversation_spaced"
+"t
+x
+k
+k
+a",1,"inappropriate_bad_conversation_vertical"
+"txkk@",1,"inappropriate_bad_conversation_leet"
+"sh*ta",1,"inappropriate_bad_conversation"
+"s.h.*.t.a",1,"inappropriate_bad_conversation_dotted"
+"s...h...*...t...a",1,"inappropriate_bad_conversation_multidot"
+"s-h-*-t-a",1,"inappropriate_bad_conversation_hyphenated"
+"s*h***t*a",1,"inappropriate_bad_conversation_starred"
+"s h * t a",1,"inappropriate_bad_conversation_spaced"
+"s
+h
+*
+t
+a",1,"inappropriate_bad_conversation_vertical"
+"$h*t@",1,"inappropriate_bad_conversation_leet"
+"test_violation_sample_1791313399001",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.3.3.9.9.0.0.1",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...3...3...9...9...0...0...1",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-3-3-9-9-0-0-1",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*3*3*9*9*0*0*1",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 3 3 9 9 0 0 1",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+1
+3
+1
+3
+3
+9
+9
+0
+0
+1",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1791313399001",1,"active_learning_test_leet"

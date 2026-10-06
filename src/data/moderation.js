@@ -126,9 +126,9 @@ function detectLowQualityMessage(text) {
   
   const lowerText = text.toLowerCase().trim();
 
-  // Check conversational NLP analyzer for low-effort text lines
+  // Check conversational NLP analyzer for low-effort text lines, phone sharing, social leaks, symbols
   const conv = analyzeConversationLine(text);
-  if (conv.isLowEffort) {
+  if (conv.isViolation) {
     return {
       detected: true,
       pattern: conv.reason || 'low_effort',

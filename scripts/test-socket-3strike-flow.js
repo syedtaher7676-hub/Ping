@@ -96,12 +96,12 @@ server.listen(0, async () => {
   console.log("✅ Matched in room:", roomId);
 
   // 1. Offense 1: Send slur
-  await new Promise((r) => setTimeout(r, 300));
+  await new Promise((r) => setTimeout(r, 800));
   socketA.emit("send_message", { message: "you are a bitch" }, (ack) => {
     console.log("Offense 1 ack:", ack);
   });
 
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 800));
   if (partnerReceivedSlur) {
     console.error("❌ Partner received slur! Message was NOT blocked.");
     process.exit(1);
@@ -118,7 +118,7 @@ server.listen(0, async () => {
     if (p.message === "hello again") normalMsgReceived = true;
   });
   socketA.emit("send_message", { message: "hello again" });
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 800));
   if (!normalMsgReceived) {
     console.error("❌ Chat did not continue after Strike 1!");
     process.exit(1);
@@ -126,11 +126,12 @@ server.listen(0, async () => {
   console.log("✅ Chat continues normally after Strike 1 warning.");
 
   // 2. Offense 2: Send second slur
+  await new Promise((r) => setTimeout(r, 800));
   socketA.emit("send_message", { message: "shut up slut" }, (ack) => {
     console.log("Offense 2 ack:", ack);
   });
 
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 800));
   if (partnerReceivedSlur) {
     console.error("❌ Partner received slur on 2nd offense!");
     process.exit(1);
@@ -147,7 +148,7 @@ server.listen(0, async () => {
     if (p.message === "clean conversation continues") normalMsg2Received = true;
   });
   socketA.emit("send_message", { message: "clean conversation continues" });
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 800));
   if (!normalMsg2Received) {
     console.error("❌ Chat did not continue after Strike 2!");
     process.exit(1);
@@ -155,6 +156,7 @@ server.listen(0, async () => {
   console.log("✅ Chat continues normally after Strike 2 warning.");
 
   // 3. Offense 3: Send third slur
+  await new Promise((r) => setTimeout(r, 800));
   socketA.emit("send_message", { message: "fuck off gandu" }, (ack) => {
     console.log("Offense 3 ack:", ack);
   });

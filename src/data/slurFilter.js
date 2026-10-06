@@ -86,6 +86,7 @@ const DEFAULT_SLURS = [
   "chutiya",
   "chutiye",
   "gandu",
+  "gaandu",
   "bhosadike",
   "bhosdike",
   "bhosadi",
@@ -112,6 +113,419 @@ const DEFAULT_SLURS = [
   "lund",
   "chinal",
   "randwa",
+
+  // Tamil slurs & profanity
+  "thevidiya",
+  "thevidya",
+  "thevdiya",
+  "thevadiya",
+  "thevidia",
+  "thevadiye",
+  "thevidiyale",
+  "thevidiya paiya",
+  "thevidiya paya",
+  "thevidiya payale",
+  "thevidiya mavane",
+  "thevidiya pasanga",
+  "thevadiyaye",
+  "thevidiya munda",
+  "thevidiya mundai",
+  "otha",
+  "othaa",
+  "othala",
+  "othale",
+  "othavala",
+  "othavane",
+  "omala",
+  "ommala",
+  "ommale",
+  "gommale",
+  "gommala",
+  "otha gommala",
+  "punda",
+  "pundamavan",
+  "pundamavane",
+  "punda mavan",
+  "punda mavane",
+  "punda payale",
+  "loosu punda",
+  "kenapunda",
+  "kena punda",
+  "pundai",
+  "kena pundai",
+  "olugura punda",
+  "pundakokki",
+  "pundakokke",
+  "punda munda",
+  "koothi",
+  "koothee",
+  "koothe",
+  "koodhi",
+  "loosu koodhi",
+  "koothi oombu",
+  "poolu",
+  "poola",
+  "poolu oombu",
+  "poolu sapu",
+  "poolumani",
+  "oombu",
+  "oombuda",
+  "oombale",
+  "oomburavan",
+  "sunni",
+  "sunnee",
+  "sunniya oombu",
+  "sunni oombu",
+  "sunni sapu",
+  "mayiru",
+  "mayire",
+  "mayir",
+  "baadu",
+  "naaye",
+  "naai",
+  "ungamma",
+  "ungammale",
+  "ungappana",
+  "ungappan",
+  "unammale",
+  "un appan",
+  "pichaikarane",
+  "kandravi",
+  "eruma maadu",
+  "porukki",
+  "kamnati",
+  "kazhutha",
+  "echa kala",
+  "echa paya",
+  "paradesi",
+  "savugrahandi",
+  "lavadakabaal",
+  "lavada",
+  "soothu",
+  "sootha moodu",
+  "sotha moodu",
+  "தேவிடியா",
+  "கூதி",
+  "பூலு",
+  "புண்ட",
+  "புண்டை",
+  "ஓத்தா",
+  "மயிரு",
+  "நாயே",
+  "சுன்னி",
+
+  // Telugu slurs & profanity
+  "lanja",
+  "lanjakodaka",
+  "lanja kodaka",
+  "lanjamunda",
+  "lanja munda",
+  "lanjodka",
+  "lanjakompa",
+  "lanja puttina",
+  "lanjaputtina",
+  "donga lanja",
+  "donga munda",
+  "lanja munda kodaka",
+  "lanja kuthura",
+  "lanjakuthura",
+  "lanja bathuku",
+  "dengu",
+  "dhengey",
+  "dhengai",
+  "dengai",
+  "dengi",
+  "dengutha",
+  "dengudu",
+  "dhengichuko",
+  "dengichuko",
+  "dengulata",
+  "dengava",
+  "dengu ra",
+  "denguko",
+  "denginchuko",
+  "gudha",
+  "guda",
+  "guddha",
+  "gudha balisinda",
+  "gudha moosko",
+  "gudhalo",
+  "gudhadenge",
+  "gudhala",
+  "gudha cheeku",
+  "gudha dengu",
+  "gudha paguluddi",
+  "gudha pagaldhengo",
+  "munda",
+  "mundamopi",
+  "munde",
+  "munda mopi",
+  "mundamopivi",
+  "munda kodaka",
+  "puku",
+  "pooku",
+  "pukulo",
+  "pookulo",
+  "erri puku",
+  "erripuku",
+  "verri puku",
+  "verripuku",
+  "puku gadu",
+  "madhyalo puku",
+  "puku cheeku",
+  "erri puka",
+  "erripuka",
+  "puku nakku",
+  "modda",
+  "moddalo",
+  "moddada",
+  "modda cheeku",
+  "erri modda",
+  "errimodda",
+  "chekka",
+  "moddalo jeevitham",
+  "modda gudu",
+  "moddagudu",
+  "modda nakku",
+  "sulli",
+  "sulliga",
+  "sulli cheeku",
+  "sulli gadu",
+  "sulligadu",
+  "sulli gudu",
+  "nakodaka",
+  "na kodaka",
+  "donga na kodaka",
+  "dongana kodaka",
+  "chillar na kodaka",
+  "chillara na kodaka",
+  "nee yavva",
+  "nee yamma",
+  "nee abba",
+  "nee ayya",
+  "nee amman",
+  "nee bamma",
+  "nee thalli",
+  "లంజ",
+  "లంజకొడకా",
+  "దెంగు",
+  "గుద్ద",
+  "పూకు",
+  "మొడ్డ",
+  "సుల్లి",
+  "ఎర్రిపూకు",
+
+  // Kannada slurs & profanity
+  "sule",
+  "sule maga",
+  "sulemaga",
+  "sule magane",
+  "sulemagane",
+  "sulay",
+  "sulay maga",
+  "sulay magane",
+  "sulaymaga",
+  "sulaymagane",
+  "sooley",
+  "soole maga",
+  "soole magane",
+  "soolemagane",
+  "sule munde",
+  "sulemunde",
+  "soole munde",
+  "sulekodaga",
+  "sule kodaga",
+  "sulemaklu",
+  "sule maklu",
+  "soole",
+  "sule hadaragi",
+  "thika",
+  "tikka",
+  "theeka",
+  "theekamuchu",
+  "theka",
+  "thika muchu",
+  "tikka muchu",
+  "thika muchkond",
+  "tikka muchkond",
+  "thika hodithini",
+  "tikka hodithini",
+  "thika thulko",
+  "tikka thulko",
+  "theeka muchu",
+  "tikka keyyo",
+  "boli",
+  "boli maga",
+  "bolimaga",
+  "boli munde",
+  "bolimunde",
+  "boli maklu",
+  "bolimaklu",
+  "baddimaga",
+  "baddi maga",
+  "baddi munde",
+  "baddimunde",
+  "baddithana",
+  "byawarsi",
+  "bewarsi",
+  "bewarse",
+  "bevarsi",
+  "bevarsi nan maga",
+  "bewarsi nan maga",
+  "hadaragi",
+  "hadaragi maga",
+  "hadsko",
+  "hadskota",
+  "hadargithi",
+  "hadar githi",
+  "hadarathana",
+  "keythini",
+  "keyyo",
+  "keyyodhu",
+  "mindri",
+  "kalla nanna maga",
+  "kallan nan maga",
+  "nin amman",
+  "nin ammanige",
+  "nin amman thullu",
+  "nin amman thika",
+  "nin ayyana",
+  "nin appan",
+  "nin akkan",
+  "nin thangi",
+  "nim amman",
+  "nim ammanige",
+  "nimman",
+  "nimmanige",
+  "nimmajji",
+  "ninajji",
+  "nin ajji",
+  "tunne",
+  "thunne",
+  "tunne cheepu",
+  "thunne cheepu",
+  "tunne unnu",
+  "thunne nekku",
+  "tullu",
+  "thullu",
+  "tulu",
+  "thulu",
+  "tullu muchu",
+  "thullu muchu",
+  "tullu cheepu",
+  "tullu nekku",
+  "tullina",
+  "shata",
+  "shatta",
+  "satha",
+  "shata kithko",
+  "shatta kithko",
+  "shata muchu",
+  "shatta muchu",
+  "shata bolli",
+  "shata thulko",
+  "ganchali",
+  "huch naayi",
+  "huch nayi",
+  "karubu",
+  "thukaali",
+  "loffer",
+  "chaddi donga",
+  "kandre",
+  "ಸೂಳೆ",
+  "ಸೂಳೆಮಗ",
+  "ಸೂಳೆ ಮಗನೆ",
+  "ಬೋಳಿ",
+  "ಬೋಳಿಮಗ",
+  "ತಿಕ್ಕ",
+  "ತುಣ್ಣೆ",
+  "ಶಟ",
+  "ಬೇವರ್ಸಿ",
+
+  // Malayalam slurs & profanity
+  "myre",
+  "maire",
+  "myru",
+  "mairu",
+  "myren",
+  "mairen",
+  "myran",
+  "mairan",
+  "myrukale",
+  "myro",
+  "myroli",
+  "thendi",
+  "thenndi",
+  "thendimon",
+  "thendimol",
+  "thendikale",
+  "thendi naye",
+  "patti",
+  "pattishow",
+  "naaye",
+  "naayi",
+  "naayinte mone",
+  "nayinte mone",
+  "nayinte mon",
+  "naayinte mon",
+  "pattide mone",
+  "pattintemon",
+  "patti mone",
+  "pulayadi",
+  "pulayadimon",
+  "pulayadimonu",
+  "pulayadi mone",
+  "pulayadimone",
+  "kunna",
+  "kundi",
+  "kundimon",
+  "kundimone",
+  "kundikku",
+  "kundi adikkal",
+  "kunna paal",
+  "kunna oombu",
+  "pooru",
+  "poorimon",
+  "poorimone",
+  "poottile",
+  "pooru mone",
+  "pooru mon",
+  "poori mone",
+  "poori",
+  "poore",
+  "poothole",
+  "pooru nakku",
+  "andi",
+  "visham",
+  "thaayoli",
+  "thayoli",
+  "thayyoli",
+  "thayolee",
+  "thayoli mone",
+  "thayyoli mone",
+  "thayolimon",
+  "thayoli naye",
+  "kallan",
+  "chetta",
+  "vellathalayan",
+  "panna thaye",
+  "kallatharam",
+  "kandathil",
+  "vedichi",
+  "vadi",
+  "koothichi",
+  "kotham",
+  "മൈരേ",
+  "മൈര്",
+  "തെണ്ടി",
+  "പട്ടി",
+  "നായേ",
+  "പുലയാടി",
+  "കുന്ന",
+  "കുണ്ടി",
+  "പൂറ്",
+  "പൂറിമോനേ",
+  "തയോളി",
 
   // Spanish & International slurs
   "maricon",
@@ -305,11 +719,14 @@ function normalizeHomoglyphs(text) {
     'т': 't',
     'у': 'y', 'ý': 'y', 'ÿ': 'y',
     'х': 'x', 'ҳ': 'x',
-    'ѡ': 'w', 'ш': 'w',
-    'ѵ': 'v'
+    'ѡ': 'w', 'ш': 'w', 'щ': 'w',
+    'ѵ': 'v',
+    'п': 'n', 'г': 'r', 'д': 'd', 'и': 'u', 'л': 'l', 'м': 'm', 'н': 'h', 'я': 'r',
+    'θ': 'o', 'λ': 'l', 'μ': 'u', 'ν': 'v', 'π': 'n', 'ρ': 'p', 'σ': 's', 'τ': 't', 'χ': 'x', 'ψ': 'y', 'ω': 'w'
   };
 
-  let result = text;
+  // 1. Decompose mathematical/circled/stylized unicode characters to base ASCII
+  let result = text.normalize('NFKD');
   for (const [nonLatin, latin] of Object.entries(homoglyphMap)) {
     result = result.replace(new RegExp(nonLatin, 'gi'), latin);
   }
@@ -317,19 +734,22 @@ function normalizeHomoglyphs(text) {
 }
 
 /**
- * Collapses multi-line vertical text (e.g., "d\ni\nd\nd\ny" -> "diddy")
+ * Collapses multi-line vertical text (e.g., "d\ni\nd\nd\ny" -> "diddy", "n\ni\ng\ng\na" -> "nigga")
  */
 function collapseVerticalText(text) {
   if (!text || typeof text !== 'string') return '';
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  if (lines.length >= 2 && lines.every(l => l.length <= 3)) {
-    return lines.join('');
+  if (lines.length >= 2) {
+    const strippedLines = lines.map(l => l.replace(/[^a-zA-Z0-9]/g, ''));
+    if (strippedLines.every(l => l.length <= 3)) {
+      return strippedLines.join('');
+    }
   }
   return text.replace(/([a-zA-Z0-9])[\r\n]+([a-zA-Z0-9])/g, '$1$2');
 }
 
 /**
- * Collapses spaced single letters (e.g. "d i d d y" -> "diddy", "d  i  x  x  y" -> "dixxy")
+ * Collapses spaced single letters (e.g. "d i d d y" -> "diddy", "d  i  x  x  y" -> "dixxy", "n i g g a" -> "nigga")
  */
 function collapseSpacedLetters(text) {
   if (!text || typeof text !== 'string') return '';
@@ -339,15 +759,102 @@ function collapseSpacedLetters(text) {
 }
 
 /**
- * Strips all masked spacer punctuation (dots, hyphens, underscores, slashes, tildes, asterisks)
- * e.g., "di...dd...y" -> "diddy", "d-i-d-d-y" -> "diddy", "d*i*x*x*y" -> "dixxy"
+ * Strips all non-alphanumeric symbols and invisible unicode
+ * e.g., "////nigga" -> "nigga", "////n/i/g/g/a" -> "nigga", "b-h-e-n-c-h-o-d" -> "bhenchod"
+ */
+function stripAllSymbols(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F\u00AD]/g, '')
+    .replace(/[\s\.\-_,\/\\~\|\*\^#%+=:;'"!?`@$<>{}\[\]\(\)]+/g, '');
+}
+
+/**
+ * Strips all masked spacer punctuation
  */
 function sanitizeMaskedText(text) {
   if (!text || typeof text !== 'string') return '';
   return text
+    .normalize('NFKD')
     .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F]/g, '') // strip invisible unicode
-    .replace(/[\s\.\-_,\/\\~\|\*\^#%+=:;'"!?`]+/g, '');
+    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F\u00AD]/g, '')
+    .replace(/[\s\.\-_,\/\\~\|\*\^#%+=:;'"!?`@$<>{}\[\]\(\)]+/g, '');
+}
+
+/**
+ * Collapses repeating runs of characters (e.g. "niiiigggga" -> "nigga")
+ */
+function collapseRepeatedChars(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text.replace(/(.)\1{2,}/g, '$1$1').replace(/([a-zA-Z])\1+/g, '$1');
+}
+
+/**
+ * Collapses elongated vowels e.g. "gaandu" -> "gandu", "puuunda" -> "punda", "suuulay" -> "sule"
+ */
+function collapseElongatedVowels(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    .replace(/aa+/g, 'a')
+    .replace(/ee+/g, 'e')
+    .replace(/ii+/g, 'i')
+    .replace(/oo+/g, 'o')
+    .replace(/uu+/g, 'u')
+    .replace(/yy+/g, 'y');
+}
+
+/**
+ * Detects masked bad words where letters are masked with 'x', '*', '.', '_', '-', '/', '@', '#', '$'
+ * e.g. "gxxndu" -> matches "gandu"/"gaandu", "bxxch" -> matches "bitch", "sxxle" -> matches "sule",
+ * "pxxda" -> matches "punda", "txxlu" -> matches "tullu", "shxta" -> matches "shata", "mxxre" -> matches "myre",
+ * "sxxle mxgxne" -> matches "sule magane", "nxx ammxx" -> matches "nin amman", "txkka" -> matches "tikka"
+ */
+function detectMaskedBadWords(text, blockedList) {
+  if (!text || typeof text !== 'string') return [];
+  const matches = [];
+  const tokens = text.toLowerCase().split(/\s+/).filter(Boolean);
+
+  // 1. Single token masked evaluation
+  for (const rawToken of tokens) {
+    const token = rawToken.replace(/^[^a-zA-Z0-9*xX_.\-\/#@$]+|[^a-zA-Z0-9*xX_.\-\/#@$]+$/g, '');
+    if (token.length >= 3 && /[x\*_\.\-\/#@\$]/i.test(token)) {
+      if (SAFE_EXCEPTIONS.includes(token)) continue;
+
+      const escapedMask = token.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
+      const patternStr = '^' + escapedMask.replace(/(\\\*|\\\.|\/|\\-|\\_|x|#|@|\\\$)+/gi, '.{1,4}') + '$';
+      try {
+        const regex = new RegExp(patternStr, 'i');
+        for (const slur of blockedList) {
+          if (slur.length >= 3 && regex.test(slur)) {
+            if (Math.abs(slur.length - token.length) <= 4) {
+              matches.push(slur);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  // 2. Multi-word n-gram masked evaluation (e.g. "sxxle mxgxne", "n*n amm*n", "b*li m*ga")
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const bigram = [tokens[i], tokens[i + 1]].map(t => t.replace(/^[^a-zA-Z0-9*xX_.\-\/#@$]+|[^a-zA-Z0-9*xX_.\-\/#@$]+$/g, '')).join(' ');
+    if (/[x\*_\.\-\/#@\$]/i.test(bigram) && bigram.length >= 5) {
+      const escapedMask = bigram.replace(/([.*+?^${}()|[\]\\])/g, '\\$1');
+      const patternStr = '^' + escapedMask.replace(/(\\\*|\\\.|\/|\\-|\\_|x|#|@|\\\$)+/gi, '.{1,4}') + '$';
+      try {
+        const regex = new RegExp(patternStr, 'i');
+        for (const slur of blockedList) {
+          if (slur.includes(' ') && regex.test(slur)) {
+            matches.push(slur);
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  return matches;
 }
 
 /**
@@ -364,6 +871,7 @@ function normalizePhoneticSubstitutions(text) {
     .replace(/\bd1x+y\b/g, 'diddy')
     .replace(/\bpux+y\b/g, 'pussy')
     .replace(/\bnix+a\b/g, 'nigga')
+    .replace(/\bnix+er\b/g, 'nigger')
     .replace(/\bbix+ch\b/g, 'bitch');
 }
 
@@ -374,7 +882,7 @@ function normalizeLeetspeak(text) {
   if (!text || typeof text !== 'string') return '';
   return text
     .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F]/g, '') // strip zero-width characters
+    .replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200F\u0300-\u036F\u00AD]/g, '') // strip zero-width characters
     .replace(/[@4^]/g, 'a')
     .replace(/[8]/g, 'b')
     .replace(/[(\[<]/g, 'c')
@@ -481,9 +989,16 @@ function detectSlurWithContext(text) {
   const spacedCollapsed = collapseSpacedLetters(homoglyphNormalized);
   const leetNormalized = normalizeLeetspeak(homoglyphNormalized);
   const strippedSpacers = sanitizeMaskedText(homoglyphNormalized);
+  const pureSymbolsStripped = stripAllSymbols(homoglyphNormalized);
+  const pureSymbolsLeet = normalizeLeetspeak(pureSymbolsStripped);
+  const pureDeduped = collapseRepeatedChars(pureSymbolsStripped);
+  const pureDedupedLeet = collapseRepeatedChars(pureSymbolsLeet);
+  const vowelCollapsed = collapseElongatedVowels(rawLower);
+  const vowelCollapsedPure = collapseElongatedVowels(pureSymbolsStripped);
   const phoneticNormalized = normalizePhoneticSubstitutions(homoglyphNormalized);
   const strippedPhonetic = normalizePhoneticSubstitutions(strippedSpacers);
   const verticalPhonetic = normalizePhoneticSubstitutions(verticalCollapsed);
+  const purePhonetic = normalizePhoneticSubstitutions(pureSymbolsStripped);
 
   const candidateRepresentations = [
     rawLower,
@@ -492,16 +1007,33 @@ function detectSlurWithContext(text) {
     spacedCollapsed,
     leetNormalized,
     strippedSpacers,
+    pureSymbolsStripped,
+    pureSymbolsLeet,
+    pureDeduped,
+    pureDedupedLeet,
+    vowelCollapsed,
+    vowelCollapsedPure,
     phoneticNormalized,
     strippedPhonetic,
-    verticalPhonetic
+    verticalPhonetic,
+    purePhonetic
   ];
 
   const matched = new Set();
 
-  // 1. Direct and normalized token matching
+  // 1. Masked bad words detection (e.g. gxxndu, g*ndu, bxxch, nxxga, pxxda, sxxle, txxlu, shxta, mxxre)
+  const maskedFound = [
+    ...detectMaskedBadWords(rawTrimmed, allBlocked),
+    ...detectMaskedBadWords(homoglyphNormalized, allBlocked),
+    ...detectMaskedBadWords(pureSymbolsStripped, allBlocked)
+  ];
+  for (const mf of maskedFound) {
+    matched.add(mf);
+  }
+
+  // 2. Direct and normalized token matching
   for (const rep of candidateRepresentations) {
-    const tokens = rep.split(/[\s,\.!?_\\/~|\*\^#%+=:;'"`]+/).filter(Boolean);
+    const tokens = rep.split(/[\s,\.!?_\\/~|\*\^#%+=:;'"`@$<>{}\[\]\(\)]+/).filter(Boolean);
     for (const t of tokens) {
       if (t.length >= SLUR_CONFIG.MIN_WORD_LENGTH && allBlocked.includes(t)) {
         matched.add(t);
@@ -509,7 +1041,7 @@ function detectSlurWithContext(text) {
     }
   }
 
-  // 2. Substring & masked spacer matching for severe slurs & bad conversation keywords
+  // 3. Substring & masked spacer matching for severe slurs & bad conversation keywords
   for (const slur of allBlocked) {
     if (slur.length < 3) continue;
 
@@ -521,10 +1053,19 @@ function detectSlurWithContext(text) {
       }
     }
 
-    // Stripped spacers check (e.g. "di...dd...y", "n.i.g.g.e.r", "d-i-d-d-y", "b h e n c h o d")
-    if (strippedSpacers.includes(slur) || strippedPhonetic.includes(slur)) {
+    // Stripped spacers check (e.g. "di...dd...y", "n.i.g.g.e.r", "d-i-d-d-y", "b h e n c h o d", "////nigga", "n\ni\ng\ng\na")
+    if (
+      strippedSpacers.includes(slur) ||
+      pureSymbolsStripped.includes(slur) ||
+      pureSymbolsLeet.includes(slur) ||
+      pureDeduped.includes(slur) ||
+      pureDedupedLeet.includes(slur) ||
+      vowelCollapsedPure.includes(slur) ||
+      strippedPhonetic.includes(slur) ||
+      purePhonetic.includes(slur)
+    ) {
       // Ensure it's not a benign subword false positive
-      const isBenignSubword = SAFE_EXCEPTIONS.some(safe => strippedSpacers.includes(safe));
+      const isBenignSubword = SAFE_EXCEPTIONS.some(safe => strippedSpacers.includes(safe) || pureSymbolsStripped.includes(safe));
       if (!isBenignSubword) {
         matched.add(slur);
       }
@@ -786,6 +1327,10 @@ module.exports = {
   collapseVerticalText,
   collapseSpacedLetters,
   sanitizeMaskedText,
+  stripAllSymbols,
+  collapseRepeatedChars,
+  collapseElongatedVowels,
+  detectMaskedBadWords,
   normalizePhoneticSubstitutions,
   SLUR_CONFIG,
 };

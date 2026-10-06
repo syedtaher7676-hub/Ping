@@ -148,6 +148,141 @@ const LOW_EFFORT_EXACT_PATTERNS = [
   /^\s*idk\s*$/i
 ];
 
+// Number word dictionary for written number evasion checks
+const NUMBER_WORDS_MAP = {
+  zero: '0',
+  one: '1',
+  two: '2',
+  three: '3',
+  four: '4',
+  five: '5',
+  six: '6',
+  seven: '7',
+  eight: '8',
+  nine: '9',
+  oh: '0',
+};
+
+/**
+ * Detects phone numbers shared in any format:
+ * - Direct: "9563693257", "+919563693257", "+1-956-369-3257"
+ * - Multi-line vertical: "9\n5\n6\n3\n6\n9\n3\n2\n5\n7"
+ * - Spaced/dotted/slashed: "9 5 6 3 6 9 3 2 5 7", "9.5.6.3.6.9.3.2.5.7", "9-5-6-3-6-9-3-2-5-7"
+ * - Words: "nine five six three six nine three two five seven"
+ */
+function detectPhoneNumber(text) {
+  if (!text || typeof text !== 'string') return false;
+  const raw = text.trim();
+  if (!raw) return false;
+
+  // 1. Multi-line vertical single/double digits check
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length >= 7) {
+    const digitLines = lines.filter(l => /^\D*(\d)\D*$/.test(l));
+    if (digitLines.length >= 7 && digitLines.length / lines.length >= 0.7) {
+      const extractedDigits = lines.map(l => l.replace(/\D/g, '')).join('');
+      if (extractedDigits.length >= 7 && extractedDigits.length <= 16) {
+        return true;
+      }
+    }
+  }
+
+  // 2. Convert written number words to digits
+  let textWithConvertedWords = raw.toLowerCase();
+  for (const [word, digit] of Object.entries(NUMBER_WORDS_MAP)) {
+    const wordRegex = new RegExp(`\\b${word}\\b`, 'gi');
+    textWithConvertedWords = textWithConvertedWords.replace(wordRegex, digit);
+  }
+
+  // 3. Spaced / symbol separated digits
+  const digitsOnly = textWithConvertedWords.replace(/\D/g, '');
+  if (digitsOnly.length >= 10 && digitsOnly.length <= 16) {
+    const nonSpaceCount = raw.replace(/\s/g, '').length;
+    if (digitsOnly.length / Math.max(1, nonSpaceCount) >= 0.45 || nonSpaceCount <= 25) {
+      return true;
+    }
+  }
+
+  // 4. Standard phone regex patterns
+  const phonePatterns = [
+    // Standard international / US / India mobile format
+    /\b(?:\+?\d{1,3}[-.\s\/\\]*)?(?:\(?\d{2,4}\)?[-.\s\/\\]*)?\d{3,5}[-.\s\/\\]*\d{3,5}\b/,
+    /\b[6-9]\d{9}\b/,
+    /\b\d{3}[-.\s\/\\]\d{3}[-.\s\/\\]\d{4}\b/,
+    /\b\(\d{3}\)\s*\d{3}[-.\s\/\\]\d{4}\b/,
+    // Spaced 10 digits
+    /\b\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\s*[-.\s\/\\_]*\d\b/,
+    // Phone keywords followed by 7-15 digits
+    /\b(call|ph|phone|num|number|no|whatsapp|wa|dial|contact|cell|mob|mobile|msg|txt|text|reach me|dm me on wa|call me)\s*[:=-]?\s*[\d\s\.\-_\\\/]{7,16}\b/i
+  ];
+
+  for (const pattern of phonePatterns) {
+    if (pattern.test(raw) || pattern.test(textWithConvertedWords)) {
+      const match = raw.match(pattern) || textWithConvertedWords.match(pattern);
+      if (match) {
+        const matchDigits = match[0].replace(/\D/g, '');
+        if (matchDigits.length >= 7 && matchDigits.length <= 16) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Detects Snapchat, Instagram, and social handles/links
+ */
+function detectSocialMediaSharing(text) {
+  if (!text || typeof text !== 'string') return false;
+  const raw = text.trim();
+  if (!raw) return false;
+
+  const socialPatterns = [
+    // Instagram links and handles
+    /\b(?:https?:\/\/)?(?:www\.)?(?:instagram\.com|instagr\.am|ig\.me)\/[a-zA-Z0-9_\.]+\b/i,
+    /\b(?:add|follow|find|dm|msg|text|my)\s+(?:me\s+on\s+|my\s+)?(?:insta|instagram|ig)\b/i,
+    /\b(?:insta|instagram|ig)\s*[:=-]\s*@?[a-zA-Z0-9_\.]{3,30}\b/i,
+    /\b(?:my\s+)?(?:insta|instagram|ig)\s+is\s+@?[a-zA-Z0-9_\.]{3,30}\b/i,
+    /^\s*(?:insta|instagram|ig)\s*[:\s]+@?[a-zA-Z0-9_\.]+\s*$/i,
+
+    // Snapchat links and handles
+    /\b(?:https?:\/\/)?(?:www\.)?(?:snapchat\.com|t\.snapchat\.com)\/[a-zA-Z0-9_\.]+\b/i,
+    /\b(?:add|follow|find|dm|msg|text|send|hit)\s+(?:me\s+on\s+|my\s+)?(?:snap|snapchat|sc)\b/i,
+    /\b(?:snap|snapchat|sc)\s*[:=-]\s*@?[a-zA-Z0-9_\.]{3,30}\b/i,
+    /\b(?:my\s+)?(?:snap|snapchat|sc)\s+is\s+@?[a-zA-Z0-9_\.]{3,30}\b/i,
+    /^\s*(?:snap|snapchat|sc)\s*[:\s]+@?[a-zA-Z0-9_\.]+\s*$/i,
+
+    // WhatsApp / Telegram / Discord / TikTok handles and links
+    /\b(?:wa\.me|t\.me|telegram\.me|discord\.gg|dsc\.gg|tiktok\.com\/@)[a-zA-Z0-9_\.]+\b/i,
+    /\b(?:telegram|tg|whatsapp|discord)\s*[:=-]\s*@?[a-zA-Z0-9_\.]+\b/i
+  ];
+
+  for (const pattern of socialPatterns) {
+    if (pattern.test(raw)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Restricts symbols other than standard punctuation (, and .) to tighten moderation
+ * Allows letters (Latin, Devanagari, Tamil, Telugu, Kannada), numbers, spaces, commas, periods,
+ * and standard English conversational apostrophes and question marks.
+ */
+function detectRestrictedSymbols(text) {
+  if (!text || typeof text !== 'string') return false;
+  if (isInnocentColloquialism(text)) return false;
+
+  // Prohibited symbols commonly used for spam or filter evasion:
+  // slashes /, \, @, #, $, %, ^, *, _, +, =, ~, |, <, >, {, }, [, ], `
+  const RESTRICTED_SYMBOLS_REGEX = /[\/\\@#$%^\*_\+=\~\|<>\{\}\[\]`]/;
+  return RESTRICTED_SYMBOLS_REGEX.test(text);
+}
+
 function isKeyboardMashOrCharacterFlood(text) {
   if (!text || typeof text !== 'string') return false;
   const clean = text.trim().toLowerCase();
@@ -224,6 +359,45 @@ function analyzeConversationLine(text) {
       category: null,
       reason: null,
       warningMessage: null
+    };
+  }
+
+  // ── STEP 1.1: Phone Number Sharing Protection ──
+  if (detectPhoneNumber(cleaned)) {
+    return {
+      isViolation: true,
+      isThreat: false,
+      isHarassment: false,
+      isLowEffort: false,
+      category: 'privacy_phone_sharing',
+      reason: 'phone_number_detected',
+      warningMessage: '🚫 Sharing phone numbers is strictly prohibited to protect your safety and privacy.'
+    };
+  }
+
+  // ── STEP 1.2: Snapchat & Instagram / Social Media Sharing Protection ──
+  if (detectSocialMediaSharing(cleaned)) {
+    return {
+      isViolation: true,
+      isThreat: false,
+      isHarassment: false,
+      isLowEffort: false,
+      category: 'social_handle_leak',
+      reason: 'social_media_detected',
+      warningMessage: '🚫 Sharing Instagram, Snapchat, social handles, or off-platform links is disabled to protect your privacy and prevent spam.'
+    };
+  }
+
+  // ── STEP 1.3: Restricted Symbol Restriction ──
+  if (detectRestrictedSymbols(cleaned)) {
+    return {
+      isViolation: true,
+      isThreat: false,
+      isHarassment: false,
+      isLowEffort: false,
+      category: 'restricted_symbols',
+      reason: 'restricted_symbols_detected',
+      warningMessage: '⚠️ Special symbols like /, @, #, $, %, ^, *, _, +, =, ~, |, <, > are not allowed. Please keep messages clean using only letters, numbers, commas, and periods.'
     };
   }
 
@@ -372,5 +546,8 @@ module.exports = {
   isInnocentColloquialism,
   isKeyboardMashOrCharacterFlood,
   isVerticalLetterSpam,
+  detectPhoneNumber,
+  detectSocialMediaSharing,
+  detectRestrictedSymbols,
   INNOCENT_COLLOQUIALISMS
 };

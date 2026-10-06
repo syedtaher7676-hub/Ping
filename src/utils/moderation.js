@@ -31,6 +31,8 @@ const {
   collapseVerticalText,
   collapseSpacedLetters,
   sanitizeMaskedText,
+  stripAllSymbols,
+  collapseRepeatedChars,
   normalizePhoneticSubstitutions,
   normalizeLeetspeak
 } = require('../data/slurFilter');
@@ -138,8 +140,8 @@ const BAD_PATTERNS = [
   // Explicit predatory age questions
   /\b(how old are you|how old u|your age|ur age|u age)\b/i,
 
-  // Social handle leaks / off-platform migration tags
-  /\b(snapchat|snapchat:|snap:|instagram|insta:|telegram|tg:|whatsapp|wa\.me|kik|discord|dsc\.gg|add my snap)\b/i,
+  // Social handle leaks / off-platform migration tags (Instagram, Snapchat, etc.)
+  /\b(snapchat|snapchat:|snap:|instagram|insta:|telegram|tg:|whatsapp|wa\.me|kik|discord|dsc\.gg|add my snap|add my insta)\b/i,
 
   // Severe racial/ethnic slurs
   /\b(nigger|nigga|niggaz|niggers|chink|chinks|gook|gooks|kike|kikes|spic|spics|wetback|coon|paki|beaner|raghead|towelhead|zipperhead)\b/i,
@@ -151,7 +153,19 @@ const BAD_PATTERNS = [
   /\b(retard|retarded|tard|cunt|cunts|slut|sluts|whore|whores|motherfucker)\b/i,
 
   // Hindi / Urdu / South Asian slurs
-  /\b(bhenchod|behenchod|madarchod|chutiya|chutiye|gandu|bhosadike|bhosdike|bhosadi|randi|haramkhor|kamina|kamine|suar|kutte|kutiya|bhadwe|bhadwa|jhantu|laude|lauda|lavde|chinal)\b/i,
+  /\b(bhenchod|behenchod|madarchod|chutiya|chutiye|gandu|gaandu|gxxndu|bhosadike|bhosdike|bhosadi|randi|haramkhor|kamina|kamine|suar|kutte|kutiya|bhadwe|bhadwa|jhantu|laude|lauda|lavde|chinal)\b/i,
+
+  // Tamil slurs & profanity
+  /\b(thevidiya|thevidya|thevdiya|thevadiya|thevidia|thevadiye|thevidiyale|thevidiya\s*paiya|thevidiya\s*mavane|thevidiya\s*munda|thevidiya\s*mundai|otha|othaa|othala|othale|othavane|omala|ommala|ommale|gommale|gommala|otha\s*gommala|punda|pundamavan|pundamavane|pundai|loosu\s*punda|kenapunda|punda\s*munda|koothi|koothee|koothe|koodhi|koothi\s*oombu|poolu|poola|oombu|oombuda|sunni|sunnee|mayiru|mayire|mayir|baadu|naaye|naai|ungamma|ungammale|thevadiyaye|pichaikarane|eruma\s*maadu|lavada|lavadakabaal|soothu)\b/i,
+
+  // Telugu slurs & profanity
+  /\b(lanja|lanjakodaka|lanja\s*kodaka|lanjamunda|lanja\s*munda|lanjodka|lanjakompa|lanja\s*kuthura|lanja\s*bathuku|dengu|dhengey|dhengai|dengai|dengi|dengutha|dengudu|dhengichuko|dengichuko|gudha|guda|guddha|gudha\s*balisinda|gudha\s*moosko|gudhalo|gudhadenge|gudha\s*cheeku|munda|mundamopi|munde|mundamopivi|puku|pooku|pukulo|pookulo|erri\s*puku|erripuku|verri\s*puku|verripuku|puku\s*cheeku|erri\s*puka|modda|moddalo|moddada|modda\s*cheeku|modda\s*gudu|erri\s*modda|errimodda|chekka|sulli|sulliga|sulli\s*cheeku|nakodaka|na\s*kodaka|donga\s*na\s*kodaka|chillar\s*na\s*kodaka|nee\s*yavva|nee\s*yamma)\b/i,
+
+  // Kannada slurs & profanity
+  /\b(sule|sule\s*maga|sulemaga|sule\s*magane|sulemagane|sulay|sulay\s*maga|sulay\s*magane|sulaymaga|sulaymagane|sooley|soole\s*maga|soole\s*magane|soolemagane|sule\s*munde|sulemunde|soole\s*munde|sulekodaga|sule\s*kodaga|sulemaklu|sule\s*maklu|soole|sule\s*hadaragi|thika|tikka|theeka|theekamuchu|theka|thika\s*muchu|tikka\s*muchu|thika\s*muchkond|tikka\s*muchkond|thika\s*hodithini|tikka\s*hodithini|thika\s*thulko|tikka\s*thulko|theeka\s*muchu|tikka\s*keyyo|boli|boli\s*maga|bolimaga|boli\s*munde|bolimunde|boli\s*maklu|bolimaklu|baddimaga|baddi\s*maga|baddi\s*munde|baddimunde|baddithana|byawarsi|bewarsi|bewarse|bevarsi|bevarsi\s*nan\s*maga|hadaragi|hadaragi\s*maga|hadsko|hadargithi|hadar\s*githi|keythini|keyyo|tunne|thunne|tunne\s*cheepu|thunne\s*cheepu|tullu|thullu|tulu|thulu|tullu\s*muchu|thullu\s*muchu|tullu\s*cheepu|shata|shatta|satha|shata\s*kithko|shatta\s*kithko|shata\s*muchu|shata\s*bolli|kalla\s*nanna\s*maga|nin\s*amman|nin\s*ammanige|nin\s*amman\s*thullu|nin\s*ayyana|nin\s*appan|nin\s*akkan|nim\s*amman|nimmanige|ganchali|huch\s*naayi|huch\s*nayi|loffer)\b/i,
+
+  // Malayalam slurs & profanity
+  /\b(myre|maire|myru|mairu|myren|mairen|myran|mairan|myrukale|myro|myroli|thendi|thenndi|thendimon|thendimol|thendikale|thendi\s*naye|patti|pattishow|naaye|naayi|naayinte\s*mone|nayinte\s*mone|pattide\s*mone|pulayadi|pulayadimon|pulayadimonu|pulayadi\s*mone|kunna|kundi|kundimon|kundimone|kundikku|kundi\s*adikkal|pooru|poorimon|poorimone|poottile|pooru\s*mone|poori|poore|andi|visham|thaayoli|thayoli|thayyoli|thayolee|thayoli\s*mone|thayolimon|kallan|chetta|vellathalayan|vedichi)\b/i,
 
   // Spanish slurs
   /\b(maricon|puta|culero|pendejo|cabron)\b/i,
@@ -208,29 +222,34 @@ async function checkMessageSafety(text) {
       warningMessage: convAnalysis.warningMessage
     };
   }
-  if (convAnalysis.isLowEffort) {
+  if (convAnalysis.isViolation) {
     return {
       valid: false,
-      reason: 'low_effort',
-      action: 'warn_low_effort',
+      reason: convAnalysis.reason || 'inappropriate_conversation',
+      action: 'warn',
       category: convAnalysis.category,
-      layer: 'conversation_low_effort',
+      layer: 'conversation_violation',
       warningMessage: convAnalysis.warningMessage
     };
   }
 
   // ─────────────────────────────────────────────────────────────
   // LAYER 1: Multi-Format Obfuscation & Leetspeak Sanitizer ($0, 0ms)
-  // Catches "dixxy", "di...dd...y", "d\ni\nd\nd\ny", "d-i-d-d-y", homoglyphs
+  // Catches "dixxy", "di...dd...y", "d\ni\nd\nd\ny", "d-i-d-d-y", "////nigga", homoglyphs
   // ─────────────────────────────────────────────────────────────
   const homoglyph = normalizeHomoglyphs(cleaned);
   const vertical = collapseVerticalText(homoglyph);
   const spaced = collapseSpacedLetters(homoglyph);
   const leet = normalizeLeetspeak(homoglyph);
   const stripped = sanitizeMaskedText(homoglyph);
+  const pureSymbols = stripAllSymbols(homoglyph);
+  const pureLeet = normalizeLeetspeak(pureSymbols);
+  const pureDeduped = collapseRepeatedChars(pureSymbols);
+  const pureDedupedLeet = collapseRepeatedChars(pureLeet);
   const phonetic = normalizePhoneticSubstitutions(homoglyph);
   const strippedPhonetic = normalizePhoneticSubstitutions(stripped);
   const verticalPhonetic = normalizePhoneticSubstitutions(vertical);
+  const purePhonetic = normalizePhoneticSubstitutions(pureSymbols);
 
   const variations = [
     cleaned,
@@ -239,9 +258,14 @@ async function checkMessageSafety(text) {
     spaced,
     leet,
     stripped,
+    pureSymbols,
+    pureLeet,
+    pureDeduped,
+    pureDedupedLeet,
     phonetic,
     strippedPhonetic,
-    verticalPhonetic
+    verticalPhonetic,
+    purePhonetic
   ];
 
   for (const variation of variations) {

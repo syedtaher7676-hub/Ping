@@ -37,6 +37,11 @@ const { userStore, reportStore, spamStore, slurFilter, securityStore, moderation
 const dbService = require("../services/dbService");
 const { validateMessage } = require("../utils/moderation");
 const { recordReport, isDeviceBanned } = require("../state/reports");
+const {
+  detectPhoneNumber,
+  detectSocialMediaSharing,
+  detectRestrictedSymbols
+} = require("../utils/conversationModerator");
 
 // ═══════════════════════════════════════════════════════════════
 // MULTI-TIER REAL-TIME MODERATION & FLOOD STATE STORES
@@ -417,14 +422,37 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
 
 // Shared message validation (slur filter, moderation, spam)
 function validateAndModerateMessage(socket, userId, text) {
-  // Block link and URL spam
-  if (hasBlockedLinks(text)) {
-    log("message_blocked_link", { userId, text: text.slice(0, 50) });
-    socket.emit("error_message", { message: "🚫 Sharing links, URLs, or handles is disabled to prevent spam bots." });
-    return { blocked: true, reason: "links_disabled", action: "block", message: "🚫 Sharing links, URLs, or handles is disabled to prevent spam bots." };
+  // 1. Block Phone / Mobile number sharing (Separate policy warning - NOT a slur strike)
+  if (detectPhoneNumber(text)) {
+    const msg = "🚫 Sharing phone or mobile numbers is not allowed. Please keep your personal contact details private.";
+    log("message_blocked_phone", { userId, text: text.slice(0, 50) });
+    socket.emit("warning_message", { message: msg, type: "phone_sharing_blocked" });
+    socket.emit("message_rejected", { message: msg, reason: "phone_sharing_blocked" });
+    socket.emit("error_message", { message: msg });
+    return { blocked: true, reason: "phone_sharing_blocked", action: "block", message: msg };
   }
 
-  // Slur filter - NEVER terminates session immediately
+  // 2. Block Snapchat, Instagram, Social IDs, Link and URL spam (Separate policy warning - NOT a slur strike)
+  if (detectSocialMediaSharing(text) || hasBlockedLinks(text)) {
+    const msg = "🚫 Sharing Snapchat, Instagram, or other IDs and handles is not allowed. Please keep conversations within the chat.";
+    log("message_blocked_social_id", { userId, text: text.slice(0, 50) });
+    socket.emit("warning_message", { message: msg, type: "social_id_blocked" });
+    socket.emit("message_rejected", { message: msg, reason: "social_id_blocked" });
+    socket.emit("error_message", { message: msg });
+    return { blocked: true, reason: "social_id_blocked", action: "block", message: msg };
+  }
+
+  // 3. Block Restricted Symbols (Separate policy warning - NOT a slur strike)
+  if (detectRestrictedSymbols(text)) {
+    const msg = "⚠️ Using special symbols is not allowed. Only letters, numbers, commas (,), and periods (.) are permitted.";
+    log("message_blocked_symbols", { userId, text: text.slice(0, 50) });
+    socket.emit("warning_message", { message: msg, type: "restricted_symbols_blocked" });
+    socket.emit("message_rejected", { message: msg, reason: "restricted_symbols_blocked" });
+    socket.emit("error_message", { message: msg });
+    return { blocked: true, reason: "restricted_symbols_blocked", action: "block", message: msg };
+  }
+
+  // 4. Slur filter - NEVER terminates session immediately
   const slurResult = slurFilter.moderateSlurMessage(userId, text);
 
   if (!slurResult.allowed) {
@@ -984,27 +1012,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // 2. Check for slurs or inappropriate communication (3-Strike Policy)
-        const slurCheck = slurFilter.detectSlurWithContext(text);
-        let customMod = { valid: true };
-        if (!slurCheck.hasSlur) {
-          customMod = await validateMessage(text);
-        }
-
-        if (slurCheck.hasSlur || !customMod.valid) {
-          const violationReason = slurCheck.hasSlur ? "slur_detected" : (customMod.reason || "inappropriate_communication");
-          log("message_blocked_inappropriate", { userId, reason: violationReason, text: text.slice(0, 100) });
-          handleInappropriateViolation(socket, io, userId, violationReason, text, currentUser.roomId, false, ack);
-          return;
-        }
-
         if (text.length > MAX_MESSAGE_LENGTH) {
           socket.emit("error_message", { message: `✂️ message too long! keep it under ${MAX_MESSAGE_LENGTH} chars bestie` });
           if (typeof ack === "function") ack({ ok: false, reason: "message_too_long" });
           return;
         }
 
-        // Run secondary low-quality pattern moderation if clean of slurs
+        // 2. Validate and moderate message (handles phone, social, symbols, slurs, low effort)
         const modResult = validateAndModerateMessage(socket, userId, text);
         if (modResult.blocked) {
           if (modResult.reason === "slur_blocked") {
@@ -1188,27 +1202,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // 2. Check for slurs or inappropriate communication (3-Strike Policy)
-        const slurCheck = slurFilter.detectSlurWithContext(text);
-        let customMod = { valid: true };
-        if (!slurCheck.hasSlur) {
-          customMod = await validateMessage(text);
-        }
-
-        if (slurCheck.hasSlur || !customMod.valid) {
-          const violationReason = slurCheck.hasSlur ? "slur_detected" : (customMod.reason || "inappropriate_communication");
-          log("dm_blocked_inappropriate", { userId, reason: violationReason, text: text.slice(0, 100) });
-          handleInappropriateViolation(socket, io, userId, violationReason, text, roomId, true, ack);
-          return;
-        }
-
         if (text.length > MAX_MESSAGE_LENGTH) {
           socket.emit("error_message", { message: `✂️ message too long! keep it under ${MAX_MESSAGE_LENGTH} chars bestie` });
           if (typeof ack === "function") ack({ ok: false, success: false, reason: "message_too_long" });
           return;
         }
 
-        // Run secondary low-quality pattern moderation if clean of slurs
+        // 2. Validate and moderate message (handles phone, social, symbols, slurs, low effort)
         const modResult = validateAndModerateMessage(socket, userId, text);
         if (modResult.blocked) {
           if (modResult.reason === "slur_blocked") {

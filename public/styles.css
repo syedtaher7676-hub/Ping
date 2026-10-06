@@ -1153,15 +1153,15 @@ input {
   justify-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   left: auto;
   transform: none;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(18, 14, 38, 0.7);
   padding: 6px 18px;
   border-radius: var(--r-full);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(124, 58, 237, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   white-space: nowrap;
   flex-shrink: 0;
   z-index: 2;
@@ -1170,21 +1170,47 @@ input {
 }
 
 .header-center:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(196, 181, 253, 0.4);
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: rgba(30, 24, 60, 0.85);
+  border-color: rgba(219, 39, 119, 0.55);
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 6px 28px rgba(124, 58, 237, 0.35), 0 0 20px rgba(236, 72, 153, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.header-brand-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ec4899;
+  box-shadow: 0 0 10px #ec4899, 0 0 18px #7c3aed;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.header-brand-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid #ec4899;
+  opacity: 0.7;
+  animation: ping-pulse-ring 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+@keyframes ping-pulse-ring {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
 
 .header-wordmark {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 50%, #f472b6 100%);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 45%, #f472b6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 20px rgba(196, 181, 253, 0.3);
+  filter: drop-shadow(0 0 12px rgba(196, 181, 253, 0.4));
 }
 
 .header-right {

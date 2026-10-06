@@ -1419,5 +1419,60 @@
     "reportId": "rpt_1791129152840_asjbq3",
     "severity": "medium",
     "createdAt": 1791129152847
+  },
+  {
+    "id": "sec_1791312095785_nwzygv",
+    "type": "bad_language_violation",
+    "userId": "u_d46ac050-73e3-4150-856f-014ab9a4d199",
+    "message": "you are a bitch",
+    "violationCount": 1,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "medium",
+    "createdAt": 1791312095785
+  },
+  {
+    "id": "sec_1791312096757_07kaik",
+    "type": "bad_language_violation",
+    "userId": "u_d46ac050-73e3-4150-856f-014ab9a4d199",
+    "message": "shut up slut",
+    "violationCount": 2,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "high",
+    "createdAt": 1791312096757
+  },
+  {
+    "id": "sec_1791312129742_k8ahy6",
+    "type": "bad_language_violation",
+    "userId": "u_615df6d2-61bf-4032-a805-a2441ce124a6",
+    "message": "you are a bitch",
+    "violationCount": 1,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "medium",
+    "createdAt": 1791312129742
+  },
+  {
+    "id": "sec_1791312132117_x9a0wx",
+    "type": "bad_language_violation",
+    "userId": "u_615df6d2-61bf-4032-a805-a2441ce124a6",
+    "message": "shut up slut",
+    "violationCount": 2,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "high",
+    "createdAt": 1791312132117
+  },
+  {
+    "id": "sec_1791312134519_9kxj7q",
+    "type": "bad_language_violation",
+    "userId": "u_615df6d2-61bf-4032-a805-a2441ce124a6",
+    "message": "fuck off gandu",
+    "violationCount": 3,
+    "reason": "slur_detected",
+    "ip": "127.0.0.1",
+    "severity": "critical",
+    "createdAt": 1791312134519
   }
 ]

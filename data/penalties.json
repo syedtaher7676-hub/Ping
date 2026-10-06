@@ -2,15 +2,9 @@
   "penalties": {
     "test_user_obf": {
       "type": "ban_15min",
-      "startTime": 1791025174139,
+      "startTime": 1791313398823,
       "duration": 900000,
-      "expiresAt": 1791026074139
-    },
-    "u_90a1b2d2-10a6-4e24-9e8d-bc382a93a5da": {
-      "type": "ban_15min",
-      "startTime": 1791025182100,
-      "duration": 900000,
-      "expiresAt": 1791026082100
+      "expiresAt": 1791314298823
     }
   }
 }

@@ -41,9 +41,68 @@ async function runTests() {
     { text: "k.y.s", note: "Dotted kys" },
     { text: "f\na\ng", note: "Multi-line vertical slur" },
     { text: "n\ni\ng\ng\ne\nr", note: "Multi-line vertical n-slur" },
+    { text: "n\ni\ng\ng\na", note: "Multi-line vertical nigga" },
+    { text: "////nigga", note: "Slash-prefixed nigga" },
+    { text: "////n/i/g/g/a", note: "Slashed spaced nigga" },
     { text: "f.a.g.g.o.t", note: "Dotted f-slur" },
     { text: "b h e n c h o d", note: "Spaced Hindi slur" },
-    { text: "b.h.e.n.c.h.o.d", note: "Dotted Hindi slur" }
+    { text: "b.h.e.n.c.h.o.d", note: "Dotted Hindi slur" },
+    // Kannada slurs
+    { text: "sule", note: "Direct Kannada slur" },
+    { text: "sulemaga", note: "Kannada compound slur" },
+    { text: "s\nu\nl\ne", note: "Vertical Kannada slur" },
+    { text: "t-h-i-k-a", note: "Hyphenated Kannada profanity" },
+    { text: "tullu", note: "Kannada tullu" },
+    { text: "shata", note: "Kannada shata" },
+    { text: "nin amman", note: "Kannada nin amman" },
+    { text: "sulay magane", note: "Kannada sulay magane" },
+    { text: "sule magane", note: "Kannada sule magane" },
+    { text: "tikka", note: "Kannada tikka" },
+    { text: "bolimaga", note: "Kannada bolimaga" },
+    { text: "baddimaga", note: "Kannada baddimaga" },
+    { text: "bevarsi nan maga", note: "Kannada bevarsi nan maga" },
+    // Tamil slurs
+    { text: "thevidiya", note: "Direct Tamil slur" },
+    { text: "punda", note: "Direct Tamil profanity" },
+    { text: "otha", note: "Tamil curse" },
+    { text: "pundamavane", note: "Tamil pundamavane" },
+    { text: "oombu", note: "Tamil oombu" },
+    { text: "t.h.e.v.i.d.i.y.a", note: "Dotted Tamil slur" },
+    { text: "p\nu\nn\nd\na", note: "Vertical Tamil profanity" },
+    // Telugu slurs
+    { text: "lanja", note: "Direct Telugu slur" },
+    { text: "lanjakodaka", note: "Telugu compound slur" },
+    { text: "l/a/n/j/a", note: "Slashed Telugu slur" },
+    { text: "s\nu\nl\nl\ni", note: "Vertical Telugu profanity" },
+    { text: "dengu", note: "Telugu dengu" },
+    { text: "modda gudu", note: "Telugu modda gudu" },
+    { text: "gudha cheeku", note: "Telugu gudha cheeku" },
+    // Malayalam slurs
+    { text: "myre", note: "Malayalam myre" },
+    { text: "thaayoli", note: "Malayalam thaayoli" },
+    { text: "thendi", note: "Malayalam thendi" },
+    { text: "pulayadi", note: "Malayalam pulayadi" },
+    { text: "kunna", note: "Malayalam kunna" },
+    { text: "kundi", note: "Malayalam kundi" },
+    { text: "pooru", note: "Malayalam pooru" },
+    { text: "poorimone", note: "Malayalam poorimone" },
+    // Elongated and masked words (gaandu / gxxndu format)
+    { text: "gaandu", note: "Elongated gaandu" },
+    { text: "gxxndu", note: "Masked xx in gandu" },
+    { text: "g*ndu", note: "Asterisk masked gandu" },
+    { text: "bxxch", note: "Masked bitch" },
+    { text: "nxxga", note: "Masked nigga" },
+    { text: "pxxda", note: "Masked punda" },
+    { text: "txxlu", note: "Masked tullu" },
+    { text: "t*llu", note: "Masked asterisk tullu" },
+    { text: "sxxle", note: "Masked sule" },
+    { text: "sxxle mxgxne", note: "Multi-word masked sule magane" },
+    { text: "nxx ammxx", note: "Multi-word masked nin amman" },
+    { text: "txkka", note: "Masked tikka" },
+    { text: "lxxja", note: "Masked lanja" },
+    { text: "shxta", note: "Masked shata" },
+    { text: "sh*ta", note: "Masked asterisk shata" },
+    { text: "mxxre", note: "Masked myre" }
   ];
 
   for (const tc of obfuscationCases) {
@@ -57,6 +116,62 @@ async function runTests() {
     assert.strictEqual(modResult.allowed, false, `Message must never be sent to recipient for: "${tc.text.replace(/\n/g, '\\n')}"`);
 
     console.log(`   ✅ BLOCKED [${tc.note}] "${tc.text.replace(/\n/g, '\\n')}" -> Action: ${modResult.action}`);
+  }
+
+  console.log('\n--- 1.1 Testing Phone Number Sharing (Vertical, Spaced, Words) ---');
+  const phoneCases = [
+    { text: "9\n5\n6\n3\n6\n9\n3\n2\n5\n7", note: "Vertical multi-line phone number" },
+    { text: "9 5 6 3 6 9 3 2 5 7", note: "Spaced digits phone number" },
+    { text: "9.5.6.3.6.9.3.2.5.7", note: "Dot separated phone number" },
+    { text: "9-5-6-3-6-9-3-2-5-7", note: "Hyphen separated phone number" },
+    { text: "9563693257", note: "Direct 10-digit mobile number" },
+    { text: "+91 95636 93257", note: "International formatted mobile number" },
+    { text: "call me at 9563693257", note: "Phone number with call keyword" },
+    { text: "nine five six three six nine three two five seven", note: "Written number words" }
+  ];
+
+  for (const pc of phoneCases) {
+    const safety = await checkMessageSafety(pc.text);
+    assert.strictEqual(safety.valid, false, `Phone number sharing must be blocked: "${pc.text.replace(/\n/g, '\\n')}" (${pc.note})`);
+    console.log(`   ✅ BLOCKED [${pc.note}] "${pc.text.replace(/\n/g, '\\n')}" -> Reason: ${safety.reason}`);
+  }
+
+  console.log('\n--- 1.2 Testing Instagram & Snapchat Sharing ---');
+  const socialCases = [
+    { text: "add my snap: coolguy123", note: "Snapchat handle invitation" },
+    { text: "snapchat.com/add/coolguy", note: "Snapchat link" },
+    { text: "my insta is @cool_vibes", note: "Instagram handle" },
+    { text: "instagram.com/cool_vibes", note: "Instagram link" },
+    { text: "sc: my_snap_user", note: "SC shortcut tag" },
+    { text: "ig: my_insta_user", note: "IG shortcut tag" },
+    { text: "dm me on instagram", note: "Instagram DM invitation" }
+  ];
+
+  for (const sc of socialCases) {
+    const safety = await checkMessageSafety(sc.text);
+    assert.strictEqual(safety.valid, false, `Social media sharing must be blocked: "${sc.text}" (${sc.note})`);
+    console.log(`   ✅ BLOCKED [${sc.note}] "${sc.text}" -> Reason: ${safety.reason}`);
+  }
+
+  console.log('\n--- 1.3 Testing Restricted Symbols vs Allowed Punctuation (, and .) ---');
+  const symbolCases = [
+    { text: "////hello", note: "Slash prefix spam", shouldBlock: true },
+    { text: "@everyone", note: "At sign symbol", shouldBlock: true },
+    { text: "$100 dollars", note: "Dollar symbol", shouldBlock: true },
+    { text: "*hello world*", note: "Asterisk wrapping", shouldBlock: true },
+    { text: "Hello, this is a clean message.", note: "Clean message with comma and period", shouldBlock: false },
+    { text: "I enjoy programming, music, and art.", note: "Clean list with commas and period", shouldBlock: false }
+  ];
+
+  for (const sc of symbolCases) {
+    const safety = await checkMessageSafety(sc.text);
+    if (sc.shouldBlock) {
+      assert.strictEqual(safety.valid, false, `Message with restricted symbols should be blocked: "${sc.text}" (${sc.note})`);
+      console.log(`   ✅ BLOCKED RESTRICTED SYMBOL [${sc.note}] "${sc.text}"`);
+    } else {
+      assert.strictEqual(safety.valid, true, `Clean message with allowed punctuation should pass: "${sc.text}" (${sc.note})`);
+      console.log(`   ✅ ALLOWED CLEAN PUNCTUATION [${sc.note}] "${sc.text}"`);
+    }
   }
 
   console.log('\n--- 2. Testing Threatening & Bad Behaviour Conversational Lines ---');
