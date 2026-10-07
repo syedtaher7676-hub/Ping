@@ -131,6 +131,24 @@ function clearAllReportsAndBans() {
   targetFlags.clear();
 }
 
+// Periodic background memory sweep (prevents unbounded Map growth under 10k users)
+setInterval(() => {
+  const now = Date.now();
+  for (const [deviceHash, expiresAt] of bans.entries()) {
+    if (now >= expiresAt) bans.delete(deviceHash);
+  }
+  for (const [reporterHash, history] of reporterHistory.entries()) {
+    const valid = history.filter((ts) => now - ts <= REPORTER_WINDOW_MS);
+    if (valid.length === 0) reporterHistory.delete(reporterHash);
+    else reporterHistory.set(reporterHash, valid);
+  }
+  for (const [targetHash, flags] of targetFlags.entries()) {
+    const valid = flags.filter((ts) => now - ts <= TARGET_WINDOW_MS);
+    if (valid.length === 0) targetFlags.delete(targetHash);
+    else targetFlags.set(targetHash, valid);
+  }
+}, 60000).unref();
+
 module.exports = {
   bans,
   reporterHistory,

@@ -18,10 +18,26 @@ try {
   }
 } catch (_) {}
 
+let saveSecurityTimeout = null;
+let isSavingSecurity = false;
+
 function saveSecurityEventsToFile() {
-  try {
-    fs.writeFileSync(SECURITY_FILE, JSON.stringify(events, null, 2), 'utf8');
-  } catch (_) {}
+  if (saveSecurityTimeout) return;
+  saveSecurityTimeout = setTimeout(async () => {
+    saveSecurityTimeout = null;
+    if (isSavingSecurity) return;
+    isSavingSecurity = true;
+    try {
+      await fs.promises.writeFile(SECURITY_FILE, JSON.stringify(events, null, 2), 'utf8');
+    } catch (_) {
+      // Fail-open
+    } finally {
+      isSavingSecurity = false;
+    }
+  }, 1000);
+  if (typeof saveSecurityTimeout.unref === 'function') {
+    saveSecurityTimeout.unref();
+  }
 }
 
 function addSecurityEvent(event) {

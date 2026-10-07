@@ -176,21 +176,29 @@ async function attemptMatchmaking(io) {
     }
 
     // 2. In-Memory Fail-Open Matchmaking Engine
+    if (waitingQueue.length < 2) {
+      return;
+    }
+
     sanitizeQueue(io);
 
-    while (waitingQueue.length >= 2) {
+    let matchCountThisTick = 0;
+    const MAX_MATCHES_PER_TICK = 50;
+
+    while (waitingQueue.length >= 2 && matchCountThisTick < MAX_MATCHES_PER_TICK) {
       let firstUserId = null;
       let secondUserId = null;
 
-      // Scan waiting queue to see if any pair shares at least 1 interest
-      for (let i = 0; i < waitingQueue.length; i++) {
+      // Scan bounded window (top 40 candidates) to match shared interests in O(1) bounded time
+      const windowSize = Math.min(waitingQueue.length, 40);
+      for (let i = 0; i < windowSize; i++) {
         const uAId = waitingQueue[i];
         const uA = users.get(uAId);
         if (!uA || !isUserAvailableForMatch(uAId, io)) continue;
 
         const interestsA = Array.isArray(uA.interests) ? uA.interests : [];
         if (interestsA.length > 0) {
-          for (let j = i + 1; j < waitingQueue.length; j++) {
+          for (let j = i + 1; j < windowSize; j++) {
             const uBId = waitingQueue[j];
             const uB = users.get(uBId);
             if (!uB || uB.socketId === uA.socketId || !isUserAvailableForMatch(uBId, io)) continue;
@@ -281,6 +289,8 @@ async function attemptMatchmaking(io) {
         // Session creation handled peer recovery internally if one disconnected
         continue;
       }
+
+      matchCountThisTick++;
 
       // Record matchmaking time metrics
       const firstWaitTime = matchmakingStartTimes.get(firstUserId) ? Date.now() - matchmakingStartTimes.get(firstUserId) : 0;

@@ -89,6 +89,33 @@ function markUserAsExemptPartner(userId, durationMs = 60000) {
   exemptPartnerUsers.set(userId, Date.now() + durationMs);
 }
 
+// Periodic background memory sweep for handler maps (prevents memory leak under long uptime & 10k CCU)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, ts] of recentReports.entries()) {
+    if (now - ts > 60000) recentReports.delete(key);
+  }
+  for (const [key, ts] of exemptPartnerUsers.entries()) {
+    if (now >= ts) exemptPartnerUsers.delete(key);
+  }
+  for (const [socketId, expiry] of silencedSockets.entries()) {
+    if (now >= expiry) {
+      silencedSockets.delete(socketId);
+      silenceViolationCounts.delete(socketId);
+    }
+  }
+  for (const [key, list] of exploreViolations.entries()) {
+    const active = list.filter(t => now - t <= 3600000);
+    if (active.length === 0) exploreViolations.delete(key);
+    else exploreViolations.set(key, active);
+  }
+  for (const [key, list] of friendViolations.entries()) {
+    const active = list.filter(t => now - t <= 3600000);
+    if (active.length === 0) friendViolations.delete(key);
+    else friendViolations.set(key, active);
+  }
+}, 60000).unref();
+
 function isUserBanned(socket, userId) {
   const now = Date.now();
   for (const [id, expiry] of temporaryBans.entries()) {

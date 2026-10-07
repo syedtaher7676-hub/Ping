@@ -880,6 +880,27 @@ function areRecentPartners(user1, user2) {
   return false;
 }
 
+// ── PERIODIC BACKGROUND MEMORY SWEEPER ────────────────────────
+setInterval(() => {
+  const now = Date.now();
+  // 1. Evict stale memory rate limits older than 5 minutes
+  for (const [key, list] of memoryRateLimits.entries()) {
+    const active = list.filter((entry) => now - entry.timestamp <= 300000);
+    if (active.length === 0) memoryRateLimits.delete(key);
+    else memoryRateLimits.set(key, active);
+  }
+  // 2. Evict inactive disconnected users older than 24 hours
+  for (const [uid, u] of memoryUsers.entries()) {
+    if (!u.isActive && u.lastDisconnect && (now - u.lastDisconnect > 86400000)) {
+      memoryUsers.delete(uid);
+    }
+  }
+  // 3. Evict expired temporary bans
+  for (const [id, expiry] of memoryTemporaryBans.entries()) {
+    if (now >= expiry) memoryTemporaryBans.delete(id);
+  }
+}, 60000).unref();
+
 // ── MODULE EXPORTS ────────────────────────────────────────────
 module.exports = {
   // Underlying redis instances & helpers

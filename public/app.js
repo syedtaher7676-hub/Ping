@@ -2322,8 +2322,9 @@ function showView(which) {
       el.style.display = 'flex';
       if (viewChanged) {
         el.classList.remove('view-enter');
-        void el.offsetWidth;
-        el.classList.add('view-enter');
+        requestAnimationFrame(() => {
+          el.classList.add('view-enter');
+        });
       }
     } else {
       el.style.display = 'none';

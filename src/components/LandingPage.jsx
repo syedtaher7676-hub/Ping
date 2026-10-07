@@ -118,36 +118,6 @@ const HeroCopy = memo(function HeroCopy() {
 });
 
 /**
- * Isolated Static Trust Line
- */
-const TrustLine = memo(function TrustLine() {
-  return (
-    <p
-      className="trust-line"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        fontSize: '0.85rem',
-        color: '#94a3b8',
-        margin: 0,
-        willChange: 'transform, opacity',
-        transform: 'translateZ(0)',
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-      }}
-    >
-      <span>🔒 No account</span>
-      <span className="tl-sep">·</span>
-      <span>👻 Zero data stored</span>
-      <span className="tl-sep">·</span>
-      <span>⚡ Instant</span>
-    </p>
-  );
-});
-
-/**
  * Isolated Action Buttons Row
  */
 const ActionButtons = memo(function ActionButtons({ onStartChat, onDownloadApp }) {
@@ -304,9 +274,6 @@ export const LandingPage = memo(function LandingPage({ onStartChat, onDownloadAp
 
         {/* Memoized Static CTA Action Buttons */}
         <ActionButtons onStartChat={handleStart} onDownloadApp={handleDownload} />
-
-        {/* Memoized Static Trust Footer */}
-        <TrustLine />
       </div>
 
       {/* iOS PWA Install Guidance Banner */}

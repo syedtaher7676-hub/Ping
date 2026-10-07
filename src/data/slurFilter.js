@@ -610,19 +610,47 @@ try {
   // Fail-open to in-memory
 }
 
+let saveViolationsTimeout = null;
+let isSavingViolations = false;
+
 function saveViolationsToFile() {
-  try {
-    fs.writeFileSync(VIOLATIONS_FILE, JSON.stringify({ violations: slurViolations }, null, 2), 'utf8');
-  } catch (e) {
-    // Non-blocking on ephemeral filesystems
+  if (saveViolationsTimeout) return;
+  saveViolationsTimeout = setTimeout(async () => {
+    saveViolationsTimeout = null;
+    if (isSavingViolations) return;
+    isSavingViolations = true;
+    try {
+      await fs.promises.writeFile(VIOLATIONS_FILE, JSON.stringify({ violations: slurViolations }, null, 2), 'utf8');
+    } catch (e) {
+      // Non-blocking on ephemeral filesystems
+    } finally {
+      isSavingViolations = false;
+    }
+  }, 1000);
+  if (typeof saveViolationsTimeout.unref === 'function') {
+    saveViolationsTimeout.unref();
   }
 }
 
+let savePenaltiesTimeout = null;
+let isSavingPenalties = false;
+
 function savePenaltiesToFile() {
-  try {
-    fs.writeFileSync(PENALTIES_FILE, JSON.stringify({ penalties }, null, 2), 'utf8');
-  } catch (e) {
-    // Non-blocking on ephemeral filesystems
+  if (savePenaltiesTimeout) return;
+  savePenaltiesTimeout = setTimeout(async () => {
+    savePenaltiesTimeout = null;
+    if (isSavingPenalties) return;
+    isSavingPenalties = true;
+    try {
+      await fs.promises.writeFile(PENALTIES_FILE, JSON.stringify({ penalties }, null, 2), 'utf8');
+    } catch (e) {
+      // Non-blocking on ephemeral filesystems
+    } finally {
+      isSavingPenalties = false;
+    }
+  }, 1000);
+  if (typeof savePenaltiesTimeout.unref === 'function') {
+    savePenaltiesTimeout.unref();
   }
 }
 

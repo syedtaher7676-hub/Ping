@@ -1,4 +1,4 @@
-// Report storage - IN-MEMORY with Disk Persistence & Training Dataset Ingestion
+// Report storage - IN-MEMORY with Asynchronous Debounced Disk Persistence & Training Dataset Ingestion
 const fs = require('fs');
 const path = require('path');
 const { recordChatSampleForTraining } = require('../services/modelTrainer');
@@ -8,7 +8,7 @@ const REPORTS_FILE = path.join(__dirname, '../../data/reports.json');
 const reports = [];
 const MAX_REPORTS = 1000;
 
-// Hydrate from disk if available
+// Hydrate from disk if available at startup
 try {
   if (fs.existsSync(REPORTS_FILE)) {
     const raw = fs.readFileSync(REPORTS_FILE, 'utf8');
@@ -19,10 +19,27 @@ try {
   }
 } catch (_) {}
 
+// Non-blocking debounced file persistence (prevents event loop lag under 10k CCU)
+let saveTimeout = null;
+let isSaving = false;
+
 function saveReportsToFile() {
-  try {
-    fs.writeFileSync(REPORTS_FILE, JSON.stringify(reports, null, 2), 'utf8');
-  } catch (_) {}
+  if (saveTimeout) return;
+  saveTimeout = setTimeout(async () => {
+    saveTimeout = null;
+    if (isSaving) return;
+    isSaving = true;
+    try {
+      await fs.promises.writeFile(REPORTS_FILE, JSON.stringify(reports, null, 2), 'utf8');
+    } catch (_) {
+      // Non-blocking fail-open
+    } finally {
+      isSaving = false;
+    }
+  }, 1000);
+  if (typeof saveTimeout.unref === 'function') {
+    saveTimeout.unref();
+  }
 }
 
 function addReport(report) {

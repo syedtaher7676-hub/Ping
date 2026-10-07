@@ -89,10 +89,11 @@ function getCountryFromSocket(socket) {
 }
 
 const app = express();
+app.disable("x-powered-by");
 const server = http.createServer(app);
 
 // ═══════════════════════════════════════════════════════════════
-// EXPRESS CORS & PREFLIGHT MIDDLEWARE
+// EXPRESS CYBERSECURITY & CORS PREFLIGHT MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -105,6 +106,12 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-requested-with");
   
+  // High-performance Zero-Trust Security Headers
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -112,7 +119,7 @@ app.use((req, res, next) => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// SOCKET.IO SERVER INITIALIZATION WITH PRIORITIZED WEBSOCKETS
+// SOCKET.IO SERVER INITIALIZATION WITH HARDENED PROTOCOLS
 // ═══════════════════════════════════════════════════════════════
 // Prioritizes WebSockets for low-latency multi-node scaling while
 // retaining HTTP long-polling fallback for constrained client proxies.
@@ -122,17 +129,58 @@ const io = new Server(server, {
   pingInterval: 10000,        // 10s keep-alive prevents cloud proxy / reverse proxy idle drops
   pingTimeout: 25000,         // 25s timeout before considering connection dropped
   connectTimeout: 45000,      // Generous connection timeout
-  maxHttpBufferSize: 1e6,     // 1MB max payload
+  maxHttpBufferSize: 64 * 1024, // 64KB max payload (prevents memory exhaustion buffer attacks)
   allowUpgrades: true,        // Allow seamless polling to websocket upgrade
   perMessageDeflate: false,   // Disable perMessageDeflate to eliminate zlib decompression memory overhead
   httpCompression: true,
 });
 
+// ── PER-IP CONCURRENT CONNECTION LIMITER (ANTI-SLOWLORIS / ANTI-BOTNET) ─
+const ipConnectionMap = new Map(); // ip -> Set<socketId>
+const MAX_CONCURRENT_SOCKETS_PER_IP = 30; // Generous limit for campus / NAT gateways, while stopping socket exhaustion swarms
+
+function getClientIpFromSocket(socket) {
+  const headers = socket.handshake?.headers || {};
+  let ip =
+    headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    headers["cf-connecting-ip"] ||
+    headers["x-real-ip"] ||
+    headers["x-client-ip"] ||
+    headers["x-forwarded-ip"] ||
+    socket.handshake?.address ||
+    socket.conn?.remoteAddress ||
+    "unknown";
+  if (typeof ip === "string" && ip.startsWith("::ffff:")) {
+    ip = ip.substring(7);
+  }
+  return ip;
+}
+
+// Background cleanup for stale IP tracking
+setInterval(() => {
+  if (ipConnectionMap.size === 0) return;
+  for (const [ip, socketSet] of ipConnectionMap.entries()) {
+    if (socketSet.size === 0) {
+      ipConnectionMap.delete(ip);
+      continue;
+    }
+    // Verify sockets are still live
+    for (const sId of socketSet) {
+      if (!io.sockets.sockets.has(sId)) {
+        socketSet.delete(sId);
+      }
+    }
+    if (socketSet.size === 0) {
+      ipConnectionMap.delete(ip);
+    }
+  }
+}, 60000).unref();
+
 // ═══════════════════════════════════════════════════════════════
 // SOCKET HANDSHAKE AUTHENTICATION & SECURITY MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════
 // Validates client handshake credentials, sanitizes user IDs against
-// prototype pollution and spoofing, verifies origins against CSWSH,
+// prototype pollution and spoofing, enforces per-IP connection limits,
 // and binds verified metadata to socket.data.
 io.use((socket, next) => {
   try {
@@ -143,7 +191,21 @@ io.use((socket, next) => {
       return next(new Error("Invalid authentication payload format"));
     }
 
-    // 2. Sanitize and validate client-provided userId and deviceHash
+    // 2. Anti-Botnet Per-IP Connection Hardening
+    const clientIp = getClientIpFromSocket(socket);
+    socket.data.clientIp = clientIp;
+
+    if (clientIp && clientIp !== "127.0.0.1" && clientIp !== "::1" && clientIp !== "localhost" && clientIp !== "unknown") {
+      const activeSockets = ipConnectionMap.get(clientIp) || new Set();
+      if (activeSockets.size >= MAX_CONCURRENT_SOCKETS_PER_IP) {
+        log("ip_concurrency_limit_blocked", { ip: clientIp, activeCount: activeSockets.size });
+        return next(new Error("TOO_MANY_CONNECTIONS_FROM_IP"));
+      }
+      activeSockets.add(socket.id);
+      ipConnectionMap.set(clientIp, activeSockets);
+    }
+
+    // 3. Sanitize and validate client-provided userId and deviceHash
     const rawUserId = auth?.userId;
     let verifiedUserId = null;
 
@@ -173,7 +235,7 @@ io.use((socket, next) => {
       verifiedDeviceHash = "dev_" + verifiedUserId;
     }
 
-    // 3. Attach verified session identity to socket.data
+    // 4. Attach verified session identity to socket.data
     socket.data.userId = verifiedUserId;
     socket.data.deviceHash = verifiedDeviceHash;
     socket.data.country = getCountryFromSocket(socket);

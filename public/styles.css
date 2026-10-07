@@ -134,6 +134,16 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.96) translateZ(0);
 }
 
 input {
@@ -1153,64 +1163,76 @@ input {
   justify-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   position: relative;
   left: auto;
   transform: none;
-  background: rgba(18, 14, 38, 0.7);
-  padding: 6px 18px;
+  background: transparent;
+  padding: 0;
   border-radius: var(--r-full);
-  border: 1px solid rgba(168, 85, 247, 0.35);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(124, 58, 237, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border: none;
+  box-shadow: none;
   white-space: nowrap;
   flex-shrink: 0;
   z-index: 2;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header-center:hover {
-  background: rgba(30, 24, 60, 0.85);
-  border-color: rgba(219, 39, 119, 0.55);
-  transform: translateY(-1px) scale(1.04);
-  box-shadow: 0 6px 28px rgba(124, 58, 237, 0.35), 0 0 20px rgba(236, 72, 153, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px) scale(1.03);
 }
 
-.header-brand-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ec4899;
-  box-shadow: 0 0 10px #ec4899, 0 0 18px #7c3aed;
-  position: relative;
+.header-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px 6px 12px;
+  background: rgba(18, 14, 38, 0.75);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: var(--r-full);
+  box-shadow: 
+    0 4px 18px rgba(0, 0, 0, 0.35), 
+    0 0 16px rgba(124, 58, 237, 0.18), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-center:hover .header-brand-badge {
+  background: rgba(28, 22, 56, 0.9);
+  border-color: rgba(219, 39, 119, 0.5);
+  box-shadow: 
+    0 6px 24px rgba(124, 58, 237, 0.3), 
+    0 0 22px rgba(219, 39, 119, 0.2), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.header-logo-mark {
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(124, 58, 237, 0.5));
+  transition: transform 0.2s ease;
 }
 
-.header-brand-dot::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1.5px solid #ec4899;
-  opacity: 0.7;
-  animation: ping-pulse-ring 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+.header-center:hover .header-logo-mark {
+  transform: rotate(-6deg) scale(1.08);
 }
 
-@keyframes ping-pulse-ring {
-  0% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-
-.header-wordmark {
+.header-brand-text {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.15rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 45%, #f472b6 100%);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 50%, #c4b5fd 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 12px rgba(196, 181, 253, 0.4));
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.6));
 }
 
 .header-right {
@@ -4220,13 +4242,15 @@ input:checked+.slider-round:before {
   background: transparent;
   border: none;
   color: var(--t-hi);
-  font-size: .92rem;
+  font-size: 16px; /* 16px prevents iOS Safari / Chrome automatic viewport zoom */
   outline: none;
   resize: none;
   max-height: 120px;
   line-height: 1.4;
   display: block;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .message-input::placeholder {

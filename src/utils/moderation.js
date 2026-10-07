@@ -315,9 +315,35 @@ async function checkMessageSafety(text) {
     }
   }
 
+// LRU cache for ONNX moderation to eliminate redundant CPU computation under 10k CCU
+const onnxResultCache = new Map();
+const MAX_ONNX_CACHE = 5000;
+
+function getCachedOnnxResult(text) {
+  return onnxResultCache.get(text);
+}
+
+function setCachedOnnxResult(text, result) {
+  if (onnxResultCache.size >= MAX_ONNX_CACHE) {
+    const firstKey = onnxResultCache.keys().next().value;
+    onnxResultCache.delete(firstKey);
+  }
+  onnxResultCache.set(text, result);
+}
+
   // ─────────────────────────────────────────────────────────────
-  // LAYER 2: Local ONNX Neural Classifier ($0, local CPU, ~10ms)
+  // LAYER 2: Local ONNX Neural Classifier ($0, local CPU, ~10ms with LRU Cache)
   // ─────────────────────────────────────────────────────────────
+  // Fast path: short clean phrases (<10 chars) or cached clean results bypass ONNX
+  if (cleaned.length <= 8 && !/[^\w\s]/.test(cleaned)) {
+    return { valid: true, layer: 'fast_path_clean' };
+  }
+
+  const cached = getCachedOnnxResult(cleaned);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const model = classifier || (await initOnnxClassifier());
     if (model) {
@@ -333,7 +359,7 @@ async function checkMessageSafety(text) {
           (label === 'toxic' && score > 0.70);
 
         if (isViolation) {
-          return {
+          const res = {
             valid: false,
             reason: 'ai_toxic_detected',
             action: score > 0.85 ? 'ban_15min' : 'warn',
@@ -341,9 +367,13 @@ async function checkMessageSafety(text) {
             model: activeModelName,
             layer: 'local_onnx'
           };
+          setCachedOnnxResult(cleaned, res);
+          return res;
         }
 
-        return { valid: true, confidence: score, model: activeModelName, layer: 'local_onnx' };
+        const cleanRes = { valid: true, confidence: score, model: activeModelName, layer: 'local_onnx' };
+        setCachedOnnxResult(cleaned, cleanRes);
+        return cleanRes;
       }
     }
   } catch (onnxErr) {
