@@ -711,6 +711,31 @@ function showFirebaseConnectModal(options = {}) {
 window.showPostFriendAuthModal = showFirebaseConnectModal;
 window.showFirebaseConnectModal = showFirebaseConnectModal;
 
+function extractPartnerFlag(countryString) {
+  if (!countryString || countryString === 'Unknown' || countryString === 'Someone nearby') {
+    return '🇮🇳';
+  }
+  const flagMatch = countryString.match(/(\uD83C[\uDDE6-\uDDFF]\uD83C[\uDDE6-\uDDFF])/u);
+  if (flagMatch) {
+    return flagMatch[0];
+  }
+  const lower = countryString.toLowerCase();
+  if (lower.includes('india') || lower.includes('karnataka')) return '🇮🇳';
+  if (lower.includes('united states') || lower.includes('usa') || lower.includes('america') || lower.includes('california')) return '🇺🇸';
+  if (lower.includes('united kingdom') || lower.includes('uk') || lower.includes('london') || lower.includes('britain')) return '🇬🇧';
+  if (lower.includes('canada') || lower.includes('ontario')) return '🇨🇦';
+  if (lower.includes('germany') || lower.includes('berlin')) return '🇩🇪';
+  if (lower.includes('australia') || lower.includes('sydney')) return '🇦🇺';
+  if (lower.includes('france') || lower.includes('paris')) return '🇫🇷';
+  if (lower.includes('japan') || lower.includes('tokyo')) return '🇯🇵';
+  if (lower.includes('brazil')) return '🇧🇷';
+  if (lower.includes('russia')) return '🇷🇺';
+  if (lower.includes('china')) return '🇨🇳';
+  if (lower.includes('singapore')) return '🇸🇬';
+  if (lower.includes('uae') || lower.includes('dubai')) return '🇦🇪';
+  return '🇮🇳';
+}
+
 function formatPartnerLocation(countryString) {
   if (!countryString || countryString === 'Unknown' || countryString === 'Someone nearby') {
     return '🇮🇳 India (Karnataka)';
@@ -2445,7 +2470,7 @@ function endCurrentChat() {
   }
   syncButtons();
   clearChat();
-  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+  if (partnerNameEl) partnerNameEl.innerHTML = `<span class="location-flag" style="font-size: 1.5rem; line-height: 1; vertical-align: middle;">🇮🇳</span>`;
   if (typingIndicator) typingIndicator.classList.remove('visible');
   if (isConnected) setConnStatus('connected');
 
@@ -2569,16 +2594,35 @@ function renderFriendsList(friends) {
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
+let isNavigatingView = false;
+
 function goToChat() {
-  if (landingPage) landingPage.style.display = 'none';
+  if (isNavigatingView) return;
+  isNavigatingView = true;
+
+  if (landingPage) {
+    landingPage.style.display = 'none';
+  }
   if (chatApp) {
     chatApp.style.display = 'flex';
     chatApp.style.opacity = '1';
   }
+
   showView('prechat');
   switchHomeTab('random');
+
   const ac = $('appCanvas');
-  if (ac) { ac.width = ac.offsetWidth || innerWidth; ac.height = ac.offsetHeight || innerHeight; }
+  if (ac) {
+    ac.width = window.innerWidth;
+    ac.height = window.innerHeight;
+  }
+  if (typeof window.__pingSetAppMode === 'function') {
+    window.__pingSetAppMode('prechat');
+  }
+
+  setTimeout(() => {
+    isNavigatingView = false;
+  }, 100);
 }
 
 function goToLanding() {
@@ -2609,9 +2653,30 @@ function executeGoToLanding() {
     landingPage.style.display = 'flex';
     landingPage.style.opacity = '1';
   }
+  const lc = $('particleCanvas');
+  if (lc) {
+    lc.width = window.innerWidth;
+    lc.height = window.innerHeight;
+  }
 }
 
-startLandingBtn?.addEventListener('click', goToChat);
+// Instant 0ms Tap Handling for Start Chat (prevents 350ms iOS Safari & Chrome tap delay)
+if (startLandingBtn) {
+  let touchHandled = false;
+  startLandingBtn.addEventListener('click', (e) => {
+    if (touchHandled) {
+      touchHandled = false;
+      return;
+    }
+    goToChat();
+  });
+  startLandingBtn.addEventListener('touchend', (e) => {
+    touchHandled = true;
+    if (e.cancelable) e.preventDefault();
+    goToChat();
+    setTimeout(() => { touchHandled = false; }, 400);
+  }, { passive: false });
+}
 backBtn?.addEventListener('click', goToLanding);
 
 // ── HOME TAB SWITCHING ────────────────────────────────────────
@@ -3206,15 +3271,15 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc, matchedI
   AppState.explore.timerEndMs = Number(endAt) || Date.now() + (Number(expiresInMs) || 180000);
 
   applyState('matched', roomId);
-  const displayLocation = formatPartnerLocation(pc) || '🇮🇳 India (Karnataka)';
+  const partnerFlag = extractPartnerFlag(pc);
   if (partnerNameEl) {
-    partnerNameEl.innerHTML = `<span class="location-flag">${displayLocation.split(' ')[0]}</span> ${displayLocation.split(' ').slice(1).join(' ') || 'Stranger'}`;
+    partnerNameEl.innerHTML = `<span class="location-flag" style="font-size: 1.5rem; line-height: 1; vertical-align: middle;">${partnerFlag}</span>`;
   }
   if (partnerCountryLabel && partnerCountryLabel !== partnerNameEl) {
-    partnerCountryLabel.innerHTML = partnerNameEl ? partnerNameEl.innerHTML : displayLocation;
+    partnerCountryLabel.textContent = partnerFlag;
   }
 
-  appendMsg(`Connected to ${displayLocation}. Say hi! 👋✨`, { isSystem: true, variant: 'success' });
+  appendMsg(`Connected with stranger ${partnerFlag}. Say hi! 👋✨`, { isSystem: true, variant: 'success' });
 
   // Trigger Ping chime sound so both users know they have been matched
   playPingChime();
@@ -3568,7 +3633,7 @@ function handleChatEnd(reason, rawReason) {
   AppState.explore.timerEndMs = 0;
   syncButtons();
 
-  if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+  if (partnerNameEl) partnerNameEl.innerHTML = `<span class="location-flag" style="font-size: 1.5rem; line-height: 1; vertical-align: middle;">🇮🇳</span>`;
 
   // If local user left/skipped, go to prechat immediately
   if (userInitiatedLeave || userInitiatedSkip) {
@@ -3959,13 +4024,6 @@ window.forceNextChat = () => {
 };
 
 autoSearchNowBtn?.addEventListener('click', () => window.forceNextChat());
-
-startLandingBtn?.addEventListener('click', () => {
-  goToChat();
-  // Show tabs and default to Random tab
-  if (homeTabs) homeTabs.style.display = 'flex';
-  switchHomeTab('random');
-});
 
 findChatBtn?.addEventListener('click', () => {
   if (banExpiryTimestamp && Date.now() < Number(banExpiryTimestamp)) {
@@ -5030,6 +5088,14 @@ function initMobileKeyboardViewportHandler() {
     }
   };
 
+  const enforceScrollLock = () => {
+    if (window.scrollY !== 0 || window.scrollX !== 0) {
+      window.scrollTo(0, 0);
+    }
+    if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+  };
+
   const updateViewportMetrics = () => {
     let visibleHeight = window.innerHeight;
     let keyboardHeight = 0;
@@ -5042,7 +5108,10 @@ function initMobileKeyboardViewportHandler() {
     document.documentElement.style.setProperty('--visual-viewport-height', `${visibleHeight}px`);
     document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
 
-    const openState = keyboardHeight > 100;
+    const activeEl = document.activeElement;
+    const isInputFocused = !!(activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT'));
+    const openState = isInputFocused && keyboardHeight > 100;
+
     if (openState !== isKeyboardCurrentlyOpen) {
       isKeyboardCurrentlyOpen = openState;
       if (openState) {
@@ -5055,13 +5124,7 @@ function initMobileKeyboardViewportHandler() {
       }
     }
 
-    // On iOS Safari, pin document scroll to top 0 to avoid container displacement
-    if (window.scrollY !== 0) {
-      window.scrollTo(0, 0);
-    }
-    if (document.body.scrollTop !== 0) {
-      document.body.scrollTop = 0;
-    }
+    enforceScrollLock();
   };
 
   // Immediate sync
@@ -5073,13 +5136,11 @@ function initMobileKeyboardViewportHandler() {
       scrollActiveChatToBottom();
     });
 
-    window.visualViewport.addEventListener('scroll', () => {
-      if (window.scrollY !== 0) {
-        window.scrollTo(0, 0);
-      }
-    });
+    window.visualViewport.addEventListener('scroll', enforceScrollLock);
   }
 
+  window.addEventListener('scroll', enforceScrollLock, { passive: true });
+  document.addEventListener('scroll', enforceScrollLock, { passive: true });
   window.addEventListener('resize', updateViewportMetrics);
   window.addEventListener('orientationchange', () => {
     setTimeout(updateViewportMetrics, 150);

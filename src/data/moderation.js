@@ -303,11 +303,13 @@ function moderateMessage(userId, text) {
     pattern: detection.pattern
   });
   
+  const specificMessage = detection.warningMessage || (penalty ? penalty.message : MODERATION_CONFIG.WARNING_MESSAGE);
+
   if (penalty) {
     return {
       allowed: false,
       action: penalty.type,
-      message: penalty.message,
+      message: specificMessage,
       duration: penalty.duration,
       violationCount,
       detectedPattern: detection.pattern,
@@ -317,7 +319,7 @@ function moderateMessage(userId, text) {
   return {
     allowed: false,
     action: 'warning',
-    message: MODERATION_CONFIG.WARNING_MESSAGE,
+    message: specificMessage,
     violationCount,
     detectedPattern: detection.pattern,
   };

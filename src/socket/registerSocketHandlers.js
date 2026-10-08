@@ -449,32 +449,41 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
 
 // Shared message validation (slur filter, moderation, spam)
 function validateAndModerateMessage(socket, userId, text) {
-  // 1. Block Phone / Mobile number sharing (Separate policy warning - NOT a slur strike)
+  // 1. Separate Warning for Phone / Mobile numbers (NO BAN)
   if (detectPhoneNumber(text)) {
-    const msg = "🚫 Sharing phone or mobile numbers is not allowed. Please keep your personal contact details private.";
+    const msg = "🚫 Warning: Sharing phone numbers or personal contact numbers is restricted to protect your privacy.";
     log("message_blocked_phone", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "phone_sharing_blocked" });
-    socket.emit("message_rejected", { message: msg, reason: "phone_sharing_blocked" });
+    socket.emit("warning_message", { message: msg, type: "phone_number_warning", reason: "phone_number_blocked" });
     socket.emit("error_message", { message: msg });
-    return { blocked: true, reason: "phone_sharing_blocked", action: "block", message: msg };
+    return { blocked: true, reason: "phone_number_blocked", action: "block", message: msg };
   }
 
-  // 2. Block Snapchat, Instagram, Social IDs, Link and URL spam (Separate policy warning - NOT a slur strike)
-  if (detectSocialMediaSharing(text) || hasBlockedLinks(text)) {
-    const msg = "🚫 Sharing Snapchat, Instagram, or other IDs and handles is not allowed. Please keep conversations within the chat.";
+  // 2. Separate Warning for External Links and URLs (NO BAN)
+  if (hasBlockedLinks(text)) {
+    const msg = "🚫 Warning: Sharing links, websites, or external URLs is not allowed to protect user safety.";
+    log("message_blocked_link", { userId, text: text.slice(0, 50) });
+    socket.emit("warning_message", { message: msg, type: "link_sharing_warning", reason: "link_sharing_blocked" });
+    socket.emit("error_message", { message: msg });
+    return { blocked: true, reason: "link_sharing_blocked", action: "block", message: msg };
+  }
+
+  // 2.1 Separate Warning for Social Media Handles / IDs (NO BAN)
+  if (detectSocialMediaSharing(text)) {
+    const msg = "🚫 Warning: Sharing Snapchat, Instagram, or social IDs is not allowed. Please keep conversations within the chat.";
     log("message_blocked_social_id", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "social_id_blocked" });
-    socket.emit("message_rejected", { message: msg, reason: "social_id_blocked" });
+    socket.emit("warning_message", { message: msg, type: "social_id_warning", reason: "social_id_blocked" });
     socket.emit("error_message", { message: msg });
     return { blocked: true, reason: "social_id_blocked", action: "block", message: msg };
   }
 
-  // 3. Block Restricted Symbols (Separate policy warning - NOT a slur strike)
+  // 3. Separate Warning for Special Symbols & Excessive Punctuation (NO BAN)
   if (detectRestrictedSymbols(text)) {
-    const msg = "⚠️ Using special symbols is not allowed. Only letters, numbers, commas (,), and periods (.) are permitted.";
+    const isExcessive = /\.{6,}/.test(text) || /\,{6,}/.test(text);
+    const msg = isExcessive
+      ? "⚠️ Warning: Continuous dots (.) or commas (,) are allowed up to 5 times max."
+      : "⚠️ Warning: Special symbols like /, @, #, $, %, ^, *, _, +, =, ~, |, <, > are restricted. Only letters, numbers, spaces, commas (,), and periods (.) are permitted (up to 5 continuous dots/commas).";
     log("message_blocked_symbols", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "restricted_symbols_blocked" });
-    socket.emit("message_rejected", { message: msg, reason: "restricted_symbols_blocked" });
+    socket.emit("warning_message", { message: msg, type: isExcessive ? "excessive_punctuation_warning" : "restricted_symbols_warning", reason: "restricted_symbols_blocked" });
     socket.emit("error_message", { message: msg });
     return { blocked: true, reason: "restricted_symbols_blocked", action: "block", message: msg };
   }

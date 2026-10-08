@@ -272,10 +272,16 @@ function detectSocialMediaSharing(text) {
  * Restricts symbols other than standard punctuation (, and .) to tighten moderation
  * Allows letters (Latin, Devanagari, Tamil, Telugu, Kannada), numbers, spaces, commas, periods,
  * and standard English conversational apostrophes and question marks.
+ * Enforces maximum of 5 continuous dots (.) and commas (,).
  */
 function detectRestrictedSymbols(text) {
   if (!text || typeof text !== 'string') return false;
   if (isInnocentColloquialism(text)) return false;
+
+  // Check for excessive repeating dots or commas (>5 continuous)
+  if (/\.{6,}/.test(text) || /\,{6,}/.test(text)) {
+    return true;
+  }
 
   // Prohibited symbols commonly used for spam or filter evasion:
   // slashes /, \, @, #, $, %, ^, *, _, +, =, ~, |, <, >, {, }, [, ], `
@@ -286,8 +292,20 @@ function detectRestrictedSymbols(text) {
 function isKeyboardMashOrCharacterFlood(text) {
   if (!text || typeof text !== 'string') return false;
   const clean = text.trim().toLowerCase();
-  if (/^[\s\.\?!,;:\-_+=\*\^%$#@~`]{3,}$/.test(clean)) return true;
+
+  // Allow continuous . or , up to 5 times max (e.g. ..., ...., ....., ,,,,,)
+  if (/^[\.,]{1,5}$/.test(clean)) return false;
+
+  // Excessive continuous dots or commas (>5)
+  if (/\.{6,}/.test(clean) || /\,{6,}/.test(clean)) return true;
+
+  // Check for 6 or more repeating identical characters
   if (/(.)\1{5,}/.test(clean)) return true;
+
+  // Punctuation flood of non-dot/comma symbols
+  if (/^[\s\?!;:\-_+=\*\^%$#@~`\/\\|<>\{\}\[\]]{3,}$/.test(clean)) return true;
+  if (/^[\s\.\?!,;:\-_+=\*\^%$#@~`\/\\|<>\{\}\[\]]{6,}$/.test(clean)) return true;
+
   const commonMashes = [
     'asdfgh', 'asdfjkl', 'qwertyui', 'zxcvbn', 'lkjhgf',
     'qazwsx', 'wsxedc', 'edcrfv', 'rfvtgb', 'yhnujm',
@@ -371,7 +389,7 @@ function analyzeConversationLine(text) {
       isLowEffort: false,
       category: 'privacy_phone_sharing',
       reason: 'phone_number_detected',
-      warningMessage: '🚫 Sharing phone numbers is strictly prohibited to protect your safety and privacy.'
+      warningMessage: '🚫 Warning: Sharing phone numbers or personal contact numbers is restricted to protect your privacy.'
     };
   }
 
@@ -384,20 +402,24 @@ function analyzeConversationLine(text) {
       isLowEffort: false,
       category: 'social_handle_leak',
       reason: 'social_media_detected',
-      warningMessage: '🚫 Sharing Instagram, Snapchat, social handles, or off-platform links is disabled to protect your privacy and prevent spam.'
+      warningMessage: '🚫 Warning: Sharing Snapchat, Instagram, or social IDs is not allowed. Please keep conversations within the chat.'
     };
   }
 
-  // ── STEP 1.3: Restricted Symbol Restriction ──
+  // ── STEP 1.3: Restricted Symbol Restriction (Max 5 continuous dots/commas, no prohibited special symbols) ──
   if (detectRestrictedSymbols(cleaned)) {
+    const isExcessivePunct = /\.{6,}/.test(cleaned) || /\,{6,}/.test(cleaned);
+    const warn = isExcessivePunct
+      ? '⚠️ Warning: Continuous dots (.) or commas (,) are allowed up to 5 times max.'
+      : '⚠️ Warning: Special symbols like /, @, #, $, %, ^, *, _, +, =, ~, |, <, > are restricted. Only letters, numbers, spaces, commas (,), and periods (.) are permitted (up to 5 continuous dots/commas).';
     return {
       isViolation: true,
       isThreat: false,
       isHarassment: false,
       isLowEffort: false,
       category: 'restricted_symbols',
-      reason: 'restricted_symbols_detected',
-      warningMessage: '⚠️ Special symbols like /, @, #, $, %, ^, *, _, +, =, ~, |, <, > are not allowed. Please keep messages clean using only letters, numbers, commas, and periods.'
+      reason: isExcessivePunct ? 'excessive_punctuation_detected' : 'restricted_symbols_detected',
+      warningMessage: warn
     };
   }
 

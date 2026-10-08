@@ -96,13 +96,20 @@
     draw(c) { const a = Math.sin((this.life/this.max)*Math.PI)*(.6+Math.sin(this.tw)*.2); c.beginPath(); c.arc(this.x,this.y,this.r,0,Math.PI*2); c.fillStyle=this.col+a.toFixed(2)+')'; c.fill(); }
   }
 
-  const MAX_L = rm ? 0 : 85; // Optimized count
+  const isTouchDevice = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
+  const isFastMode = () => {
+    const cl = document.documentElement.classList;
+    return cl.contains('fast-mode') || cl.contains('is-ios') || cl.contains('is-safari') || cl.contains('is-android') || cl.contains('is-mobile') || cl.contains('is-low-end') || isTouchDevice;
+  };
+  const isLowEndDevice = () => document.documentElement.classList.contains('is-low-end');
+
+  const MAX_L = rm ? 0 : (isLowEndDevice() ? 25 : (isTouchDevice ? 36 : 85));
   const stars  = [];
   if (lCtx) for (let i=0;i<MAX_L;i++) stars.push(new Star());
 
   function drawConstellation(ctx, pts, maxD, a) {
+    if (isFastMode()) return; // Skip O(N^2) CPU overhead on mobile & low-end devices
     ctx.lineWidth = .5;
-    // O(N^2) optimization: Only draw subset of lines to save CPU
     for (let i=0; i<pts.length; i+=2) {
       for (let j=i+1; j<pts.length; j+=2) {
         const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.hypot(dx,dy);
@@ -112,7 +119,6 @@
   }
 
   // ── CURSOR TRAIL ──────────────────────────────────────────────
-  const isTouchDevice = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
   const trail = [];
   const TN = (rm || isTouchDevice) ? 0 : 10; // Optimized segments for desktop only
   let mX = -999, mY = -999;
@@ -126,9 +132,9 @@
     addEventListener('mousemove', e => { mX = e.clientX; mY = e.clientY; });
   }
 
-  // ── GLOW TRACKING CTA ─────────────────────────────────────────
+  // ── GLOW TRACKING CTA (Desktop mouse only to avoid delaying iOS/mobile tap) ──
   const ctaBtn = document.getElementById('startLandingBtn');
-  if (ctaBtn && !rm) {
+  if (ctaBtn && !rm && !isTouchDevice) {
     let bR = null;
     let ctaRaf = null;
     const rbr = () => { bR = ctaBtn.getBoundingClientRect(); };
@@ -169,8 +175,8 @@
 
   function resizeApp() {
     if (!aCv) return;
-    const newW = aCv.offsetWidth || innerWidth;
-    const newH = aCv.offsetHeight || innerHeight;
+    const newW = (chatApp && chatApp.clientWidth) ? chatApp.clientWidth : window.innerWidth;
+    const newH = (chatApp && chatApp.clientHeight) ? chatApp.clientHeight : window.innerHeight;
     if (newW !== AW || newH !== AH) {
       AW = aCv.width = newW;
       AH = aCv.height = newH;
@@ -178,6 +184,9 @@
     }
   }
   addEventListener('resize', () => { if (aCv && chatApp?.style.display !== 'none') resizeApp(); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => { if (aCv && chatApp?.style.display !== 'none') resizeApp(); });
+  }
 
   class AmbPart {
     constructor() { this.r(); }
@@ -227,8 +236,12 @@
       const a = Math.sin((this.life/this.max)*Math.PI) * 0.4; 
       c.beginPath(); c.arc(this.x, this.y, this.rad, 0, Math.PI*2);
       c.fillStyle = this.col + a.toFixed(2) + ')';
-      c.shadowBlur = 15; c.shadowColor = this.col + '0.8)';
-      c.fill(); c.shadowBlur = 0;
+      if (!isFastMode()) {
+        c.shadowBlur = 15; c.shadowColor = this.col + '0.8)';
+        c.fill(); c.shadowBlur = 0;
+      } else {
+        c.fill();
+      }
     }
   }
 
@@ -238,19 +251,28 @@
     if (!aCtx) return;
     aParticles=[]; warpPool=[];
     if (rm) return;
+    const fast = isFastMode();
+    const lowEnd = isLowEndDevice();
+
     if (appMode==='prechat') {
-      for(let i=0;i<40;i++) aParticles.push(new AmbPart());
+      const count = lowEnd ? 14 : (fast ? 20 : 40);
+      for(let i=0;i<count;i++) aParticles.push(new AmbPart());
     } else if (appMode==='waiting') {
-      for(let i=0;i<20;i++) aParticles.push(new AmbPart());
-      for(let i=0;i<50;i++) warpPool.push(new WarpPart());
+      const ambCount = lowEnd ? 10 : (fast ? 14 : 20);
+      const warpCount = lowEnd ? 16 : (fast ? 24 : 50);
+      for(let i=0;i<ambCount;i++) aParticles.push(new AmbPart());
+      for(let i=0;i<warpCount;i++) warpPool.push(new WarpPart());
     } else if (appMode==='chat'||appMode==='chatting'||appMode==='friendDM') {
-      for(let i=0;i<45;i++) aParticles.push(new ChatPart());
+      const count = lowEnd ? 14 : (fast ? 20 : 45);
+      for(let i=0;i<count;i++) aParticles.push(new ChatPart());
     }
   }
 
   function neuralLines(ctx, pts, maxD, alpha) {
+    if (isLowEndDevice()) return; // Skip neural mesh lines on low-end hardware
     ctx.lineWidth=.6;
-    for(let i=0;i<pts.length;i+=2) for(let j=i+1;j<pts.length;j+=2) {
+    const step = isFastMode() ? 3 : 2;
+    for(let i=0;i<pts.length;i+=step) for(let j=i+1;j<pts.length;j+=step) {
       const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
       if(d<maxD){ ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(124,58,237,${((1-d/maxD)*alpha).toFixed(3)})`;ctx.stroke(); }
     }
@@ -258,20 +280,18 @@
 
   function drawApp() {
     if (!aCtx) return;
-    const isFast = document.documentElement.classList.contains('fast-mode') ||
-                   document.documentElement.classList.contains('is-ios') ||
-                   document.documentElement.classList.contains('is-safari');
+    const fast = isFastMode();
     aCtx.clearRect(0,0,AW,AH);
     if (appMode==='prechat') {
       aParticles.forEach(p=>{p.step();p.draw(aCtx);});
-      if (!isFast) drawConstellation(aCtx, aParticles, 85, .1);
+      if (!fast) drawConstellation(aCtx, aParticles, 85, .1);
     } else if (appMode==='waiting') {
       aParticles.forEach(p=>{p.step();p.draw(aCtx);});
       warpPool.forEach(p=>{p.step();p.draw(aCtx);});
       neuralLines(aCtx, warpPool,  120, .25);
     } else {
       aParticles.forEach(p=>{p.step();p.draw(aCtx);});
-      if (!isFast) drawConstellation(aCtx, aParticles, 100, .15);
+      if (!fast) drawConstellation(aCtx, aParticles, 100, .15);
     }
   }
 

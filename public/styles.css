@@ -72,20 +72,25 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  height: 100%;
+  height: 100dvh;
   touch-action: manipulation;
-  overflow-x: hidden;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: #0b0713;
 }
 
 body {
   font-family: 'Inter', system-ui, sans-serif;
-  background: var(--bg);
+  background: #0b0713;
+  background-color: #0b0713;
   color: var(--t-med);
+  height: 100dvh;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  overflow: hidden;
+  overscroll-behavior: none;
   position: relative;
   touch-action: manipulation;
 }
@@ -718,10 +723,13 @@ input {
   transition: transform .2s var(--spring), box-shadow .2s var(--ease), background .2s var(--ease);
   opacity: 1 !important;
   visibility: visible !important;
-  will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .cta-btn:hover {
@@ -729,6 +737,13 @@ input {
   box-shadow: var(--sh-btn-h);
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+@media (hover: none) {
+  .cta-btn:hover {
+    transform: none;
+    box-shadow: var(--sh-btn);
+  }
 }
 
 .cta-btn:active {
@@ -785,7 +800,10 @@ input {
    ================================================================ */
 .btn, .btn-primary, .btn-ghost, .cta-btn, .send-circle-btn, #startBtn, #startLandingBtn, #findChatBtn, .download-app-btn {
   transition: background 0.08s ease, transform 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
-  will-change: transform;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
   backface-visibility: hidden; /* Prevents webkit subpixel flicker */
 }
 
@@ -962,18 +980,15 @@ input {
 }
 
 @keyframes app-vortex-hue {
-
   0%,
   100% {
-    filter: blur(45px) hue-rotate(0deg) brightness(1);
+    opacity: 0.95;
+    transform: rotate(0deg) translateZ(0);
   }
 
-  33% {
-    filter: blur(45px) hue-rotate(45deg) brightness(1.2);
-  }
-
-  66% {
-    filter: blur(45px) hue-rotate(-30deg) brightness(.9);
+  50% {
+    opacity: 0.65;
+    transform: rotate(180deg) translateZ(0);
   }
 }
 
@@ -1122,29 +1137,26 @@ input {
   content: "";
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 50%;
   height: 100%;
   background: linear-gradient(90deg,
       transparent,
       rgba(255, 255, 255, 0.08),
       transparent);
-  transform: skewX(-25deg);
+  transform: translateX(-150%) skewX(-25deg);
   animation: header-sweep 8s infinite;
   pointer-events: none;
 }
 
 @keyframes header-sweep {
   0% {
-    left: -100%;
+    transform: translateX(-150%) skewX(-25deg);
   }
 
-  20% {
-    left: 200%;
-  }
-
+  20%,
   100% {
-    left: 200%;
+    transform: translateX(350%) skewX(-25deg);
   }
 }
 
@@ -1556,7 +1568,8 @@ input {
 .app-main {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -1565,8 +1578,9 @@ input {
 
 /* Glass card */
 .glass-card {
-  background: rgba(10, 10, 28, .82);
-  backdrop-filter: blur(40px) saturate(1.5);
+  background: rgba(10, 10, 28, .86);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
   border: 1px solid var(--glass-brd);
   border-radius: var(--r-2xl);
   box-shadow: var(--sh-card), 0 0 60px rgba(124, 58, 237, .05);
@@ -1585,7 +1599,8 @@ input {
   align-items: center;
   justify-content: center;
   padding: 16px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   will-change: opacity, transform;
   transform: translateZ(0);
   backface-visibility: hidden;
@@ -1634,10 +1649,11 @@ input {
 
 /* ── PRE-CHAT ── */
 .view-prechat {
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding-top: clamp(68px, 12vh, 120px);
-  padding-bottom: 32px;
+  padding-top: clamp(32px, 8vh, 80px);
+  padding-bottom: 60px;
+  overflow-y: auto;
 }
 
 .view-prechat::before {
@@ -1700,6 +1716,11 @@ input {
   align-items: center;
   gap: 16px;
   text-align: center;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .prechat-anon-badge {
@@ -5900,12 +5921,20 @@ body.theme-neon {
 }
 
 body {
-  background-color: var(--theme-bg);
+  background-color: #0b0713;
   transition: background-color .5s ease;
 }
 
 .app-container {
-  background: var(--theme-bg);
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #0b0713;
+  background-color: #0b0713;
 }
 
 .theme-picker {
@@ -7589,16 +7618,13 @@ html.is-inapp-browser .asb-search-btn {
   animation: none !important;
 }
 
-/* 5. Force hardware acceleration on main container elements */
+/* 5. Force hardware acceleration on specific interactive elements */
 .start-chat-button,
 .cta-btn,
 .logo-mark,
 .logo-container,
 .brand-logo-img,
-.auto-search-bar,
-.chat-app,
-.landing-content {
-  will-change: transform, opacity;
+.auto-search-bar {
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
@@ -7658,15 +7684,19 @@ html.is-inapp-browser .asb-search-btn {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FAST MODE & SAFARI / IOS PROMOTION GPU ACCELERATION
-   Ensures Safari and iOS run with the exact same 60fps/120Hz speed
-   as the Instagram in-app browser version without changing any UI
+   FAST MODE & MOBILE / LOW-END GPU ACCELERATION
+   Guarantees instantaneous transition from landing to explore screen
+   and solid 60fps across iOS Safari, Chrome, and low-end devices
+   (Samsung M series, Android) without altering UI or look
    ═══════════════════════════════════════════════════════════════ */
 
-/* 1. Eliminate heavy live Gaussian blur rasterization passes in Safari/iOS/fast-mode */
+/* 1. Eliminate heavy live Gaussian blur rasterization passes on mobile & fast-mode */
 html.fast-mode body::before,
 html.is-ios body::before,
-html.is-safari body::before {
+html.is-safari body::before,
+html.is-android body::before,
+html.is-mobile body::before,
+html.is-low-end body::before {
   filter: none !important;
   background: radial-gradient(circle at 10% 10%, rgba(124, 58, 237, 0.16) 0%, transparent 60%) !important;
   animation: none !important;
@@ -7675,43 +7705,151 @@ html.is-safari body::before {
 
 html.fast-mode body::after,
 html.is-ios body::after,
-html.is-safari body::after {
+html.is-safari body::after,
+html.is-android body::after,
+html.is-mobile body::after,
+html.is-low-end body::after {
   filter: none !important;
   background: radial-gradient(circle at 90% 90%, rgba(6, 182, 212, 0.12) 0%, transparent 60%) !important;
   animation: none !important;
   position: absolute !important;
 }
 
-/* 2. Optimize continuous background keyframe animations on mobile/iOS/Safari */
+/* 2. Optimize background layers on mobile / low-end devices while keeping exact visual ambience */
 html.fast-mode .vortex-wheel,
 html.is-ios .vortex-wheel,
 html.is-safari .vortex-wheel,
-html.fast-mode .nebula-field,
-html.is-ios .nebula-field,
-html.is-safari .nebula-field,
-html.fast-mode .aurora-canvas,
-html.is-ios .aurora-canvas,
-html.is-safari .aurora-canvas,
+html.is-android .vortex-wheel,
+html.is-mobile .vortex-wheel,
+html.is-low-end .vortex-wheel {
+  filter: none !important;
+  opacity: 0.32 !important;
+  animation: vortex-spin 26s linear infinite !important;
+}
+
 html.fast-mode .app-vortex,
 html.is-ios .app-vortex,
 html.is-safari .app-vortex,
+html.is-android .app-vortex,
+html.is-mobile .app-vortex,
+html.is-low-end .app-vortex {
+  filter: none !important;
+  opacity: 0.28 !important;
+  animation: app-vortex-spin 28s linear infinite !important;
+}
+
+html.fast-mode .nebula-field,
+html.is-ios .nebula-field,
+html.is-safari .nebula-field,
+html.is-android .nebula-field,
+html.is-mobile .nebula-field,
+html.is-low-end .nebula-field,
+html.fast-mode .neb,
+html.is-ios .neb,
+html.is-safari .neb,
+html.is-android .neb,
+html.is-mobile .neb,
+html.is-low-end .neb {
+  filter: none !important;
+  opacity: 0.8 !important;
+}
+
+html.fast-mode .aurora-canvas,
+html.is-ios .aurora-canvas,
+html.is-safari .aurora-canvas,
+html.is-android .aurora-canvas,
+html.is-mobile .aurora-canvas,
+html.is-low-end .aurora-canvas,
+html.fast-mode .aurora-band,
+html.is-ios .aurora-band,
+html.is-safari .aurora-band,
+html.is-android .aurora-band,
+html.is-mobile .aurora-band,
+html.is-low-end .aurora-band {
+  filter: none !important;
+  opacity: 0.55 !important;
+}
+
 html.fast-mode .app-nebula,
 html.is-ios .app-nebula,
 html.is-safari .app-nebula,
+html.is-android .app-nebula,
+html.is-mobile .app-nebula,
+html.is-low-end .app-nebula,
+html.fast-mode .app-neb,
+html.is-ios .app-neb,
+html.is-safari .app-neb,
+html.is-android .app-neb,
+html.is-mobile .app-neb,
+html.is-low-end .app-neb {
+  filter: none !important;
+  opacity: 0.75 !important;
+}
+
 html.fast-mode .chat-glow-orb,
 html.is-ios .chat-glow-orb,
 html.is-safari .chat-glow-orb,
+html.is-android .chat-glow-orb,
+html.is-mobile .chat-glow-orb,
+html.is-low-end .chat-glow-orb,
 html.fast-mode .chat-grid-overlay,
 html.is-ios .chat-grid-overlay,
-html.is-safari .chat-grid-overlay {
+html.is-safari .chat-grid-overlay,
+html.is-android .chat-grid-overlay,
+html.is-mobile .chat-grid-overlay,
+html.is-low-end .chat-grid-overlay {
   animation: none !important;
   filter: none !important;
-  opacity: 0.12 !important;
+  opacity: 0.15 !important;
 }
 
-/* 3. Hardware acceleration on Safari and WebKit */
+/* 3. Prechat view background optimization: smooth static glow without continuous scale thrash */
+html.fast-mode .view-prechat::before,
+html.is-ios .view-prechat::before,
+html.is-safari .view-prechat::before,
+html.is-android .view-prechat::before,
+html.is-mobile .view-prechat::before,
+html.is-low-end .view-prechat::before {
+  animation: none !important;
+  opacity: 0.8 !important;
+  transform: none !important;
+}
+
+html.fast-mode .view-prechat::after,
+html.is-ios .view-prechat::after,
+html.is-safari .view-prechat::after,
+html.is-android .view-prechat::after,
+html.is-mobile .view-prechat::after,
+html.is-low-end .view-prechat::after {
+  animation: none !important;
+  opacity: 0.7 !important;
+}
+
+/* 4. Glass card and Prechat card: lightweight hardware blur */
+html.fast-mode .glass-card,
+html.is-ios .glass-card,
+html.is-safari .glass-card,
+html.is-android .glass-card,
+html.is-mobile .glass-card,
+html.is-low-end .glass-card,
+html.fast-mode .prechat-card,
+html.is-ios .prechat-card,
+html.is-safari .prechat-card,
+html.is-android .prechat-card,
+html.is-mobile .prechat-card,
+html.is-low-end .prechat-card {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* 5. Tap responsiveness on WebKit & Mobile */
 html.is-ios *,
-html.is-safari * {
+html.is-safari *,
+html.is-android *,
+html.is-mobile * {
   -webkit-tap-highlight-color: transparent;
 }
 
