@@ -434,6 +434,18 @@ function dequeueUser() {
   return null;
 }
 
+function clearWaitingQueue() {
+  const count = memoryWaitingQueue.length;
+  memoryWaitingQueue.length = 0;
+  memoryWaitingSet.clear();
+
+  if (isRedisReady()) {
+    redisClient.del(KEYS.QUEUE).catch(() => {});
+    redisClient.del(KEYS.WAITING_SET).catch(() => {});
+  }
+  return count;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // BUG FIX 1: Instant & Atomic Memory Purge on Disconnect
 // ═══════════════════════════════════════════════════════════════
@@ -944,6 +956,7 @@ module.exports = {
   isUserQueued,
   enqueueUser,
   dequeueUser,
+  clearWaitingQueue,
   removeUserFromQueue,
   addFriendship,
   areFriends,

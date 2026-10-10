@@ -442,6 +442,64 @@ async function saveReport({
   }
 }
 
+/**
+ * Retrieves recent moderation reports from Firestore
+ * @param {number} limitCount
+ * @returns {Promise<Array>}
+ */
+async function getRecentReports(limitCount = 50) {
+  const db = getDb();
+  if (!db) return [];
+
+  try {
+    const snapshot = await db
+      .collection(COLLECTIONS.REPORTS)
+      .orderBy("createdAt", "desc")
+      .limit(limitCount)
+      .get();
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      let createdIso = null;
+      if (data.createdAt && typeof data.createdAt.toDate === "function") {
+        createdIso = data.createdAt.toDate().toISOString();
+      } else if (data.createdAt) {
+        createdIso = String(data.createdAt);
+      }
+      return {
+        ...data,
+        reportId: doc.id,
+        createdAt: createdIso,
+      };
+    });
+  } catch (error) {
+    handleDbError("getRecentReports", error);
+    return [];
+  }
+}
+
+/**
+ * Updates status of a report in Firestore
+ * @param {string} reportId
+ * @param {string} status
+ * @returns {Promise<boolean>}
+ */
+async function updateReportStatus(reportId, status) {
+  const db = getDb();
+  if (!db || !reportId) return false;
+
+  try {
+    await db.collection(COLLECTIONS.REPORTS).doc(reportId).update({
+      status,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return true;
+  } catch (error) {
+    handleDbError("updateReportStatus", error, reportId);
+    return false;
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  FRIEND CHAT & MESSAGE OPERATIONS
 // ═══════════════════════════════════════════════════════════════
@@ -689,5 +747,7 @@ module.exports = {
   deleteFriendChatMessage,
   // Report operations
   saveReport,
+  getRecentReports,
+  updateReportStatus,
   isFirebaseConfigured,
 };

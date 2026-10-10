@@ -11,8 +11,11 @@ const TARGET_BAN_THRESHOLD = 3;            // 3 total reports triggers ban
 
 // In-memory JavaScript Maps
 const bans = new Map();             // deviceHash -> banExpiresAt (epoch ms)
+const banMetadata = new Map();      // deviceHash -> { reason, bannedAt, durationMs }
 const reporterHistory = new Map();  // reporterHash -> Array of timestamp ms
 const targetFlags = new Map();      // targetHash -> Array of timestamp ms
+const recentReports = [];           // Ring buffer of recent reports (max 100)
+const MAX_RECENT_REPORTS = 100;
 
 /**
  * Check if a device is banned and return how many minutes are remaining.
@@ -60,6 +63,11 @@ function recordReport(reporterHash, targetHash) {
     if (history.length > REPORTER_MAX_REPORTS) {
       const banExpiresAt = now + BAN_DURATION_MS;
       bans.set(reporterHash, banExpiresAt);
+      banMetadata.set(reporterHash, {
+        reason: "Report button spam (>3 in 1m)",
+        bannedAt: now,
+        durationMs: BAN_DURATION_MS,
+      });
       return {
         reporterBanned: true,
         targetBanned: false,
@@ -67,6 +75,21 @@ function recordReport(reporterHash, targetHash) {
         minutesLeft: 15,
         reason: "reporter_spam",
       };
+    }
+  }
+
+  // Record into in-memory reports log
+  if (reporterHash && targetHash) {
+    recentReports.push({
+      reportId: "rep_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6),
+      reporterHash,
+      targetHash,
+      timestamp: now,
+      reason: "User flagged for inappropriate behavior",
+      status: "pending_review",
+    });
+    if (recentReports.length > MAX_RECENT_REPORTS) {
+      recentReports.shift();
     }
   }
 
@@ -82,6 +105,11 @@ function recordReport(reporterHash, targetHash) {
     if (flags.length >= TARGET_BAN_THRESHOLD) {
       const banExpiresAt = now + BAN_DURATION_MS;
       bans.set(targetHash, banExpiresAt);
+      banMetadata.set(targetHash, {
+        reason: `Exceeded community reports threshold (${TARGET_BAN_THRESHOLD} reports)`,
+        bannedAt: now,
+        durationMs: BAN_DURATION_MS,
+      });
       targetFlags.delete(targetHash); // Clear flags once ban is triggered
       return {
         reporterBanned: false,
@@ -109,9 +137,15 @@ function recordReport(reporterHash, targetHash) {
 /**
  * Helper to manually ban a device
  */
-function banDevice(deviceHash, durationMs = BAN_DURATION_MS) {
+function banDevice(deviceHash, durationMs = BAN_DURATION_MS, reason = "Manual admin suspension") {
   if (!deviceHash) return;
-  bans.set(deviceHash, Date.now() + durationMs);
+  const now = Date.now();
+  bans.set(deviceHash, now + durationMs);
+  banMetadata.set(deviceHash, {
+    reason,
+    bannedAt: now,
+    durationMs,
+  });
 }
 
 /**
@@ -120,6 +154,49 @@ function banDevice(deviceHash, durationMs = BAN_DURATION_MS) {
 function unbanDevice(deviceHash) {
   if (!deviceHash) return;
   bans.delete(deviceHash);
+  banMetadata.delete(deviceHash);
+}
+
+/**
+ * Return all currently active device bans with remaining minutes
+ */
+function getAllActiveBans() {
+  const list = [];
+  const now = Date.now();
+  for (const [deviceHash, expiresAt] of bans.entries()) {
+    if (expiresAt > now) {
+      const remainingMs = expiresAt - now;
+      const minutesLeft = Math.max(1, Math.ceil(remainingMs / 60000));
+      const meta = banMetadata.get(deviceHash) || {};
+      list.push({
+        deviceHash,
+        expiresAt,
+        minutesLeft,
+        reason: meta.reason || "Suspended by moderation policy",
+        bannedAt: meta.bannedAt || (now - (meta.durationMs || BAN_DURATION_MS) + remainingMs),
+      });
+    }
+  }
+  return list.sort((a, b) => b.expiresAt - a.expiresAt);
+}
+
+/**
+ * Return in-memory report entries
+ */
+function getInMemoryReports() {
+  return [...recentReports].reverse();
+}
+
+/**
+ * Update report status in memory
+ */
+function updateInMemoryReportStatus(reportId, status) {
+  const item = recentReports.find((r) => r.reportId === reportId);
+  if (item) {
+    item.status = status;
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -127,15 +204,20 @@ function unbanDevice(deviceHash) {
  */
 function clearAllReportsAndBans() {
   bans.clear();
+  banMetadata.clear();
   reporterHistory.clear();
   targetFlags.clear();
+  recentReports.length = 0;
 }
 
 // Periodic background memory sweep (prevents unbounded Map growth under 10k users)
 setInterval(() => {
   const now = Date.now();
   for (const [deviceHash, expiresAt] of bans.entries()) {
-    if (now >= expiresAt) bans.delete(deviceHash);
+    if (now >= expiresAt) {
+      bans.delete(deviceHash);
+      banMetadata.delete(deviceHash);
+    }
   }
   for (const [reporterHash, history] of reporterHistory.entries()) {
     const valid = history.filter((ts) => now - ts <= REPORTER_WINDOW_MS);
@@ -151,12 +233,16 @@ setInterval(() => {
 
 module.exports = {
   bans,
+  banMetadata,
   reporterHistory,
   targetFlags,
   isDeviceBanned,
   recordReport,
   banDevice,
   unbanDevice,
+  getAllActiveBans,
+  getInMemoryReports,
+  updateInMemoryReportStatus,
   clearAllReportsAndBans,
   BAN_DURATION_MS,
   REPORTER_WINDOW_MS,

@@ -285,6 +285,15 @@
     <button id="closeIabBannerBtn" class="iab-close-btn" type="button" aria-label="Dismiss banner">✕</button>
   </div>
 
+  <!-- ═══ REAL-TIME SYSTEM ANNOUNCEMENT BANNER ═══ -->
+  <div id="systemAnnouncementBanner" class="system-announcement-banner" style="display:none;" role="alert">
+    <div class="announcement-content">
+      <span class="announcement-icon" id="announcementIcon">📢</span>
+      <span id="announcementText" class="announcement-text"></span>
+    </div>
+    <button id="closeAnnouncementBtn" class="announcement-close" type="button" aria-label="Dismiss announcement">✕</button>
+  </div>
+
   <!-- ═══ SPLASH ═══ -->
   <div id="splashScreen" class="splash-screen">
     <div class="splash-logo">
@@ -318,8 +327,8 @@
 
     <!-- CONTENT -->
     <div class="landing-content">
-      <div class="logo-lockup">
-        <div class="logo-mark">
+      <div class="logo-lockup" id="landingLogoLockup" title="Ping">
+        <div class="logo-mark" id="landingLogoMark">
           <img src="/logo.svg" alt="Ping Logo" class="brand-logo-img" width="72" height="72" fetchpriority="high" />
         </div>
         <h1 class="logo-wordmark">
@@ -1161,6 +1170,723 @@
     <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
 
   </div><!-- /chatApp -->
+
+  <!-- ═══ ADMIN PASSWORD AUTHORIZATION MODAL ═══ -->
+  <div id="adminAuthModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
+    <div class="admin-auth-card">
+      <div class="admin-auth-glow" aria-hidden="true"></div>
+      <button id="closeAdminAuthBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      
+      <div class="admin-auth-header">
+        <div class="admin-shield-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h3 id="adminModalTitle" class="admin-auth-title">Ping Command Center</h3>
+        <p class="admin-auth-subtitle">Restricted administrative access. Enter master password.</p>
+      </div>
+
+      <form id="adminAuthForm" class="admin-auth-form" onsubmit="return false;">
+        <div class="admin-field-group">
+          <label for="adminPasswordInput" class="admin-label">Master Password</label>
+          <div class="admin-input-wrap">
+            <input 
+              type="password" 
+              id="adminPasswordInput" 
+              class="admin-input" 
+              placeholder="Enter admin password..." 
+              autocomplete="current-password"
+              required 
+            />
+            <button type="button" id="toggleAdminPasswordBtn" class="admin-eye-btn" title="Toggle password visibility">
+              <svg id="eyeIconSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="adminAuthError" class="admin-error-msg" style="display:none;"></div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelAdminAuthBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitAdminAuthBtn" class="btn-primary-admin">
+            <span>Authenticate</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ FULL-SCREEN ADMIN DASHBOARD ═══ -->
+  <div id="adminDashboardView" class="admin-dashboard-view" style="display:none;" role="region" aria-label="Admin Dashboard">
+    <div class="admin-header">
+      <div class="admin-brand-left">
+        <div class="admin-logo-mark">
+          <img src="/logo-mark.svg" alt="Ping" width="24" height="24" />
+        </div>
+        <div class="admin-brand-text-wrap">
+          <span class="admin-brand-title">Ping Admin</span>
+          <span class="admin-live-badge"><span class="admin-live-dot"></span> LIVE TELEMETRY</span>
+        </div>
+      </div>
+
+      <div class="admin-header-controls">
+        <div class="admin-pill-uptime" id="adminUptimeBadge" title="Server Uptime">
+          <span class="pill-icon">⏱</span>
+          <span id="adminUptimeText">Up: 0m</span>
+        </div>
+        <button id="adminSoundToggle" class="admin-pill-btn active" title="Toggle Sound Chime on Reports">
+          <span class="pill-icon">🔔</span>
+          <span id="adminSoundToggleText">Sound: ON</span>
+        </button>
+        <button id="adminExportBtn" class="admin-pill-btn" title="Download System Telemetry Snapshot (JSON)">
+          <span class="pill-icon">⬇</span>
+          <span>Backup JSON</span>
+        </button>
+        <button id="adminAutoRefreshToggle" class="admin-pill-btn active" title="Toggle Auto Refresh (3s)">
+          <span class="pill-dot"></span>
+          <span>Auto (3s)</span>
+        </button>
+        <button id="adminManualRefreshBtn" class="admin-icon-btn" title="Refresh Now">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <button id="exitAdminBtn" class="admin-exit-btn" title="Exit Admin Console">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Exit Admin</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-nav-tabs">
+      <button class="admin-tab-btn active" data-tab="overview" id="adminNavTabOverview">
+        <span class="tab-icon">📊</span>
+        <span>Overview</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="events" id="adminNavTabEvents">
+        <span class="tab-icon">⚡</span>
+        <span>Audit Stream</span>
+        <span class="admin-badge-count" id="adminEventsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="rooms" id="adminNavTabRooms">
+        <span class="tab-icon">💬</span>
+        <span>Live Chats</span>
+        <span class="admin-badge-count" id="adminRoomsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="bans" id="adminNavTabBans">
+        <span class="tab-icon">🛡️</span>
+        <span>Moderation & Bans</span>
+        <span class="admin-badge-count" id="adminBansBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="reports" id="adminNavTabReports">
+        <span class="tab-icon">🚨</span>
+        <span>Reports Feed</span>
+        <span class="admin-badge-count" id="adminReportsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="words" id="adminNavTabWords">
+        <span class="tab-icon">🔤</span>
+        <span>Word Filter</span>
+        <span class="admin-badge-count" id="adminWordsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="lookup" id="adminNavTabLookup">
+        <span class="tab-icon">🔍</span>
+        <span>User Lookup</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="broadcast" id="adminNavTabBroadcast">
+        <span class="tab-icon">📢</span>
+        <span>Broadcast</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="geo" id="adminNavTabGeo">
+        <span class="tab-icon">🌍</span>
+        <span>Traffic & Geo</span>
+      </button>
+    </div>
+
+    <!-- Tab Contents Container -->
+    <div class="admin-main-content">
+      <!-- 1. OVERVIEW TAB -->
+      <div id="adminTabOverview" class="admin-tab-panel active">
+        <div class="admin-stats-grid">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Online Sockets</span>
+              <span class="stat-icon-wrap cyan">👥</span>
+            </div>
+            <div class="stat-value" id="statOnlineUsers">0</div>
+            <div class="stat-sub">Active connections</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Active 1-on-1 Rooms</span>
+              <span class="stat-icon-wrap purple">💬</span>
+            </div>
+            <div class="stat-value" id="statActiveRooms">0</div>
+            <div class="stat-sub">Concurrent live sessions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Waiting Queue</span>
+              <span class="stat-icon-wrap yellow">⏳</span>
+            </div>
+            <div class="stat-value" id="statWaitingQueue">0</div>
+            <div class="stat-sub">Waiting for instant match</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Total Matches Made</span>
+              <span class="stat-icon-wrap green">🚀</span>
+            </div>
+            <div class="stat-value" id="statTotalMatches">0</div>
+            <div class="stat-sub">Cumulative matches</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Memory Allocation</span>
+              <span class="stat-icon-wrap pink">💾</span>
+            </div>
+            <div class="stat-value" id="statMemoryUsage">0 MB</div>
+            <div class="stat-sub" id="statMemoryDetails">Heap: 0 / 0 MB · RSS</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Active Bans</span>
+              <span class="stat-icon-wrap red">🚫</span>
+            </div>
+            <div class="stat-value" id="statActiveBansCount">0</div>
+            <div class="stat-sub">Devices restricted</div>
+          </div>
+        </div>
+
+        <!-- Real-Time Telemetry Sparklines (Zero-Lag Pure SVG) -->
+        <div class="admin-grid-2col" style="margin-bottom: 20px;">
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Matchmaking Velocity (Matches/min)</h4>
+              <span class="count-pill cyan" id="sparklineVelocityLabel">Real-time</span>
+            </div>
+            <div class="sparkline-container" id="sparklineVelocityWrap">
+              <svg id="svgMatchSparkline" class="sparkline-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path id="sparklineVelocityArea" fill="url(#gradCyan)" d="M0,70 L300,70 Z"/>
+                <polyline id="sparklineVelocityLine" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="0,50 300,50"/>
+              </svg>
+            </div>
+            <div class="sparkline-footer">
+              <span>5m window</span>
+              <span id="sparklineVelocityTrend">Tracking cadence...</span>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Active Sockets Trend</h4>
+              <span class="count-pill purple" id="sparklineSocketsLabel">Live</span>
+            </div>
+            <div class="sparkline-container" id="sparklineSocketsWrap">
+              <svg id="svgSocketsSparkline" class="sparkline-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#a855f7" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="#a855f7" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path id="sparklineSocketsArea" fill="url(#gradPurple)" d="M0,70 L300,70 Z"/>
+                <polyline id="sparklineSocketsLine" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="0,50 300,50"/>
+              </svg>
+            </div>
+            <div class="sparkline-footer">
+              <span>Sockets connected</span>
+              <span id="sparklineSocketsTrend">Online stability</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Infrastructure Status -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Cluster & Database Health</h4>
+              <span class="badge-status-ok">Operational</span>
+            </div>
+            <div class="infra-list">
+              <div class="infra-item">
+                <div class="infra-info">
+                  <strong>Distributed Redis State</strong>
+                  <span class="infra-desc">Sub-millisecond matchmaking & ephemeral store</span>
+                </div>
+                <span class="infra-badge" id="badgeRedisStatus">Checking...</span>
+              </div>
+              <div class="infra-item">
+                <div class="infra-info">
+                  <strong>Cloud Firestore</strong>
+                  <span class="infra-desc">Persistent user records, friendships, & reports</span>
+                </div>
+                <span class="infra-badge" id="badgeFirestoreStatus">Checking...</span>
+              </div>
+              <div class="infra-item">
+                <div class="infra-info">
+                  <strong>Node.js Runtime</strong>
+                  <span class="infra-desc" id="infraNodeDesc">v20+ · Linux</span>
+                </div>
+                <span class="infra-badge ok">Healthy</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Controls & System Switches -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Emergency Controls & Switches</h4>
+              <span class="count-pill" id="systemControlsStatusPill">Normal Mode</span>
+            </div>
+            <div class="system-switches-list">
+              <div class="switch-row-item">
+                <div>
+                  <strong>Matchmaking Kill Switch</strong>
+                  <p class="switch-desc">Pause user matching instantly for maintenance or load control</p>
+                </div>
+                <button id="adminToggleMatchmakingBtn" class="btn-switch active" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="matchmakingBtnText">MATCHING ACTIVE</span>
+                </button>
+              </div>
+
+              <div class="switch-row-item">
+                <div>
+                  <strong>Nearby Origin Matching</strong>
+                  <p class="switch-desc">Prioritize matching users from adjacent regions/countries</p>
+                </div>
+                <button id="adminToggleGeoBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="geoMatchBtnText">GLOBAL (OFF)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. REAL-TIME AUDIT STREAM TAB -->
+      <div id="adminTabEvents" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Real-Time Audit & Event Stream</h3>
+            <p class="panel-section-subtitle">Zero-lag platform event telemetry, matches, moderation, and alerts</p>
+          </div>
+          <div class="events-toolbar-actions">
+            <button class="btn-refresh-sm" id="clearEventsBtn" type="button">Clear Feed</button>
+            <button class="btn-refresh-sm active" id="toggleEventsAutoScrollBtn" type="button">Auto-Scroll: ON</button>
+          </div>
+        </div>
+
+        <div class="events-filter-bar">
+          <div class="events-pill-filters">
+            <button class="event-filter-pill active" data-type="all">All Events</button>
+            <button class="event-filter-pill" data-type="match">Matches</button>
+            <button class="event-filter-pill" data-type="ban">Bans & Suspensions</button>
+            <button class="event-filter-pill" data-type="report">Reports</button>
+            <button class="event-filter-pill" data-type="system">System & Broadcast</button>
+          </div>
+          <span class="events-count-note" id="eventsCountNote">Showing recent 50 events</span>
+        </div>
+
+        <div id="adminEventsContainer" class="admin-events-stream-list">
+          <!-- Real-time event cards inserted here -->
+        </div>
+      </div>
+
+      <!-- 3. LIVE CHATS TAB -->
+      <div id="adminTabRooms" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Active 1-on-1 Chat Rooms</h3>
+            <p class="panel-section-subtitle">Real-time inspector of ongoing ephemeral sessions</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <input type="text" id="searchRoomsInput" class="admin-filter-input" placeholder="🔍 Filter rooms by ID or user..." />
+            <button class="btn-refresh-sm" id="refreshRoomsBtn" type="button">Refresh Rooms</button>
+          </div>
+        </div>
+        <div id="adminRoomsContainer" class="admin-rooms-grid">
+          <!-- Room cards will be inserted here -->
+        </div>
+      </div>
+
+      <!-- 4. MODERATION & BANS TAB -->
+      <div id="adminTabBans" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Device Moderation & Bans</h3>
+            <p class="panel-section-subtitle">Enforce safety policies, manage suspensions, or lift restrictions</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <input type="text" id="searchBansInput" class="admin-filter-input" placeholder="🔍 Search device hash or reason..." />
+            <button class="btn-primary-sm" id="openManualBanModalBtn" type="button">+ Manual Ban</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Active Suspended Devices</h4>
+            <span class="count-pill" id="activeBansCountPill">0 active</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Device Identifier</th>
+                  <th>Remaining Time</th>
+                  <th>Reason / Policy Trigger</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminBansTableBody">
+                <!-- Ban rows inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. REPORTS TAB -->
+      <div id="adminTabReports" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User Reports & Moderation Queue</h3>
+            <p class="panel-section-subtitle">Investigate reported behavior and take immediate action</p>
+          </div>
+          <button class="btn-refresh-sm" id="refreshReportsBtn" type="button">Refresh Feed</button>
+        </div>
+
+        <div class="reports-filter-bar">
+          <input type="text" id="searchReportsInput" class="admin-filter-input" placeholder="🔍 Filter reports by target user or reason..." />
+          <div class="reports-status-pills">
+            <button class="report-filter-pill active" data-status="all">All</button>
+            <button class="report-filter-pill" data-status="pending">Pending</button>
+            <button class="report-filter-pill" data-status="reviewed">Reviewed</button>
+            <button class="report-filter-pill" data-status="dismissed">Dismissed</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Reporter</th>
+                  <th>Reported Target</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminReportsTableBody">
+                <!-- Report rows inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. WORD FILTER & BLACKLIST TAB -->
+      <div id="adminTabWords" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Automated Content Safety & Word Filter</h3>
+            <p class="panel-section-subtitle">Real-time phrase moderation sandbox, prohibited terms, and zero-restart filter sync</p>
+          </div>
+          <button class="btn-refresh-sm" id="refreshWordsBtn" type="button">Refresh Terms</button>
+        </div>
+
+        <div class="admin-stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">System Filter Rules</span>
+              <span class="stat-icon-wrap purple">🛡️</span>
+            </div>
+            <div class="stat-value" id="statTotalBlockedWords">0</div>
+            <div class="stat-sub">Active harmful terms</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Custom Dynamic Rules</span>
+              <span class="stat-icon-wrap cyan">✏️</span>
+            </div>
+            <div class="stat-value" id="statCustomWordsCount">0</div>
+            <div class="stat-sub">Admin additions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Violations Intercepted</span>
+              <span class="stat-icon-wrap pink">⚡</span>
+            </div>
+            <div class="stat-value" id="statSlurViolations">0</div>
+            <div class="stat-sub">Blocked pre-delivery</div>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Live Interactive Sandbox Tester -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Interactive Filter Sandbox Tester</h4>
+              <span class="count-pill cyan">Real-time Engine</span>
+            </div>
+            <p class="admin-desc-text">Test a sentence against multi-format obfuscation (leetspeak, spaced text, vertical text, phonetics):</p>
+            <div class="admin-field-group">
+              <textarea id="wordTestInput" class="admin-textarea" rows="2" placeholder="Type a message to test (e.g. 'I'm gonna kill this test' or a forbidden word)..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+              <button id="testWordBtn" class="btn-primary-admin" type="button" style="padding: 9px 18px; min-height: 38px;">Test Phrase</button>
+              <span id="testWordVerdict" class="badge-tag pending" style="display:none;">Testing...</span>
+            </div>
+            <div id="testWordDetails" class="test-word-details-box" style="display:none;"></div>
+          </div>
+
+          <!-- Add Prohibited Term Form -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Add Prohibited Term</h4>
+              <span class="count-pill">Instant Sync</span>
+            </div>
+            <form id="addWordForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="newWordInput" class="admin-label">Prohibited Word or Phrase</label>
+                <input type="text" id="newWordInput" class="admin-input" placeholder="e.g. predatory_term or spam_link" required />
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Policy Action on Match</label>
+                <div class="custom-word-meta">
+                  <span>Matches will trigger automatic chat block and 3-strike policy escalation.</span>
+                </div>
+              </div>
+              <button type="submit" id="addWordSubmitBtn" class="btn-primary-admin" style="width: 100%;">
+                + Add Prohibited Term
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Custom Active Blocklist Chips -->
+        <div class="admin-card" style="margin-top: 20px;">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Active Custom Blocklist Terms</h4>
+            <span class="count-pill" id="customWordsCountPill">0 custom</span>
+          </div>
+          <div id="customWordsChipsContainer" class="custom-words-chips-wrap">
+            <!-- Custom word chips inserted here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. USER & DEVICE LIVE INSPECTOR TAB -->
+      <div id="adminTabLookup" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User & Device Live Inspector</h3>
+            <p class="panel-section-subtitle">Real-time socket diagnostics, connection tracing, and 1-click administrative actions</p>
+          </div>
+        </div>
+
+        <div class="admin-card" style="margin-bottom: 20px;">
+          <form id="adminLookupForm" onsubmit="return false;" class="lookup-search-form">
+            <input 
+              type="text" 
+              id="lookupQueryInput" 
+              class="admin-input lookup-input" 
+              placeholder="Paste Device Hash (dh_...), User ID (u_...), or Socket ID..." 
+              required 
+            />
+            <button type="submit" id="adminLookupSubmitBtn" class="btn-primary-admin" style="min-width: 120px;">
+              <span>Investigate</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <div id="lookupResultCard" class="admin-card" style="display:none;">
+          <!-- Profile details populated dynamically -->
+        </div>
+      </div>
+
+      <!-- 8. BROADCAST TAB -->
+      <div id="adminTabBroadcast" class="admin-tab-panel">
+        <div class="admin-grid-2col">
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Compose Global Announcement</h4>
+            </div>
+
+            <!-- Quick Preset Templates -->
+            <div class="broadcast-presets-section">
+              <span class="broadcast-presets-title">Quick Preset Templates:</span>
+              <div class="broadcast-presets-grid">
+                <button type="button" class="preset-pill-btn" data-preset="maintenance">
+                  <span>⏱ Maintenance in 10m</span>
+                </button>
+                <button type="button" class="preset-pill-btn" data-preset="safety">
+                  <span>🛡️ Safety Notice</span>
+                </button>
+                <button type="button" class="preset-pill-btn" data-preset="healthy">
+                  <span>✨ Smooth Speed</span>
+                </button>
+                <button type="button" class="preset-pill-btn" data-preset="flash">
+                  <span>⚡ Flash Chat Hour</span>
+                </button>
+              </div>
+            </div>
+
+            <form id="adminBroadcastForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="broadcastMessageInput" class="admin-label">Announcement Message</label>
+                <textarea 
+                  id="broadcastMessageInput" 
+                  class="admin-textarea" 
+                  rows="3" 
+                  maxlength="300" 
+                  placeholder="e.g., Notice: Ping server maintenance in 10 minutes..." 
+                  required
+                ></textarea>
+                <div class="char-count-row"><span id="broadcastCharCount">0</span>/300 chars</div>
+              </div>
+
+              <div class="admin-field-group">
+                <label class="admin-label">Severity Level</label>
+                <div class="severity-picker">
+                  <label class="sev-radio">
+                    <input type="radio" name="broadcastLevel" value="info" checked />
+                    <span class="sev-tag info">ℹ️ Info (Cyan)</span>
+                  </label>
+                  <label class="sev-radio">
+                    <input type="radio" name="broadcastLevel" value="warning" />
+                    <span class="sev-tag warning">⚠️ Warning (Amber)</span>
+                  </label>
+                  <label class="sev-radio">
+                    <input type="radio" name="broadcastLevel" value="alert" />
+                    <span class="sev-tag alert">🚨 Urgent (Rose)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="broadcast-submit-row">
+                <button type="submit" id="sendBroadcastBtn" class="btn-primary-admin">
+                  <span>Send Broadcast to All Users</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Live Preview & Banner Testing</h4>
+            </div>
+            <p class="preview-label">How connected users will see it at the top of their screen:</p>
+            <div class="preview-banner-box">
+              <div class="preview-banner-inner info" id="broadcastPreviewBanner">
+                <span class="preview-icon">📢</span>
+                <span id="broadcastPreviewText">Your announcement message will appear here in real time...</span>
+              </div>
+            </div>
+            <div id="broadcastStatusMsg" class="broadcast-status-msg" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. TRAFFIC & GEO TAB -->
+      <div id="adminTabGeo" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Traffic & Geolocation Distribution</h3>
+            <p class="panel-section-subtitle">Real-time breakdown of connected users by origin</p>
+          </div>
+          <button class="btn-refresh-sm" id="refreshGeoBtn" type="button">Refresh Traffic</button>
+        </div>
+
+        <div class="admin-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Country / Location</th>
+                  <th>Connected Users</th>
+                  <th>Share of Traffic</th>
+                </tr>
+              </thead>
+              <tbody id="adminGeoTableBody">
+                <!-- Geo rows inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MANUAL BAN MODAL ═══ -->
+  <div id="adminManualBanModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="manualBanModalTitle">
+    <div class="admin-auth-card">
+      <button id="closeManualBanModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <h3 id="manualBanModalTitle" class="admin-auth-title">Add Manual Device Ban</h3>
+        <p class="admin-auth-subtitle">Restrict a device identifier from connecting or chatting</p>
+      </div>
+
+      <form id="adminManualBanForm" onsubmit="return false;">
+        <div class="admin-field-group">
+          <label for="banDeviceInput" class="admin-label">Device Identifier / Hash / User ID</label>
+          <input type="text" id="banDeviceInput" class="admin-input" placeholder="e.g., dh_abc123 or u_xyz" required />
+        </div>
+        <div class="admin-field-group">
+          <label for="banDurationSelect" class="admin-label">Ban Duration</label>
+          <select id="banDurationSelect" class="admin-select">
+            <option value="15">15 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="1440">24 Hours (1 Day)</option>
+            <option value="10080">7 Days</option>
+            <option value="43200">30 Days</option>
+            <option value="525600">Permanent (1 Year)</option>
+          </select>
+        </div>
+        <div class="admin-field-group">
+          <label for="banReasonInput" class="admin-label">Suspension Reason</label>
+          <input type="text" id="banReasonInput" class="admin-input" placeholder="e.g. Hate speech, solicitation, spamming" value="Manual administrator suspension" required />
+        </div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelManualBanBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitManualBanBtn" class="btn-primary-admin">Apply Ban</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script type="module" src="/firebase-client.js"></script>
   <script src="/socket.io/socket.io.js"></script>

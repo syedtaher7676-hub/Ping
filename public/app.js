@@ -5211,6 +5211,1571 @@ if (document.readyState === 'loading') {
   initIabBanner();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PING ADMIN DASHBOARD & EASTER EGG (10 CLICKS ON LOGO)
+// ═══════════════════════════════════════════════════════════════
+
+function initAdminModule() {
+  let adminLogoClicks = 0;
+  let adminClickTimeout = null;
+  let adminToken = null; // Always require authentication upon entering dashboard
+
+  let adminActiveTab = 'overview';
+  let adminPollingInterval = null;
+  let autoRefreshEnabled = true;
+
+  // DOM Elements
+  const adminAuthModal = $('adminAuthModal');
+  const closeAdminAuthBtn = $('closeAdminAuthBtn');
+  const cancelAdminAuthBtn = $('cancelAdminAuthBtn');
+  const adminAuthForm = $('adminAuthForm');
+  const adminPasswordInput = $('adminPasswordInput');
+  const toggleAdminPasswordBtn = $('toggleAdminPasswordBtn');
+  const adminAuthError = $('adminAuthError');
+  const adminClickCounterBadge = $('adminClickCounterBadge');
+  const adminDashboardView = $('adminDashboardView');
+  const exitAdminBtn = $('exitAdminBtn');
+  const adminAutoRefreshToggle = $('adminAutoRefreshToggle');
+  const adminManualRefreshBtn = $('adminManualRefreshBtn');
+  const adminUptimeText = $('adminUptimeText');
+
+  // Stats DOM
+  const statOnlineUsers = $('statOnlineUsers');
+  const statActiveRooms = $('statActiveRooms');
+  const statWaitingQueue = $('statWaitingQueue');
+  const statTotalMatches = $('statTotalMatches');
+  const statMemoryUsage = $('statMemoryUsage');
+  const statMemoryDetails = $('statMemoryDetails');
+  const statActiveBansCount = $('statActiveBansCount');
+  const badgeRedisStatus = $('badgeRedisStatus');
+  const badgeFirestoreStatus = $('badgeFirestoreStatus');
+  const infraNodeDesc = $('infraNodeDesc');
+
+  // Badge counts
+  const adminRoomsBadge = $('adminRoomsBadge');
+  const adminBansBadge = $('adminBansBadge');
+  const adminReportsBadge = $('adminReportsBadge');
+  const adminEventsBadge = $('adminEventsBadge');
+  const adminWordsBadge = $('adminWordsBadge');
+
+  // Header controls & sound
+  const adminSoundToggle = $('adminSoundToggle');
+  const adminSoundToggleText = $('adminSoundToggleText');
+  const adminExportBtn = $('adminExportBtn');
+  let soundAlertsEnabled = true;
+
+  // Sparklines DOM
+  const sparklineVelocityLine = $('sparklineVelocityLine');
+  const sparklineVelocityArea = $('sparklineVelocityArea');
+  const sparklineVelocityTrend = $('sparklineVelocityTrend');
+  const sparklineSocketsLine = $('sparklineSocketsLine');
+  const sparklineSocketsArea = $('sparklineSocketsArea');
+  const sparklineSocketsTrend = $('sparklineSocketsTrend');
+
+  // Emergency Switches DOM
+  const adminToggleMatchmakingBtn = $('adminToggleMatchmakingBtn');
+  const matchmakingBtnText = $('matchmakingBtnText');
+  const adminToggleGeoBtn = $('adminToggleGeoBtn');
+  const geoMatchBtnText = $('geoMatchBtnText');
+  const systemControlsStatusPill = $('systemControlsStatusPill');
+
+  // Real-time Audit Stream DOM
+  const adminEventsContainer = $('adminEventsContainer');
+  const clearEventsBtn = $('clearEventsBtn');
+  const toggleEventsAutoScrollBtn = $('toggleEventsAutoScrollBtn');
+  const eventsCountNote = $('eventsCountNote');
+  let eventsAutoScroll = true;
+  let currentEventFilter = 'all';
+  let cachedEventsList = [];
+
+  // Table Filter Inputs & Cache
+  const searchRoomsInput = $('searchRoomsInput');
+  const searchBansInput = $('searchBansInput');
+  const searchReportsInput = $('searchReportsInput');
+  let currentReportsFilter = 'all';
+  let cachedRoomsList = [];
+  let cachedBansList = [];
+  let cachedReportsList = [];
+
+  // Word Filter DOM
+  const statTotalBlockedWords = $('statTotalBlockedWords');
+  const statCustomWordsCount = $('statCustomWordsCount');
+  const statSlurViolations = $('statSlurViolations');
+  const wordTestInput = $('wordTestInput');
+  const testWordBtn = $('testWordBtn');
+  const testWordVerdict = $('testWordVerdict');
+  const testWordDetails = $('testWordDetails');
+  const addWordForm = $('addWordForm');
+  const newWordInput = $('newWordInput');
+  const customWordsChipsContainer = $('customWordsChipsContainer');
+  const customWordsCountPill = $('customWordsCountPill');
+  const refreshWordsBtn = $('refreshWordsBtn');
+
+  // User & Device Live Inspector DOM
+  const adminLookupForm = $('adminLookupForm');
+  const lookupQueryInput = $('lookupQueryInput');
+  const lookupResultCard = $('lookupResultCard');
+
+  // Tables / Containers
+  const adminRoomsContainer = $('adminRoomsContainer');
+  const adminBansTableBody = $('adminBansTableBody');
+  const adminReportsTableBody = $('adminReportsTableBody');
+  const adminGeoTableBody = $('adminGeoTableBody');
+  const activeBansCountPill = $('activeBansCountPill');
+
+  // Broadcast DOM
+  const adminBroadcastForm = $('adminBroadcastForm');
+  const broadcastMessageInput = $('broadcastMessageInput');
+  const broadcastCharCount = $('broadcastCharCount');
+  const broadcastPreviewText = $('broadcastPreviewText');
+  const broadcastPreviewBanner = $('broadcastPreviewBanner');
+  const broadcastStatusMsg = $('broadcastStatusMsg');
+
+  // Manual Ban Modal
+  const adminManualBanModal = $('adminManualBanModal');
+  const openManualBanModalBtn = $('openManualBanModalBtn');
+  const closeManualBanModalBtn = $('closeManualBanModalBtn');
+  const cancelManualBanBtn = $('cancelManualBanBtn');
+  const adminManualBanForm = $('adminManualBanForm');
+  const banDeviceInput = $('banDeviceInput');
+  const banDurationSelect = $('banDurationSelect');
+  const banReasonInput = $('banReasonInput');
+
+  // System Announcement Client Banner
+  const systemAnnouncementBanner = $('systemAnnouncementBanner');
+  const announcementText = $('announcementText');
+  const announcementIcon = $('announcementIcon');
+  const closeAnnouncementBtn = $('closeAnnouncementBtn');
+
+  // 1. Easter Egg: 15 Clicks/Taps on Ping Logo on Landing Page (discreet & silent)
+  let lastLogoTapTime = 0;
+  function handleLogoClick(e) {
+    if (landingPage && landingPage.style.display === 'none') {
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastLogoTapTime < 60) return; // Debounce touch+click synthetic events
+    lastLogoTapTime = now;
+
+    adminLogoClicks++;
+    clearTimeout(adminClickTimeout);
+
+    if (adminLogoClicks >= 15) {
+      adminLogoClicks = 0;
+      openAdminAuthModal();
+      return;
+    }
+
+    // Reset clicks after 5 seconds of inactivity
+    adminClickTimeout = setTimeout(() => {
+      adminLogoClicks = 0;
+    }, 5000);
+  }
+
+  // Bind to landing logo elements with touch support
+  const logoElements = [
+    $('landingLogoMark'),
+    $('landingLogoLockup'),
+    document.querySelector('.brand-logo-img'),
+    document.querySelector('.logo-mark'),
+    $('headerCenterLogo'),
+  ].filter(Boolean);
+
+  logoElements.forEach((el) => {
+    el.style.cursor = 'pointer';
+    el.style.touchAction = 'manipulation';
+    el.addEventListener('click', handleLogoClick);
+    el.addEventListener('touchend', handleLogoClick, { passive: true });
+  });
+
+  // 2. Open / Close Admin Password Modal
+  function openAdminAuthModal() {
+    if (adminAuthModal) {
+      adminAuthModal.style.display = 'flex';
+      if (adminAuthError) adminAuthError.style.display = 'none';
+      if (adminPasswordInput) {
+        adminPasswordInput.value = '';
+        setTimeout(() => adminPasswordInput.focus(), 150);
+      }
+    }
+  }
+
+  function closeAdminAuthModal() {
+    if (adminAuthModal) adminAuthModal.style.display = 'none';
+    if (adminAuthError) adminAuthError.style.display = 'none';
+    if (adminPasswordInput) adminPasswordInput.value = '';
+  }
+
+  closeAdminAuthBtn?.addEventListener('click', closeAdminAuthModal);
+  cancelAdminAuthBtn?.addEventListener('click', closeAdminAuthModal);
+
+  // Toggle password visibility
+  toggleAdminPasswordBtn?.addEventListener('click', () => {
+    if (!adminPasswordInput) return;
+    const isPass = adminPasswordInput.type === 'password';
+    adminPasswordInput.type = isPass ? 'text' : 'password';
+  });
+
+  // 3. Submit Admin Password Authentication
+  adminAuthForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = adminPasswordInput?.value?.trim();
+    if (!password) return;
+
+    if (adminAuthError) adminAuthError.style.display = 'none';
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success && data.token) {
+        adminToken = data.token;
+        try {
+          sessionStorage.setItem('ping_admin_token', adminToken);
+        } catch (_) {}
+        closeAdminAuthModal();
+        openAdminDashboard();
+        if (typeof showToast === 'function') {
+          showToast('✅ Admin authorization verified. Welcome to Command Center.');
+        }
+      } else {
+        if (adminAuthError) {
+          adminAuthError.textContent = data.error || 'Incorrect admin password.';
+          adminAuthError.style.display = 'block';
+        }
+      }
+    } catch (err) {
+      if (adminAuthError) {
+        adminAuthError.textContent = 'Server connection failed. Please try again.';
+        adminAuthError.style.display = 'block';
+      }
+    }
+  });
+
+  // 4. Open / Exit Admin Dashboard View
+  function openAdminDashboard() {
+    if (!adminDashboardView) return;
+    adminDashboardView.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    startAdminPolling();
+    refreshAllAdminData();
+  }
+
+  function closeAdminDashboard() {
+    if (!adminDashboardView) return;
+    adminDashboardView.style.display = 'none';
+    document.body.style.overflow = '';
+    stopAdminPolling();
+
+    // Invalidate token on server (fire-and-forget)
+    if (adminToken) {
+      try {
+        fetch(`${backendUrl}/api/admin/logout`, {
+          method: 'POST',
+          headers: authHeaders(),
+        }).catch(() => {});
+      } catch (_) {}
+    }
+
+    // Clear session token so re-entering requires password again
+    adminToken = null;
+    try {
+      sessionStorage.removeItem('ping_admin_token');
+    } catch (_) {}
+
+    if (adminPasswordInput) {
+      adminPasswordInput.value = '';
+    }
+    if (adminAuthError) {
+      adminAuthError.style.display = 'none';
+    }
+  }
+
+  exitAdminBtn?.addEventListener('click', closeAdminDashboard);
+
+  // 5. Admin Navigation Tabs
+  const tabButtons = document.querySelectorAll('.admin-tab-btn');
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetTab = btn.getAttribute('data-tab');
+      if (!targetTab) return;
+      switchAdminTab(targetTab);
+    });
+  });
+
+  function switchAdminTab(tabKey) {
+    adminActiveTab = tabKey;
+    tabButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tabKey);
+    });
+    document.querySelectorAll('.admin-tab-panel').forEach((panel) => {
+      panel.classList.remove('active');
+    });
+
+    const activePanel = document.getElementById(`adminTab${capitalize(tabKey)}`);
+    if (activePanel) {
+      activePanel.classList.add('active');
+    }
+
+    refreshTabSpecificData(tabKey);
+  }
+
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // Quick Action Buttons
+  $('qaGoBroadcastBtn')?.addEventListener('click', () => switchAdminTab('broadcast'));
+  $('qaGoRoomsBtn')?.addEventListener('click', () => switchAdminTab('rooms'));
+  $('qaGoBansBtn')?.addEventListener('click', () => switchAdminTab('bans'));
+
+  // 6. Polling & Data Fetching
+  function startAdminPolling() {
+    stopAdminPolling();
+    if (autoRefreshEnabled) {
+      adminPollingInterval = setInterval(() => {
+        if (adminDashboardView && adminDashboardView.style.display !== 'none') {
+          refreshAllAdminData();
+        }
+      }, 3000);
+    }
+  }
+
+  function stopAdminPolling() {
+    if (adminPollingInterval) {
+      clearInterval(adminPollingInterval);
+      adminPollingInterval = null;
+    }
+  }
+
+  adminAutoRefreshToggle?.addEventListener('click', () => {
+    autoRefreshEnabled = !autoRefreshEnabled;
+    adminAutoRefreshToggle.classList.toggle('active', autoRefreshEnabled);
+    if (autoRefreshEnabled) {
+      startAdminPolling();
+    } else {
+      stopAdminPolling();
+    }
+  });
+
+  adminManualRefreshBtn?.addEventListener('click', () => {
+    refreshAllAdminData();
+    if (typeof showToast === 'function') {
+      showToast('🔄 Telemetry refreshed');
+    }
+  });
+
+  $('refreshRoomsBtn')?.addEventListener('click', fetchActiveRooms);
+  $('refreshReportsBtn')?.addEventListener('click', fetchReportsFeed);
+  $('refreshGeoBtn')?.addEventListener('click', fetchGeoData);
+
+  function authHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${adminToken}`,
+    };
+  }
+
+  async function checkAuthFailure(res) {
+    if (res.status === 401) {
+      try {
+        sessionStorage.removeItem('ping_admin_token');
+      } catch (_) {}
+      adminToken = null;
+      closeAdminDashboard();
+      openAdminAuthModal();
+      return true;
+    }
+    return false;
+  }
+
+  // Synthesized notification audio chime (Zero network load, pure Web Audio API oscillator)
+  let audioCtx = null;
+  function playNotificationChime() {
+    if (!soundAlertsEnabled) return;
+    try {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.32);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.33);
+    } catch (_) {}
+  }
+
+  // Pure SVG Sparkline Renderer (Zero-Lag, 60fps, 0ms compute)
+  function renderSparklines(samples = []) {
+    if (!samples || samples.length < 2) return;
+    const width = 300;
+    const height = 70;
+
+    // 1. Matches / Rooms velocity curve
+    const roomVals = samples.map((s) => s.rooms || 0);
+    const maxRooms = Math.max(...roomVals, 4);
+    const minRooms = Math.min(...roomVals, 0);
+    const rangeR = maxRooms - minRooms || 1;
+
+    const pointsR = roomVals
+      .map((val, idx) => {
+        const x = Math.round((idx / (roomVals.length - 1)) * width);
+        const y = Math.round(height - 10 - ((val - minRooms) / rangeR) * (height - 20));
+        return `${x},${y}`;
+      })
+      .join(' ');
+
+    if (sparklineVelocityLine) sparklineVelocityLine.setAttribute('points', pointsR);
+    if (sparklineVelocityArea && pointsR) {
+      sparklineVelocityArea.setAttribute('d', `M${pointsR.split(' ')[0]} L${pointsR.replace(/ /g, ' L')} L${width},${height} L0,${height} Z`);
+    }
+    if (sparklineVelocityTrend) {
+      const last = roomVals[roomVals.length - 1];
+      const prev = roomVals[0];
+      const diff = last - prev;
+      sparklineVelocityTrend.textContent = diff > 0 ? `▲ +${diff} active` : (diff < 0 ? `▼ ${diff} active` : `Steady cadence`);
+    }
+
+    // 2. Connected Sockets trend curve
+    const onlineVals = samples.map((s) => s.online || 0);
+    const maxOnline = Math.max(...onlineVals, 4);
+    const minOnline = Math.min(...onlineVals, 0);
+    const rangeO = maxOnline - minOnline || 1;
+
+    const pointsO = onlineVals
+      .map((val, idx) => {
+        const x = Math.round((idx / (onlineVals.length - 1)) * width);
+        const y = Math.round(height - 10 - ((val - minOnline) / rangeO) * (height - 20));
+        return `${x},${y}`;
+      })
+      .join(' ');
+
+    if (sparklineSocketsLine) sparklineSocketsLine.setAttribute('points', pointsO);
+    if (sparklineSocketsArea && pointsO) {
+      sparklineSocketsArea.setAttribute('d', `M${pointsO.split(' ')[0]} L${pointsO.replace(/ /g, ' L')} L${width},${height} L0,${height} Z`);
+    }
+    if (sparklineSocketsTrend) {
+      const lastO = onlineVals[onlineVals.length - 1];
+      sparklineSocketsTrend.textContent = `${lastO} active sockets`;
+    }
+  }
+
+  async function refreshAllAdminData() {
+    if (!adminToken) return;
+    await fetchOverviewStats();
+    if (adminActiveTab === 'events') fetchAdminEvents();
+    else if (adminActiveTab === 'rooms') fetchActiveRooms();
+    else if (adminActiveTab === 'bans') fetchActiveBans();
+    else if (adminActiveTab === 'reports') fetchReportsFeed();
+    else if (adminActiveTab === 'words') fetchWordFilterData();
+    else if (adminActiveTab === 'geo') fetchGeoData();
+  }
+
+  function refreshTabSpecificData(tabKey) {
+    if (tabKey === 'overview') fetchOverviewStats();
+    else if (tabKey === 'events') fetchAdminEvents();
+    else if (tabKey === 'rooms') fetchActiveRooms();
+    else if (tabKey === 'bans') fetchActiveBans();
+    else if (tabKey === 'reports') fetchReportsFeed();
+    else if (tabKey === 'words') fetchWordFilterData();
+    else if (tabKey === 'geo') fetchGeoData();
+  }
+
+  // 7. Overview Telemetry Fetcher
+  async function fetchOverviewStats() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/overview`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      if (statOnlineUsers) statOnlineUsers.textContent = data.onlineUsers;
+      if (statActiveRooms) statActiveRooms.textContent = data.activeRooms;
+      if (statWaitingQueue) statWaitingQueue.textContent = data.waitingQueue;
+      if (statTotalMatches) statTotalMatches.textContent = data.totalMatches;
+      if (statActiveBansCount) statActiveBansCount.textContent = data.bansCount;
+
+      if (adminRoomsBadge) adminRoomsBadge.textContent = data.activeRooms;
+      if (adminBansBadge) adminBansBadge.textContent = data.bansCount;
+      if (adminEventsBadge) adminEventsBadge.textContent = data.eventsCount || 0;
+      if (adminWordsBadge && data.slurStats) {
+        adminWordsBadge.textContent = data.slurStats.totalViolations || 0;
+      }
+
+      // Sparklines rendering
+      if (data.sparkline) {
+        renderSparklines(data.sparkline);
+      }
+
+      // Emergency switches state sync
+      if (data.matchmakingSettings) {
+        const isPaused = !!data.matchmakingSettings.isMatchmakingPaused;
+        if (adminToggleMatchmakingBtn && matchmakingBtnText) {
+          adminToggleMatchmakingBtn.className = `btn-switch ${isPaused ? 'paused' : 'active'}`;
+          matchmakingBtnText.textContent = isPaused ? 'MATCHING PAUSED' : 'MATCHING ACTIVE';
+        }
+        const isGeoOn = !!data.matchmakingSettings.geoPreferenceEnabled;
+        if (adminToggleGeoBtn && geoMatchBtnText) {
+          adminToggleGeoBtn.className = `btn-switch ${isGeoOn ? 'active' : ''}`;
+          geoMatchBtnText.textContent = isGeoOn ? 'NEARBY (ON)' : 'GLOBAL (OFF)';
+        }
+        if (systemControlsStatusPill) {
+          systemControlsStatusPill.textContent = isPaused ? 'Paused Mode' : 'Normal Mode';
+          systemControlsStatusPill.className = `count-pill ${isPaused ? 'pink' : ''}`;
+        }
+      }
+
+      if (statMemoryUsage && data.memory) {
+        statMemoryUsage.textContent = `${data.memory.rssMb} MB`;
+        if (statMemoryDetails) {
+          statMemoryDetails.textContent = `Heap: ${data.memory.heapUsedMb} / ${data.memory.heapTotalMb} MB · RSS`;
+        }
+      }
+
+      if (adminUptimeText && typeof data.uptimeSeconds === 'number') {
+        const u = data.uptimeSeconds;
+        const h = Math.floor(u / 3600);
+        const m = Math.floor((u % 3600) / 60);
+        const s = u % 60;
+        adminUptimeText.textContent = `Up: ${h}h ${m}m ${s}s`;
+      }
+
+      if (badgeRedisStatus) {
+        const isConn = data.redisStatus === 'connected';
+        badgeRedisStatus.textContent = isConn ? 'Cluster Connected' : 'In-Memory (Fail-open)';
+        badgeRedisStatus.className = `infra-badge ${isConn ? 'ok' : 'warn'}`;
+      }
+
+      if (badgeFirestoreStatus) {
+        const isConn = data.firestoreStatus === 'connected';
+        badgeFirestoreStatus.textContent = isConn ? 'Cloud Connected' : 'Ready (In-Memory)';
+        badgeFirestoreStatus.className = `infra-badge ${isConn ? 'ok' : 'ok'}`;
+      }
+
+      if (infraNodeDesc) {
+        infraNodeDesc.textContent = `${data.nodeVersion || 'v20+'} · ${data.platform || 'Linux'}`;
+      }
+    } catch (_) {}
+  }
+
+  // 8. Real-Time Audit & Event Stream
+  async function fetchAdminEvents() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/events`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      cachedEventsList = data.events || [];
+      if (adminEventsBadge) adminEventsBadge.textContent = cachedEventsList.length;
+      renderEventsList();
+    } catch (_) {}
+  }
+
+  function renderEventsList() {
+    if (!adminEventsContainer) return;
+    const filtered = currentEventFilter === 'all'
+      ? cachedEventsList
+      : cachedEventsList.filter((e) => e.type === currentEventFilter);
+
+    if (eventsCountNote) {
+      eventsCountNote.textContent = `Showing ${filtered.length} of ${cachedEventsList.length} events`;
+    }
+
+    if (filtered.length === 0) {
+      adminEventsContainer.innerHTML = `
+        <div class="empty-state-card" style="padding: 30px;">
+          <span class="empty-icon">⚡</span>
+          <strong>No Events Recorded In This Category</strong>
+          <span>Live platform activity and moderation audit logs will appear here.</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Keep DOM rendering fast: only render top 50 items
+    const displayList = filtered.slice(0, 50);
+
+    adminEventsContainer.innerHTML = displayList
+      .map((e) => {
+        const timeStr = e.timestamp ? new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+        const lvl = e.level || 'info';
+        const typeClass = e.type || 'system';
+
+        return `
+          <div class="admin-event-card ${lvl}">
+            <span class="event-type-badge ${typeClass}">${e.type || 'event'}</span>
+            <div class="event-details-wrap">
+              <div class="event-title-row">
+                <span class="event-title-text">${e.title || 'Event'}</span>
+                <span class="event-time-stamp">${timeStr}</span>
+              </div>
+              <div class="event-message-text">${e.detail || ''}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    if (eventsAutoScroll) {
+      adminEventsContainer.scrollTop = 0;
+    }
+  }
+
+  // Event stream listeners
+  clearEventsBtn?.addEventListener('click', async () => {
+    try {
+      await fetch(`${backendUrl}/api/admin/events/clear`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      cachedEventsList = [];
+      if (adminEventsBadge) adminEventsBadge.textContent = '0';
+      renderEventsList();
+      if (typeof showToast === 'function') showToast('Audit feed cleared.');
+    } catch (_) {}
+  });
+
+  toggleEventsAutoScrollBtn?.addEventListener('click', () => {
+    eventsAutoScroll = !eventsAutoScroll;
+    toggleEventsAutoScrollBtn.textContent = `Auto-Scroll: ${eventsAutoScroll ? 'ON' : 'OFF'}`;
+    toggleEventsAutoScrollBtn.classList.toggle('active', eventsAutoScroll);
+  });
+
+  document.querySelectorAll('.event-filter-pill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.event-filter-pill').forEach((p) => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentEventFilter = pill.getAttribute('data-type') || 'all';
+      renderEventsList();
+    });
+  });
+
+  // Real-time listener for incoming admin events
+  if (socket) {
+    socket.on('admin_live_event', (evt) => {
+      if (!evt) return;
+      cachedEventsList.unshift(evt);
+      if (cachedEventsList.length > 100) cachedEventsList.pop();
+      if (adminEventsBadge) adminEventsBadge.textContent = cachedEventsList.length;
+
+      if (adminActiveTab === 'events' && adminDashboardView?.style.display !== 'none') {
+        renderEventsList();
+      }
+    });
+  }
+
+  // 9. Live Rooms Inspector with Instant Search
+  async function fetchActiveRooms() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/rooms`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      cachedRoomsList = data.rooms || [];
+      if (adminRoomsBadge) adminRoomsBadge.textContent = cachedRoomsList.length;
+      renderRoomsList();
+    } catch (_) {}
+  }
+
+  function renderRoomsList() {
+    if (!adminRoomsContainer) return;
+    const query = (searchRoomsInput?.value || '').trim().toLowerCase();
+    const rooms = query
+      ? cachedRoomsList.filter((r) => {
+          const uA = (r.users?.[0]?.userId || '').toLowerCase();
+          const uB = (r.users?.[1]?.userId || '').toLowerCase();
+          const rId = (r.roomId || '').toLowerCase();
+          return rId.includes(query) || uA.includes(query) || uB.includes(query);
+        })
+      : cachedRoomsList;
+
+    if (rooms.length === 0) {
+      adminRoomsContainer.innerHTML = `
+        <div class="empty-state-card" style="grid-column: 1 / -1;">
+          <span class="empty-icon">💬</span>
+          <strong>No Active Conversations Matching</strong>
+          <span>${query ? `No rooms matching "${query}"` : 'When anonymous users are matched into ephemeral rooms, they will show up here live.'}</span>
+        </div>
+      `;
+      return;
+    }
+
+    adminRoomsContainer.innerHTML = rooms
+      .map((rm) => {
+        const uA = rm.users?.[0] || { userId: 'Unknown', country: '🌐 Anonymous' };
+        const uB = rm.users?.[1] || { userId: 'Unknown', country: '🌐 Anonymous' };
+        const elapsedM = Math.floor((rm.elapsedSeconds || 0) / 60);
+        const elapsedS = (rm.elapsedSeconds || 0) % 60;
+        const timeStr = `${elapsedM}:${elapsedS < 10 ? '0' : ''}${elapsedS}`;
+
+        return `
+          <div class="admin-room-card" data-room-id="${rm.roomId}">
+            <div class="room-card-head">
+              <span class="room-id-pill">${rm.roomId}</span>
+              <div class="room-duration">
+                <span>⏱</span>
+                <span>${timeStr}</span>
+                ${rm.isFlash ? '<span class="badge-tag warning">⚡ Flash</span>' : ''}
+              </div>
+            </div>
+            <div class="room-participants-flow">
+              <div class="room-user-info">
+                <span class="room-user-uid">${uA.userId}</span>
+                <span class="room-user-country">${uA.country}</span>
+              </div>
+              <div class="room-exchange-icon">⇄</div>
+              <div class="room-user-info" style="text-align:right;">
+                <span class="room-user-uid">${uB.userId}</span>
+                <span class="room-user-country">${uB.country}</span>
+              </div>
+            </div>
+            <div class="room-card-actions">
+              <span style="font-size:0.75rem; color:var(--t-ghost);">Messages: ${rm.messageCount || 0}</span>
+              <button class="btn-terminate-room" data-action="terminate-room" data-room="${rm.roomId}">
+                Force Terminate
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    adminRoomsContainer.querySelectorAll('[data-action="terminate-room"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const rId = btn.getAttribute('data-room');
+        if (!rId) return;
+        if (!confirm(`Are you sure you want to forcefully terminate room ${rId}?`)) return;
+
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/terminate-room`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ roomId: rId }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            if (typeof showToast === 'function') showToast(`Room ${rId} terminated.`);
+            fetchActiveRooms();
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
+  searchRoomsInput?.addEventListener('input', () => {
+    renderRoomsList();
+  });
+
+  // 10. Bans & Moderation with Instant Search
+  async function fetchActiveBans() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/bans`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      cachedBansList = data.bans || [];
+      if (adminBansBadge) adminBansBadge.textContent = cachedBansList.length;
+      if (activeBansCountPill) activeBansCountPill.textContent = `${cachedBansList.length} active`;
+      renderBansTable();
+    } catch (_) {}
+  }
+
+  function renderBansTable() {
+    if (!adminBansTableBody) return;
+    const query = (searchBansInput?.value || '').trim().toLowerCase();
+    const bans = query
+      ? cachedBansList.filter((b) => {
+          return (
+            (b.deviceHash || '').toLowerCase().includes(query) ||
+            (b.reason || '').toLowerCase().includes(query)
+          );
+        })
+      : cachedBansList;
+
+    if (bans.length === 0) {
+      adminBansTableBody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align:center; padding:30px; color:var(--t-ghost);">
+            🛡️ ${query ? `No suspended devices matching "${query}"` : 'No devices are currently banned. Platform is operating normally.'}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    adminBansTableBody.innerHTML = bans
+      .map(
+        (b) => `
+        <tr>
+          <td><code style="color:var(--purple-ll); font-size:0.8rem;">${b.deviceHash}</code></td>
+          <td><span class="badge-tag pending">⏳ ${b.minutesLeft}m left</span></td>
+          <td style="font-size:0.82rem;">${b.reason || 'Violation'}</td>
+          <td>
+            <button class="btn-table-action success" data-action="unban" data-target="${b.deviceHash}">
+              Lift Ban
+            </button>
+          </td>
+        </tr>
+      `
+      )
+      .join('');
+
+    adminBansTableBody.querySelectorAll('[data-action="unban"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const target = btn.getAttribute('data-target');
+        if (!target) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/bans/remove`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ deviceHash: target }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            if (typeof showToast === 'function') showToast(`Device ${target} unbanned.`);
+            fetchActiveBans();
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
+  searchBansInput?.addEventListener('input', () => {
+    renderBansTable();
+  });
+
+  // Manual Ban Modal Controls
+  openManualBanModalBtn?.addEventListener('click', () => {
+    if (adminManualBanModal) {
+      adminManualBanModal.style.display = 'flex';
+      if (banDeviceInput) {
+        banDeviceInput.value = '';
+        setTimeout(() => banDeviceInput.focus(), 100);
+      }
+    }
+  });
+
+  function closeManualBanModal() {
+    if (adminManualBanModal) adminManualBanModal.style.display = 'none';
+  }
+
+  closeManualBanModalBtn?.addEventListener('click', closeManualBanModal);
+  cancelManualBanBtn?.addEventListener('click', closeManualBanModal);
+
+  adminManualBanForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const deviceHash = banDeviceInput?.value?.trim();
+    const durationMinutes = Number(banDurationSelect?.value) || 15;
+    const reason = banReasonInput?.value?.trim() || 'Manual administrator suspension';
+
+    if (!deviceHash) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ deviceHash, durationMinutes, reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeManualBanModal();
+        if (typeof showToast === 'function') showToast(`Device ${deviceHash} suspended for ${durationMinutes}m.`);
+        fetchActiveBans();
+      }
+    } catch (_) {}
+  });
+
+  // 11. Reports Feed with Chime & Status Filter
+  let previousReportsCount = 0;
+  async function fetchReportsFeed() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/reports`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      const reports = data.reports || [];
+      if (reports.length > previousReportsCount && previousReportsCount > 0) {
+        playNotificationChime();
+        if (typeof showToast === 'function') showToast('🚨 New user report received!');
+      }
+      previousReportsCount = reports.length;
+
+      cachedReportsList = reports;
+      if (adminReportsBadge) adminReportsBadge.textContent = cachedReportsList.length;
+      renderReportsTable();
+    } catch (_) {}
+  }
+
+  function renderReportsTable() {
+    if (!adminReportsTableBody) return;
+    const query = (searchReportsInput?.value || '').trim().toLowerCase();
+
+    let reports = cachedReportsList;
+    if (currentReportsFilter !== 'all') {
+      reports = reports.filter((r) => (r.status || 'pending').toLowerCase() === currentReportsFilter);
+    }
+    if (query) {
+      reports = reports.filter((r) => {
+        return (
+          (r.reporterId || '').toLowerCase().includes(query) ||
+          (r.reportedUserId || '').toLowerCase().includes(query) ||
+          (r.reason || '').toLowerCase().includes(query)
+        );
+      });
+    }
+
+    if (reports.length === 0) {
+      adminReportsTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; padding:30px; color:var(--t-ghost);">
+            🚨 No moderation reports found matching this criteria.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    adminReportsTableBody.innerHTML = reports
+      .map((r) => {
+        const timeStr = r.createdAt ? new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently';
+        const stClass = r.status === 'reviewed' ? 'reviewed' : (r.status === 'dismissed' ? 'dismissed' : 'pending');
+
+        return `
+          <tr>
+            <td style="font-size:0.75rem; color:var(--t-ghost);">${timeStr}</td>
+            <td><code style="font-size:0.76rem; color:var(--t-med);">${r.reporterId || 'Anonymous'}</code></td>
+            <td><code style="font-size:0.76rem; color:#f87171;">${r.reportedUserId || 'Anonymous'}</code></td>
+            <td style="font-size:0.8rem; max-width:200px;">${r.reason || 'Flagged behavior'}</td>
+            <td><span class="badge-tag ${stClass}">${r.status || 'pending'}</span></td>
+            <td>
+              <div class="action-btns-cell">
+                <button class="btn-table-action danger" data-action="ban-target" data-target="${r.reportedUserId}" title="Ban reported user for 15 minutes">
+                  Ban Target
+                </button>
+                <button class="btn-table-action success" data-action="review-report" data-id="${r.reportId}" title="Mark as reviewed">
+                  ✓ Reviewed
+                </button>
+                <button class="btn-table-action" data-action="dismiss-report" data-id="${r.reportId}" title="Dismiss">
+                  Dismiss
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    adminReportsTableBody.querySelectorAll('[data-action="ban-target"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const target = btn.getAttribute('data-target');
+        if (!target) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ deviceHash: target, durationMinutes: 15, reason: 'Reported community violation' }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            if (typeof showToast === 'function') showToast(`Target ${target} suspended for 15 minutes.`);
+            fetchActiveBans();
+          }
+        } catch (_) {}
+      });
+    });
+
+    adminReportsTableBody.querySelectorAll('[data-action="review-report"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const repId = btn.getAttribute('data-id');
+        if (!repId) return;
+        await updateReportStatus(repId, 'reviewed');
+      });
+    });
+
+    adminReportsTableBody.querySelectorAll('[data-action="dismiss-report"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const repId = btn.getAttribute('data-id');
+        if (!repId) return;
+        await updateReportStatus(repId, 'dismissed');
+      });
+    });
+  }
+
+  searchReportsInput?.addEventListener('input', () => {
+    renderReportsTable();
+  });
+
+  document.querySelectorAll('.report-filter-pill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.report-filter-pill').forEach((p) => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentReportsFilter = pill.getAttribute('data-status') || 'all';
+      renderReportsTable();
+    });
+  });
+
+  async function updateReportStatus(reportId, status) {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/reports/update-status`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ reportId, status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchReportsFeed();
+      }
+    } catch (_) {}
+  }
+
+  // 12. Word Filter & Safety Manager
+  async function fetchWordFilterData() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/words`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      if (statTotalBlockedWords) statTotalBlockedWords.textContent = data.totalBlocked || 0;
+      if (statCustomWordsCount) statCustomWordsCount.textContent = (data.customWords || []).length;
+      if (customWordsCountPill) customWordsCountPill.textContent = `${(data.customWords || []).length} custom`;
+      if (statSlurViolations && data.stats) statSlurViolations.textContent = data.stats.totalViolations || 0;
+
+      renderCustomWordsChips(data.customWords || []);
+    } catch (_) {}
+  }
+
+  function renderCustomWordsChips(words = []) {
+    if (!customWordsChipsContainer) return;
+    if (words.length === 0) {
+      customWordsChipsContainer.innerHTML = `
+        <span style="font-size:0.78rem; color:var(--t-ghost); padding: 8px 0;">
+          No custom terms added yet. System filter rules are active.
+        </span>
+      `;
+      return;
+    }
+
+    customWordsChipsContainer.innerHTML = words
+      .map((w) => `
+        <span class="word-chip-pill">
+          <span>${w}</span>
+          <button class="word-chip-delete" data-action="remove-word" data-word="${w}" title="Remove rule">✕</button>
+        </span>
+      `)
+      .join('');
+
+    customWordsChipsContainer.querySelectorAll('[data-action="remove-word"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const w = btn.getAttribute('data-word');
+        if (!w) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/words/remove`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ word: w }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            if (typeof showToast === 'function') showToast(`Word "${w}" removed.`);
+            fetchWordFilterData();
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
+  refreshWordsBtn?.addEventListener('click', fetchWordFilterData);
+
+  testWordBtn?.addEventListener('click', async () => {
+    const text = wordTestInput?.value?.trim();
+    if (!text) return;
+
+    if (testWordVerdict) {
+      testWordVerdict.style.display = 'inline-block';
+      testWordVerdict.className = 'badge-tag pending';
+      testWordVerdict.textContent = 'Testing...';
+    }
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/words/test`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+
+      if (data.success && testWordVerdict) {
+        if (data.hasSlur) {
+          testWordVerdict.className = 'badge-tag rejected';
+          testWordVerdict.textContent = `🚨 BLOCKED: ${data.category || 'Violation'}`;
+          if (testWordDetails) {
+            testWordDetails.style.display = 'block';
+            testWordDetails.innerHTML = `
+              <strong style="color:#f87171;">Pattern Detected:</strong> <code>${(data.matchedWords || []).join(', ') || 'Obfuscated term'}</code><br/>
+              <span style="color:var(--t-low);">Policy Enforcement: Message blocked pre-send + automated 3-strike escalation.</span>
+            `;
+          }
+        } else {
+          testWordVerdict.className = 'badge-tag approved';
+          testWordVerdict.textContent = '✅ SAFE / CLEAN';
+          if (testWordDetails) {
+            testWordDetails.style.display = 'block';
+            testWordDetails.innerHTML = `<span style="color:#4ade80;">No violations detected. Message will pass through without interference.</span>`;
+          }
+        }
+      }
+    } catch (_) {}
+  });
+
+  addWordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const word = newWordInput?.value?.trim();
+    if (!word) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/words/add`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ word }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        newWordInput.value = '';
+        if (typeof showToast === 'function') showToast(`Term "${word}" added to active blocklist.`);
+        fetchWordFilterData();
+      }
+    } catch (_) {}
+  });
+
+  // 13. User & Device Live Inspector / Lookup
+  adminLookupForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const query = lookupQueryInput?.value?.trim();
+    if (!query || !lookupResultCard) return;
+
+    lookupResultCard.style.display = 'block';
+    lookupResultCard.innerHTML = `<p style="color:var(--t-low);">Investigating connection and records for "${query}"...</p>`;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/lookup?query=${encodeURIComponent(query)}`, {
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        const isOnline = data.isConnected;
+        const onlineBadge = isOnline ? '<span class="badge-tag approved">🟢 ONLINE</span>' : '<span class="badge-tag rejected">⚪ OFFLINE</span>';
+        const banBadge = data.isBanned ? `<span class="badge-tag rejected">🚫 BANNED (${data.banMinutesLeft}m left)</span>` : '<span class="badge-tag approved">✓ Clean</span>';
+        const inRoom = data.roomId ? `<span class="badge-tag pending">💬 In Room: ${data.roomId} (${data.roomElapsedSeconds}s)</span>` : '<span style="color:var(--t-ghost);">Not in active chat</span>';
+
+        lookupResultCard.innerHTML = `
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Investigation Profile: <code>${data.query}</code></h4>
+            <div>${onlineBadge} ${banBadge}</div>
+          </div>
+
+          <div class="lookup-profile-grid">
+            <div class="lookup-stat-item">
+              <div class="lookup-stat-label">Device Hash</div>
+              <div class="lookup-stat-val">${data.deviceHash || 'None registered'}</div>
+            </div>
+            <div class="lookup-stat-item">
+              <div class="lookup-stat-label">User ID</div>
+              <div class="lookup-stat-val">${data.userId || 'Anonymous'}</div>
+            </div>
+            <div class="lookup-stat-item">
+              <div class="lookup-stat-label">Origin Location</div>
+              <div class="lookup-stat-val">${data.country || 'Unknown'}</div>
+            </div>
+            <div class="lookup-stat-item">
+              <div class="lookup-stat-label">Active Socket ID</div>
+              <div class="lookup-stat-val">${data.socketId || 'No active socket'}</div>
+            </div>
+            <div class="lookup-stat-item">
+              <div class="lookup-stat-label">Chat Session State</div>
+              <div class="lookup-stat-val" style="font-size:0.85rem;">${inRoom}</div>
+            </div>
+            <div class="lookup-stat-item">
+              <div class="lookup-stat-label">Policy Status</div>
+              <div class="lookup-stat-val" style="font-size:0.85rem;">${data.banReason || 'Good Standing'}</div>
+            </div>
+          </div>
+
+          <div class="lookup-actions-row">
+            ${
+              data.isBanned
+                ? `<button class="btn-table-action success" id="lookupLiftBanBtn" data-target="${data.deviceHash || data.query}">Lift Ban</button>`
+                : `<button class="btn-table-action danger" id="lookupBan15Btn" data-target="${data.deviceHash || data.query}">+ Ban 15 Minutes</button>
+                   <button class="btn-table-action danger" id="lookupBanDayBtn" data-target="${data.deviceHash || data.query}">+ Ban 24 Hours</button>`
+            }
+            ${
+              isOnline
+                ? `<button class="btn-table-action danger" id="lookupKickBtn" data-target="${data.socketId || data.query}">Disconnect (Kick)</button>`
+                : ''
+            }
+            ${
+              data.roomId
+                ? `<button class="btn-table-action" id="lookupTerminateRoomBtn" data-room="${data.roomId}">Terminate Active Chat</button>`
+                : ''
+            }
+          </div>
+        `;
+
+        // Bind quick actions on lookup card
+        $('lookupBan15Btn')?.addEventListener('click', async () => {
+          const target = $('lookupBan15Btn').getAttribute('data-target');
+          await fetch(`${backendUrl}/api/admin/bans/add`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ deviceHash: target, durationMinutes: 15, reason: 'Admin lookup suspension' }),
+          });
+          if (typeof showToast === 'function') showToast(`Target ${target} banned for 15m.`);
+          lookupQueryInput.value = target;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+
+        $('lookupBanDayBtn')?.addEventListener('click', async () => {
+          const target = $('lookupBanDayBtn').getAttribute('data-target');
+          await fetch(`${backendUrl}/api/admin/bans/add`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ deviceHash: target, durationMinutes: 1440, reason: 'Admin 24h suspension' }),
+          });
+          if (typeof showToast === 'function') showToast(`Target ${target} banned for 24h.`);
+          lookupQueryInput.value = target;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+
+        $('lookupLiftBanBtn')?.addEventListener('click', async () => {
+          const target = $('lookupLiftBanBtn').getAttribute('data-target');
+          await fetch(`${backendUrl}/api/admin/bans/remove`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ deviceHash: target }),
+          });
+          if (typeof showToast === 'function') showToast(`Target ${target} unbanned.`);
+          lookupQueryInput.value = target;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+
+        $('lookupKickBtn')?.addEventListener('click', async () => {
+          const target = $('lookupKickBtn').getAttribute('data-target');
+          await fetch(`${backendUrl}/api/admin/kick`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ target }),
+          });
+          if (typeof showToast === 'function') showToast(`Disconnected socket ${target}.`);
+          lookupQueryInput.value = target;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+
+        $('lookupTerminateRoomBtn')?.addEventListener('click', async () => {
+          const rId = $('lookupTerminateRoomBtn').getAttribute('data-room');
+          await fetch(`${backendUrl}/api/admin/terminate-room`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ roomId: rId }),
+          });
+          if (typeof showToast === 'function') showToast(`Room ${rId} terminated.`);
+          lookupQueryInput.value = query;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+      } else {
+        lookupResultCard.innerHTML = `<p style="color:#f87171;">Investigation query failed: ${data.error || 'No records found.'}</p>`;
+      }
+    } catch (err) {
+      lookupResultCard.innerHTML = `<p style="color:#f87171;">Server connection error during lookup.</p>`;
+    }
+  });
+
+  // 14. Emergency Platform Controls
+  adminToggleMatchmakingBtn?.addEventListener('click', async () => {
+    const isCurrentlyActive = adminToggleMatchmakingBtn.classList.contains('active');
+    const newPauseState = isCurrentlyActive; // if active, pause it
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/matchmaking-pause`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ paused: newPauseState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToggleMatchmakingBtn.className = `btn-switch ${data.isMatchmakingPaused ? 'paused' : 'active'}`;
+        if (matchmakingBtnText) {
+          matchmakingBtnText.textContent = data.isMatchmakingPaused ? 'MATCHING PAUSED' : 'MATCHING ACTIVE';
+        }
+        if (typeof showToast === 'function') {
+          showToast(data.message || (data.isMatchmakingPaused ? 'Matchmaking paused' : 'Matchmaking active'));
+        }
+      }
+    } catch (_) {}
+  });
+
+  adminToggleGeoBtn?.addEventListener('click', async () => {
+    const isCurrentlyOn = adminToggleGeoBtn.classList.contains('active');
+    const newState = !isCurrentlyOn;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/geo-preference`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ enabled: newState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToggleGeoBtn.className = `btn-switch ${data.geoPreferenceEnabled ? 'active' : ''}`;
+        if (geoMatchBtnText) {
+          geoMatchBtnText.textContent = data.geoPreferenceEnabled ? 'NEARBY (ON)' : 'GLOBAL (OFF)';
+        }
+        if (typeof showToast === 'function') {
+          showToast(`Nearby origin matching priority: ${data.geoPreferenceEnabled ? 'ON' : 'OFF'}`);
+        }
+      }
+    } catch (_) {}
+  });
+
+  // 15. Broadcast Console with Quick Presets
+  const broadcastPresets = {
+    maintenance: {
+      message: 'Notice: Scheduled server maintenance starting in 10 minutes. Please finish your active chats.',
+      level: 'warning',
+    },
+    safety: {
+      message: 'Safety Advisory: Never share personal passwords, phone numbers, or external social handles on Ping.',
+      level: 'alert',
+    },
+    healthy: {
+      message: 'All systems running smoothly! Sub-millisecond matching is active across global nodes.',
+      level: 'info',
+    },
+    flash: {
+      message: 'Flash Chat hours are now active! Connect instantly with fast anonymous matches.',
+      level: 'info',
+    },
+  };
+
+  document.querySelectorAll('.preset-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-preset');
+      const preset = broadcastPresets[key];
+      if (!preset) return;
+
+      if (broadcastMessageInput) {
+        broadcastMessageInput.value = preset.message;
+        broadcastMessageInput.dispatchEvent(new Event('input'));
+      }
+
+      broadcastRadios.forEach((r) => {
+        if (r.value === preset.level) {
+          r.checked = true;
+          r.dispatchEvent(new Event('change'));
+        }
+      });
+    });
+  });
+
+  if (broadcastMessageInput) {
+    broadcastMessageInput.addEventListener('input', () => {
+      const val = broadcastMessageInput.value;
+      if (broadcastCharCount) broadcastCharCount.textContent = val.length;
+      if (broadcastPreviewText) {
+        broadcastPreviewText.textContent = val.trim() || 'Your announcement message will appear here in real time...';
+      }
+    });
+  }
+
+  const broadcastRadios = document.querySelectorAll('input[name="broadcastLevel"]');
+  broadcastRadios.forEach((r) => {
+    r.addEventListener('change', () => {
+      const lvl = r.value;
+      if (broadcastPreviewBanner) {
+        broadcastPreviewBanner.className = `preview-banner-inner ${lvl}`;
+      }
+    });
+  });
+
+  adminBroadcastForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = broadcastMessageInput?.value?.trim();
+    if (!message) return;
+
+    let selectedLevel = 'info';
+    broadcastRadios.forEach((r) => {
+      if (r.checked) selectedLevel = r.value;
+    });
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/broadcast`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ message, level: selectedLevel }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (broadcastStatusMsg) {
+          broadcastStatusMsg.className = 'broadcast-status-msg success';
+          broadcastStatusMsg.textContent = `📢 Broadcast sent to ${data.recipients || 'all'} connected users!`;
+          broadcastStatusMsg.style.display = 'block';
+          setTimeout(() => {
+            if (broadcastStatusMsg) broadcastStatusMsg.style.display = 'none';
+          }, 5000);
+        }
+        if (typeof showToast === 'function') {
+          showToast(`📢 Broadcast sent to ${data.recipients} online users`);
+        }
+        broadcastMessageInput.value = '';
+        if (broadcastCharCount) broadcastCharCount.textContent = '0';
+      }
+    } catch (_) {}
+  });
+
+  // 16. Header Sound Alert Toggle & Backup Export
+  adminSoundToggle?.addEventListener('click', () => {
+    soundAlertsEnabled = !soundAlertsEnabled;
+    adminSoundToggle.classList.toggle('active', soundAlertsEnabled);
+    if (adminSoundToggleText) {
+      adminSoundToggleText.textContent = soundAlertsEnabled ? 'Sound: ON' : 'Sound: OFF';
+    }
+    if (soundAlertsEnabled) {
+      playNotificationChime();
+    }
+  });
+
+  adminExportBtn?.addEventListener('click', () => {
+    if (!adminToken) return;
+    fetch(`${backendUrl}/api/admin/export`, { headers: authHeaders() })
+      .then((res) => res.blob())
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ping-admin-backup-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        if (typeof showToast === 'function') showToast('💾 System backup JSON downloaded.');
+      })
+      .catch(() => {});
+  });
+
+  // Escape key handler: close modals or exit dashboard
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (adminManualBanModal && adminManualBanModal.style.display !== 'none') {
+        closeManualBanModal();
+      } else if (adminAuthModal && adminAuthModal.style.display !== 'none') {
+        closeAdminAuthModal();
+      } else if (adminDashboardView && adminDashboardView.style.display !== 'none') {
+        closeAdminDashboard();
+      }
+    }
+  });
+
+  // 17. Traffic & Geo Distribution
+  async function fetchGeoData() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/geo`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      renderGeoTable(data.geo || []);
+    } catch (_) {}
+  }
+
+  function renderGeoTable(geoList) {
+    if (!adminGeoTableBody) return;
+    if (geoList.length === 0) {
+      adminGeoTableBody.innerHTML = `
+        <tr>
+          <td colspan="4" style="text-align:center; padding:30px; color:var(--t-ghost);">
+            🌍 No visitor location data collected yet.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const total = geoList.reduce((acc, curr) => acc + (curr.count || 0), 0) || 1;
+
+    adminGeoTableBody.innerHTML = geoList
+      .map((item, idx) => {
+        const pct = Math.round(((item.count || 0) / total) * 100);
+        return `
+          <tr>
+            <td><strong>#${idx + 1}</strong></td>
+            <td><span style="font-size:0.95rem;">${item.country}</span></td>
+            <td><strong>${item.count}</strong> sockets</td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="flex:1; max-width:120px; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
+                  <div style="width:${pct}%; height:100%; background:linear-gradient(90deg, #7c3aed, #06b6d4);"></div>
+                </div>
+                <span style="font-size:0.75rem; color:var(--t-low);">${pct}%</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+  }
+
+  // 18. Client Listener for Real-Time System Announcements
+  if (socket) {
+    socket.on('system_announcement', (announcement) => {
+      if (!announcement || !announcement.message) return;
+
+      if (systemAnnouncementBanner && announcementText) {
+        announcementText.textContent = announcement.message;
+        systemAnnouncementBanner.className = `system-announcement-banner ${announcement.level || 'info'}`;
+        systemAnnouncementBanner.style.display = 'flex';
+
+        if (announcementIcon) {
+          announcementIcon.textContent = announcement.level === 'alert' ? '🚨' : (announcement.level === 'warning' ? '⚠️' : '📢');
+        }
+
+        clearTimeout(window.__announcementDismissTimer);
+        window.__announcementDismissTimer = setTimeout(() => {
+          if (systemAnnouncementBanner) systemAnnouncementBanner.style.display = 'none';
+        }, 20000);
+      }
+    });
+  }
+
+  closeAnnouncementBtn?.addEventListener('click', () => {
+    if (systemAnnouncementBanner) systemAnnouncementBanner.style.display = 'none';
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAdminModule);
+} else {
+  initAdminModule();
+}
+
 
 
 

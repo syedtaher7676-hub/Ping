@@ -1,13 +1,15 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
+import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
 import OnlineCounter from './OnlineCounter';
 import IOSInstallBanner from './IOSInstallBanner';
+import AdminDashboard from './AdminDashboard';
 import { subscribeToOnlineCount, getSocket, socket } from '../socket';
 
 /**
  * 1. Strictly Memoized Logo & Hero Title Section
  * Cached via React.memo so parent onlineUserCount updates cause 0 re-renders here.
+ * Supports onLogoClick for admin dashboard trigger.
  */
-export const HeroSection = memo(function HeroSection() {
+export const HeroSection = memo(function HeroSection({ onLogoClick }) {
   return (
     <div
       className="hero-section"
@@ -24,11 +26,15 @@ export const HeroSection = memo(function HeroSection() {
     >
       <div
         className="logo-lockup"
+        onClick={onLogoClick}
+        title="Ping Logo (Click 10 times for Admin)"
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '16px',
+          cursor: 'pointer',
+          userSelect: 'none',
           willChange: 'transform, opacity',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
@@ -172,6 +178,60 @@ export function Home({ onStartChat }) {
   const [onlineUserCount, setOnlineUserCount] = useState(0);
   const [banMinutes, setBanMinutes] = useState(null);
 
+  // Admin auth & modal state
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+    return sessionStorage.getItem('ping_admin_auth') === 'true';
+  });
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoginError, setAdminLoginError] = useState('');
+
+  const clickCountRef = useRef(0);
+  const lastClickTimeRef = useRef(0);
+
+  const handleLogoClick = useCallback(() => {
+    const now = Date.now();
+    if (now - lastClickTimeRef.current > 4000) {
+      clickCountRef.current = 1;
+    } else {
+      clickCountRef.current += 1;
+    }
+    lastClickTimeRef.current = now;
+
+    if (clickCountRef.current >= 10) {
+      clickCountRef.current = 0;
+      setShowAdminModal(true);
+    }
+  }, []);
+
+  const handleAdminLoginSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAdminAuthenticated(true);
+        sessionStorage.setItem('ping_admin_auth', 'true');
+        setShowAdminModal(false);
+        setAdminPassword('');
+        setAdminLoginError('');
+      } else {
+        setAdminLoginError(data.message || 'Incorrect admin password');
+      }
+    } catch (err) {
+      setAdminLoginError('Network error during login');
+    }
+  };
+
+  const handleExitAdmin = useCallback(() => {
+    setIsAdminAuthenticated(false);
+    sessionStorage.removeItem('ping_admin_auth');
+  }, []);
+
   useEffect(() => {
     const unsubscribe = subscribeToOnlineCount((count) => {
       setOnlineUserCount(count);
@@ -205,6 +265,10 @@ export function Home({ onStartChat }) {
   }, [onStartChat, banMinutes]);
 
   const isBanned = banMinutes !== null;
+
+  if (isAdminAuthenticated) {
+    return <AdminDashboard onExitAdmin={handleExitAdmin} />;
+  }
 
   return (
     <div
@@ -243,8 +307,8 @@ export function Home({ onStartChat }) {
           WebkitBackfaceVisibility: 'hidden',
         }}
       >
-        {/* Step 1 Optimization: Memoized Hero & Title section */}
-        <HeroSection />
+        {/* Step 1 Optimization: Memoized Hero & Title section with logo click trigger */}
+        <HeroSection onLogoClick={handleLogoClick} />
 
         {/* Step 2 Optimization: Standalone Decoupled Online Counter */}
         <OnlineCounter count={onlineUserCount} />
@@ -255,6 +319,140 @@ export function Home({ onStartChat }) {
 
       {/* iOS PWA Install Guidance Banner */}
       <IOSInstallBanner />
+
+      {/* Admin Password Modal */}
+      {showAdminModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(5, 5, 14, 0.92)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            style={{
+              maxWidth: '420px',
+              width: '100%',
+              backgroundColor: '#0c0c1e',
+              border: '1px solid rgba(124, 58, 237, 0.4)',
+              borderRadius: '20px',
+              padding: '36px 28px',
+              textAlign: 'center',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(124, 58, 237, 0.2)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px',
+            }}
+          >
+            <div
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(124, 58, 237, 0.15)',
+                border: '1px solid rgba(124, 58, 237, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '28px',
+                margin: '0 auto',
+              }}
+            >
+              🔒
+            </div>
+            <div>
+              <h2
+                style={{
+                  color: '#ffffff',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: '1.45rem',
+                  fontWeight: 700,
+                  margin: '0 0 8px 0',
+                }}
+              >
+                Admin Authentication
+              </h2>
+              <p
+                style={{
+                  color: '#94a3b8',
+                  fontSize: '0.9rem',
+                  margin: 0,
+                }}
+              >
+                Enter password to unlock the Admin Dashboard (default: <code style={{ color: '#a78bfa' }}>admin123</code>)
+              </p>
+            </div>
+
+            <form onSubmit={handleAdminLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <input
+                type="password"
+                placeholder="Admin password..."
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                autoFocus
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: '#070710',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  color: '#fff',
+                  fontSize: '1rem',
+                  outline: 'none',
+                  textAlign: 'center',
+                }}
+              />
+              {adminLoginError && (
+                <div style={{ color: '#f87171', fontSize: '0.85rem', fontWeight: 600 }}>
+                  {adminLoginError}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAdminModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: '#cbd5e1',
+                    fontSize: '0.95rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    background: 'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: '#fff',
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(124, 58, 237, 0.4)',
+                  }}
+                >
+                  Unlock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Clean Dark Overlay for Temporary Ban */}
       {isBanned && (

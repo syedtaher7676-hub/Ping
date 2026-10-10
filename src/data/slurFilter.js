@@ -956,6 +956,10 @@ function getBlockedWords() {
   return [...blockedWords.slurs, ...blockedWords.custom];
 }
 
+function getCustomWords() {
+  return [...blockedWords.custom];
+}
+
 // === CONTEXT-AWARE DETECTION ===
 
 /**
@@ -1340,6 +1344,7 @@ module.exports = {
   addCustomWord,
   removeCustomWord,
   getBlockedWords,
+  getCustomWords,
   detectSlurWithContext,
   moderateSlurMessage,
   addSlurViolation,

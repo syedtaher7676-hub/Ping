@@ -19,7 +19,26 @@ const { createId } = require("../utils/ids");
 const { log } = require("../utils/logger");
 
 let isMatching = false;
+let isMatchmakingPaused = false;
+let geoPreferenceEnabled = false;
 const matchmakingStartTimes = new Map(); // Track when users enter queue
+
+function setMatchmakingPaused(paused) {
+  isMatchmakingPaused = Boolean(paused);
+  return isMatchmakingPaused;
+}
+
+function setGeoPreference(enabled) {
+  geoPreferenceEnabled = Boolean(enabled);
+  return geoPreferenceEnabled;
+}
+
+function getMatchmakingSettings() {
+  return {
+    isMatchmakingPaused,
+    geoPreferenceEnabled,
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════
 // BUG FIX 1 & 2: Active Socket Verification & Queue Sanitization
@@ -131,7 +150,7 @@ function sanitizeQueue(io = null) {
 }
 
 async function attemptMatchmaking(io) {
-  if (isMatching) {
+  if (isMatching || isMatchmakingPaused) {
     return;
   }
 
@@ -331,4 +350,7 @@ module.exports = {
   leaveWaitingQueue,
   getMatchStats,
   isUserAvailableForMatch,
+  setMatchmakingPaused,
+  setGeoPreference,
+  getMatchmakingSettings,
 };

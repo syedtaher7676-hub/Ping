@@ -4,6 +4,7 @@ const REDIS_URL = process.env.REDIS_URL || "";
 const CHAT_DURATION_MS = 3 * 60 * 1000;
 const MATCHMAKING_INTERVAL_MS = Number(process.env.MATCHMAKING_INTERVAL_MS) || 150;
 const START_CHAT_COOLDOWN_MS = Number(process.env.START_CHAT_COOLDOWN_MS) || 600;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Syed@12345";
 
 // Anti-spam configuration - SMART SYSTEM
 const MESSAGE_RATE_LIMIT_MS = 200; // Min time between messages (very permissive)
@@ -114,4 +115,5 @@ module.exports = {
   METRICS_LOG_INTERVAL_MS,
   SOCKET_CORS,
   THROTTLE_PENALTY_MS,
+  ADMIN_PASSWORD,
 };
