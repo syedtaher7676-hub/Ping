@@ -1919,6 +1919,16 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             user.roomId = roomId;
             user.status = "matched";
           }
+          if (room.disconnectTimeoutRef) {
+            clearTimeout(room.disconnectTimeoutRef);
+            room.disconnectTimeoutRef = null;
+          }
+          const partnerId = room.users?.find(id => id !== userId);
+          const partnerUser = partnerId ? users.get(partnerId) : null;
+          if (partnerUser?.socketId) {
+            const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
+            partnerSocket?.emit("partner_reconnected", { roomId });
+          }
           callback?.({ success: true, ok: true });
         } else {
           callback?.({ success: false, ok: false, reason: 'Room expired or invalid' });
@@ -1926,6 +1936,60 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       } catch (err) {
         log("rejoin_explore_room_error", { userId, error: err?.message });
         callback?.({ success: false, ok: false, reason: 'Internal error' });
+      }
+    });
+
+    socket.on("left_screen", (rawPayload = {}) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const roomId = safeId(payload.roomId) || user?.roomId;
+        if (!roomId) return;
+        const room = rooms.get(roomId);
+        if (!room || room.status !== "active") return;
+
+        const partnerId = room.users?.find(id => id !== userId);
+        const partnerUser = partnerId ? users.get(partnerId) : null;
+        if (partnerUser?.socketId) {
+          const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
+          partnerSocket?.emit("partner_disconnected", {
+            roomId,
+            message: "Stranger left the screen...",
+            gracePeriod: 15000,
+          });
+        }
+
+        if (room.disconnectTimeoutRef) {
+          clearTimeout(room.disconnectTimeoutRef);
+        }
+        room.disconnectTimeoutRef = setTimeout(() => {
+          handlePartnerDisconnect(io, roomId, userId);
+        }, 15000);
+      } catch (err) {
+        log("left_screen_error", { userId, error: err?.message });
+      }
+    });
+
+    socket.on("returned_to_screen", (rawPayload = {}) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const roomId = safeId(payload.roomId) || user?.roomId;
+        if (!roomId) return;
+        const room = rooms.get(roomId);
+        if (!room || room.status !== "active") return;
+
+        if (room.disconnectTimeoutRef) {
+          clearTimeout(room.disconnectTimeoutRef);
+          room.disconnectTimeoutRef = null;
+        }
+
+        const partnerId = room.users?.find(id => id !== userId);
+        const partnerUser = partnerId ? users.get(partnerId) : null;
+        if (partnerUser?.socketId) {
+          const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
+          partnerSocket?.emit("partner_reconnected", { roomId });
+        }
+      } catch (err) {
+        log("returned_to_screen_error", { userId, error: err?.message });
       }
     });
 
@@ -2387,7 +2451,7 @@ function registerSocketHandlers(io, getCountryFromSocket) {
               const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
               partnerSocket?.emit("partner_disconnected", {
                 roomId: originalRoomId,
-                message: "Stranger's connection dropped. Waiting 15s for them to reconnect...",
+                message: "Stranger left the screen...",
                 gracePeriod: 15000,
               });
             }

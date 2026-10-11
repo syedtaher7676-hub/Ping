@@ -63,6 +63,7 @@ function terminateSession(io, roomId, reason = "session_ended") {
 
   // Broadcast chat_ended and chat_end to the room and individual user rooms BEFORE removing room metadata
   // Broadcast exactly once to the room before deleting metadata or leaving sockets
+  io.to(roomId).emit("partner_typing", { isTyping: false });
   io.to(roomId).emit("chat_ended", endPayload);
 
   room.status = "terminated";

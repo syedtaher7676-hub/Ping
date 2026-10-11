@@ -2328,6 +2328,14 @@ if (cancelFriendReplyBtn) {
 let currentActiveView = 'prechat';
 
 function showView(which) {
+  if (landingPage) {
+    landingPage.style.display = 'none';
+  }
+  if (chatApp) {
+    chatApp.style.display = 'flex';
+    chatApp.style.opacity = '1';
+  }
+
   const views = [
     { key: 'prechat', el: preChatView },
     { key: 'waiting', el: waitingView },
@@ -2596,10 +2604,7 @@ function renderFriendsList(friends) {
 // ── NAVIGATION ───────────────────────────────────────────────
 let isNavigatingView = false;
 
-function goToChat() {
-  if (isNavigatingView) return;
-  isNavigatingView = true;
-
+function goToChat(targetView = null) {
   if (landingPage) {
     landingPage.style.display = 'none';
   }
@@ -2608,7 +2613,8 @@ function goToChat() {
     chatApp.style.opacity = '1';
   }
 
-  showView('prechat');
+  const destination = targetView || (inChat || AppState.explore.inChat ? 'chat' : 'prechat');
+  showView(destination);
   switchHomeTab('random');
 
   const ac = $('appCanvas');
@@ -2617,12 +2623,8 @@ function goToChat() {
     ac.height = window.innerHeight;
   }
   if (typeof window.__pingSetAppMode === 'function') {
-    window.__pingSetAppMode('prechat');
+    window.__pingSetAppMode(destination);
   }
-
-  setTimeout(() => {
-    isNavigatingView = false;
-  }, 100);
 }
 
 function goToLanding() {
@@ -2797,7 +2799,13 @@ function handleSuccessfulConnection() {
         if (!activeFriendId) {
           activeRoomId = state.roomId;
           inChat = true;
+          AppState.explore.inChat = true;
+          AppState.explore.roomId = state.roomId;
           isWaiting = false;
+          try {
+            sessionStorage.setItem('ping_last_explore_room', state.roomId);
+          } catch (_) {}
+          goToChat();
           showView('chat');
           if (wasReconnecting && lastKnownRoomId) {
             appendMsg('⚡ Connection restored! You are back in the chat.', { isSystem: true, variant: 'success' });
@@ -3507,8 +3515,26 @@ function startAutoSearch(seconds = 15) {
 
     if (autoSearchTimerSeconds <= 0) {
       stopAutoSearch();
-      showToast('🔍 Searching for a new stranger...', 'info', 2000);
-      forceNextChat();
+      showToast('Stranger left', 'info', 3000);
+
+      inChat = false;
+      activeRoomId = null;
+      AppState.explore.inChat = false;
+      AppState.explore.isWaiting = false;
+      AppState.explore.roomId = null;
+      AppState.explore.timerEndMs = 0;
+      isWaiting = false;
+      pendingStart = false;
+
+      try {
+        sessionStorage.removeItem('ping_last_explore_room');
+      } catch (_) {}
+
+      stopTimer();
+      syncButtons();
+      clearChat();
+      if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
+      showView('prechat');
     }
   }, 1000);
 }
@@ -3645,10 +3671,14 @@ function handleChatEnd(reason, rawReason) {
     return;
   }
 
-  // Single toast notification when stranger leaves/skips
-  showToast("Stranger has skipped the chat.", "info", 3500);
-
   const reasonStr = String(reason || rawReason || '').toLowerCase();
+  if (reasonStr.includes('stranger_disconnected') || reasonStr.includes('partner_disconnect')) {
+    stopAutoSearch();
+    showToast('Stranger left', 'info', 3000);
+    clearChat();
+    showView('prechat');
+    return;
+  }
   if (reasonStr.includes('user_reported_warning')) {
     showToast('⚠️ You were reported by your chat partner. Returned to home screen.', 'warn', 5000);
     showView('prechat');
@@ -4640,8 +4670,43 @@ window.addEventListener('offline', () => {
   showNetworkStatus('You are currently offline. Check your internet connection.', 'error');
 });
 
+function handleUserLeftScreen() {
+  if (!inChat && !AppState.explore.inChat && !activeRoomId) return;
+  const currentRoom = activeRoomId || AppState.explore.roomId;
+  if (!currentRoom) return;
+
+  try {
+    sessionStorage.setItem('ping_last_explore_room', currentRoom);
+  } catch (_) {}
+
+  if (socket && socket.connected) {
+    socket.emit('left_screen', { roomId: currentRoom });
+  }
+}
+
+function handleUserReturnedToScreen() {
+  let currentRoom = activeRoomId || AppState.explore.roomId;
+  if (!currentRoom) {
+    try {
+      currentRoom = sessionStorage.getItem('ping_last_explore_room');
+    } catch (_) {}
+  }
+  if (!inChat && !AppState.explore.inChat && !currentRoom) return;
+
+  // Crucial: Take the person directly to the chat screen, NOT the main screen
+  goToChat();
+  showView('chat');
+
+  if (currentRoom && socket && socket.connected) {
+    socket.emit('returned_to_screen', { roomId: currentRoom });
+  }
+}
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
+  if (document.visibilityState === 'hidden') {
+    handleUserLeftScreen();
+  } else if (document.visibilityState === 'visible') {
+    handleUserReturnedToScreen();
     if (!socket.connected) {
       socket.connect();
     } else {
@@ -4649,6 +4714,10 @@ document.addEventListener('visibilitychange', () => {
       socket.emit('get_status');
     }
   }
+});
+
+window.addEventListener('pagehide', () => {
+  handleUserLeftScreen();
 });
 
 // ── THEME SWITCHER ──────────────────────────────────────────
@@ -4665,12 +4734,15 @@ setConnStatus('connecting');
 syncButtons();
 setScreenIndicator('home');
 
-// ── SCREENSAVER MODE ──────────────────────────────────────────
+// ── SCREENSAVER & FOCUS LISTENERS ─────────────────────────────
 window.addEventListener('blur', () => {
   if (inChat) document.body.classList.add('privacy-blur');
+  handleUserLeftScreen();
 });
+
 window.addEventListener('focus', () => {
   document.body.classList.remove('privacy-blur');
+  handleUserReturnedToScreen();
 });
 // ── FLASH & PING LISTENERS ───────────────────────────────────
 function triggerFlash(isFriend = false) {
@@ -5152,26 +5224,14 @@ function initMobileKeyboardViewportHandler() {
     if (!inp) return;
 
     inp.addEventListener('focus', () => {
-      // Delay slightly so mobile OS keyboard slide animation begins
-      setTimeout(() => {
-        updateViewportMetrics();
-        inp.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-        scrollActiveChatToBottom(true);
-        window.scrollTo(0, 0);
-      }, 60);
-
-      setTimeout(() => {
-        updateViewportMetrics();
-        scrollActiveChatToBottom(true);
-        window.scrollTo(0, 0);
-      }, 250);
+      updateViewportMetrics();
+      scrollActiveChatToBottom(true);
+      window.scrollTo(0, 0);
     });
 
     inp.addEventListener('blur', () => {
-      setTimeout(() => {
-        updateViewportMetrics();
-        window.scrollTo(0, 0);
-      }, 100);
+      updateViewportMetrics();
+      window.scrollTo(0, 0);
     });
   });
 }

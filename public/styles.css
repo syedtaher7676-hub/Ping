@@ -70,7 +70,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-text-size-adjust: 100%;
   height: 100dvh;
   touch-action: manipulation;
@@ -153,6 +153,7 @@ button:active:not(:disabled) {
 
 input {
   font-family: inherit;
+  font-size: 16px;
 }
 
 ::-webkit-scrollbar {
@@ -7933,6 +7934,40 @@ html.fast-mode .chat-bottom-wrapper {
 .keyboard-open .chat-app {
   height: var(--visual-viewport-height, 100dvh) !important;
   max-height: var(--visual-viewport-height, 100dvh) !important;
+  transition: none !important;
+}
+
+.keyboard-open,
+.keyboard-open body,
+.keyboard-open .chat-app,
+.keyboard-open .view-chat,
+.keyboard-open .messages-area,
+.keyboard-open .chat-bottom-wrapper,
+.keyboard-open .input-row,
+.keyboard-open .input-pill {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* iOS-specific rock-solid viewport docking: prevent iOS WebKit from slowly expanding/zooming */
+html.is-ios,
+html.is-ios body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  scroll-behavior: auto !important;
+}
+
+html.is-ios .chat-app {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: var(--visual-viewport-height, 100%) !important;
+  max-height: var(--visual-viewport-height, 100%) !important;
+  transition: none !important;
 }
 
 .keyboard-open .messages-area {
