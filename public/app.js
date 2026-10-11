@@ -1262,6 +1262,114 @@ function attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend, is
   });
 }
 
+// ── WHATSAPP-STYLE SWIPE TO REPLY HANDLER ──
+function attachSwipeToReply(el, { msgId, text, isPartner, isFriend, isSelf }) {
+  if (!el || el.classList.contains('system')) return;
+
+  let replyIcon = el.querySelector('.msg-swipe-reply-icon');
+  if (!replyIcon) {
+    replyIcon = document.createElement('div');
+    replyIcon.className = 'msg-swipe-reply-icon';
+    replyIcon.setAttribute('aria-hidden', 'true');
+    replyIcon.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 17 4 12 9 7"></polyline>
+        <path d="M20 18v-2a4 4 0 0 0-4-4H4"></path>
+      </svg>
+    `;
+    el.appendChild(replyIcon);
+  }
+
+  let startX = 0;
+  let startY = 0;
+  let isSwiping = false;
+  let isHorizontal = false;
+  let hasHapticFired = false;
+  let currentOffset = 0;
+  const SWIPE_THRESHOLD = 40;
+  const MAX_SWIPE = 68;
+
+  const onStart = (e) => {
+    const t = e.touches ? e.touches[0] : e;
+    startX = t.clientX;
+    startY = t.clientY;
+    isSwiping = false;
+    isHorizontal = false;
+    hasHapticFired = false;
+    currentOffset = 0;
+    el.style.transition = 'none';
+  };
+
+  const onMove = (e) => {
+    const t = e.touches ? e.touches[0] : e;
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if (!isHorizontal) {
+      if (dx > 8 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+        isHorizontal = true;
+        isSwiping = true;
+      } else if (Math.abs(dy) > 7) {
+        return;
+      }
+    }
+
+    if (isSwiping && dx > 0) {
+      if (e.cancelable) e.preventDefault();
+      currentOffset = Math.min(MAX_SWIPE, Math.max(0, dx * 0.65));
+      el.style.transform = `translateX(${currentOffset}px)`;
+
+      const progress = Math.min(1, currentOffset / SWIPE_THRESHOLD);
+      if (currentOffset >= SWIPE_THRESHOLD) {
+        replyIcon.classList.add('ready');
+        replyIcon.style.opacity = '1';
+        replyIcon.style.transform = 'translateY(-50%) scale(1.15)';
+        if (!hasHapticFired) {
+          if (navigator.vibrate) navigator.vibrate(14);
+          hasHapticFired = true;
+        }
+      } else {
+        replyIcon.classList.remove('ready');
+        replyIcon.style.opacity = progress.toFixed(2);
+        replyIcon.style.transform = `translateY(-50%) scale(${0.65 + progress * 0.35})`;
+      }
+    }
+  };
+
+  const onEnd = (e) => {
+    if (isSwiping) {
+      const triggered = currentOffset >= SWIPE_THRESHOLD;
+
+      el.style.transition = 'transform 0.24s cubic-bezier(0.18, 0.89, 0.32, 1.28)';
+      el.style.transform = 'translateX(0)';
+
+      replyIcon.classList.remove('ready');
+      replyIcon.style.opacity = '0';
+      replyIcon.style.transform = 'translateY(-50%) scale(0.65)';
+
+      setTimeout(() => {
+        el.style.transition = '';
+      }, 260);
+
+      if (triggered) {
+        if (e && e.cancelable) e.preventDefault();
+        const rawText = text || el.querySelector('.msg-text')?.textContent || '';
+        window.startReply(rawText, isPartner, msgId);
+        const input = isFriend ? friendMessageInput : messageInput;
+        if (input) input.focus({ preventScroll: true });
+      }
+    }
+    isSwiping = false;
+    isHorizontal = false;
+    currentOffset = 0;
+  };
+
+  el.addEventListener('touchstart', onStart, { passive: true });
+  el.addEventListener('touchmove', onMove, { passive: false });
+  el.addEventListener('touchend', onEnd, { passive: true });
+  el.addEventListener('touchcancel', onEnd, { passive: true });
+}
+
 // ── MESSAGES ─────────────────────────────────────────────────
 let lastSystemMsgText = '';
 let lastSystemMsgTime = 0;
@@ -1402,6 +1510,7 @@ function appendMsg(text, opts = {}) {
   // Context Menu & Long press event listener for advanced options
   if (!isSystem) {
     attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend: false, isSelf, sentAt: opts.sentAt });
+    attachSwipeToReply(el, { msgId, text, isPartner, isFriend: false, isSelf });
   }
 
   // Double tap to heart
@@ -2061,6 +2170,7 @@ function appendFriendMsg(text, opts = {}) {
   // Context Menu & Long press event listener for advanced options
   if (!isSystem) {
     attachMsgLongPress(el, { msgId, textNode, text, isPartner, isFriend: true, isSelf, sentAt: opts.sentAt });
+    attachSwipeToReply(el, { msgId, text, isPartner, isFriend: true, isSelf });
   }
 
   // Double tap to heart
@@ -2328,12 +2438,14 @@ if (cancelFriendReplyBtn) {
 let currentActiveView = 'prechat';
 
 function showView(which) {
-  if (landingPage) {
-    landingPage.style.display = 'none';
-  }
-  if (chatApp) {
-    chatApp.style.display = 'flex';
-    chatApp.style.opacity = '1';
+  if (which === 'chat' || which === 'waiting' || which === 'friendDM' || (chatApp && chatApp.style.display === 'flex')) {
+    if (landingPage) {
+      landingPage.style.display = 'none';
+    }
+    if (chatApp) {
+      chatApp.style.display = 'flex';
+      chatApp.style.opacity = '1';
+    }
   }
 
   const views = [
@@ -2804,9 +2916,18 @@ function handleSuccessfulConnection() {
           isWaiting = false;
           try {
             sessionStorage.setItem('ping_last_explore_room', state.roomId);
+            sessionStorage.setItem('ping_is_in_chat', 'true');
           } catch (_) {}
-          goToChat();
+          goToChat('chat');
           showView('chat');
+
+          const sessionEndMs = Number(state.endAt) || (state.remainingMs ? Date.now() + Number(state.remainingMs) : null);
+          if (sessionEndMs) {
+            AppState.explore.timerEndMs = sessionEndMs;
+            try { sessionStorage.setItem('ping_explore_timer_end', String(sessionEndMs)); } catch (_) {}
+            startTimer(sessionEndMs);
+          }
+
           if (wasReconnecting && lastKnownRoomId) {
             appendMsg('⚡ Connection restored! You are back in the chat.', { isSystem: true, variant: 'success' });
           }
@@ -2814,9 +2935,22 @@ function handleSuccessfulConnection() {
       } else if (state.status === 'waiting') {
         if (!activeFriendId) applyState('waiting');
       } else if (state.status === 'idle') {
-        if (wasReconnecting && lastKnownRoomId && inChat && !activeFriendId) {
+        inChat = false;
+        activeRoomId = null;
+        AppState.explore.inChat = false;
+        AppState.explore.roomId = null;
+        try {
+          sessionStorage.removeItem('ping_is_in_chat');
+          sessionStorage.removeItem('ping_last_explore_room');
+          sessionStorage.removeItem('ping_explore_timer_end');
+        } catch (_) {}
+        if (wasReconnecting && lastKnownRoomId && !activeFriendId) {
           endCurrentChat();
           appendMsg('Chat ended while connection was lost ✌️', { isSystem: true });
+        }
+        // If not in a friend chat, ensure user starts with the landing page as default!
+        if (!activeFriendId && (!currentChatType || currentChatType !== 'friend')) {
+          executeGoToLanding();
         }
       }
     }
@@ -3277,6 +3411,11 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc, matchedI
   AppState.explore.inChat = true;
   AppState.explore.isWaiting = false;
   AppState.explore.timerEndMs = Number(endAt) || Date.now() + (Number(expiresInMs) || 180000);
+  try {
+    sessionStorage.setItem('ping_is_in_chat', 'true');
+    sessionStorage.setItem('ping_last_explore_room', roomId);
+    sessionStorage.setItem('ping_explore_timer_end', String(AppState.explore.timerEndMs));
+  } catch (_) {}
 
   applyState('matched', roomId);
   const partnerFlag = extractPartnerFlag(pc);
@@ -3304,6 +3443,32 @@ socket.on('matched', ({ roomId, endAt, expiresInMs, partnerCountry: pc, matchedI
 
   startTimer(AppState.explore.timerEndMs);
   if (window.__pingMatchBurst) window.__pingMatchBurst();
+});
+
+socket.off('timer_sync');
+socket.on('timer_sync', ({ roomId, endAt, remainingMs }) => {
+  if (!inChat || (activeRoomId && activeRoomId !== roomId)) return;
+  const targetEndMs = Number(endAt) || (remainingMs ? Date.now() + Number(remainingMs) : AppState.explore.timerEndMs);
+  if (targetEndMs) {
+    AppState.explore.timerEndMs = targetEndMs;
+    try {
+      sessionStorage.setItem('ping_explore_timer_end', String(targetEndMs));
+    } catch (_) {}
+    startTimer(targetEndMs);
+  }
+});
+
+socket.off('timer_update');
+socket.on('timer_update', ({ endAt, remainingMs }) => {
+  if (!inChat) return;
+  const targetEndMs = Number(endAt) || (remainingMs ? Date.now() + Number(remainingMs) : null);
+  if (targetEndMs && Math.abs((AppState.explore.timerEndMs || 0) - targetEndMs) > 1500) {
+    AppState.explore.timerEndMs = targetEndMs;
+    try {
+      sessionStorage.setItem('ping_explore_timer_end', String(targetEndMs));
+    } catch (_) {}
+    startTimer(targetEndMs);
+  }
 });
 
 socket.off('new_message');

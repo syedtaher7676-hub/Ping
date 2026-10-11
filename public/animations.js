@@ -40,14 +40,22 @@
       splash.style.filter = 'blur(4px)';
       splash.style.pointerEvents = 'none';
 
-      const hasActiveChat = (chatApp && chatApp.style.display !== 'none') || (function() {
-        try { return !!sessionStorage.getItem('ping_last_explore_room'); } catch (_) { return false; }
+      const hasActiveChat = (function() {
+        try {
+          return sessionStorage.getItem('ping_is_in_chat') === 'true' && !!sessionStorage.getItem('ping_last_explore_room');
+        } catch (_) {
+          return false;
+        }
       })();
 
       if (landing && !hasActiveChat) {
+        landing.style.display = 'flex';
         landing.style.transition = 'opacity 0.2s cubic-bezier(0, 0, 0.2, 1), transform 0.2s cubic-bezier(0, 0, 0.2, 1)';
         landing.style.opacity = '1';
         landing.style.transform = 'scale(1) translateZ(0)';
+      }
+      if (chatApp && !hasActiveChat) {
+        chatApp.style.display = 'none';
       }
 
       setTimeout(() => {

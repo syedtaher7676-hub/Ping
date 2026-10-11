@@ -1480,6 +1480,27 @@
                   <span id="geoMatchBtnText">GLOBAL (OFF)</span>
                 </button>
               </div>
+
+              <div class="switch-row-item">
+                <div>
+                  <strong>Strict 1-Strike Emergency Safety Mode</strong>
+                  <p class="switch-desc">Instant 1-strike immediate device ban on any detected slur/violation</p>
+                </div>
+                <button id="adminToggleStrictModeBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="strictModeBtnText">STANDARD (3-STRIKE)</span>
+                </button>
+              </div>
+
+              <div class="switch-row-item">
+                <div>
+                  <strong>Clean Inactive Sockets</strong>
+                  <p class="switch-desc">Purge lingering dead connections and idle memory</p>
+                </div>
+                <button id="adminFlushSocketsBtn" class="btn-primary-admin" type="button" style="padding: 7px 14px; font-size: 0.8rem;">
+                  <span>🧹 Flush Idle Sockets</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1493,6 +1514,7 @@
             <p class="panel-section-subtitle">Zero-lag platform event telemetry, matches, moderation, and alerts</p>
           </div>
           <div class="events-toolbar-actions">
+            <input type="text" id="searchEventsInput" class="admin-filter-input" placeholder="🔍 Search events..." style="width: 160px; padding: 5px 10px; font-size: 0.76rem;" />
             <button class="btn-refresh-sm" id="clearEventsBtn" type="button">Clear Feed</button>
             <button class="btn-refresh-sm active" id="toggleEventsAutoScrollBtn" type="button">Auto-Scroll: ON</button>
           </div>
@@ -1541,6 +1563,25 @@
           <div class="toolbar-right-search-wrap">
             <input type="text" id="searchBansInput" class="admin-filter-input" placeholder="🔍 Search device hash or reason..." />
             <button class="btn-primary-sm" id="openManualBanModalBtn" type="button">+ Manual Ban</button>
+          </div>
+        </div>
+
+        <!-- Fast Moderation Presets Bar -->
+        <div class="broadcast-presets-section" style="margin-bottom: 14px;">
+          <span class="broadcast-presets-title">⚡ Fast Moderation Preset Templates:</span>
+          <div class="broadcast-presets-grid" id="adminBanPresetsGrid">
+            <button type="button" class="preset-pill-btn" data-ban-mins="15" data-ban-reason="Hate speech / harassment policy violation">
+              <span>🚫 15m Hate Speech</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-ban-mins="60" data-ban-reason="Targeted user harassment / bullying">
+              <span>⚠️ 1h Harassment</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-ban-mins="1440" data-ban-reason="Predatory behavior / unsolicited NSFW solicitation">
+              <span>🚨 24h Predatory / NSFW</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-ban-mins="10080" data-ban-reason="Spam bot / unauthorized external promotion">
+              <span>🤖 7d Bot / Spammer</span>
+            </button>
           </div>
         </div>
 
@@ -1883,6 +1924,63 @@
         <div class="admin-auth-actions">
           <button type="button" id="cancelManualBanBtn" class="btn-ghost-admin">Cancel</button>
           <button type="submit" id="submitManualBanBtn" class="btn-primary-admin">Apply Ban</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ MODERATION ACTION MODAL (WARN / SILENCE) ═══ -->
+  <div id="adminActionModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="actionModalTitle">
+    <div class="admin-auth-card">
+      <button id="closeActionModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <h3 id="actionModalTitle" class="admin-auth-title">Moderate Target</h3>
+        <p class="admin-auth-subtitle" id="actionModalSubtitle">Issue targeted administrative enforcement</p>
+      </div>
+
+      <form id="adminActionForm" onsubmit="return false;">
+        <input type="hidden" id="actionTargetInput" />
+        <input type="hidden" id="actionTypeInput" value="warn" />
+
+        <div id="actionWarnFields">
+          <div class="admin-field-group">
+            <label for="actionWarnMessageInput" class="admin-label">Warning Notice Message</label>
+            <textarea id="actionWarnMessageInput" class="admin-textarea" rows="3" placeholder="Enter warning message shown directly to user..."></textarea>
+          </div>
+          <div class="broadcast-presets-section" style="margin-bottom: 12px;">
+            <span class="broadcast-presets-title">Presets:</span>
+            <div class="broadcast-presets-grid" style="grid-template-columns: repeat(2, 1fr);">
+              <button type="button" class="preset-pill-btn" data-warn-preset="⚠️ Please keep conversations respectful and follow community rules.">
+                <span>Respectful chat</span>
+              </button>
+              <button type="button" class="preset-pill-btn" data-warn-preset="🚨 Warning: Repeated harassment or vulgar language results in an immediate device ban.">
+                <span>Harassment notice</span>
+              </button>
+              <button type="button" class="preset-pill-btn" data-warn-preset="🚫 Solicitation, advertising, and sharing inappropriate links are strictly forbidden.">
+                <span>No solicitation</span>
+              </button>
+              <button type="button" class="preset-pill-btn" data-warn-preset="⚠️ Final Warning: Continued violations will permanently suspend your device.">
+                <span>Final strike</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="actionSilenceFields" style="display:none;">
+          <div class="admin-field-group">
+            <label for="actionSilenceSelect" class="admin-label">Mute Duration</label>
+            <select id="actionSilenceSelect" class="admin-select">
+              <option value="5">5 Minutes</option>
+              <option value="15" selected>15 Minutes</option>
+              <option value="60">1 Hour</option>
+            </select>
+          </div>
+          <p class="admin-desc-text" style="margin-bottom: 12px;">Target will be prevented from sending messages for the selected duration.</p>
+        </div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelActionModalBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitActionModalBtn" class="btn-primary-admin">Confirm Action</button>
         </div>
       </form>
     </div>

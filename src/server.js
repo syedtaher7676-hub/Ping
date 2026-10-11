@@ -8,7 +8,13 @@ const { createAdapter } = require("@socket.io/redis-adapter");
 const Redis = require("ioredis");
 const geoip = require("geoip-lite");
 const { PORT, SOCKET_CORS, MATCHMAKING_INTERVAL_MS, REDIS_URL, ADMIN_PASSWORD } = require("./config");
-const { registerSocketHandlers } = require("./socket/registerSocketHandlers");
+const {
+  registerSocketHandlers,
+  adminSilenceUser,
+  adminResetStrikes,
+  setEmergencyStrictMode,
+  isEmergencyStrictMode,
+} = require("./socket/registerSocketHandlers");
 const {
   getMatchStats,
   attemptMatchmaking,
@@ -571,6 +577,8 @@ app.get("/api/admin/rooms", verifyAdmin, (_req, res) => {
         userId: uid,
         country: u?.country || "Someone nearby",
         hasSocket: !!(u?.socketId && io.sockets?.sockets?.has(u.socketId)),
+        socketId: u?.socketId || null,
+        deviceHash: u?.deviceHash || null,
       };
     });
 
@@ -620,19 +628,26 @@ app.post("/api/admin/bans/add", verifyAdmin, (req, res) => {
 
   const durationMs = (Number(durationMinutes) || 15) * 60 * 1000;
   const suspensionReason = reason?.trim() || "Manual admin suspension";
-  banDevice(deviceHash.trim(), durationMs, suspensionReason);
+  const cleanTarget = deviceHash.trim();
+  let resolvedHash = cleanTarget;
 
-  // Forcefully disconnect any sockets associated with this deviceHash
+  // Resolve target if passed userId or socketId
   for (const socket of io.sockets.sockets.values()) {
-    if (socket.data?.deviceHash === deviceHash.trim()) {
+    if (socket.id === cleanTarget || socket.data?.userId === cleanTarget) {
+      if (socket.data?.deviceHash) resolvedHash = socket.data.deviceHash;
+      socket.emit("banned", { minutes: Math.ceil(durationMs / 60000), reason: suspensionReason });
+      socket.disconnect(true);
+    } else if (socket.data?.deviceHash === cleanTarget || (resolvedHash && socket.data?.deviceHash === resolvedHash)) {
       socket.emit("banned", { minutes: Math.ceil(durationMs / 60000), reason: suspensionReason });
       socket.disconnect(true);
     }
   }
 
-  recordAdminEvent("ban", "Device Suspended", `${deviceHash.trim()} banned for ${durationMinutes || 15}m (${suspensionReason})`, "alert");
-  log("admin_ban_device", { deviceHash, durationMinutes, reason: suspensionReason });
-  res.json({ success: true, message: `Device ${deviceHash} suspended for ${durationMinutes || 15} minutes.` });
+  banDevice(resolvedHash, durationMs, suspensionReason);
+
+  recordAdminEvent("ban", "Device Suspended", `${resolvedHash} banned for ${durationMinutes || 15}m (${suspensionReason})`, "alert");
+  log("admin_ban_device", { deviceHash: resolvedHash, durationMinutes, reason: suspensionReason });
+  res.json({ success: true, message: `Device ${resolvedHash} suspended for ${durationMinutes || 15} minutes.` });
 });
 
 // 7. Remove device ban
@@ -913,6 +928,92 @@ app.post("/api/admin/kick", verifyAdmin, (req, res) => {
 
   recordAdminEvent("moderation", "User Disconnected", `Admin kicked target: ${target.trim()}`, "warning");
   res.json({ success: true, kickedCount, message: `Disconnected ${kickedCount} active socket connection(s).` });
+});
+
+// 16b. Issue Official Administrative Warning
+app.post("/api/admin/warn", verifyAdmin, (req, res) => {
+  const { target, message } = req.body || {};
+  if (!target || typeof target !== "string") {
+    return res.status(400).json({ success: false, error: "Target identifier is required" });
+  }
+  const cleanTarget = target.trim();
+  const warnMsg = (message && typeof message === "string" && message.trim()) || "⚠️ Admin Warning: Please follow community safety guidelines and keep conversations respectful.";
+  let sentCount = 0;
+  for (const s of io.sockets.sockets.values()) {
+    if (s.id === cleanTarget || s.data?.userId === cleanTarget || s.data?.deviceHash === cleanTarget) {
+      s.emit("warning_message", { message: warnMsg });
+      sentCount++;
+    }
+  }
+  recordAdminEvent("moderation", "Warning Issued", `Warned target ${cleanTarget}: "${warnMsg.slice(0, 50)}..."`, "warning");
+  res.json({ success: true, sentCount, message: `Issued warning to ${sentCount} active socket connection(s).` });
+});
+
+// 16c. Silence / Mute User
+app.post("/api/admin/silence", verifyAdmin, (req, res) => {
+  const { target, durationMinutes } = req.body || {};
+  if (!target || typeof target !== "string") {
+    return res.status(400).json({ success: false, error: "Target identifier is required" });
+  }
+  const cleanTarget = target.trim();
+  const mins = Math.max(1, Number(durationMinutes) || 10);
+  const durationMs = mins * 60 * 1000;
+  if (typeof adminSilenceUser === "function") {
+    adminSilenceUser(cleanTarget, durationMs);
+  }
+  let sentCount = 0;
+  for (const s of io.sockets.sockets.values()) {
+    if (s.id === cleanTarget || s.data?.userId === cleanTarget || s.data?.deviceHash === cleanTarget) {
+      s.emit("error_message", { message: `🔇 You have been muted by administration for ${mins} minutes.` });
+      sentCount++;
+    }
+  }
+  recordAdminEvent("moderation", "User Silenced", `Muted ${cleanTarget} for ${mins}m`, "warning");
+  res.json({ success: true, sentCount, message: `Target ${cleanTarget} silenced for ${mins} minutes.` });
+});
+
+// 16d. Reset Violation History & Strikes
+app.post("/api/admin/clear-strikes", verifyAdmin, (req, res) => {
+  const { target } = req.body || {};
+  if (!target || typeof target !== "string") {
+    return res.status(400).json({ success: false, error: "Target identifier is required" });
+  }
+  const cleanTarget = target.trim();
+  if (typeof adminResetStrikes === "function") {
+    adminResetStrikes(cleanTarget);
+  }
+  recordAdminEvent("moderation", "Strikes Reset", `Reset violation history for ${cleanTarget}`, "info");
+  res.json({ success: true, message: `Violation strikes reset for ${cleanTarget}.` });
+});
+
+// 16e. Toggle Strict Emergency Safety Mode (1-strike ban)
+app.post("/api/admin/system/strict-mode", verifyAdmin, (req, res) => {
+  const { enabled } = req.body || {};
+  const strict = Boolean(enabled);
+  if (typeof setEmergencyStrictMode === "function") {
+    setEmergencyStrictMode(strict);
+  }
+  recordAdminEvent("system", "Strict Safety Mode", `Strict safety mode ${strict ? "ENABLED (1-strike ban)" : "DISABLED (standard 3-strikes)"}`, strict ? "alert" : "info");
+  res.json({ success: true, strictMode: strict });
+});
+
+app.get("/api/admin/system/strict-mode", verifyAdmin, (_req, res) => {
+  const strict = typeof isEmergencyStrictMode === "function" ? isEmergencyStrictMode() : false;
+  res.json({ success: true, strictMode: strict });
+});
+
+// 16f. Flush Idle Sockets
+app.post("/api/admin/flush-sockets", verifyAdmin, (_req, res) => {
+  const now = Date.now();
+  let closedCount = 0;
+  for (const [id, user] of users.entries()) {
+    if (user.status === "idle" && (!user.socketId || !io.sockets.sockets.has(user.socketId) || (now - (user.lastHeartbeat || 0) > 60000))) {
+      users.delete(id);
+      closedCount++;
+    }
+  }
+  recordAdminEvent("system", "Memory Cleanup", `Flushed ${closedCount} stale idle connections`, "info");
+  res.json({ success: true, closedCount, message: `Flushed ${closedCount} stale connection records.` });
 });
 
 // 17. Export Full System Telemetry Snapshot (JSON Backup)

@@ -296,11 +296,21 @@ function addViolation(userId, isDm) {
   return active.length;
 }
 
+let isEmergencyStrictModeEnabled = false;
+
+function setEmergencyStrictMode(val) {
+  isEmergencyStrictModeEnabled = Boolean(val);
+}
+
+function isEmergencyStrictMode() {
+  return isEmergencyStrictModeEnabled;
+}
+
 // 1st Offense etc.
 function handleInappropriateViolation(socket, io, userId, reason, text, roomId, isDm, ack) {
   const ip = getSocketIp(socket);
   const violationCount = addViolation(userId, isDm);
-  const maxLimit = isDm ? 5 : 3;
+  const maxLimit = isEmergencyStrictModeEnabled ? 1 : (isDm ? 5 : 3);
 
   spamStore.addSpamViolation({
     userId,
@@ -1929,7 +1939,13 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
             partnerSocket?.emit("partner_reconnected", { roomId });
           }
-          callback?.({ success: true, ok: true });
+          const remainingMs = Math.max(0, (room.endAt || 0) - Date.now());
+          io.to(roomId).emit("timer_sync", {
+            roomId,
+            endAt: room.endAt,
+            remainingMs,
+          });
+          callback?.({ success: true, ok: true, endAt: room.endAt, remainingMs });
         } else {
           callback?.({ success: false, ok: false, reason: 'Room expired or invalid' });
         }
@@ -1969,13 +1985,22 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       }
     });
 
-    socket.on("returned_to_screen", (rawPayload = {}) => {
+    socket.on("returned_to_screen", (rawPayload = {}, ack) => {
       try {
         const payload = safeObject(rawPayload);
         const roomId = safeId(payload.roomId) || user?.roomId;
         if (!roomId) return;
         const room = rooms.get(roomId);
         if (!room || room.status !== "active") return;
+
+        if (user) {
+          user.status = "matched";
+          user.roomId = roomId;
+        }
+
+        if (!socket.rooms.has(roomId)) {
+          socket.join(roomId);
+        }
 
         if (room.disconnectTimeoutRef) {
           clearTimeout(room.disconnectTimeoutRef);
@@ -1988,6 +2013,17 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
           partnerSocket?.emit("partner_reconnected", { roomId });
         }
+
+        // Authoritative 3-minute timer sync according to session length
+        const remainingMs = Math.max(0, (room.endAt || 0) - Date.now());
+        io.to(roomId).emit("timer_sync", {
+          roomId,
+          endAt: room.endAt,
+          remainingMs,
+        });
+
+        const cb = typeof ack === "function" ? ack : (typeof payload.callback === "function" ? payload.callback : null);
+        cb?.({ success: true, ok: true, endAt: room.endAt, remainingMs });
       } catch (err) {
         log("returned_to_screen_error", { userId, error: err?.message });
       }
@@ -2088,11 +2124,22 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     socket.on("get_status", (_rawPayload, ack) => {
       try {
         const currentUser = users.get(userId);
+        let endAt = null;
+        let remainingMs = null;
+        if (currentUser?.roomId) {
+          const room = rooms.get(currentUser.roomId);
+          if (room && room.status === "active") {
+            endAt = room.endAt || null;
+            remainingMs = endAt ? Math.max(0, endAt - Date.now()) : null;
+          }
+        }
         if (typeof ack === "function") {
           ack({
             status: currentUser?.status || "idle",
             roomId: currentUser?.roomId || null,
             joinedAt: currentUser?.joinedAt || null,
+            endAt,
+            remainingMs,
           });
         }
         if (currentUser) {
@@ -2497,6 +2544,34 @@ function registerSocketHandlers(io, getCountryFromSocket) {
   });
 }
 
+function adminSilenceUser(target, durationMs = 10 * 60 * 1000) {
+  const expiry = Date.now() + durationMs;
+  let count = 0;
+  for (const [id, user] of users.entries()) {
+    if (id === target || user.socketId === target) {
+      if (user.socketId) {
+        silencedSockets.set(user.socketId, expiry);
+        count++;
+      }
+    }
+  }
+  if (silencedSockets.has(target)) {
+    silencedSockets.set(target, expiry);
+    count++;
+  }
+  return count;
+}
+
+function adminResetStrikes(target) {
+  exploreViolations.delete(target);
+  friendViolations.delete(target);
+}
+
 module.exports = {
   registerSocketHandlers,
+  adminSilenceUser,
+  adminResetStrikes,
+  setEmergencyStrictMode,
+  isEmergencyStrictMode,
+  silencedSockets,
 };

@@ -3374,6 +3374,46 @@ input:checked+.slider-round:before {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  will-change: transform;
+}
+
+/* ════ WhatsApp-style Swipe to Reply ════ */
+.msg:not(.system) {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.msg-swipe-reply-icon {
+  position: absolute;
+  top: 50%;
+  left: -32px;
+  transform: translateY(-50%) scale(0.65);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.25);
+  border: 1px solid rgba(167, 139, 250, 0.5);
+  color: #c4b5fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.15s ease, color 0.15s ease;
+  z-index: 5;
+}
+
+.msg.self .msg-swipe-reply-icon {
+  left: -32px;
+}
+
+.msg-swipe-reply-icon.ready {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.15);
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #a78bfa;
+  box-shadow: 0 0 14px rgba(124, 58, 237, 0.75);
 }
 
 .msg-text {
@@ -9150,6 +9190,18 @@ html.is-ios .chat-app {
   background: rgba(239, 68, 68, 0.15);
   border-color: rgba(239, 68, 68, 0.35);
   color: #f87171;
+}
+
+.btn-table-action.warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.btn-table-action.info {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.35);
+  color: #38bdf8;
 }
 
 .btn-table-action.success {
