@@ -232,6 +232,42 @@ function detectPhoneNumber(text) {
 }
 
 /**
+ * Detects requests or solicitations for phone numbers or personal mobile/WhatsApp numbers:
+ * - "give me your number", "whats your number", "drop your digits", "can i get your number"
+ * - "whatsapp number please", "send your phone no", "apna number do"
+ */
+function detectAskingForPhoneNumber(text) {
+  if (!text || typeof text !== 'string') return false;
+  const raw = text.trim().toLowerCase();
+  if (!raw) return false;
+
+  const askingPatterns = [
+    // Direct requests: "give me your number", "send your number", "whats your number"
+    /\b(give|send|drop|share|tell|show|leak|got|have)\s+(me\s+)?(your|ur)?\s*(phone|cell|mobile|whatsapp|wa|contact)?\s*(num|number|digits|no\b)/i,
+    // "what is your number", "whats ur num", "what's your phone number"
+    /\b(what('s|\s+is)?|drop|share)\s+(your|ur)\s*(phone|cell|mobile|whatsapp|wa|contact)?\s*(number|num|digits|no\b)/i,
+    // "can i have / get your number", "can u give your number"
+    /\bcan\s+(i|we|u|you)\s+(get|have|got|give|share|see)\s+(your|ur|me\s+your|me\s+ur)?\s*(phone|cell|mobile|whatsapp|wa)?\s*(number|num|digits|no\b)/i,
+    // "ur number?", "your num?", "number please", "phone number?"
+    /^\s*(your|ur)?\s*(phone|cell|mobile|whatsapp|wa)?\s*(number|num|digits)\s*\??\s*$/i,
+    // "call me", "text me", "whatsapp me" with request
+    /\b(call|text|sms|msg|message|dm|ping)\s+me\s+(on|at)?\s*(whatsapp|wa|phone|cell)?\b/i,
+    // Hinglish / South Asian: "number do", "apna number", "number milega", "phn no do", "wa no"
+    /\b(apna\s+)?(number|no)\s+(do|de|dedo|bhejo|send\s+karo|milega|btao|batao)\b/i,
+    /\b(phone|whatsapp|wa)\s*(number|no)\s*(do|de|bhejo|milega)?\b/i,
+    // "exchange numbers", "swap numbers"
+    /\b(exchange|swap|share)\s+(numbers?|nums?|contacts?|digits)\b/i,
+  ];
+
+  for (const pattern of askingPatterns) {
+    if (pattern.test(raw)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Detects Snapchat, Instagram, and social handles/links
  */
 function detectSocialMediaSharing(text) {
@@ -569,6 +605,7 @@ module.exports = {
   isKeyboardMashOrCharacterFlood,
   isVerticalLetterSpam,
   detectPhoneNumber,
+  detectAskingForPhoneNumber,
   detectSocialMediaSharing,
   detectRestrictedSymbols,
   INNOCENT_COLLOQUIALISMS

@@ -21,6 +21,7 @@ const { log } = require("../utils/logger");
 let isMatching = false;
 let isMatchmakingPaused = false;
 let geoPreferenceEnabled = false;
+let queueCapLimit = 0; // 0 = unlimited (supports up to 100k concurrency)
 const matchmakingStartTimes = new Map(); // Track when users enter queue
 
 function setMatchmakingPaused(paused) {
@@ -33,10 +34,20 @@ function setGeoPreference(enabled) {
   return geoPreferenceEnabled;
 }
 
+function setQueueCap(cap) {
+  queueCapLimit = Math.max(0, Number(cap) || 0);
+  return queueCapLimit;
+}
+
+function getQueueCap() {
+  return queueCapLimit;
+}
+
 function getMatchmakingSettings() {
   return {
     isMatchmakingPaused,
     geoPreferenceEnabled,
+    queueCapLimit,
   };
 }
 
@@ -76,6 +87,11 @@ function enqueueForMatchmaking(userId, io = null) {
   const user = users.get(userId);
   if (!user) {
     return { ok: false, reason: "user_not_found" };
+  }
+
+  // High-load 100k queue cap check
+  if (queueCapLimit > 0 && waitingSet && waitingSet.size >= queueCapLimit) {
+    return { ok: false, reason: "queue_capacity_limit", message: "Matchmaking queue is at peak capacity. Please retry shortly." };
   }
 
   // Verify socket is alive before enqueueing
@@ -353,4 +369,6 @@ module.exports = {
   setMatchmakingPaused,
   setGeoPreference,
   getMatchmakingSettings,
+  setQueueCap,
+  getQueueCap,
 };

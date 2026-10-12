@@ -17,6 +17,7 @@ const {
 } = require("../state/store");
 const { createId } = require("../utils/ids");
 const { log } = require("../utils/logger");
+const { recordSessionCompleted } = require("./behaviorAnalytics");
 
 function safelyResetUser(user) {
   if (!user) {
@@ -68,6 +69,8 @@ function terminateSession(io, roomId, reason = "session_ended") {
 
   room.status = "terminated";
   room.endedAt = Date.now();
+  const sessionDurationSec = room.createdAt || room.startedAt ? Math.max(0, Math.round((Date.now() - (room.createdAt || room.startedAt)) / 1000)) : 0;
+  recordSessionCompleted(sessionDurationSec, room.messageCount || 0, reason);
   if (room.timerRef) {
     clearTimeout(room.timerRef);
     room.timerRef = null;

@@ -14,6 +14,20 @@ const {
   adminResetStrikes,
   setEmergencyStrictMode,
   isEmergencyStrictMode,
+  setGlobalSlowMode,
+  getGlobalSlowMode,
+  setRaidShield,
+  isRaidShield,
+  setBlockExternalLinks,
+  isBlockExternalLinks,
+  toggleCountryQuarantine,
+  isCountryQuarantined,
+  getQuarantinedCountries,
+  addShadowban,
+  removeShadowban,
+  isShadowbanned,
+  getAllShadowbans,
+  calculateUserRiskScore,
 } = require("./socket/registerSocketHandlers");
 const {
   getMatchStats,
@@ -21,6 +35,8 @@ const {
   setMatchmakingPaused,
   setGeoPreference,
   getMatchmakingSettings,
+  setQueueCap,
+  getQueueCap,
 } = require("./services/matchmaking");
 const {
   getBlockedWords,
@@ -30,6 +46,7 @@ const {
   detectSlurWithContext,
   getSlurStats,
 } = require("./data/slurFilter");
+const { getBehaviorAnalyticsSnapshot } = require("./services/behaviorAnalytics");
 const { terminateSession } = require("./services/sessionManager");
 const { rooms, users, waitingSet, redisClient, isRedisReady } = require("./state/store");
 const { createId } = require("./utils/ids");
@@ -442,22 +459,60 @@ function recordAdminEvent(type, title, detail, level = "info") {
 global.recordAdminEvent = recordAdminEvent;
 recordAdminEvent("system", "Gateway Initialized", "Ping real-time server ready", "success");
 
-// Telemetry history samples for silky smooth SVG sparklines (last 20 intervals, 0ms latency)
+// Telemetry history samples for silky smooth SVG sparklines & multi-metric graphs (last 40 intervals)
 const telemetryHistory = [];
-const MAX_TELEMETRY_SAMPLES = 20;
+const MAX_TELEMETRY_SAMPLES = 40;
+
+let messageThroughputWindow = 0;
+let violationsThroughputWindow = 0;
+let lastThroughputSampleTime = Date.now();
+let currentMsgsPerSec = 0;
+let currentViolationsPerSec = 0;
+let lastEventLoopLag = 1;
+
+global.recordMessageSent = () => {
+  messageThroughputWindow++;
+};
+
+global.recordViolationIntercepted = () => {
+  violationsThroughputWindow++;
+};
 
 setInterval(() => {
+  const start = Date.now();
+  setImmediate(() => {
+    lastEventLoopLag = Math.max(0, Date.now() - start);
+  });
+}, 2000).unref();
+
+setInterval(() => {
+  const now = Date.now();
+  const elapsedSec = Math.max(1, (now - lastThroughputSampleTime) / 1000);
+  currentMsgsPerSec = Math.round(messageThroughputWindow / elapsedSec);
+  currentViolationsPerSec = Math.round(violationsThroughputWindow / elapsedSec);
+  messageThroughputWindow = 0;
+  violationsThroughputWindow = 0;
+  lastThroughputSampleTime = now;
+}, 3000).unref();
+
+setInterval(() => {
+  const mem = process.memoryUsage();
   const sample = {
     t: Date.now(),
     online: io.sockets?.sockets?.size || 0,
     rooms: rooms.size || 0,
     waiting: waitingSet ? waitingSet.size : 0,
+    msgsPerSec: currentMsgsPerSec,
+    violationsPerSec: currentViolationsPerSec,
+    heapMb: Math.round(mem.heapUsed / 1024 / 1024),
+    rssMb: Math.round(mem.rss / 1024 / 1024),
+    eventLoopLagMs: lastEventLoopLag,
   };
   telemetryHistory.push(sample);
   if (telemetryHistory.length > MAX_TELEMETRY_SAMPLES) {
     telemetryHistory.shift();
   }
-}, 5000).unref();
+}, 3000).unref();
 
 // Cleanup expired admin tokens
 setInterval(() => {
@@ -559,26 +614,49 @@ app.get("/api/admin/overview", verifyAdmin, (_req, res) => {
     redisStatus: typeof isRedisReady === "function" && isRedisReady() ? "connected" : "in_memory_fallback",
     firestoreStatus: dbService.isFirebaseConfigured() ? "connected" : "ready_in_memory",
     bansCount: bans.size,
+    shadowbansCount: typeof getAllShadowbans === "function" ? getAllShadowbans().length : 0,
+    slowModeSeconds: typeof getGlobalSlowMode === "function" ? getGlobalSlowMode() : 0,
+    raidShield: typeof isRaidShield === "function" ? isRaidShield() : false,
+    strictMode: typeof isEmergencyStrictMode === "function" ? isEmergencyStrictMode() : false,
+    blockLinks: typeof isBlockExternalLinks === "function" ? isBlockExternalLinks() : true,
+    quarantinedCountriesCount: typeof getQuarantinedCountries === "function" ? getQuarantinedCountries().length : 0,
+    queueCapLimit: typeof getQueueCap === "function" ? getQueueCap() : 0,
+    msgsPerSec: currentMsgsPerSec,
+    violationsPerSec: currentViolationsPerSec,
+    eventLoopLagMs: lastEventLoopLag,
     matchmakingSettings: mmSettings,
     slurStats,
+    behaviorStats: typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : null,
     sparkline: telemetryHistory,
     eventsCount: adminEvents.length,
   });
 });
 
-// 3. Active rooms list
+// 2b. Comprehensive Behavioral & Violation Analytics Feed
+app.get("/api/admin/behavior-analytics", verifyAdmin, (_req, res) => {
+  const snapshot = typeof getBehaviorAnalyticsSnapshot === "function"
+    ? getBehaviorAnalyticsSnapshot()
+    : { overview: {}, slurDistribution: {}, contactExtraction: {}, engagement: {}, topTriggers: [], recentInterceptions: [] };
+  res.json({ success: true, ...snapshot });
+});
+
+// 3. Active rooms list with risk analysis
 app.get("/api/admin/rooms", verifyAdmin, (_req, res) => {
   const activeRoomsList = [];
   const now = Date.now();
   for (const [roomId, room] of rooms.entries()) {
     const userList = (room.users || []).map((uid) => {
       const u = users.get(uid);
+      const risk = typeof calculateUserRiskScore === "function" ? calculateUserRiskScore(uid) : { score: 0, tier: "Normal" };
       return {
         userId: uid,
         country: u?.country || "Someone nearby",
         hasSocket: !!(u?.socketId && io.sockets?.sockets?.has(u.socketId)),
         socketId: u?.socketId || null,
         deviceHash: u?.deviceHash || null,
+        riskScore: risk.score,
+        riskTier: risk.tier,
+        isShadowbanned: typeof isShadowbanned === "function" ? isShadowbanned(uid) : false,
       };
     });
 
@@ -907,6 +985,10 @@ app.get("/api/admin/lookup", verifyAdmin, (req, res) => {
     isBanned,
     banMinutesLeft,
     banReason: meta.reason || (isBanned ? "Active suspension" : null),
+    isShadowbanned: typeof isShadowbanned === "function" ? isShadowbanned(query, foundSocket) : false,
+    riskScore: (typeof calculateUserRiskScore === "function" ? calculateUserRiskScore(query) : { score: 0, tier: "Normal" }).score,
+    riskTier: (typeof calculateUserRiskScore === "function" ? calculateUserRiskScore(query) : { score: 0, tier: "Normal" }).tier,
+    riskReasons: (typeof calculateUserRiskScore === "function" ? calculateUserRiskScore(query) : { score: 0, tier: "Normal", reasons: [] }).reasons,
   });
 });
 
@@ -1014,6 +1096,238 @@ app.post("/api/admin/flush-sockets", verifyAdmin, (_req, res) => {
   }
   recordAdminEvent("system", "Memory Cleanup", `Flushed ${closedCount} stale idle connections`, "info");
   res.json({ success: true, closedCount, message: `Flushed ${closedCount} stale connection records.` });
+});
+
+// 16g. Global Slow Mode Cooldown (Chat rate governor)
+app.post("/api/admin/system/slow-mode", verifyAdmin, (req, res) => {
+  const { seconds } = req.body || {};
+  const s = Math.max(0, Number(seconds) || 0);
+  const updated = typeof setGlobalSlowMode === "function" ? setGlobalSlowMode(s) : s;
+  recordAdminEvent("system", "Slow Mode Updated", updated > 0 ? `Global slow mode set to ${updated}s` : "Global slow mode DISABLED", updated > 0 ? "warning" : "info");
+  res.json({ success: true, slowModeSeconds: updated });
+});
+
+// 16h. Raid Shield / Anti-Bot Surge Defense
+app.post("/api/admin/system/raid-shield", verifyAdmin, (req, res) => {
+  const { enabled } = req.body || {};
+  const active = Boolean(enabled);
+  const updated = typeof setRaidShield === "function" ? setRaidShield(active) : active;
+  recordAdminEvent("system", "Raid Shield Toggled", updated ? "Surge raid defense ENABLED" : "Raid defense DISABLED", updated ? "alert" : "info");
+  res.json({ success: true, raidShield: updated });
+});
+
+// 16i. Aggressive External Link Filter
+app.post("/api/admin/system/link-filter", verifyAdmin, (req, res) => {
+  const { enabled } = req.body || {};
+  const active = Boolean(enabled);
+  const updated = typeof setBlockExternalLinks === "function" ? setBlockExternalLinks(active) : active;
+  recordAdminEvent("system", "Link Shield Toggled", updated ? "External links/invites strictly BLOCKED" : "Standard link policy", "info");
+  res.json({ success: true, blockLinks: updated });
+});
+
+// 16j. Matchmaking Queue Capacity Governor
+app.post("/api/admin/system/queue-cap", verifyAdmin, (req, res) => {
+  const { cap } = req.body || {};
+  const limit = Math.max(0, Number(cap) || 0);
+  const updated = typeof setQueueCap === "function" ? setQueueCap(limit) : limit;
+  recordAdminEvent("system", "Queue Capacity Set", updated > 0 ? `Max queue cap set to ${updated} users` : "Queue capacity UNLIMITED", "info");
+  res.json({ success: true, queueCapLimit: updated });
+});
+
+// 16k. Shadowban (Ghost Mode) Management
+app.get("/api/admin/shadowbans", verifyAdmin, (_req, res) => {
+  const list = typeof getAllShadowbans === "function" ? getAllShadowbans() : [];
+  res.json({ success: true, shadowbans: list });
+});
+
+app.post("/api/admin/shadowbans/add", verifyAdmin, (req, res) => {
+  const { target, durationMinutes, reason } = req.body || {};
+  if (!target || typeof target !== "string") {
+    return res.status(400).json({ success: false, error: "Target identifier is required" });
+  }
+  const cleanTarget = target.trim();
+  const mins = Math.max(1, Number(durationMinutes) || 1440);
+  const durationMs = mins * 60 * 1000;
+  const shadowReason = reason?.trim() || "Automated spam bot isolation";
+
+  if (typeof addShadowban === "function") {
+    addShadowban(cleanTarget, durationMs, shadowReason);
+  }
+  recordAdminEvent("moderation", "Ghost Shadowban Added", `Silently isolated target: ${cleanTarget} (${mins}m)`, "warning");
+  res.json({ success: true, message: `Target ${cleanTarget} added to ghost shadowban mode for ${mins}m.` });
+});
+
+app.post("/api/admin/shadowbans/remove", verifyAdmin, (req, res) => {
+  const { target } = req.body || {};
+  if (!target || typeof target !== "string") {
+    return res.status(400).json({ success: false, error: "Target identifier is required" });
+  }
+  const cleanTarget = target.trim();
+  if (typeof removeShadowban === "function") {
+    removeShadowban(cleanTarget);
+  }
+  recordAdminEvent("moderation", "Ghost Shadowban Lifted", `Lifted shadowban for: ${cleanTarget}`, "info");
+  res.json({ success: true, message: `Shadowban lifted for ${cleanTarget}.` });
+});
+
+// 16l. Bulk Moderation - Batch Ban
+app.post("/api/admin/bulk-ban", verifyAdmin, (req, res) => {
+  const { targets, durationMinutes, reason } = req.body || {};
+  if (!targets) {
+    return res.status(400).json({ success: false, error: "Targets list is required" });
+  }
+
+  let list = [];
+  if (Array.isArray(targets)) {
+    list = targets.map((t) => String(t).trim()).filter(Boolean);
+  } else if (typeof targets === "string") {
+    list = targets.split(/[\n,;\s]+/).map((t) => t.trim()).filter(Boolean);
+  }
+
+  if (list.length === 0) {
+    return res.status(400).json({ success: false, error: "No valid targets specified" });
+  }
+
+  const mins = Math.max(1, Number(durationMinutes) || 60);
+  const durationMs = mins * 60 * 1000;
+  const suspensionReason = reason?.trim() || "Bulk administrative suspension";
+  let count = 0;
+
+  for (const t of list) {
+    banDevice(t, durationMs, suspensionReason);
+    count++;
+    // Disconnect active socket if connected
+    for (const socket of io.sockets.sockets.values()) {
+      if (socket.id === t || socket.data?.userId === t || socket.data?.deviceHash === t) {
+        socket.emit("banned", { minutes: mins, reason: suspensionReason });
+        socket.disconnect(true);
+      }
+    }
+  }
+
+  recordAdminEvent("ban", "Bulk Devices Suspended", `Batch-banned ${count} target(s) for ${mins}m`, "alert");
+  res.json({ success: true, processedCount: count, message: `Batch-banned ${count} target(s) successfully.` });
+});
+
+// 16m. Bulk Moderation - Batch Shadowban
+app.post("/api/admin/bulk-shadowban", verifyAdmin, (req, res) => {
+  const { targets, durationMinutes, reason } = req.body || {};
+  let list = [];
+  if (Array.isArray(targets)) {
+    list = targets.map((t) => String(t).trim()).filter(Boolean);
+  } else if (typeof targets === "string") {
+    list = targets.split(/[\n,;\s]+/).map((t) => t.trim()).filter(Boolean);
+  }
+
+  if (list.length === 0) {
+    return res.status(400).json({ success: false, error: "No valid targets specified" });
+  }
+
+  const mins = Math.max(1, Number(durationMinutes) || 1440);
+  const durationMs = mins * 60 * 1000;
+  const shadowReason = reason?.trim() || "Bulk ghost moderation";
+  let count = 0;
+
+  for (const t of list) {
+    if (typeof addShadowban === "function") {
+      addShadowban(t, durationMs, shadowReason);
+      count++;
+    }
+  }
+
+  recordAdminEvent("moderation", "Bulk Shadowban Applied", `Ghost-isolated ${count} target(s)`, "warning");
+  res.json({ success: true, processedCount: count, message: `Bulk ghost-shadowban applied to ${count} target(s).` });
+});
+
+// 16n. Bulk Moderation - Mass Disconnect (Purge by criteria)
+app.post("/api/admin/bulk-kick", verifyAdmin, (req, res) => {
+  const { mode = "targets", targets, country } = req.body || {};
+  let kickedCount = 0;
+
+  if (mode === "by_country" && country) {
+    const cleanCountry = String(country).toLowerCase().trim();
+    for (const socket of io.sockets.sockets.values()) {
+      const socketCountry = (socket.data?.country || "").toLowerCase();
+      if (socketCountry.includes(cleanCountry)) {
+        socket.emit("error_message", { message: "Administrative maintenance for this region." });
+        socket.disconnect(true);
+        kickedCount++;
+      }
+    }
+  } else if (mode === "all_idle") {
+    const now = Date.now();
+    for (const [id, user] of users.entries()) {
+      if (user.status === "idle" && (now - (user.lastActionAt || user.joinedAt || 0) > 300000)) {
+        if (user.socketId && io.sockets.sockets.has(user.socketId)) {
+          const s = io.sockets.sockets.get(user.socketId);
+          s.disconnect(true);
+        }
+        users.delete(id);
+        kickedCount++;
+      }
+    }
+  } else {
+    let list = [];
+    if (Array.isArray(targets)) list = targets.map((t) => String(t).trim()).filter(Boolean);
+    else if (typeof targets === "string") list = targets.split(/[\n,;\s]+/).map((t) => t.trim()).filter(Boolean);
+
+    for (const t of list) {
+      for (const socket of io.sockets.sockets.values()) {
+        if (socket.id === t || socket.data?.userId === t || socket.data?.deviceHash === t) {
+          socket.emit("error_message", { message: "Disconnected by system administration." });
+          socket.disconnect(true);
+          kickedCount++;
+        }
+      }
+    }
+  }
+
+  recordAdminEvent("system", "Mass Disconnect", `Purged ${kickedCount} socket connections (Mode: ${mode})`, "warning");
+  res.json({ success: true, kickedCount, message: `Disconnected ${kickedCount} connections.` });
+});
+
+// 16o. Country Quarantine & Geo-Fencing Control
+app.get("/api/admin/geo-rules", verifyAdmin, (_req, res) => {
+  const quarantined = typeof getQuarantinedCountries === "function" ? getQuarantinedCountries() : [];
+  const counts = new Map();
+  for (const socket of io.sockets.sockets.values()) {
+    const country = socket.data?.country || "Someone nearby";
+    counts.set(country, (counts.get(country) || 0) + 1);
+  }
+
+  const list = Array.from(counts.entries()).map(([country, count]) => {
+    const isQuarantined = quarantined.some((q) => country.toLowerCase().includes(q));
+    return { country, count, isQuarantined };
+  });
+
+  res.json({ success: true, geoRules: list, quarantined });
+});
+
+app.post("/api/admin/geo-rules/toggle", verifyAdmin, (req, res) => {
+  const { country, quarantine } = req.body || {};
+  if (!country || typeof country !== "string") {
+    return res.status(400).json({ success: false, error: "Country identifier is required" });
+  }
+
+  const updated = typeof toggleCountryQuarantine === "function" ? toggleCountryQuarantine(country, Boolean(quarantine)) : Boolean(quarantine);
+  recordAdminEvent("system", "Geo-Fence Toggled", `Country "${country}" quarantine: ${updated ? "ACTIVE" : "REMOVED"}`, updated ? "warning" : "info");
+  res.json({ success: true, country, isQuarantined: updated });
+});
+
+// 16p. High-Resolution Extended Telemetry Time-Series
+app.get("/api/admin/telemetry-history", verifyAdmin, (_req, res) => {
+  res.json({
+    success: true,
+    history: telemetryHistory,
+    current: {
+      online: io.sockets?.sockets?.size || 0,
+      rooms: rooms.size || 0,
+      waiting: waitingSet ? waitingSet.size : 0,
+      msgsPerSec: currentMsgsPerSec,
+      violationsPerSec: currentViolationsPerSec,
+      eventLoopLagMs: lastEventLoopLag,
+    },
+  });
 });
 
 // 17. Export Full System Telemetry Snapshot (JSON Backup)

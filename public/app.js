@@ -5469,11 +5469,15 @@ function initAdminModule() {
   const statActiveRooms = $('statActiveRooms');
   const statWaitingQueue = $('statWaitingQueue');
   const statTotalMatches = $('statTotalMatches');
+  const statMsgsPerSec = $('statMsgsPerSec');
+  const statViolationsIntercepted = $('statViolationsIntercepted');
+  const statShadowbansCount = $('statShadowbansCount');
   const statMemoryUsage = $('statMemoryUsage');
   const statMemoryDetails = $('statMemoryDetails');
   const statActiveBansCount = $('statActiveBansCount');
   const badgeRedisStatus = $('badgeRedisStatus');
   const badgeFirestoreStatus = $('badgeFirestoreStatus');
+  const badgeEventLoopLag = $('badgeEventLoopLag');
   const infraNodeDesc = $('infraNodeDesc');
 
   // Badge counts
@@ -5482,12 +5486,46 @@ function initAdminModule() {
   const adminReportsBadge = $('adminReportsBadge');
   const adminEventsBadge = $('adminEventsBadge');
   const adminWordsBadge = $('adminWordsBadge');
+  const adminShadowbansBadge = $('adminShadowbansBadge');
 
   // Header controls & sound
   const adminSoundToggle = $('adminSoundToggle');
   const adminSoundToggleText = $('adminSoundToggleText');
   const adminExportBtn = $('adminExportBtn');
   let soundAlertsEnabled = true;
+
+  // Advanced SVG Chart 1 (Fleet Concurrency & Throughput) DOM
+  const svgThroughputChart = $('svgThroughputChart');
+  const throughputChartWrapper = $('throughputChartWrapper');
+  const throughputChartOverlay = $('throughputChartOverlay');
+  const chartSocketsArea = $('chartSocketsArea');
+  const chartSocketsPolyline = $('chartSocketsPolyline');
+  const chartRoomsArea = $('chartRoomsArea');
+  const chartRoomsPolyline = $('chartRoomsPolyline');
+  const chartVelocityPolyline = $('chartVelocityPolyline');
+  const chartScrubLine = $('chartScrubLine');
+  const chartScrubDotSockets = $('chartScrubDotSockets');
+  const chartScrubDotRooms = $('chartScrubDotRooms');
+  const hudTimeVal = $('hudTimeVal');
+  const hudSocketsVal = $('hudSocketsVal');
+  const hudRoomsVal = $('hudRoomsVal');
+  const hudVelocityVal = $('hudVelocityVal');
+  const hudQueueVal = $('hudQueueVal');
+  let currentThroughputTimeframe = '90s';
+
+  // Advanced SVG Chart 2 (Automated Threat Shield) DOM
+  const svgThreatChart = $('svgThreatChart');
+  const threatChartWrapper = $('threatChartWrapper');
+  const threatChartOverlay = $('threatChartOverlay');
+  const chartThreatArea = $('chartThreatArea');
+  const chartThreatPolyline = $('chartThreatPolyline');
+  const chartSpamPolyline = $('chartSpamPolyline');
+  const threatScrubLine = $('threatScrubLine');
+  const threatScrubDot = $('threatScrubDot');
+  const hudThreatTimeVal = $('hudThreatTimeVal');
+  const hudThreatVal = $('hudThreatVal');
+  const hudSpamVal = $('hudSpamVal');
+  const hudCleanRateVal = $('hudCleanRateVal');
 
   // Sparklines DOM
   const sparklineVelocityLine = $('sparklineVelocityLine');
@@ -5498,11 +5536,137 @@ function initAdminModule() {
   const sparklineSocketsTrend = $('sparklineSocketsTrend');
 
   // Emergency Switches DOM
+  const adminToggleRaidShieldBtn = $('adminToggleRaidShieldBtn');
+  const raidShieldBtnText = $('raidShieldBtnText');
+  const adminSlowModeSelect = $('adminSlowModeSelect');
   const adminToggleMatchmakingBtn = $('adminToggleMatchmakingBtn');
   const matchmakingBtnText = $('matchmakingBtnText');
+  const adminToggleStrictModeBtn = $('adminToggleStrictModeBtn');
+  const strictModeBtnText = $('strictModeBtnText');
+  const adminToggleLinkShieldBtn = $('adminToggleLinkShieldBtn');
+  const linkShieldBtnText = $('linkShieldBtnText');
+  const adminQueueCapSelect = $('adminQueueCapSelect');
+  const adminFlushSocketsBtn = $('adminFlushSocketsBtn');
   const adminToggleGeoBtn = $('adminToggleGeoBtn');
   const geoMatchBtnText = $('geoMatchBtnText');
   const systemControlsStatusPill = $('systemControlsStatusPill');
+
+  // 100k Mass Control & Bulk Operations DOM
+  const bulkTargetsInput = $('bulkTargetsInput');
+  const bulkFillReportsBtn = $('bulkFillReportsBtn');
+  const bulkClearTargetsBtn = $('bulkClearTargetsBtn');
+  const bulkDurationSelect = $('bulkDurationSelect');
+  const bulkReasonInput = $('bulkReasonInput');
+  const executeBulkBanBtn = $('executeBulkBanBtn');
+  const executeBulkShadowbanBtn = $('executeBulkShadowbanBtn');
+  const executeBulkKickBtn = $('executeBulkKickBtn');
+  const bulkActionOutputLog = $('bulkActionOutputLog');
+  const purgeIdleSocketsBtn = $('purgeIdleSocketsBtn');
+  const purgeCountryInput = $('purgeCountryInput');
+  const purgeCountryBtn = $('purgeCountryBtn');
+  const drainQueueBtn = $('drainQueueBtn');
+  const geoRulesActiveCount = $('geoRulesActiveCount');
+  const geoRulesTableBody = $('geoRulesTableBody');
+
+  // Ghost Shadowban DOM
+  const addShadowbanForm = $('addShadowbanForm');
+  const shadowbanTargetInput = $('shadowbanTargetInput');
+  const shadowbanDurationSelect = $('shadowbanDurationSelect');
+  const shadowbanReasonInput = $('shadowbanReasonInput');
+  const submitShadowbanBtn = $('submitShadowbanBtn');
+  const shadowbansCountPill = $('shadowbansCountPill');
+  const shadowbansTableBody = $('shadowbansTableBody');
+  let cachedShadowbansList = [];
+
+  // Behavior, Messaging & Violation Intelligence DOM
+  const adminNavTabBehavior = $('adminNavTabBehavior');
+  const adminBehaviorBadge = $('adminBehaviorBadge');
+  const refreshBehaviorBtn = $('refreshBehaviorBtn');
+
+  // Overview Tab Behavior Cards
+  const statOverviewAskedNumbers = $('statOverviewAskedNumbers');
+  const statOverviewSharedNumbers = $('statOverviewSharedNumbers');
+  const statOverviewSlursBlocked = $('statOverviewSlursBlocked');
+  const statOverviewCleanRate = $('statOverviewCleanRate');
+
+  // Behavior Tab Stats Grid
+  const statBehaviorAskedNumbers = $('statBehaviorAskedNumbers');
+  const statBehaviorSharedNumbers = $('statBehaviorSharedNumbers');
+  const statBehaviorSlursBlocked = $('statBehaviorSlursBlocked');
+  const statBehaviorSocialHandles = $('statBehaviorSocialHandles');
+  const statBehaviorCleanRate = $('statBehaviorCleanRate');
+  const statBehaviorAvgDuration = $('statBehaviorAvgDuration');
+  const statBehaviorAvgMsgLength = $('statBehaviorAvgMsgLength');
+  const statBehaviorOffPlatformRate = $('statBehaviorOffPlatformRate');
+
+  // Ratio Bar & Legend
+  const ratioBarAsked = $('ratioBarAsked');
+  const ratioBarShared = $('ratioBarShared');
+  const ratioBarSlurs = $('ratioBarSlurs');
+  const ratioBarSocial = $('ratioBarSocial');
+  const ratioBarLinks = $('ratioBarLinks');
+  const behaviorLegendList = $('behaviorLegendList');
+
+  // Contact Extraction Items
+  const countExtractAsked = $('countExtractAsked');
+  const countExtractShared = $('countExtractShared');
+  const countExtractInstagram = $('countExtractInstagram');
+  const countExtractSnapchat = $('countExtractSnapchat');
+  const countExtractTelegram = $('countExtractTelegram');
+
+  // Slur Taxonomy Cards
+  const catRacialCount = $('catRacialCount');
+  const catPredatoryCount = $('catPredatoryCount');
+  const catHomophobicCount = $('catHomophobicCount');
+  const catMisogynisticCount = $('catMisogynisticCount');
+  const catCyberbullyingCount = $('catCyberbullyingCount');
+  const catRegionalCount = $('catRegionalCount');
+
+  // Session Depth
+  const durQuickSkipsCount = $('durQuickSkipsCount');
+  const durQuickSkipsFill = $('durQuickSkipsFill');
+  const durShortChatsCount = $('durShortChatsCount');
+  const durShortChatsFill = $('durShortChatsFill');
+  const durMediumChatsCount = $('durMediumChatsCount');
+  const durMediumChatsFill = $('durMediumChatsFill');
+  const durDeepChatsCount = $('durDeepChatsCount');
+  const durDeepChatsFill = $('durDeepChatsFill');
+
+  // Conversational Vibe Taxonomy
+  const vibeGreetingsCount = $('vibeGreetingsCount');
+  const vibeGreetingsFill = $('vibeGreetingsFill');
+  const vibeCuriousCount = $('vibeCuriousCount');
+  const vibeCuriousFill = $('vibeCuriousFill');
+  const vibeCasualCount = $('vibeCasualCount');
+  const vibeCasualFill = $('vibeCasualFill');
+  const vibeHumorCount = $('vibeHumorCount');
+  const vibeHumorFill = $('vibeHumorFill');
+  const vibeHostileCount = $('vibeHostileCount');
+  const vibeHostileFill = $('vibeHostileFill');
+
+  // Behavioral Timeline SVG Chart
+  const chartBehaviorAskedArea = $('chartBehaviorAskedArea');
+  const chartBehaviorAskedPolyline = $('chartBehaviorAskedPolyline');
+  const chartBehaviorSlursArea = $('chartBehaviorSlursArea');
+  const chartBehaviorSlursPolyline = $('chartBehaviorSlursPolyline');
+  const chartBehaviorSocialPolyline = $('chartBehaviorSocialPolyline');
+  const chartBehaviorSharedPolyline = $('chartBehaviorSharedPolyline');
+  const hudBehaviorAsked = $('hudBehaviorAsked');
+  const hudBehaviorSlurs = $('hudBehaviorSlurs');
+  const hudBehaviorSocials = $('hudBehaviorSocials');
+  const hudBehaviorClean = $('hudBehaviorClean');
+
+  // Top Triggers & Repeat Offenders
+  const behaviorTriggersCount = $('behaviorTriggersCount');
+  const behaviorTriggersTableBody = $('behaviorTriggersTableBody');
+  const repeatOffendersCountPill = $('repeatOffendersCountPill');
+  const repeatOffendersTableBody = $('repeatOffendersTableBody');
+
+  // Interception Wire
+  const wireFilterPills = $('wireFilterPills');
+  const behaviorWireTableBody = $('behaviorWireTableBody');
+  let currentWireFilter = 'all';
+  let cachedWireEvents = [];
 
   // Real-time Audit Stream DOM
   const adminEventsContainer = $('adminEventsContainer');
@@ -5687,6 +5851,7 @@ function initAdminModule() {
     if (!adminDashboardView) return;
     adminDashboardView.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    setupChartScrubbing();
     startAdminPolling();
     refreshAllAdminData();
   }
@@ -5899,10 +6064,765 @@ function initAdminModule() {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // ADVANCED INTERACTIVE SVG GRAPH 1: 100K CONCURRENCY & VELOCITY
+  // ═══════════════════════════════════════════════════════════════
+  let cachedTelemetryHistory = [];
+
+  function generateSimulated100kData() {
+    const points = [];
+    const now = Date.now();
+    for (let i = 45; i >= 0; i--) {
+      const t = now - i * 2000;
+      const baseSockets = 102000 + Math.floor(Math.sin(i / 3) * 4200) + Math.floor(Math.random() * 800);
+      const baseRooms = Math.floor(baseSockets * 0.44) + Math.floor(Math.random() * 500);
+      const baseMsgs = Math.floor(baseRooms * 0.32) + Math.floor(Math.random() * 400);
+      const baseWaiting = 240 + Math.floor(Math.random() * 120);
+      const violations = 8 + Math.floor(Math.random() * 6);
+      points.push({
+        timestamp: t,
+        online: baseSockets,
+        rooms: baseRooms,
+        waiting: baseWaiting,
+        msgsPerSec: baseMsgs,
+        violationsPerSec: violations,
+        eventLoopLagMs: 2,
+      });
+    }
+    return points;
+  }
+
+  function renderAdvancedThroughputChart(history = [], timeframe = '90s') {
+    if (!svgThroughputChart) return;
+    let data = Array.isArray(history) && history.length > 0 ? [...history] : [];
+
+    if (timeframe === '100k') {
+      data = generateSimulated100kData();
+    } else if (timeframe === '5m') {
+      data = data.slice(-45);
+    } else if (timeframe === '15m') {
+      data = data.slice(-60);
+    } else {
+      data = data.slice(-30);
+    }
+
+    if (data.length < 2) {
+      // Seed initial points if server just started
+      const now = Date.now();
+      const curOnline = Number(statOnlineUsers?.textContent) || 1;
+      const curRooms = Number(statActiveRooms?.textContent) || 0;
+      data = [
+        { timestamp: now - 4000, online: Math.max(0, curOnline - 1), rooms: curRooms, msgsPerSec: 0, waiting: 0 },
+        { timestamp: now, online: curOnline, rooms: curRooms, msgsPerSec: 1, waiting: 0 }
+      ];
+    }
+
+    const W = 600;
+    const H = 200;
+    const padTop = 15;
+    const padBottom = 20;
+    const chartHeight = H - padTop - padBottom;
+
+    const maxOnline = Math.max(...data.map((d) => d.online || 0), 5);
+    const maxRooms = Math.max(...data.map((d) => d.rooms || 0), 4);
+    const maxVelocity = Math.max(...data.map((d) => d.msgsPerSec || 0), 2);
+
+    const getX = (idx) => Math.round((idx / (data.length - 1)) * W);
+    const getY = (val, maxVal) => Math.round(H - padBottom - ((val || 0) / (maxVal || 1)) * chartHeight);
+
+    // 1. Sockets Polyline & Area
+    const socketPoints = data.map((d, i) => `${getX(i)},${getY(d.online, maxOnline)}`).join(' ');
+    if (chartSocketsPolyline) chartSocketsPolyline.setAttribute('points', socketPoints);
+    if (chartSocketsArea && socketPoints) {
+      chartSocketsArea.setAttribute('d', `M0,${H - padBottom} L${socketPoints.replace(/ /g, ' L')} L${W},${H - padBottom} Z`);
+    }
+
+    // 2. Rooms Polyline & Area
+    const roomPoints = data.map((d, i) => `${getX(i)},${getY(d.rooms, maxRooms)}`).join(' ');
+    if (chartRoomsPolyline) chartRoomsPolyline.setAttribute('points', roomPoints);
+    if (chartRoomsArea && roomPoints) {
+      chartRoomsArea.setAttribute('d', `M0,${H - padBottom} L${roomPoints.replace(/ /g, ' L')} L${W},${H - padBottom} Z`);
+    }
+
+    // 3. Velocity Polyline
+    const velPoints = data.map((d, i) => `${getX(i)},${getY(d.msgsPerSec, maxVelocity)}`).join(' ');
+    if (chartVelocityPolyline) chartVelocityPolyline.setAttribute('points', velPoints);
+
+    // Update Live HUD strip with latest sample
+    const latest = data[data.length - 1];
+    if (latest) {
+      if (hudTimeVal) hudTimeVal.textContent = timeframe === '100k' ? '100k Simulated Fleet' : 'Live Fleet';
+      if (hudSocketsVal) hudSocketsVal.textContent = (latest.online || 0).toLocaleString();
+      if (hudRoomsVal) hudRoomsVal.textContent = (latest.rooms || 0).toLocaleString();
+      if (hudVelocityVal) hudVelocityVal.textContent = `${latest.msgsPerSec || 0} msgs/s`;
+      if (hudQueueVal) hudQueueVal.textContent = (latest.waiting || 0).toLocaleString();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ADVANCED INTERACTIVE SVG GRAPH 2: AUTOMATED THREAT SHIELD
+  // ═══════════════════════════════════════════════════════════════
+  function renderAdvancedThreatChart(history = []) {
+    if (!svgThreatChart) return;
+    let data = Array.isArray(history) && history.length > 0 ? history.slice(-30) : [];
+    if (data.length < 2) {
+      const now = Date.now();
+      data = [
+        { timestamp: now - 4000, violationsPerSec: 0, msgsPerSec: 1 },
+        { timestamp: now, violationsPerSec: 0, msgsPerSec: 1 }
+      ];
+    }
+
+    const W = 600;
+    const H = 160;
+    const padBottom = 15;
+    const chartHeight = H - 25 - padBottom;
+
+    const maxViolations = Math.max(...data.map((d) => d.violationsPerSec || 0), 4);
+    const getX = (idx) => Math.round((idx / (data.length - 1)) * W);
+    const getY = (val, maxVal) => Math.round(H - padBottom - ((val || 0) / (maxVal || 1)) * chartHeight);
+
+    // Threat Violations Polyline & Area
+    const threatPoints = data.map((d, i) => `${getX(i)},${getY(d.violationsPerSec, maxViolations)}`).join(' ');
+    if (chartThreatPolyline) chartThreatPolyline.setAttribute('points', threatPoints);
+    if (chartThreatArea && threatPoints) {
+      chartThreatArea.setAttribute('d', `M0,${H - padBottom} L${threatPoints.replace(/ /g, ' L')} L${W},${H - padBottom} Z`);
+    }
+
+    // Simulated / Interpolated Spam link line
+    const spamPoints = data.map((d, i) => `${getX(i)},${getY(Math.max(0, Math.floor((d.violationsPerSec || 0) * 0.6)), maxViolations)}`).join(' ');
+    if (chartSpamPolyline) chartSpamPolyline.setAttribute('points', spamPoints);
+
+    // Update HUD
+    const latest = data[data.length - 1];
+    if (latest) {
+      const v = latest.violationsPerSec || 0;
+      const m = latest.msgsPerSec || 1;
+      const cleanRate = m > 0 ? Math.max(90, Math.min(100, ((m - v) / m) * 100)).toFixed(1) : '99.9';
+      if (hudThreatTimeVal) hudThreatTimeVal.textContent = 'Live Shield';
+      if (hudThreatVal) hudThreatVal.textContent = `${v} blocked/s`;
+      if (hudSpamVal) hudSpamVal.textContent = `${Math.floor(v * 0.6)}/s`;
+      if (hudCleanRateVal) hudCleanRateVal.textContent = `${cleanRate}%`;
+    }
+  }
+
+  // Crosshair scrubber interaction for Chart 1
+  function setupChartScrubbing() {
+    if (!throughputChartOverlay) return;
+
+    const handleScrub = (clientX) => {
+      const rect = throughputChartOverlay.getBoundingClientRect();
+      if (!rect.width) return;
+      const rawX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      const pct = rawX / rect.width;
+      const chartX = pct * 600;
+
+      const data = currentThroughputTimeframe === '100k'
+        ? generateSimulated100kData()
+        : (cachedTelemetryHistory.length > 0 ? cachedTelemetryHistory.slice(-30) : []);
+
+      if (data.length === 0) return;
+      const idx = Math.min(data.length - 1, Math.max(0, Math.round(pct * (data.length - 1))));
+      const item = data[idx];
+      if (!item) return;
+
+      const maxOnline = Math.max(...data.map((d) => d.online || 0), 5);
+      const maxRooms = Math.max(...data.map((d) => d.rooms || 0), 4);
+      const chartHeight = 200 - 15 - 20;
+      const ySockets = Math.round(200 - 20 - ((item.online || 0) / maxOnline) * chartHeight);
+      const yRooms = Math.round(200 - 20 - ((item.rooms || 0) / maxRooms) * chartHeight);
+
+      if (chartScrubLine) {
+        chartScrubLine.setAttribute('x1', chartX);
+        chartScrubLine.setAttribute('x2', chartX);
+        chartScrubLine.setAttribute('opacity', '0.85');
+      }
+      if (chartScrubDotSockets) {
+        chartScrubDotSockets.setAttribute('cx', chartX);
+        chartScrubDotSockets.setAttribute('cy', ySockets);
+        chartScrubDotSockets.setAttribute('opacity', '1');
+      }
+      if (chartScrubDotRooms) {
+        chartScrubDotRooms.setAttribute('cx', chartX);
+        chartScrubDotRooms.setAttribute('cy', yRooms);
+        chartScrubDotRooms.setAttribute('opacity', '1');
+      }
+
+      const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Scrub';
+      if (hudTimeVal) hudTimeVal.textContent = timeStr;
+      if (hudSocketsVal) hudSocketsVal.textContent = (item.online || 0).toLocaleString();
+      if (hudRoomsVal) hudRoomsVal.textContent = (item.rooms || 0).toLocaleString();
+      if (hudVelocityVal) hudVelocityVal.textContent = `${item.msgsPerSec || 0} msgs/s`;
+      if (hudQueueVal) hudQueueVal.textContent = (item.waiting || 0).toLocaleString();
+    };
+
+    const resetScrub = () => {
+      if (chartScrubLine) chartScrubLine.setAttribute('opacity', '0');
+      if (chartScrubDotSockets) chartScrubDotSockets.setAttribute('opacity', '0');
+      if (chartScrubDotRooms) chartScrubDotRooms.setAttribute('opacity', '0');
+      renderAdvancedThroughputChart(cachedTelemetryHistory, currentThroughputTimeframe);
+    };
+
+    throughputChartOverlay.addEventListener('mousemove', (e) => handleScrub(e.clientX));
+    throughputChartOverlay.addEventListener('mouseleave', resetScrub);
+    throughputChartOverlay.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) {
+        handleScrub(e.touches[0].clientX);
+      }
+    }, { passive: true });
+    throughputChartOverlay.addEventListener('touchend', resetScrub);
+  }
+
+  // Timeframe pills click handlers
+  document.querySelectorAll('#throughputTimeframeWrap .timeframe-pill').forEach((pill) => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('#throughputTimeframeWrap .timeframe-pill').forEach((p) => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentThroughputTimeframe = pill.getAttribute('data-timeframe') || '90s';
+      renderAdvancedThroughputChart(cachedTelemetryHistory, currentThroughputTimeframe);
+    });
+  });
+
+  // Fetch telemetry history for charts
+  async function fetchTelemetryHistory() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/telemetry-history`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      cachedTelemetryHistory = data.history || [];
+      renderAdvancedThroughputChart(cachedTelemetryHistory, currentThroughputTimeframe);
+      renderAdvancedThreatChart(cachedTelemetryHistory);
+
+      if (data.current) {
+        if (statMsgsPerSec) statMsgsPerSec.textContent = `${data.current.msgsPerSec || 0}/s`;
+        if (statViolationsIntercepted) statViolationsIntercepted.textContent = data.current.violationsPerSec || 0;
+        if (badgeEventLoopLag && typeof data.current.eventLoopLagMs !== 'undefined') {
+          const lag = data.current.eventLoopLagMs;
+          badgeEventLoopLag.innerHTML = `Lag: <span class="tabular-nums">${lag}ms</span>`;
+          badgeEventLoopLag.className = `infra-badge ${lag > 50 ? 'warn' : 'ok'}`;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 100K MASS CONTROL: REGIONAL QUARANTINE PERIMETER RULES
+  // ═══════════════════════════════════════════════════════════════
+  async function fetchGeoRules() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/geo-rules`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      renderGeoRulesTable(data.geoRules || [], data.quarantined || []);
+    } catch (_) {}
+  }
+
+  function renderGeoRulesTable(geoRules = [], quarantined = []) {
+    if (!geoRulesTableBody) return;
+    if (geoRulesActiveCount) geoRulesActiveCount.textContent = `${quarantined.length} Quarantined`;
+
+    if (geoRules.length === 0) {
+      geoRulesTableBody.innerHTML = `
+        <tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--t-ghost);">No regional traffic active yet.</td></tr>
+      `;
+      return;
+    }
+
+    geoRulesTableBody.innerHTML = geoRules
+      .map((rule) => {
+        const isQ = rule.isQuarantined;
+        const statusBadge = isQ
+          ? '<span class="badge-tag rejected">🚨 QUARANTINED</span>'
+          : '<span class="badge-tag approved">✓ Active Perimeter</span>';
+        const btnClass = isQ ? 'btn-table-action success' : 'btn-table-action danger';
+        const btnText = isQ ? 'Lift Quarantine' : 'Quarantine Region';
+
+        return `
+          <tr>
+            <td><strong>${rule.country}</strong></td>
+            <td><strong class="tabular-nums">${rule.count}</strong> sockets</td>
+            <td>${statusBadge}</td>
+            <td>
+              <button class="${btnClass}" data-action="toggle-quarantine" data-country="${rule.country}" data-quarantine="${!isQ}">
+                ${btnText}
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    geoRulesTableBody.querySelectorAll('[data-action="toggle-quarantine"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const country = btn.getAttribute('data-country');
+        const quarantine = btn.getAttribute('data-quarantine') === 'true';
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/geo-rules/toggle`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ country, quarantine }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            if (typeof showToast === 'function') {
+              showToast(`Region "${country}" quarantine: ${quarantine ? 'ENFORCED' : 'LIFTED'}`);
+            }
+            fetchGeoRules();
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // GHOST SHADOWBAN MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════
+  async function fetchShadowbans() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/shadowbans`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      cachedShadowbansList = data.shadowbans || [];
+      if (adminShadowbansBadge) adminShadowbansBadge.textContent = cachedShadowbansList.length;
+      if (shadowbansCountPill) shadowbansCountPill.textContent = `${cachedShadowbansList.length} active`;
+      if (statShadowbansCount) statShadowbansCount.textContent = cachedShadowbansList.length;
+      renderShadowbansTable();
+    } catch (_) {}
+  }
+
+  function renderShadowbansTable() {
+    if (!shadowbansTableBody) return;
+    if (cachedShadowbansList.length === 0) {
+      shadowbansTableBody.innerHTML = `
+        <tr><td colspan="4" style="text-align:center; padding: 24px; color: var(--t-ghost);">👻 No users are currently ghost shadowbanned.</td></tr>
+      `;
+      return;
+    }
+
+    shadowbansTableBody.innerHTML = cachedShadowbansList
+      .map((sb) => `
+        <tr>
+          <td><code style="color:var(--pink-l); font-size:0.8rem;">${sb.target}</code></td>
+          <td><span class="badge-tag pending tabular-nums">⏳ ${sb.minutesLeft}m left</span></td>
+          <td style="font-size:0.82rem;">${sb.reason || 'Ghost quarantined'}</td>
+          <td>
+            <button class="btn-table-action success" data-action="remove-shadowban" data-target="${sb.target}">
+              Lift Quarantine
+            </button>
+          </td>
+        </tr>
+      `)
+      .join('');
+
+    shadowbansTableBody.querySelectorAll('[data-action="remove-shadowban"]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const target = btn.getAttribute('data-target');
+        if (!target) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/shadowbans/remove`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ target }),
+          });
+          const d = await res.json();
+          if (d.success) {
+            if (typeof showToast === 'function') showToast(`Ghost shadowban on ${target} lifted.`);
+            fetchShadowbans();
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // USER BEHAVIOR, MESSAGING & VIOLATION INTEL CONTROLLER
+  // ═══════════════════════════════════════════════════════════════
+  async function fetchBehaviorAnalytics() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/behavior-analytics`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+      renderBehaviorData(data);
+    } catch (_) {}
+  }
+
+  function renderBehaviorData(data) {
+    if (!data) return;
+    const ov = data.overview || {};
+
+    // 1. Behavior Tab 8-Card Stat Grid
+    if (statBehaviorAskedNumbers) statBehaviorAskedNumbers.textContent = (ov.phoneNumbersAskedCount || 0).toLocaleString();
+    if (statBehaviorSharedNumbers) statBehaviorSharedNumbers.textContent = (ov.phoneNumbersSharedCount || 0).toLocaleString();
+    if (statBehaviorSlursBlocked) statBehaviorSlursBlocked.textContent = (ov.slursInterceptedCount || 0).toLocaleString();
+    if (statBehaviorSocialHandles) statBehaviorSocialHandles.textContent = (ov.socialHandlesCount || 0).toLocaleString();
+    if (statBehaviorCleanRate) statBehaviorCleanRate.textContent = `${ov.cleanPassRate ?? 100}%`;
+    if (statBehaviorAvgDuration) statBehaviorAvgDuration.textContent = `${ov.avgChatDurationSeconds || 0}s`;
+    if (statBehaviorAvgMsgLength) statBehaviorAvgMsgLength.textContent = `${ov.avgMsgLengthChars || 0} chars`;
+    if (statBehaviorOffPlatformRate) statBehaviorOffPlatformRate.textContent = `${ov.offPlatformAttemptRate || 0}%`;
+
+    // Overview Tab sync
+    if (statOverviewAskedNumbers) statOverviewAskedNumbers.textContent = (ov.phoneNumbersAskedCount || 0).toLocaleString();
+    if (statOverviewSharedNumbers) statOverviewSharedNumbers.textContent = (ov.phoneNumbersSharedCount || 0).toLocaleString();
+    if (statOverviewSlursBlocked) statOverviewSlursBlocked.textContent = (ov.slursInterceptedCount || 0).toLocaleString();
+    if (statOverviewCleanRate) statOverviewCleanRate.textContent = `${ov.cleanPassRate ?? 100}%`;
+    if (adminBehaviorBadge) adminBehaviorBadge.textContent = ov.totalMessagesBlocked || 0;
+
+    // 2. Contact Extraction Breakdown
+    const ce = data.contactExtraction || {};
+    if (countExtractAsked) countExtractAsked.textContent = (ce.numbersAsked || 0).toLocaleString();
+    if (countExtractShared) countExtractShared.textContent = (ce.numbersShared || 0).toLocaleString();
+    if (countExtractInstagram) countExtractInstagram.textContent = (ce.instagramHandles || 0).toLocaleString();
+    if (countExtractSnapchat) countExtractSnapchat.textContent = (ce.snapchatHandles || 0).toLocaleString();
+    if (countExtractTelegram) countExtractTelegram.textContent = (ce.telegramDiscord || 0).toLocaleString();
+
+    // 3. Category Composition Ratio Bar & Legend
+    const asked = ov.phoneNumbersAskedCount || 0;
+    const shared = ov.phoneNumbersSharedCount || 0;
+    const slurs = ov.slursInterceptedCount || 0;
+    const social = ov.socialHandlesCount || 0;
+    const links = ov.linksBlockedCount || 0;
+    const totalViolations = asked + shared + slurs + social + links;
+
+    if (totalViolations > 0) {
+      if (ratioBarAsked) ratioBarAsked.style.width = `${((asked / totalViolations) * 100).toFixed(1)}%`;
+      if (ratioBarShared) ratioBarShared.style.width = `${((shared / totalViolations) * 100).toFixed(1)}%`;
+      if (ratioBarSlurs) ratioBarSlurs.style.width = `${((slurs / totalViolations) * 100).toFixed(1)}%`;
+      if (ratioBarSocial) ratioBarSocial.style.width = `${((social / totalViolations) * 100).toFixed(1)}%`;
+      if (ratioBarLinks) ratioBarLinks.style.width = `${((links / totalViolations) * 100).toFixed(1)}%`;
+    } else {
+      if (ratioBarAsked) ratioBarAsked.style.width = '0%';
+      if (ratioBarShared) ratioBarShared.style.width = '0%';
+      if (ratioBarSlurs) ratioBarSlurs.style.width = '0%';
+      if (ratioBarSocial) ratioBarSocial.style.width = '0%';
+      if (ratioBarLinks) ratioBarLinks.style.width = '0%';
+    }
+
+    if (behaviorLegendList) {
+      const items = [
+        { label: 'Asking For Numbers / WhatsApp', color: '#f59e0b', count: asked },
+        { label: 'Direct Phone Numbers Shared', color: '#ef4444', count: shared },
+        { label: 'Hate Speech & Slurs', color: '#dc2626', count: slurs },
+        { label: 'Social Media Handles (IG/Snap)', color: '#a855f7', count: social },
+        { label: 'External Links & Bot Invites', color: '#3b82f6', count: links },
+      ];
+      behaviorLegendList.innerHTML = items.map(it => {
+        const pct = totalViolations > 0 ? ((it.count / totalViolations) * 100).toFixed(1) : '0.0';
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:10px; height:10px; border-radius:3px; background:${it.color}; display:inline-block;"></span>
+              <span>${it.label}</span>
+            </div>
+            <div>
+              <strong class="tabular-nums" style="margin-right:8px;">${it.count.toLocaleString()}</strong>
+              <span class="tabular-nums" style="color:var(--t-ghost); font-size:0.75rem;">(${pct}%)</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 4. Slur Category Taxonomy
+    const sd = data.slurDistribution || {};
+    if (catRacialCount) catRacialCount.textContent = (sd.racialAndEthnic || 0).toLocaleString();
+    if (catPredatoryCount) catPredatoryCount.textContent = (sd.predatoryAndGrooming || 0).toLocaleString();
+    if (catHomophobicCount) catHomophobicCount.textContent = (sd.homophobicTransphobic || 0).toLocaleString();
+    if (catMisogynisticCount) catMisogynisticCount.textContent = (sd.misogynisticAbuse || 0).toLocaleString();
+    if (catCyberbullyingCount) catCyberbullyingCount.textContent = (sd.cyberbullyingAndSelfHarm || 0).toLocaleString();
+    if (catRegionalCount) catRegionalCount.textContent = (sd.regionalHinglish || 0).toLocaleString();
+
+    // 5. Chat Session Depth Progress Bars
+    const eng = data.engagement || {};
+    const db = eng.durationBuckets || {};
+    const qk = db.quickSkips || 0;
+    const sc = db.shortChats || 0;
+    const mc = db.mediumChats || 0;
+    const dc = db.deepConversations || 0;
+    const durSum = qk + sc + mc + dc;
+
+    if (durQuickSkipsCount) durQuickSkipsCount.textContent = qk.toLocaleString();
+    if (durShortChatsCount) durShortChatsCount.textContent = sc.toLocaleString();
+    if (durMediumChatsCount) durMediumChatsCount.textContent = mc.toLocaleString();
+    if (durDeepChatsCount) durDeepChatsCount.textContent = dc.toLocaleString();
+
+    if (durSum > 0) {
+      if (durQuickSkipsFill) durQuickSkipsFill.style.width = `${Math.min(100, (qk / durSum) * 100).toFixed(1)}%`;
+      if (durShortChatsFill) durShortChatsFill.style.width = `${Math.min(100, (sc / durSum) * 100).toFixed(1)}%`;
+      if (durMediumChatsFill) durMediumChatsFill.style.width = `${Math.min(100, (mc / durSum) * 100).toFixed(1)}%`;
+      if (durDeepChatsFill) durDeepChatsFill.style.width = `${Math.min(100, (dc / durSum) * 100).toFixed(1)}%`;
+    }
+
+    // 6. Conversational Tone & Vibe Taxonomy
+    const vb = eng.vibes || {};
+    const vg = vb.friendlyGreetings || 0;
+    const vq = vb.curiousQuestions || 0;
+    const vc = vb.casualChat || 0;
+    const vh = vb.playfulHumor || 0;
+    const vx = vb.hostileAbuse || 0;
+    const vibeSum = vg + vq + vc + vh + vx;
+
+    if (vibeGreetingsCount) vibeGreetingsCount.textContent = vg.toLocaleString();
+    if (vibeCuriousCount) vibeCuriousCount.textContent = vq.toLocaleString();
+    if (vibeCasualCount) vibeCasualCount.textContent = vc.toLocaleString();
+    if (vibeHumorCount) vibeHumorCount.textContent = vh.toLocaleString();
+    if (vibeHostileCount) vibeHostileCount.textContent = vx.toLocaleString();
+
+    if (vibeSum > 0) {
+      if (vibeGreetingsFill) vibeGreetingsFill.style.width = `${Math.min(100, (vg / vibeSum) * 100).toFixed(1)}%`;
+      if (vibeCuriousFill) vibeCuriousFill.style.width = `${Math.min(100, (vq / vibeSum) * 100).toFixed(1)}%`;
+      if (vibeCasualFill) vibeCasualFill.style.width = `${Math.min(100, (vc / vibeSum) * 100).toFixed(1)}%`;
+      if (vibeHumorFill) vibeHumorFill.style.width = `${Math.min(100, (vh / vibeSum) * 100).toFixed(1)}%`;
+      if (vibeHostileFill) vibeHostileFill.style.width = `${Math.min(100, (vx / vibeSum) * 100).toFixed(1)}%`;
+    }
+
+    // 7. Behavioral Violation Timeline Chart (SVG)
+    renderBehaviorTimelineChart(data.timeSeries || []);
+
+    // 8. Top Intercepted Trigger Terms & Patterns
+    const triggers = data.topTriggers || [];
+    if (behaviorTriggersCount) behaviorTriggersCount.textContent = `${triggers.length} Active Triggers`;
+    if (behaviorTriggersTableBody) {
+      if (triggers.length === 0) {
+        behaviorTriggersTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--t-ghost);">No violation triggers recorded yet. Platform operating clean.</td></tr>`;
+      } else {
+        behaviorTriggersTableBody.innerHTML = triggers.map((t, idx) => {
+          const ago = t.lastSeen ? `${Math.max(0, Math.round((Date.now() - t.lastSeen) / 1000))}s ago` : 'recently';
+          const catClass = t.category.includes('Slur') ? 'red' : (t.category.includes('Contact') ? 'amber' : 'purple');
+          return `
+            <tr>
+              <td class="tabular-nums" style="font-weight:700; color:var(--t-ghost);">#${idx + 1}</td>
+              <td><code style="color:var(--t-primary); font-size:0.83rem;">${escapeHtml(t.trigger)}</code></td>
+              <td><span class="badge-tag ${catClass}">${escapeHtml(t.category)}</span></td>
+              <td class="tabular-nums font-bold" style="color:var(--pink-l);">${t.count.toLocaleString()}</td>
+              <td style="color:var(--t-ghost); font-size:0.78rem;">${ago}</td>
+              <td>
+                <button class="btn-table-action" data-action="blacklist-word" data-word="${escapeHtml(t.trigger)}">
+                  + Add Filter
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        behaviorTriggersTableBody.querySelectorAll('[data-action="blacklist-word"]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const word = btn.getAttribute('data-word');
+            if (!word) return;
+            switchAdminTab('words');
+            if (newWordInput) newWordInput.value = word;
+          });
+        });
+      }
+    }
+
+    // 9. Top Repeat Policy & Slur Offenders
+    const offenders = data.topOffenders || [];
+    if (repeatOffendersCountPill) repeatOffendersCountPill.textContent = `${offenders.length} Flagged`;
+    if (repeatOffendersTableBody) {
+      if (offenders.length === 0) {
+        repeatOffendersTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 22px; color: var(--t-ghost);">No repeat offenders detected. Platform safety healthy.</td></tr>`;
+      } else {
+        repeatOffendersTableBody.innerHTML = offenders.map((off, idx) => {
+          const totalV = off.violationCount || 0;
+          const badgeClass = totalV >= 5 ? 'rejected' : (totalV >= 2 ? 'pending' : 'info');
+          return `
+            <tr>
+              <td class="tabular-nums" style="font-weight:700; color:var(--t-ghost);">#${idx + 1}</td>
+              <td><code class="clickable-user-id" data-inspect-user="${off.userId}" title="Click to inspect" style="cursor:pointer; color:var(--pink-l);">${off.userId}</code></td>
+              <td><span class="country-tag" style="font-size:0.75rem;">🌐 ${escapeHtml(off.country || 'Global')}</span></td>
+              <td><span class="badge-tag ${badgeClass} tabular-nums">${totalV} strikes</span></td>
+              <td class="tabular-nums font-bold" style="color:var(--red-l);">${off.slursCount || 0}</td>
+              <td class="tabular-nums font-bold" style="color:var(--amber-l);">${(off.askedNumbersCount || 0) + (off.sharedNumbersCount || 0) + (off.socialsCount || 0)}</td>
+              <td style="font-size:0.75rem; color:var(--t-secondary); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${escapeHtml(off.lastSnippet || 'None')}
+              </td>
+              <td>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn-table-action" style="background:rgba(236,72,153,0.15); color:var(--pink-l); border-color:rgba(236,72,153,0.3);" data-action="quick-shadowban" data-user="${off.userId}" title="Silently quarantine without alert">
+                    👻 Ghost
+                  </button>
+                  <button class="btn-table-action danger" data-action="quick-ban" data-user="${off.userId}" title="Ban hardware device 15m">
+                    🚫 Ban
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        repeatOffendersTableBody.querySelectorAll('[data-action="quick-shadowban"]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const target = btn.getAttribute('data-user');
+            if (!target) return;
+            try {
+              const res = await fetch(`${backendUrl}/api/admin/shadowbans/add`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ target, minutes: 60, reason: 'Repeat slur / contact violation' }),
+              });
+              const d = await res.json();
+              if (d.success && typeof showToast === 'function') {
+                showToast(`👻 User ${target} silently ghost shadowbanned for 60m.`);
+                fetchBehaviorAnalytics();
+              }
+            } catch (_) {}
+          });
+        });
+
+        repeatOffendersTableBody.querySelectorAll('[data-action="quick-ban"]').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const target = btn.getAttribute('data-user');
+            if (!target) return;
+            try {
+              const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ deviceHash: target, minutes: 15, reason: 'Repeat community guideline violation' }),
+              });
+              const d = await res.json();
+              if (d.success && typeof showToast === 'function') {
+                showToast(`🚫 Device ${target} banned for 15m.`);
+                fetchBehaviorAnalytics();
+              }
+            } catch (_) {}
+          });
+        });
+
+        repeatOffendersTableBody.querySelectorAll('[data-inspect-user]').forEach(el => {
+          el.addEventListener('click', () => {
+            const uid = el.getAttribute('data-inspect-user');
+            if (!uid) return;
+            switchAdminTab('lookup');
+            if (lookupQueryInput) lookupQueryInput.value = uid;
+            adminLookupForm?.dispatchEvent(new Event('submit'));
+          });
+        });
+      }
+    }
+
+    // 10. Interception Wire
+    cachedWireEvents = data.recentInterceptions || [];
+    renderWireTable();
+  }
+
+  function renderBehaviorTimelineChart(timeSeries) {
+    if (!timeSeries || timeSeries.length === 0) return;
+    const askedPts = [];
+    const slursPts = [];
+    const socialPts = [];
+    const sharedPts = [];
+    const len = timeSeries.length;
+    const width = 600;
+    const paddingBottom = 155;
+
+    let maxVal = 5;
+    timeSeries.forEach(pt => {
+      const m = Math.max(pt.askedNumbers || 0, pt.slurs || 0, pt.socials || 0, pt.sharedNumbers || 0);
+      if (m > maxVal) maxVal = m;
+    });
+
+    const stepX = len > 1 ? width / (len - 1) : width;
+
+    timeSeries.forEach((pt, i) => {
+      const x = Math.round(i * stepX);
+      const yAsked = Math.round(paddingBottom - ((pt.askedNumbers || 0) / maxVal) * 120);
+      const ySlurs = Math.round(paddingBottom - ((pt.slurs || 0) / maxVal) * 120);
+      const ySocial = Math.round(paddingBottom - ((pt.socials || 0) / maxVal) * 120);
+      const yShared = Math.round(paddingBottom - ((pt.sharedNumbers || 0) / maxVal) * 120);
+
+      askedPts.push(`${x},${yAsked}`);
+      slursPts.push(`${x},${ySlurs}`);
+      socialPts.push(`${x},${ySocial}`);
+      sharedPts.push(`${x},${yShared}`);
+    });
+
+    if (chartBehaviorAskedPolyline) chartBehaviorAskedPolyline.setAttribute('points', askedPts.join(' '));
+    if (chartBehaviorAskedArea) chartBehaviorAskedArea.setAttribute('d', `M0,155 L${askedPts.join(' L')} L600,155 Z`);
+
+    if (chartBehaviorSlursPolyline) chartBehaviorSlursPolyline.setAttribute('points', slursPts.join(' '));
+    if (chartBehaviorSlursArea) chartBehaviorSlursArea.setAttribute('d', `M0,155 L${slursPts.join(' L')} L600,155 Z`);
+
+    if (chartBehaviorSocialPolyline) chartBehaviorSocialPolyline.setAttribute('points', socialPts.join(' '));
+    if (chartBehaviorSharedPolyline) chartBehaviorSharedPolyline.setAttribute('points', sharedPts.join(' '));
+
+    const latest = timeSeries[timeSeries.length - 1] || {};
+    if (hudBehaviorAsked) hudBehaviorAsked.textContent = `${latest.askedNumbers || 0}/min`;
+    if (hudBehaviorSlurs) hudBehaviorSlurs.textContent = `${latest.slurs || 0}/min`;
+    if (hudBehaviorSocials) hudBehaviorSocials.textContent = `${latest.socials || 0}/min`;
+    if (hudBehaviorClean) hudBehaviorClean.textContent = `${latest.cleanMsgs || 0}/min`;
+  }
+
+  function renderWireTable() {
+    if (!behaviorWireTableBody) return;
+    const filtered = currentWireFilter === 'all'
+      ? cachedWireEvents
+      : cachedWireEvents.filter(e => e.type === currentWireFilter);
+
+    if (filtered.length === 0) {
+      behaviorWireTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">No interceptions recorded in this filter.</td></tr>`;
+      return;
+    }
+
+    behaviorWireTableBody.innerHTML = filtered.slice(0, 50).map(item => {
+      const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+      let tagClass = 'info';
+      if (item.type === 'slur_detected') tagClass = 'rejected';
+      else if (item.type === 'phone_asked' || item.type === 'phone_shared') tagClass = 'pending';
+      else if (item.type === 'social_handle') tagClass = 'purple';
+
+      return `
+        <tr>
+          <td class="tabular-nums" style="font-size:0.75rem; color:var(--t-ghost);">${timeStr}</td>
+          <td><span class="badge-tag ${tagClass}">${escapeHtml(item.categoryName || item.type)}</span></td>
+          <td><code style="font-size:0.78rem;">${escapeHtml(item.userId || 'Anonymous')}</code></td>
+          <td style="font-size:0.75rem;">🌐 ${escapeHtml(item.country || 'Global')}</td>
+          <td style="font-size:0.78rem; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--t-secondary);">
+            ${escapeHtml(item.snippet || '')}
+          </td>
+          <td><span class="badge-tag success" style="font-size:0.72rem;">${escapeHtml(item.action || 'Blocked')}</span></td>
+          <td>
+            <button class="btn-table-action" style="padding:3px 8px; font-size:0.72rem;" data-action="wire-shadowban" data-user="${item.userId}">
+              👻 Ghost
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    behaviorWireTableBody.querySelectorAll('[data-action="wire-shadowban"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.getAttribute('data-user');
+        if (!uid || uid === 'Anonymous') return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/shadowbans/add`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ target: uid, minutes: 60, reason: 'Flagged on live interception wire' }),
+          });
+          const d = await res.json();
+          if (d.success && typeof showToast === 'function') {
+            showToast(`👻 User ${uid} ghost shadowbanned.`);
+            fetchBehaviorAnalytics();
+          }
+        } catch (_) {}
+      });
+    });
+  }
+
   async function refreshAllAdminData() {
     if (!adminToken) return;
     await fetchOverviewStats();
-    if (adminActiveTab === 'events') fetchAdminEvents();
+    if (adminActiveTab === 'behavior') fetchBehaviorAnalytics();
+    else if (adminActiveTab === 'masscontrol') fetchGeoRules();
+    else if (adminActiveTab === 'shadowbans') fetchShadowbans();
+    else if (adminActiveTab === 'events') fetchAdminEvents();
     else if (adminActiveTab === 'rooms') fetchActiveRooms();
     else if (adminActiveTab === 'bans') fetchActiveBans();
     else if (adminActiveTab === 'reports') fetchReportsFeed();
@@ -5911,13 +6831,28 @@ function initAdminModule() {
   }
 
   function refreshTabSpecificData(tabKey) {
-    if (tabKey === 'overview') fetchOverviewStats();
-    else if (tabKey === 'events') fetchAdminEvents();
-    else if (tabKey === 'rooms') fetchActiveRooms();
-    else if (tabKey === 'bans') fetchActiveBans();
-    else if (tabKey === 'reports') fetchReportsFeed();
-    else if (tabKey === 'words') fetchWordFilterData();
-    else if (tabKey === 'geo') fetchGeoData();
+    if (tabKey === 'overview') {
+      fetchOverviewStats();
+      fetchTelemetryHistory();
+    } else if (tabKey === 'behavior') {
+      fetchBehaviorAnalytics();
+    } else if (tabKey === 'masscontrol') {
+      fetchGeoRules();
+    } else if (tabKey === 'shadowbans') {
+      fetchShadowbans();
+    } else if (tabKey === 'events') {
+      fetchAdminEvents();
+    } else if (tabKey === 'rooms') {
+      fetchActiveRooms();
+    } else if (tabKey === 'bans') {
+      fetchActiveBans();
+    } else if (tabKey === 'reports') {
+      fetchReportsFeed();
+    } else if (tabKey === 'words') {
+      fetchWordFilterData();
+    } else if (tabKey === 'geo') {
+      fetchGeoData();
+    }
   }
 
   // 7. Overview Telemetry Fetcher
@@ -5928,11 +6863,27 @@ function initAdminModule() {
       const data = await res.json();
       if (!data.success) return;
 
-      if (statOnlineUsers) statOnlineUsers.textContent = data.onlineUsers;
-      if (statActiveRooms) statActiveRooms.textContent = data.activeRooms;
-      if (statWaitingQueue) statWaitingQueue.textContent = data.waitingQueue;
-      if (statTotalMatches) statTotalMatches.textContent = data.totalMatches;
-      if (statActiveBansCount) statActiveBansCount.textContent = data.bansCount;
+      if (statOnlineUsers) statOnlineUsers.textContent = (data.onlineUsers || 0).toLocaleString();
+      if (statActiveRooms) statActiveRooms.textContent = (data.activeRooms || 0).toLocaleString();
+      if (statWaitingQueue) statWaitingQueue.textContent = (data.waitingQueue || 0).toLocaleString();
+      if (statTotalMatches) statTotalMatches.textContent = (data.totalMatches || 0).toLocaleString();
+      if (statActiveBansCount) statActiveBansCount.textContent = (data.bansCount || 0).toLocaleString();
+
+      if (typeof data.shadowbansCount !== 'undefined' && statShadowbansCount) {
+        statShadowbansCount.textContent = data.shadowbansCount;
+      }
+      if (typeof data.shadowbansCount !== 'undefined' && adminShadowbansBadge) {
+        adminShadowbansBadge.textContent = data.shadowbansCount;
+      }
+
+      if (data.behaviorStats && data.behaviorStats.overview) {
+        const bo = data.behaviorStats.overview;
+        if (statOverviewAskedNumbers) statOverviewAskedNumbers.textContent = (bo.phoneNumbersAskedCount || 0).toLocaleString();
+        if (statOverviewSharedNumbers) statOverviewSharedNumbers.textContent = (bo.phoneNumbersSharedCount || 0).toLocaleString();
+        if (statOverviewSlursBlocked) statOverviewSlursBlocked.textContent = (bo.slursInterceptedCount || 0).toLocaleString();
+        if (statOverviewCleanRate) statOverviewCleanRate.textContent = `${bo.cleanPassRate ?? 100}%`;
+        if (adminBehaviorBadge) adminBehaviorBadge.textContent = bo.totalMessagesBlocked || 0;
+      }
 
       if (adminRoomsBadge) adminRoomsBadge.textContent = data.activeRooms;
       if (adminBansBadge) adminBansBadge.textContent = data.bansCount;
@@ -5941,19 +6892,49 @@ function initAdminModule() {
         adminWordsBadge.textContent = data.slurStats.totalViolations || 0;
       }
 
+      // Sync advanced switches state
+      if (adminToggleRaidShieldBtn && raidShieldBtnText) {
+        const isRaid = Boolean(data.raidShield);
+        adminToggleRaidShieldBtn.className = `btn-switch ${isRaid ? 'paused' : ''}`;
+        raidShieldBtnText.textContent = isRaid ? 'RAID SHIELD (ON)' : 'RAID SHIELD (OFF)';
+      }
+
+      if (adminSlowModeSelect && typeof data.slowModeSeconds !== 'undefined') {
+        adminSlowModeSelect.value = String(data.slowModeSeconds);
+      }
+
+      if (adminToggleStrictModeBtn && strictModeBtnText) {
+        const isStrict = Boolean(data.strictEmergencyMode);
+        adminToggleStrictModeBtn.className = `btn-switch ${isStrict ? 'paused' : ''}`;
+        strictModeBtnText.textContent = isStrict ? 'STRICT (1-STRIKE BAN)' : 'STANDARD (3-STRIKE)';
+      }
+
+      if (adminToggleLinkShieldBtn && linkShieldBtnText) {
+        const isLinks = Boolean(data.blockExternalLinks);
+        adminToggleLinkShieldBtn.className = `btn-switch ${isLinks ? 'active' : ''}`;
+        linkShieldBtnText.textContent = isLinks ? 'LINKS BLOCKED' : 'LINKS ALLOWED';
+      }
+
+      if (adminQueueCapSelect && typeof data.queueCap !== 'undefined') {
+        adminQueueCapSelect.value = String(data.queueCap);
+      }
+
       // Sparklines rendering
       if (data.sparkline) {
         renderSparklines(data.sparkline);
       }
 
+      // Also trigger chart refresh
+      fetchTelemetryHistory();
+
       // Emergency switches state sync
       if (data.matchmakingSettings) {
-        const isPaused = !!data.matchmakingSettings.isMatchmakingPaused;
+        const isPaused = Boolean(data.matchmakingSettings.isMatchmakingPaused);
         if (adminToggleMatchmakingBtn && matchmakingBtnText) {
           adminToggleMatchmakingBtn.className = `btn-switch ${isPaused ? 'paused' : 'active'}`;
           matchmakingBtnText.textContent = isPaused ? 'MATCHING PAUSED' : 'MATCHING ACTIVE';
         }
-        const isGeoOn = !!data.matchmakingSettings.geoPreferenceEnabled;
+        const isGeoOn = Boolean(data.matchmakingSettings.geoPreferenceEnabled);
         if (adminToggleGeoBtn && geoMatchBtnText) {
           adminToggleGeoBtn.className = `btn-switch ${isGeoOn ? 'active' : ''}`;
           geoMatchBtnText.textContent = isGeoOn ? 'NEARBY (ON)' : 'GLOBAL (OFF)';
@@ -6612,10 +7593,32 @@ function initAdminModule() {
         const banBadge = data.isBanned ? `<span class="badge-tag rejected">🚫 BANNED (${data.banMinutesLeft}m left)</span>` : '<span class="badge-tag approved">✓ Clean</span>';
         const inRoom = data.roomId ? `<span class="badge-tag pending">💬 In Room: ${data.roomId} (${data.roomElapsedSeconds}s)</span>` : '<span style="color:var(--t-ghost);">Not in active chat</span>';
 
+        const risk = data.riskScore || { score: 0, riskLevel: 'Normal', strikes: 0, isShadowbanned: false, reportsAgainst: 0, recentViolations: 0 };
+        const riskColor = risk.riskLevel === 'Critical' ? '#ef4444' : (risk.riskLevel === 'High' ? '#f97316' : (risk.riskLevel === 'Elevated' ? '#eab308' : '#22c55e'));
+        const isSb = Boolean(risk.isShadowbanned || data.isShadowbanned);
+
         lookupResultCard.innerHTML = `
-          <div class="card-header-bar">
+          <div class="card-header-bar flex-wrap-mobile">
             <h4 class="card-bar-title">Investigation Profile: <code>${data.query}</code></h4>
-            <div>${onlineBadge} ${banBadge}</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              ${onlineBadge}
+              ${banBadge}
+              ${isSb ? '<span class="badge-tag pending">👻 GHOST QUARANTINED</span>' : ''}
+              <span class="badge-tag" style="background:${riskColor}22; color:${riskColor}; border:1px solid ${riskColor}55;">
+                Risk: ${risk.riskLevel} (${risk.score}/100)
+              </span>
+            </div>
+          </div>
+
+          <!-- Risk Score Bar -->
+          <div style="margin: 12px 0 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.8rem;">
+              <span><strong>Fleet Risk Score Engine:</strong> <code style="color:${riskColor}; font-weight:700;">${risk.score} / 100</code></span>
+              <span style="color:var(--t-ghost); font-size:0.75rem;">Strikes: ${risk.strikes} · Reports: ${risk.reportsAgainst} · Violations: ${risk.recentViolations}</span>
+            </div>
+            <div style="height: 6px; width:100%; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
+              <div style="height:100%; width:${Math.min(100, Math.max(4, risk.score))}%; background:${riskColor}; transition:width 0.4s ease;"></div>
+            </div>
           </div>
 
           <div class="lookup-profile-grid">
@@ -6651,6 +7654,11 @@ function initAdminModule() {
                 ? `<button class="btn-table-action success" id="lookupLiftBanBtn" data-target="${data.deviceHash || data.query}">Lift Ban</button>`
                 : `<button class="btn-table-action danger" id="lookupBan15Btn" data-target="${data.deviceHash || data.query}">+ Ban 15 Minutes</button>
                    <button class="btn-table-action danger" id="lookupBanDayBtn" data-target="${data.deviceHash || data.query}">+ Ban 24 Hours</button>`
+            }
+            ${
+              isSb
+                ? `<button class="btn-table-action success" id="lookupLiftShadowbanBtn" data-target="${data.deviceHash || data.userId || data.query}">Lift Ghost Quarantine</button>`
+                : `<button class="btn-table-action warning" id="lookupAddShadowbanBtn" data-target="${data.deviceHash || data.userId || data.query}">👻 Ghost Shadowban</button>`
             }
             ${
               isOnline
@@ -6702,6 +7710,30 @@ function initAdminModule() {
           adminLookupForm.dispatchEvent(new Event('submit'));
         });
 
+        $('lookupAddShadowbanBtn')?.addEventListener('click', async () => {
+          const target = $('lookupAddShadowbanBtn').getAttribute('data-target');
+          await fetch(`${backendUrl}/api/admin/shadowbans/add`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ target, durationMinutes: 1440, reason: 'Investigated via User Lookup' }),
+          });
+          if (typeof showToast === 'function') showToast(`Ghost shadowban enforced on ${target}.`);
+          lookupQueryInput.value = target;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+
+        $('lookupLiftShadowbanBtn')?.addEventListener('click', async () => {
+          const target = $('lookupLiftShadowbanBtn').getAttribute('data-target');
+          await fetch(`${backendUrl}/api/admin/shadowbans/remove`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ target }),
+          });
+          if (typeof showToast === 'function') showToast(`Ghost shadowban lifted from ${target}.`);
+          lookupQueryInput.value = target;
+          adminLookupForm.dispatchEvent(new Event('submit'));
+        });
+
         $('lookupKickBtn')?.addEventListener('click', async () => {
           const target = $('lookupKickBtn').getAttribute('data-target');
           await fetch(`${backendUrl}/api/admin/kick`, {
@@ -6733,7 +7765,105 @@ function initAdminModule() {
     }
   });
 
-  // 14. Emergency Platform Controls
+  // 14. Emergency Platform Controls & 100k Governors
+  adminToggleRaidShieldBtn?.addEventListener('click', async () => {
+    const isCurrentlyOn = adminToggleRaidShieldBtn.classList.contains('paused');
+    const newState = !isCurrentlyOn;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/raid-shield`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ enabled: newState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToggleRaidShieldBtn.className = `btn-switch ${data.raidShieldEnabled ? 'paused' : ''}`;
+        if (raidShieldBtnText) raidShieldBtnText.textContent = data.raidShieldEnabled ? 'RAID SHIELD (ON)' : 'RAID SHIELD (OFF)';
+        if (typeof showToast === 'function') showToast(`Raid shield protection: ${data.raidShieldEnabled ? 'ACTIVE' : 'OFF'}`);
+      }
+    } catch (_) {}
+  });
+
+  adminSlowModeSelect?.addEventListener('change', async () => {
+    const seconds = Number(adminSlowModeSelect.value) || 0;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/slow-mode`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ seconds }),
+      });
+      const data = await res.json();
+      if (data.success && typeof showToast === 'function') {
+        showToast(seconds > 0 ? `⏱ Global chat slow mode set to ${seconds}s cooldown` : '⏱ Global chat slow mode disabled');
+      }
+    } catch (_) {}
+  });
+
+  adminToggleStrictModeBtn?.addEventListener('click', async () => {
+    const isCurrentlyStrict = adminToggleStrictModeBtn.classList.contains('paused');
+    const newState = !isCurrentlyStrict;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/strict-mode`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ enabled: newState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToggleStrictModeBtn.className = `btn-switch ${data.strictEmergencyMode ? 'paused' : ''}`;
+        if (strictModeBtnText) strictModeBtnText.textContent = data.strictEmergencyMode ? 'STRICT (1-STRIKE BAN)' : 'STANDARD (3-STRIKE)';
+        if (typeof showToast === 'function') showToast(`Emergency 1-strike mode: ${data.strictEmergencyMode ? 'ARMED' : 'DISARMED'}`);
+      }
+    } catch (_) {}
+  });
+
+  adminToggleLinkShieldBtn?.addEventListener('click', async () => {
+    const isCurrentlyBlocked = adminToggleLinkShieldBtn.classList.contains('active');
+    const newState = !isCurrentlyBlocked;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/link-shield`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ enabled: newState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToggleLinkShieldBtn.className = `btn-switch ${data.blockExternalLinks ? 'active' : ''}`;
+        if (linkShieldBtnText) linkShieldBtnText.textContent = data.blockExternalLinks ? 'LINKS BLOCKED' : 'LINKS ALLOWED';
+        if (typeof showToast === 'function') showToast(`External link shield: ${data.blockExternalLinks ? 'BLOCKING ALL' : 'ALLOWED'}`);
+      }
+    } catch (_) {}
+  });
+
+  adminQueueCapSelect?.addEventListener('change', async () => {
+    const limit = Number(adminQueueCapSelect.value) || 0;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/queue-cap`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ limit }),
+      });
+      const data = await res.json();
+      if (data.success && typeof showToast === 'function') {
+        showToast(limit > 0 ? `Matchmaking queue buffer capped at ${limit.toLocaleString()} users` : 'Queue buffer set to Unlimited capacity');
+      }
+    } catch (_) {}
+  });
+
+  adminFlushSocketsBtn?.addEventListener('click', async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/system/flush-sockets`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (data.success && typeof showToast === 'function') {
+        showToast(`🧹 Purged ${data.purgedCount || 0} idle connections.`);
+        fetchOverviewStats();
+      }
+    } catch (_) {}
+  });
+
   adminToggleMatchmakingBtn?.addEventListener('click', async () => {
     const isCurrentlyActive = adminToggleMatchmakingBtn.classList.contains('active');
     const newPauseState = isCurrentlyActive; // if active, pause it
@@ -6778,6 +7908,216 @@ function initAdminModule() {
         }
       }
     } catch (_) {}
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // 14b. 100k Mass Control & Bulk Operations Event Listeners
+  // ═══════════════════════════════════════════════════════════════
+  bulkFillReportsBtn?.addEventListener('click', () => {
+    if (!bulkTargetsInput) return;
+    const targets = Array.from(new Set(cachedReportsList.map((r) => r.reportedUserId).filter(Boolean)));
+    if (targets.length === 0) {
+      if (typeof showToast === 'function') showToast('No reported targets found in recent feed.');
+      return;
+    }
+    bulkTargetsInput.value = targets.join('\n');
+    if (typeof showToast === 'function') showToast(`Pasted ${targets.length} targets from reports feed.`);
+  });
+
+  bulkClearTargetsBtn?.addEventListener('click', () => {
+    if (bulkTargetsInput) bulkTargetsInput.value = '';
+    if (bulkActionOutputLog) bulkActionOutputLog.style.display = 'none';
+  });
+
+  function getBulkTargetsList() {
+    return (bulkTargetsInput?.value || '')
+      .split(/[\n,;\s]+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
+
+  function showBulkOutputLog(msg, isSuccess = true) {
+    if (!bulkActionOutputLog) return;
+    bulkActionOutputLog.style.display = 'block';
+    bulkActionOutputLog.innerHTML = `<span style="color:${isSuccess ? '#4ade80' : '#f87171'}; font-family:monospace; font-size:0.8rem;">${new Date().toLocaleTimeString()} :: ${msg}</span>`;
+  }
+
+  executeBulkBanBtn?.addEventListener('click', async () => {
+    const targets = getBulkTargetsList();
+    if (targets.length === 0) {
+      if (typeof showToast === 'function') showToast('⚠️ Enter at least one target identifier.');
+      return;
+    }
+    const durationMinutes = Number(bulkDurationSelect?.value) || 60;
+    const reason = (bulkReasonInput?.value || '').trim() || 'Bulk administrative safety policy';
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/mass/ban`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ targets, durationMinutes, reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showBulkOutputLog(`Batch operation complete: ${data.appliedCount} devices banned for ${durationMinutes}m.`);
+        if (typeof showToast === 'function') showToast(`🚫 Banned ${data.appliedCount} devices.`);
+        fetchActiveBans();
+      } else {
+        showBulkOutputLog(`Error: ${data.error || 'Operation failed'}`, false);
+      }
+    } catch (err) {
+      showBulkOutputLog(`Connection error during batch execution.`, false);
+    }
+  });
+
+  executeBulkShadowbanBtn?.addEventListener('click', async () => {
+    const targets = getBulkTargetsList();
+    if (targets.length === 0) {
+      if (typeof showToast === 'function') showToast('⚠️ Enter at least one target identifier.');
+      return;
+    }
+    const durationMinutes = Number(bulkDurationSelect?.value) || 1440;
+    const reason = (bulkReasonInput?.value || '').trim() || 'Bulk administrative safety policy';
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/mass/shadowban`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ targets, durationMinutes, reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showBulkOutputLog(`Ghost quarantine enforced on ${data.appliedCount} targets.`);
+        if (typeof showToast === 'function') showToast(`👻 Shadowbanned ${data.appliedCount} targets.`);
+        fetchShadowbans();
+      } else {
+        showBulkOutputLog(`Error: ${data.error || 'Operation failed'}`, false);
+      }
+    } catch (err) {
+      showBulkOutputLog(`Connection error during batch execution.`, false);
+    }
+  });
+
+  executeBulkKickBtn?.addEventListener('click', async () => {
+    const targets = getBulkTargetsList();
+    if (targets.length === 0) {
+      if (typeof showToast === 'function') showToast('⚠️ Enter at least one target identifier.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/mass/kick`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ targets }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showBulkOutputLog(`Disconnected ${data.kickedCount} connections.`);
+        if (typeof showToast === 'function') showToast(`🚪 Disconnected ${data.kickedCount} sockets.`);
+        fetchOverviewStats();
+      } else {
+        showBulkOutputLog(`Error: ${data.error || 'Operation failed'}`, false);
+      }
+    } catch (err) {
+      showBulkOutputLog(`Connection error during batch execution.`, false);
+    }
+  });
+
+  purgeIdleSocketsBtn?.addEventListener('click', async () => {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/mass/purge-idle`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (typeof showToast === 'function') showToast(`🧹 Purged ${data.purgedCount} idle connections.`);
+        fetchOverviewStats();
+      }
+    } catch (_) {}
+  });
+
+  purgeCountryBtn?.addEventListener('click', async () => {
+    const country = (purgeCountryInput?.value || '').trim();
+    if (!country) {
+      if (typeof showToast === 'function') showToast('⚠️ Enter a country name to disconnect.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to drop ALL socket connections from "${country}"?`)) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/mass/purge-country`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ country }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (typeof showToast === 'function') showToast(`Dropped ${data.kickedCount} connections from ${country}.`);
+        if (purgeCountryInput) purgeCountryInput.value = '';
+        fetchOverviewStats();
+      }
+    } catch (_) {}
+  });
+
+  drainQueueBtn?.addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to drain and reset the entire matchmaking queue?')) return;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/mass/drain-queue`, {
+        method: 'POST',
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (typeof showToast === 'function') showToast(`⚡ Queue drained: ${data.drainedCount} seekers reset.`);
+        fetchOverviewStats();
+      }
+    } catch (_) {}
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // 14c. Ghost Shadowban Form Submission
+  // ═══════════════════════════════════════════════════════════════
+  addShadowbanForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const target = (shadowbanTargetInput?.value || '').trim();
+    if (!target) return;
+    const durationMinutes = Number(shadowbanDurationSelect?.value) || 1440;
+    const reason = (shadowbanReasonInput?.value || '').trim() || 'Spam bot or unsolicited solicitation';
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/shadowbans/add`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ target, durationMinutes, reason }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (shadowbanTargetInput) shadowbanTargetInput.value = '';
+        if (typeof showToast === 'function') showToast(`👻 Enforced ghost shadowban on ${target}.`);
+        fetchShadowbans();
+      }
+    } catch (_) {}
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // 14d. Moderation Presets on Bans Tab
+  // ═══════════════════════════════════════════════════════════════
+  document.querySelectorAll('#adminBanPresetsGrid .preset-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mins = btn.getAttribute('data-ban-mins');
+      const reason = btn.getAttribute('data-ban-reason');
+      if (banDurationSelect && mins) banDurationSelect.value = mins;
+      if (banReasonInput && reason) banReasonInput.value = reason;
+      if (adminManualBanModal) {
+        adminManualBanModal.style.display = 'flex';
+        if (banDeviceInput) {
+          banDeviceInput.value = '';
+          setTimeout(() => banDeviceInput.focus(), 100);
+        }
+      }
+    });
   });
 
   // 15. Broadcast Console with Quick Presets
@@ -6992,6 +8332,21 @@ function initAdminModule() {
 
   closeAnnouncementBtn?.addEventListener('click', () => {
     if (systemAnnouncementBanner) systemAnnouncementBanner.style.display = 'none';
+  });
+
+  // Wire filter pills and behavior refresh
+  wireFilterPills?.querySelectorAll('.event-filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      wireFilterPills.querySelectorAll('.event-filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentWireFilter = pill.getAttribute('data-wire-filter') || 'all';
+      renderWireTable();
+    });
+  });
+
+  refreshBehaviorBtn?.addEventListener('click', () => {
+    fetchBehaviorAnalytics();
+    if (typeof showToast === 'function') showToast('🔄 Refreshing user behavior & violation intelligence...');
   });
 }
 

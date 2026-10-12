@@ -39,9 +39,14 @@ const { validateMessage } = require("../utils/moderation");
 const { recordReport, isDeviceBanned } = require("../state/reports");
 const {
   detectPhoneNumber,
+  detectAskingForPhoneNumber,
   detectSocialMediaSharing,
   detectRestrictedSymbols
 } = require("../utils/conversationModerator");
+const {
+  recordMessageDelivered,
+  recordViolationEvent
+} = require("../services/behaviorAnalytics");
 
 // ═══════════════════════════════════════════════════════════════
 // MULTI-TIER REAL-TIME MODERATION & FLOOD STATE STORES
@@ -64,6 +69,166 @@ const URL_REGEX = /(https?:\/\/|www\d{0,3}\.|\.com\/|\.org\/|\.net\/|\.io\/|\.gg
 function hasBlockedLinks(text) {
   if (typeof text !== "string") return false;
   return URL_REGEX.test(text);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 100K SCALE LOAD GOVERNOR, RAID DEFENSE & SHADOWBAN STATE
+// ═══════════════════════════════════════════════════════════════
+let globalSlowModeCooldownMs = 0; // 0 = off, 1000 = 1s, etc.
+let raidShieldEnabled = false;
+let blockExternalLinksEnabled = true;
+const quarantinedCountries = new Set();
+const shadowbannedEntities = new Map(); // target -> { reason, bannedAt, expiresAt }
+
+function setGlobalSlowMode(seconds) {
+  const secs = Math.max(0, Number(seconds) || 0);
+  globalSlowModeCooldownMs = secs * 1000;
+  return secs;
+}
+
+function getGlobalSlowMode() {
+  return Math.round(globalSlowModeCooldownMs / 1000);
+}
+
+function setRaidShield(enabled) {
+  raidShieldEnabled = Boolean(enabled);
+  return raidShieldEnabled;
+}
+
+function isRaidShield() {
+  return raidShieldEnabled;
+}
+
+function setBlockExternalLinks(enabled) {
+  blockExternalLinksEnabled = Boolean(enabled);
+  return blockExternalLinksEnabled;
+}
+
+function isBlockExternalLinks() {
+  return blockExternalLinksEnabled;
+}
+
+function toggleCountryQuarantine(countryNameOrCode, shouldQuarantine) {
+  if (!countryNameOrCode) return false;
+  const key = String(countryNameOrCode).trim().toLowerCase();
+  if (shouldQuarantine) {
+    quarantinedCountries.add(key);
+  } else {
+    quarantinedCountries.delete(key);
+  }
+  return quarantinedCountries.has(key);
+}
+
+function isCountryQuarantined(countryStr) {
+  if (!countryStr || quarantinedCountries.size === 0) return false;
+  const s = String(countryStr).trim().toLowerCase();
+  for (const q of quarantinedCountries) {
+    if (s.includes(q)) return true;
+  }
+  return false;
+}
+
+function getQuarantinedCountries() {
+  return Array.from(quarantinedCountries);
+}
+
+function addShadowban(target, durationMs = 24 * 3600 * 1000, reason = "Spam bot or persistent harassment") {
+  if (!target) return false;
+  const clean = String(target).trim();
+  const now = Date.now();
+  shadowbannedEntities.set(clean, {
+    reason: String(reason || "Silent ghost quarantine").slice(0, 150),
+    bannedAt: now,
+    expiresAt: now + durationMs,
+  });
+  return true;
+}
+
+function removeShadowban(target) {
+  if (!target) return false;
+  const clean = String(target).trim();
+  return shadowbannedEntities.delete(clean);
+}
+
+function isShadowbanned(userId, socket = null) {
+  const now = Date.now();
+  const candidates = [
+    userId,
+    socket?.id,
+    socket?.data?.userId,
+    socket?.data?.deviceHash,
+    getSocketIp(socket),
+  ].filter(Boolean);
+
+  for (const c of candidates) {
+    const entry = shadowbannedEntities.get(c);
+    if (entry) {
+      if (now >= entry.expiresAt) {
+        shadowbannedEntities.delete(c);
+      } else {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function getAllShadowbans() {
+  const now = Date.now();
+  const list = [];
+  for (const [target, meta] of shadowbannedEntities.entries()) {
+    if (now >= meta.expiresAt) {
+      shadowbannedEntities.delete(target);
+    } else {
+      const minutesLeft = Math.max(1, Math.ceil((meta.expiresAt - now) / 60000));
+      list.push({
+        target,
+        reason: meta.reason,
+        bannedAt: meta.bannedAt,
+        expiresAt: meta.expiresAt,
+        minutesLeft,
+      });
+    }
+  }
+  return list;
+}
+
+function calculateUserRiskScore(target) {
+  if (!target) return { score: 0, tier: "Normal", reasons: [] };
+  const reasons = [];
+  let score = 0;
+
+  // 1. Slur violation strikes (25 pts each)
+  const exploreStrikes = (exploreViolations.get(target) || []).length;
+  const friendStrikes = (friendViolations.get(target) || []).length;
+  const totalStrikes = exploreStrikes + friendStrikes;
+  if (totalStrikes > 0) {
+    score += Math.min(50, totalStrikes * 25);
+    reasons.push(`${totalStrikes} slur strike(s) (+${Math.min(50, totalStrikes * 25)} pts)`);
+  }
+
+  // 2. Target report flags (20 pts each)
+  const flags = (reportsByTarget.get(target) || []).length;
+  if (flags > 0) {
+    score += Math.min(40, flags * 20);
+    reasons.push(`${flags} community report(s) (+${Math.min(40, flags * 20)} pts)`);
+  }
+
+  // 3. Active ban
+  if (typeof isDeviceBanned === "function" && isDeviceBanned(target) > 0) {
+    score += 40;
+    reasons.push(`Active device ban (+40 pts)`);
+  }
+
+  // 4. Active shadowban
+  if (shadowbannedEntities.has(target)) {
+    score += 35;
+    reasons.push(`Ghost shadowban (+35 pts)`);
+  }
+
+  score = Math.min(100, Math.max(0, score));
+  const tier = score < 30 ? "Normal" : (score < 70 ? "Guarded" : "Critical");
+  return { score, tier, reasons };
 }
 
 function getSocketIp(socket) {
@@ -207,12 +372,35 @@ function queueUserForMatch(socket, io, userId) {
 }
 
 function deliverMessage(io, socket, userId, roomId, finalMessage, replyToContext, throttleDelay, ack, msgId, isFlash) {
+  if (global.recordMessageSent) {
+    global.recordMessageSent();
+  }
+  recordMessageDelivered(finalMessage);
   const deliverFn = () => {
     if (socket && !socket.rooms.has(roomId)) {
       socket.join(roomId);
     }
     const room = rooms.get(roomId);
     if (!room || room.status !== "active") return;
+    room.messageCount = (room.messageCount || 0) + 1;
+
+    // Ghost Moderation (Shadowban): deliver back to sender only
+    if (isShadowbanned(userId, socket)) {
+      socket.emit("new_message", {
+        from: userId,
+        message: finalMessage,
+        replyTo: replyToContext,
+        sentAt: Date.now(),
+        roomId,
+        msgId,
+        isFlash,
+      });
+      if (typeof ack === "function" && throttleDelay === 0) {
+        ack({ ok: true, success: true, roomId, msgId, sentAt: Date.now() });
+      }
+      return;
+    }
+
     io.to(roomId).emit("new_message", {
       from: userId,
       message: finalMessage,
@@ -459,21 +647,92 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
 
 // Shared message validation (slur filter, moderation, spam)
 function validateAndModerateMessage(socket, userId, text) {
+  const now = Date.now();
+
+  // 0. High-Scale Slow Mode Check
+  if (globalSlowModeCooldownMs > 0) {
+    const lastMsgTime = socket.data?.lastMessageTime || 0;
+    if (now - lastMsgTime < globalSlowModeCooldownMs) {
+      const waitSec = Math.ceil((globalSlowModeCooldownMs - (now - lastMsgTime)) / 1000);
+      const msg = `⏳ Slow Mode is active: Please wait ${waitSec}s between messages.`;
+      socket.emit("error_message", { message: msg });
+      if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+      return { blocked: true, reason: "slow_mode_active", action: "block", message: msg };
+    }
+  }
+
+  // 0.1 High-Scale Raid Shield Defense
+  if (raidShieldEnabled) {
+    const lastText = socket.data?.lastMessageText;
+    if (lastText && lastText === text && (now - (socket.data?.lastMessageTime || 0) < 15000)) {
+      const msg = "🛡️ Raid Shield: Duplicate repetitive broadcast message blocked.";
+      socket.emit("error_message", { message: msg });
+      if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+      return { blocked: true, reason: "raid_shield_duplicate", action: "block", message: msg };
+    }
+  }
+
+  // Update socket rate-tracker state
+  if (socket) {
+    if (!socket.data) socket.data = {};
+    socket.data.lastMessageTime = now;
+    socket.data.lastMessageText = text;
+  }
+
   // 1. Separate Warning for Phone / Mobile numbers (NO BAN)
   if (detectPhoneNumber(text)) {
     const msg = "🚫 Warning: Sharing phone numbers or personal contact numbers is restricted to protect your privacy.";
     log("message_blocked_phone", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "phone_number_warning", reason: "phone_number_blocked" });
     socket.emit("error_message", { message: msg });
+    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+    recordViolationEvent({
+      type: "phone_shared",
+      userId,
+      deviceHash: socket.data?.deviceHash,
+      country: socket.data?.country,
+      snippet: text,
+      action: "Blocked / Warning",
+      severity: "warning",
+    });
     return { blocked: true, reason: "phone_number_blocked", action: "block", message: msg };
   }
 
+  // 1.1 Separate Warning for Asking / Soliciting Phone Numbers or WhatsApp
+  if (detectAskingForPhoneNumber(text)) {
+    const msg = "🚫 Warning: Asking for phone numbers or personal WhatsApp contacts is restricted for safety.";
+    log("message_blocked_asking_phone", { userId, text: text.slice(0, 50) });
+    socket.emit("warning_message", { message: msg, type: "asking_number_warning", reason: "asking_number_blocked" });
+    socket.emit("error_message", { message: msg });
+    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+    recordViolationEvent({
+      type: "phone_asked",
+      userId,
+      deviceHash: socket.data?.deviceHash,
+      country: socket.data?.country,
+      snippet: text,
+      action: "Blocked / Warning",
+      severity: "warning",
+    });
+    return { blocked: true, reason: "asking_number_blocked", action: "block", message: msg };
+  }
+
   // 2. Separate Warning for External Links and URLs (NO BAN)
-  if (hasBlockedLinks(text)) {
+  if (blockExternalLinksEnabled && hasBlockedLinks(text)) {
     const msg = "🚫 Warning: Sharing links, websites, or external URLs is not allowed to protect user safety.";
     log("message_blocked_link", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "link_sharing_warning", reason: "link_sharing_blocked" });
     socket.emit("error_message", { message: msg });
+    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+    recordViolationEvent({
+      type: "link_blocked",
+      userId,
+      deviceHash: socket.data?.deviceHash,
+      country: socket.data?.country,
+      snippet: text,
+      action: "Blocked / Warning",
+      severity: "warning",
+    });
     return { blocked: true, reason: "link_sharing_blocked", action: "block", message: msg };
   }
 
@@ -483,6 +742,16 @@ function validateAndModerateMessage(socket, userId, text) {
     log("message_blocked_social_id", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "social_id_warning", reason: "social_id_blocked" });
     socket.emit("error_message", { message: msg });
+    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+    recordViolationEvent({
+      type: "social_handle",
+      userId,
+      deviceHash: socket.data?.deviceHash,
+      country: socket.data?.country,
+      snippet: text,
+      action: "Blocked / Warning",
+      severity: "warning",
+    });
     return { blocked: true, reason: "social_id_blocked", action: "block", message: msg };
   }
 
@@ -495,6 +764,15 @@ function validateAndModerateMessage(socket, userId, text) {
     log("message_blocked_symbols", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: isExcessive ? "excessive_punctuation_warning" : "restricted_symbols_warning", reason: "restricted_symbols_blocked" });
     socket.emit("error_message", { message: msg });
+    recordViolationEvent({
+      type: "symbols_blocked",
+      userId,
+      deviceHash: socket.data?.deviceHash,
+      country: socket.data?.country,
+      snippet: text,
+      action: "Blocked / Warning",
+      severity: "info",
+    });
     return { blocked: true, reason: "restricted_symbols_blocked", action: "block", message: msg };
   }
 
@@ -502,6 +780,17 @@ function validateAndModerateMessage(socket, userId, text) {
   const slurResult = slurFilter.moderateSlurMessage(userId, text);
 
   if (!slurResult.allowed) {
+    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+    recordViolationEvent({
+      type: "slur_detected",
+      userId,
+      deviceHash: socket.data?.deviceHash,
+      country: socket.data?.country,
+      snippet: text,
+      matchedWords: slurResult.matchedWords || [],
+      action: slurResult.action || "Warning",
+      severity: slurResult.action === "ban_15min" ? "critical" : "warning",
+    });
     spamStore.addSpamViolation({
       userId, type: "slur_blocked", message: text.slice(0, 50),
       action: slurResult.action, isTargeting: slurResult.isTargeting,
@@ -2574,4 +2863,18 @@ module.exports = {
   setEmergencyStrictMode,
   isEmergencyStrictMode,
   silencedSockets,
+  setGlobalSlowMode,
+  getGlobalSlowMode,
+  setRaidShield,
+  isRaidShield,
+  setBlockExternalLinks,
+  isBlockExternalLinks,
+  toggleCountryQuarantine,
+  isCountryQuarantined,
+  getQuarantinedCountries,
+  addShadowban,
+  removeShadowban,
+  isShadowbanned,
+  getAllShadowbans,
+  calculateUserRiskScore,
 };

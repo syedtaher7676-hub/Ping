@@ -1277,8 +1277,22 @@
         <span class="tab-icon">📊</span>
         <span>Overview</span>
       </button>
-      <button class="admin-tab-btn" data-tab="events" id="adminNavTabEvents">
+      <button class="admin-tab-btn" data-tab="behavior" id="adminNavTabBehavior">
+        <span class="tab-icon">🎯</span>
+        <span>User Behavior & Intel</span>
+        <span class="admin-badge-count" id="adminBehaviorBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="masscontrol" id="adminNavTabMassControl">
         <span class="tab-icon">⚡</span>
+        <span>100k Control</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="shadowbans" id="adminNavTabShadowbans">
+        <span class="tab-icon">👻</span>
+        <span>Ghost Mode</span>
+        <span class="admin-badge-count" id="adminShadowbansBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="events" id="adminNavTabEvents">
+        <span class="tab-icon">📜</span>
         <span>Audit Stream</span>
         <span class="admin-badge-count" id="adminEventsBadge">0</span>
       </button>
@@ -1320,134 +1334,257 @@
     <div class="admin-main-content">
       <!-- 1. OVERVIEW TAB -->
       <div id="adminTabOverview" class="admin-tab-panel active">
+        <!-- 8-Card High-Scale Telemetry Grid (Responsive 1-col mobile, 2-col tablet, 4-col desktop) -->
         <div class="admin-stats-grid">
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Online Sockets</span>
+              <span class="stat-title">Active Sockets</span>
               <span class="stat-icon-wrap cyan">👥</span>
             </div>
-            <div class="stat-value" id="statOnlineUsers">0</div>
-            <div class="stat-sub">Active connections</div>
+            <div class="stat-value tabular-nums" id="statOnlineUsers">0</div>
+            <div class="stat-sub">100k fleet scale capacity</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
               <span class="stat-title">Active 1-on-1 Rooms</span>
               <span class="stat-icon-wrap purple">💬</span>
             </div>
-            <div class="stat-value" id="statActiveRooms">0</div>
-            <div class="stat-sub">Concurrent live sessions</div>
+            <div class="stat-value tabular-nums" id="statActiveRooms">0</div>
+            <div class="stat-sub">Live concurrent sessions</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Waiting Queue</span>
+              <span class="stat-title">Matchmaking Queue</span>
               <span class="stat-icon-wrap yellow">⏳</span>
             </div>
-            <div class="stat-value" id="statWaitingQueue">0</div>
-            <div class="stat-sub">Waiting for instant match</div>
+            <div class="stat-value tabular-nums" id="statWaitingQueue">0</div>
+            <div class="stat-sub">Instant pairing buffer</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Total Matches Made</span>
-              <span class="stat-icon-wrap green">🚀</span>
+              <span class="stat-title">Message Velocity</span>
+              <span class="stat-icon-wrap green">⚡</span>
             </div>
-            <div class="stat-value" id="statTotalMatches">0</div>
-            <div class="stat-sub">Cumulative matches</div>
+            <div class="stat-value tabular-nums" id="statMsgsPerSec">0/s</div>
+            <div class="stat-sub">Throughput delivery rate</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Memory Allocation</span>
-              <span class="stat-icon-wrap pink">💾</span>
+              <span class="stat-title">Threat Interceptions</span>
+              <span class="stat-icon-wrap red">🛡️</span>
             </div>
-            <div class="stat-value" id="statMemoryUsage">0 MB</div>
-            <div class="stat-sub" id="statMemoryDetails">Heap: 0 / 0 MB · RSS</div>
+            <div class="stat-value tabular-nums" id="statViolationsIntercepted">0</div>
+            <div class="stat-sub">Slurs, links & spam blocked</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Active Bans</span>
+              <span class="stat-title">Ghost Shadowbans</span>
+              <span class="stat-icon-wrap pink">👻</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statShadowbansCount">0</div>
+            <div class="stat-sub">Silently quarantined</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Active Device Bans</span>
               <span class="stat-icon-wrap red">🚫</span>
             </div>
-            <div class="stat-value" id="statActiveBansCount">0</div>
-            <div class="stat-sub">Devices restricted</div>
+            <div class="stat-value tabular-nums" id="statActiveBansCount">0</div>
+            <div class="stat-sub">Hardware restricted</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Cluster Memory & Lag</span>
+              <span class="stat-icon-wrap cyan">💾</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statMemoryUsage">0 MB</div>
+            <div class="stat-sub tabular-nums" id="statMemoryDetails">Heap · 0ms event lag</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Asking Numbers</span>
+              <span class="stat-icon-wrap amber">📱</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statOverviewAskedNumbers">0</div>
+            <div class="stat-sub">"give num", wa requests</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Phone Numbers Shared</span>
+              <span class="stat-icon-wrap red">📞</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statOverviewSharedNumbers">0</div>
+            <div class="stat-sub">Digits & mobile numbers</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Slurs & Abusive Terms</span>
+              <span class="stat-icon-wrap red">🛡️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statOverviewSlursBlocked">0</div>
+            <div class="stat-sub">Pre-send blocked slurs</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Clean Pass Rate</span>
+              <span class="stat-icon-wrap green">✨</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statOverviewCleanRate">100%</div>
+            <div class="stat-sub">Safe conversation ratio</div>
           </div>
         </div>
 
-        <!-- Real-Time Telemetry Sparklines (Zero-Lag Pure SVG) -->
-        <div class="admin-grid-2col" style="margin-bottom: 20px;">
-          <div class="admin-card">
-            <div class="card-header-bar">
-              <h4 class="card-bar-title">Matchmaking Velocity (Matches/min)</h4>
-              <span class="count-pill cyan" id="sparklineVelocityLabel">Real-time</span>
+        <!-- ═══ ADVANCED INTERACTIVE GRAPH 1: 100K CONCURRENCY & THROUGHPUT MONITOR ═══ -->
+        <div class="admin-card chart-main-card">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div class="chart-header-left">
+              <h4 class="card-bar-title">100k Fleet Concurrency & Message Throughput</h4>
+              <span class="chart-subtitle-text">Real-time dual-series telemetry: Sockets vs Active Rooms vs Velocity</span>
             </div>
-            <div class="sparkline-container" id="sparklineVelocityWrap">
-              <svg id="svgMatchSparkline" class="sparkline-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
-                  </linearGradient>
-                </defs>
-                <path id="sparklineVelocityArea" fill="url(#gradCyan)" d="M0,70 L300,70 Z"/>
-                <polyline id="sparklineVelocityLine" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="0,50 300,50"/>
-              </svg>
-            </div>
-            <div class="sparkline-footer">
-              <span>5m window</span>
-              <span id="sparklineVelocityTrend">Tracking cadence...</span>
+            <div class="chart-header-controls">
+              <div class="chart-legend-row">
+                <span class="legend-indicator cyan"><span class="legend-dot cyan"></span> Sockets</span>
+                <span class="legend-indicator purple"><span class="legend-dot purple"></span> Live Rooms</span>
+                <span class="legend-indicator amber"><span class="legend-dot amber"></span> Velocity (msgs/s)</span>
+              </div>
+              <div class="timeframe-pills-wrap" id="throughputTimeframeWrap">
+                <button type="button" class="timeframe-pill active" data-timeframe="90s">90s Live</button>
+                <button type="button" class="timeframe-pill" data-timeframe="5m">5m Window</button>
+                <button type="button" class="timeframe-pill" data-timeframe="15m">15m Trend</button>
+                <button type="button" class="timeframe-pill" data-timeframe="100k">100k Sim</button>
+              </div>
             </div>
           </div>
 
-          <div class="admin-card">
-            <div class="card-header-bar">
-              <h4 class="card-bar-title">Active Sockets Trend</h4>
-              <span class="count-pill purple" id="sparklineSocketsLabel">Live</span>
-            </div>
-            <div class="sparkline-container" id="sparklineSocketsWrap">
-              <svg id="svgSocketsSparkline" class="sparkline-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#a855f7" stop-opacity="0.35"/>
-                    <stop offset="100%" stop-color="#a855f7" stop-opacity="0.0"/>
-                  </linearGradient>
-                </defs>
-                <path id="sparklineSocketsArea" fill="url(#gradPurple)" d="M0,70 L300,70 Z"/>
-                <polyline id="sparklineSocketsLine" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="0,50 300,50"/>
-              </svg>
-            </div>
-            <div class="sparkline-footer">
-              <span>Sockets connected</span>
-              <span id="sparklineSocketsTrend">Online stability</span>
-            </div>
+          <!-- Interactive High-Resolution SVG Chart Canvas -->
+          <div class="advanced-chart-wrapper" id="throughputChartWrapper">
+            <svg id="svgThroughputChart" class="advanced-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradThroughputSockets" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.32" />
+                  <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0" />
+                </linearGradient>
+                <linearGradient id="gradThroughputRooms" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a855f7" stop-opacity="0.28" />
+                  <stop offset="100%" stop-color="#a855f7" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Grid Lines -->
+              <line x1="0" y1="40" x2="600" y2="40" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="140" x2="600" y2="140" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="190" x2="600" y2="190" stroke="rgba(255,255,255,0.08)" />
+
+              <!-- Sockets Area & Line -->
+              <path id="chartSocketsArea" fill="url(#gradThroughputSockets)" d="M0,190 L600,190 Z" />
+              <polyline id="chartSocketsPolyline" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="0,170 600,170" />
+
+              <!-- Rooms Area & Line -->
+              <path id="chartRoomsArea" fill="url(#gradThroughputRooms)" d="M0,190 L600,190 Z" />
+              <polyline id="chartRoomsPolyline" fill="none" stroke="#a855f7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,180 600,180" />
+
+              <!-- Velocity Line (Amber) -->
+              <polyline id="chartVelocityPolyline" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="0,185 600,185" />
+
+              <!-- Interactive Scrub Cursor Line (Crosshair) -->
+              <line id="chartScrubLine" x1="300" y1="10" x2="300" y2="190" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2,2" opacity="0" />
+              <circle id="chartScrubDotSockets" cx="300" cy="100" r="4" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+              <circle id="chartScrubDotRooms" cx="300" cy="120" r="4" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+            </svg>
+
+            <!-- Touch / Pointer Crosshair Overlay -->
+            <div id="throughputChartOverlay" class="chart-interaction-overlay"></div>
+          </div>
+
+          <!-- Interactive Precision HUD Strip -->
+          <div class="chart-hud-strip" id="throughputChartHud">
+            <div class="hud-item"><span class="hud-label">Time:</span> <strong id="hudTimeVal" class="tabular-nums">Live</strong></div>
+            <div class="hud-item cyan"><span class="hud-label">Sockets:</span> <strong id="hudSocketsVal" class="tabular-nums">0</strong></div>
+            <div class="hud-item purple"><span class="hud-label">Rooms:</span> <strong id="hudRoomsVal" class="tabular-nums">0</strong></div>
+            <div class="hud-item amber"><span class="hud-label">Velocity:</span> <strong id="hudVelocityVal" class="tabular-nums">0 msgs/s</strong></div>
+            <div class="hud-item green"><span class="hud-label">Queue:</span> <strong id="hudQueueVal" class="tabular-nums">0</strong></div>
           </div>
         </div>
 
+        <!-- ═══ ADVANCED INTERACTIVE GRAPH 2: MODERATION & THREAT INTERCEPTION TIMELINE ═══ -->
+        <div class="admin-card chart-main-card">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div class="chart-header-left">
+              <h4 class="card-bar-title">Automated Threat Shield & Interception Stream</h4>
+              <span class="chart-subtitle-text">Real-time timeline of blocked slurs, spam links, and automated rate-throttles</span>
+            </div>
+            <div class="chart-legend-row">
+              <span class="legend-indicator red"><span class="legend-dot red"></span> Slurs & Abuse Blocked</span>
+              <span class="legend-indicator amber"><span class="legend-dot amber"></span> Spam Links & Bots</span>
+              <span class="legend-indicator purple"><span class="legend-dot purple"></span> Auto-Throttled</span>
+            </div>
+          </div>
+
+          <div class="advanced-chart-wrapper" id="threatChartWrapper">
+            <svg id="svgThreatChart" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradThreatRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.35" />
+                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Grid Lines -->
+              <line x1="0" y1="35" x2="600" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="125" x2="600" y2="125" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="155" x2="600" y2="155" stroke="rgba(255,255,255,0.08)" />
+
+              <!-- Threat Area & Line -->
+              <path id="chartThreatArea" fill="url(#gradThreatRed)" d="M0,155 L600,155 Z" />
+              <polyline id="chartThreatPolyline" fill="none" stroke="#ef4444" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="0,145 600,145" />
+              <polyline id="chartSpamPolyline" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="0,150 600,150" />
+
+              <!-- Scrub Crosshair -->
+              <line id="threatScrubLine" x1="300" y1="10" x2="300" y2="155" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2,2" opacity="0" />
+              <circle id="threatScrubDot" cx="300" cy="100" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+            </svg>
+            <div id="threatChartOverlay" class="chart-interaction-overlay"></div>
+          </div>
+
+          <div class="chart-hud-strip" id="threatChartHud">
+            <div class="hud-item"><span class="hud-label">Point:</span> <strong id="hudThreatTimeVal" class="tabular-nums">Live Window</strong></div>
+            <div class="hud-item red"><span class="hud-label">Violations Blocked:</span> <strong id="hudThreatVal" class="tabular-nums">0/s</strong></div>
+            <div class="hud-item amber"><span class="hud-label">Spam Intercepted:</span> <strong id="hudSpamVal" class="tabular-nums">0/s</strong></div>
+            <div class="hud-item green"><span class="hud-label">Clean Pass Rate:</span> <strong id="hudCleanRateVal" class="tabular-nums">99.8%</strong></div>
+          </div>
+        </div>
+
+        <!-- ═══ 100K LOAD GOVERNOR & EMERGENCY DEFENSE SWITCHBOARD ═══ -->
         <div class="admin-grid-2col">
           <!-- Infrastructure Status -->
           <div class="admin-card">
             <div class="card-header-bar">
-              <h4 class="card-bar-title">Cluster & Database Health</h4>
+              <h4 class="card-bar-title">Cluster Infrastructure & Node Health</h4>
               <span class="badge-status-ok">Operational</span>
             </div>
             <div class="infra-list">
               <div class="infra-item">
                 <div class="infra-info">
-                  <strong>Distributed Redis State</strong>
-                  <span class="infra-desc">Sub-millisecond matchmaking & ephemeral store</span>
+                  <strong>Distributed Redis Mesh</strong>
+                  <span class="infra-desc">Sub-millisecond matchmaking & ephemeral pub/sub</span>
                 </div>
                 <span class="infra-badge" id="badgeRedisStatus">Checking...</span>
               </div>
               <div class="infra-item">
                 <div class="infra-info">
-                  <strong>Cloud Firestore</strong>
-                  <span class="infra-desc">Persistent user records, friendships, & reports</span>
+                  <strong>Cloud Firestore Persistence</strong>
+                  <span class="infra-desc">User accounts, friendship records & report archives</span>
                 </div>
                 <span class="infra-badge" id="badgeFirestoreStatus">Checking...</span>
               </div>
               <div class="infra-item">
                 <div class="infra-info">
-                  <strong>Node.js Runtime</strong>
+                  <strong>Node.js Event Loop & Engine</strong>
                   <span class="infra-desc" id="infraNodeDesc">v20+ · Linux</span>
                 </div>
-                <span class="infra-badge ok">Healthy</span>
+                <span class="infra-badge ok" id="badgeEventLoopLag">Lag: <span class="tabular-nums">1ms</span></span>
               </div>
             </div>
           </div>
@@ -1455,10 +1592,38 @@
           <!-- Emergency Controls & System Switches -->
           <div class="admin-card">
             <div class="card-header-bar">
-              <h4 class="card-bar-title">Emergency Controls & Switches</h4>
+              <h4 class="card-bar-title">100k Concurrency Switches & Load Governors</h4>
               <span class="count-pill" id="systemControlsStatusPill">Normal Mode</span>
             </div>
             <div class="system-switches-list">
+              <!-- Switch: Raid Shield -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Raid Shield / Anti-Bot Surge Protection</strong>
+                  <p class="switch-desc">Throttles burst IP floods, duplicate copypasta, and bot clusters</p>
+                </div>
+                <button id="adminToggleRaidShieldBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="raidShieldBtnText">RAID SHIELD (OFF)</span>
+                </button>
+              </div>
+
+              <!-- Switch: Global Slow Mode -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Global Slow Mode (Chat Rate Cooldown)</strong>
+                  <p class="switch-desc">Enforce cooldown between messages to protect servers at 100k load</p>
+                </div>
+                <select id="adminSlowModeSelect" class="admin-select" style="max-width: 140px; padding: 6px 10px; font-size: 0.82rem;">
+                  <option value="0">Off (Normal)</option>
+                  <option value="1">1s Delay</option>
+                  <option value="2">2s Delay</option>
+                  <option value="3">3s Delay</option>
+                  <option value="5">5s Cooldown</option>
+                </select>
+              </div>
+
+              <!-- Switch: Matchmaking Kill Switch -->
               <div class="switch-row-item">
                 <div>
                   <strong>Matchmaking Kill Switch</strong>
@@ -1470,17 +1635,7 @@
                 </button>
               </div>
 
-              <div class="switch-row-item">
-                <div>
-                  <strong>Nearby Origin Matching</strong>
-                  <p class="switch-desc">Prioritize matching users from adjacent regions/countries</p>
-                </div>
-                <button id="adminToggleGeoBtn" class="btn-switch" type="button">
-                  <span class="switch-indicator-dot"></span>
-                  <span id="geoMatchBtnText">GLOBAL (OFF)</span>
-                </button>
-              </div>
-
+              <!-- Switch: Strict 1-Strike Emergency Mode -->
               <div class="switch-row-item">
                 <div>
                   <strong>Strict 1-Strike Emergency Safety Mode</strong>
@@ -1492,15 +1647,765 @@
                 </button>
               </div>
 
+              <!-- Switch: Link & Invite Shield -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>External Link & Invite Shield</strong>
+                  <p class="switch-desc">Block telegram, discord, whatsapp, and external invites</p>
+                </div>
+                <button id="adminToggleLinkShieldBtn" class="btn-switch active" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="linkShieldBtnText">LINKS BLOCKED</span>
+                </button>
+              </div>
+
+              <!-- Switch: Queue Capacity Governor -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Matchmaking Queue Cap</strong>
+                  <p class="switch-desc">Limit peak queue buffer during traffic surges</p>
+                </div>
+                <select id="adminQueueCapSelect" class="admin-select" style="max-width: 140px; padding: 6px 10px; font-size: 0.82rem;">
+                  <option value="0">Unlimited</option>
+                  <option value="10000">10k Cap</option>
+                  <option value="25000">25k Cap</option>
+                  <option value="50000">50k Cap</option>
+                  <option value="100000">100k Cap</option>
+                </select>
+              </div>
+
+              <!-- Action: Flush Sockets & Geo Match -->
               <div class="switch-row-item">
                 <div>
                   <strong>Clean Inactive Sockets</strong>
                   <p class="switch-desc">Purge lingering dead connections and idle memory</p>
                 </div>
                 <button id="adminFlushSocketsBtn" class="btn-primary-admin" type="button" style="padding: 7px 14px; font-size: 0.8rem;">
-                  <span>🧹 Flush Idle Sockets</span>
+                  <span>🧹 Flush Idle</span>
                 </button>
               </div>
+
+              <div class="switch-row-item">
+                <div>
+                  <strong>Nearby Origin Matching</strong>
+                  <p class="switch-desc">Prioritize matching users from adjacent regions</p>
+                </div>
+                <button id="adminToggleGeoBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="geoMatchBtnText">GLOBAL (OFF)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 1b. USER BEHAVIOR, MESSAGING & VIOLATION INTEL TAB (NEW) ═══ -->
+      <div id="adminTabBehavior" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User Behavior, Messaging & Violation Intelligence</h3>
+            <p class="panel-section-subtitle">Real-time metrics on how users are messaging, asking numbers, slur categories, and contact sharing</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <button class="btn-refresh-sm" id="refreshBehaviorBtn" type="button">🔄 Refresh Intel</button>
+          </div>
+        </div>
+
+        <!-- 8-Card Behavior & Extraction Metrics Grid -->
+        <div class="admin-stats-grid" id="behaviorStatsGrid" style="margin-bottom: 20px;">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Asking For Numbers</span>
+              <span class="stat-icon-wrap amber">📱</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorAskedNumbers">0</div>
+            <div class="stat-sub">"give me num", wa requests</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Numbers Shared</span>
+              <span class="stat-icon-wrap red">📞</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorSharedNumbers">0</div>
+            <div class="stat-sub">Digits / direct phones blocked</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Slurs & Abuse</span>
+              <span class="stat-icon-wrap red">🛡️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorSlursBlocked">0</div>
+            <div class="stat-sub">Pre-send filter interceptions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Social Handles (IG/Snap)</span>
+              <span class="stat-icon-wrap purple">📸</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorSocialHandles">0</div>
+            <div class="stat-sub">External contact extractions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Clean Pass Rate</span>
+              <span class="stat-icon-wrap green">✨</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorCleanRate">100%</div>
+            <div class="stat-sub">Civil conversation ratio</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Avg Chat Duration</span>
+              <span class="stat-icon-wrap cyan">⏱</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorAvgDuration">0s</div>
+            <div class="stat-sub">Mean completed session length</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Avg Message Depth</span>
+              <span class="stat-icon-wrap purple">📝</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorAvgMsgLength">0 chars</div>
+            <div class="stat-sub">Mean characters per message</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Off-Platform Risk Index</span>
+              <span class="stat-icon-wrap amber">⚠️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorOffPlatformRate">0.0%</div>
+            <div class="stat-sub">Users soliciting external contacts</div>
+          </div>
+        </div>
+
+        <!-- Row 2: Visual Comparison Graph & Contact Extraction Breakdown -->
+        <div class="admin-grid-2col">
+          <!-- Card 1: Interactive Category Ratio Bar / Visualizer -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Violation Category Composition</h4>
+              <span class="count-pill cyan">Proportional Breakdown</span>
+            </div>
+            <p class="admin-desc-text">Visual distribution of blocked conversational violations across categories:</p>
+
+            <!-- Visual Ratio Track -->
+            <div class="behavior-ratio-bar-wrap" style="margin: 14px 0 16px;">
+              <div class="behavior-ratio-bar" id="behaviorRatioBar" style="display:flex; height:18px; border-radius:9px; overflow:hidden; background:rgba(255,255,255,0.06); width:100%;">
+                <div id="ratioBarAsked" style="width:0%; background:#f59e0b; transition:width 0.4s;" title="Asking Numbers"></div>
+                <div id="ratioBarShared" style="width:0%; background:#ef4444; transition:width 0.4s;" title="Numbers Shared"></div>
+                <div id="ratioBarSlurs" style="width:0%; background:#dc2626; transition:width 0.4s;" title="Slurs & Abuse"></div>
+                <div id="ratioBarSocial" style="width:0%; background:#a855f7; transition:width 0.4s;" title="Social Handles"></div>
+                <div id="ratioBarLinks" style="width:0%; background:#3b82f6; transition:width 0.4s;" title="Links & Invites"></div>
+              </div>
+            </div>
+
+            <div class="behavior-legend-list" id="behaviorLegendList" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Populated dynamically with exact counts & percentages -->
+            </div>
+          </div>
+
+          <!-- Card 2: Contact Extraction & Solicitation Details -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Contact & Number Solicitation Breakdown</h4>
+              <span class="count-pill amber">Privacy Shield</span>
+            </div>
+            <p class="admin-desc-text">Breakdown of specific contact extraction techniques attempted by users:</p>
+            
+            <div class="contact-extraction-items">
+              <div class="contact-extract-row">
+                <div class="extract-info">
+                  <span class="extract-icon">📱</span>
+                  <div>
+                    <strong>"Asking For Numbers" / WhatsApp Requests</strong>
+                    <span class="extract-hint">"whats ur num", "give me number", "wa no do"</span>
+                  </div>
+                </div>
+                <strong class="extract-count tabular-nums" id="countExtractAsked">0</strong>
+              </div>
+
+              <div class="contact-extract-row">
+                <div class="extract-info">
+                  <span class="extract-icon">📞</span>
+                  <div>
+                    <strong>Phone Numbers Shared (Digits / Words)</strong>
+                    <span class="extract-hint">Standard, spaced, vertical or written digits</span>
+                  </div>
+                </div>
+                <strong class="extract-count tabular-nums" id="countExtractShared">0</strong>
+              </div>
+
+              <div class="contact-extract-row">
+                <div class="extract-info">
+                  <span class="extract-icon">📸</span>
+                  <div>
+                    <strong>Instagram Profiles & Handles</strong>
+                    <span class="extract-hint">"add my insta", "ig: @username"</span>
+                  </div>
+                </div>
+                <strong class="extract-count tabular-nums" id="countExtractInstagram">0</strong>
+              </div>
+
+              <div class="contact-extract-row">
+                <div class="extract-info">
+                  <span class="extract-icon">👻</span>
+                  <div>
+                    <strong>Snapchat Usernames</strong>
+                    <span class="extract-hint">"snap: username", "add my snap"</span>
+                  </div>
+                </div>
+                <strong class="extract-count tabular-nums" id="countExtractSnapchat">0</strong>
+              </div>
+
+              <div class="contact-extract-row">
+                <div class="extract-info">
+                  <span class="extract-icon">💬</span>
+                  <div>
+                    <strong>Telegram & Discord Handles</strong>
+                    <span class="extract-hint">t.me links, telegram handles, discord tags</span>
+                  </div>
+                </div>
+                <strong class="extract-count tabular-nums" id="countExtractTelegram">0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: Slur Category Distribution & Conversational Engagement Depth -->
+        <div class="admin-grid-2col" style="margin-top: 14px;">
+          <!-- Card 3: Categorized Slurs Distribution -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Slur & Harmful Speech Taxonomy</h4>
+              <span class="count-pill red">Hate Speech & Abuse</span>
+            </div>
+            <p class="admin-desc-text">Distribution of detected prohibited phrases across linguistic categories:</p>
+
+            <div class="slur-categories-grid">
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag red">Racial & Ethnic</span>
+                  <strong class="slur-cat-val tabular-nums" id="catRacialCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Severe racial/ethnic slurs</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag pink">Predatory / Grooming</span>
+                  <strong class="slur-cat-val tabular-nums" id="catPredatoryCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Diddy, Epstein, chomo slang</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag purple">Homophobic / Trans</span>
+                  <strong class="slur-cat-val tabular-nums" id="catHomophobicCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Anti-LGBTQ+ abusive terms</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag amber">Misogynistic Abuse</span>
+                  <strong class="slur-cat-val tabular-nums" id="catMisogynisticCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Gendered insults & degradation</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag red">Cyberbullying / KYS</span>
+                  <strong class="slur-cat-val tabular-nums" id="catCyberbullyingCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Suicide encouragement & bullying</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag cyan">Regional / Hinglish</span>
+                  <strong class="slur-cat-val tabular-nums" id="catRegionalCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">South Asian / multilingual profanity</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Conversational Engagement & Depth -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Chat Session Depth & Duration</h4>
+              <span class="count-pill green">Engagement Health</span>
+            </div>
+            <p class="admin-desc-text">How long users stay engaged in anonymous 1-on-1 conversations:</p>
+
+            <div class="duration-bars-list">
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>⚡ Quick Skips (&lt;15s)</span>
+                  <strong class="tabular-nums" id="durQuickSkipsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durQuickSkipsFill" style="width:0%; background:#ef4444;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>⏱ Short Chats (15s – 1m)</span>
+                  <strong class="tabular-nums" id="durShortChatsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durShortChatsFill" style="width:0%; background:#f59e0b;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>💬 Medium Chats (1m – 3m)</span>
+                  <strong class="tabular-nums" id="durMediumChatsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durMediumChatsFill" style="width:0%; background:#06b6d4;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>🌟 Deep Chats (&gt;3m)</span>
+                  <strong class="tabular-nums" id="durDeepChatsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durDeepChatsFill" style="width:0%; background:#10b981;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3b: Conversational Vibe Taxonomy & Behavioral Timeline Graph -->
+        <div class="admin-grid-2col" style="margin-top: 14px;">
+          <!-- Card: Conversational Tone & Vibe Taxonomy -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Conversational Tone & Vibe Distribution</h4>
+              <span class="count-pill cyan">Sentiment & Intent</span>
+            </div>
+            <p class="admin-desc-text">Algorithmic classification of active user conversational styles and opening intents:</p>
+
+            <div class="duration-bars-list" style="margin-top: 12px;">
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>👋 Friendly Greetings ("hi", "hello", "sup")</span>
+                  <strong class="tabular-nums" id="vibeGreetingsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeGreetingsFill" style="width:0%; background:#06b6d4;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>❓ Curious Questions & Icebreakers ("what", "where", "?")</span>
+                  <strong class="tabular-nums" id="vibeCuriousCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeCuriousFill" style="width:0%; background:#8b5cf6;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>💬 Casual Flowing Dialogue (Standard conversation)</span>
+                  <strong class="tabular-nums" id="vibeCasualCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeCasualFill" style="width:0%; background:#10b981;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>🤣 Playful Humor & Memes ("haha", "lol", emojis)</span>
+                  <strong class="tabular-nums" id="vibeHumorCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeHumorFill" style="width:0%; background:#f59e0b;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>⚠️ Toxic / Hostile Messages (Intercepted & Quarantined)</span>
+                  <strong class="tabular-nums" id="vibeHostileCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeHostileFill" style="width:0%; background:#ef4444;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Interactive Behavioral & Violation Timeline Graph -->
+          <div class="admin-card">
+            <div class="card-header-bar flex-wrap-mobile">
+              <div>
+                <h4 class="card-bar-title">Behavioral Violation Velocity Timeline</h4>
+                <p class="panel-section-subtitle">Minute-by-minute trend: Asking Numbers vs Slurs vs Socials</p>
+              </div>
+              <div class="chart-legend-row" style="font-size: 0.75rem;">
+                <span class="legend-indicator amber"><span class="legend-dot amber"></span> Asking Numbers</span>
+                <span class="legend-indicator red"><span class="legend-dot red"></span> Slurs</span>
+                <span class="legend-indicator purple"><span class="legend-dot purple"></span> Socials</span>
+              </div>
+            </div>
+
+            <!-- SVG Timeline Canvas -->
+            <div class="advanced-chart-wrapper" style="margin-top: 10px; height: 160px;">
+              <svg id="svgBehaviorTimeline" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="gradBehaviorAmber" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
+                    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id="gradBehaviorRed" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ef4444" stop-opacity="0.28" />
+                    <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                <!-- Grid lines -->
+                <line x1="0" y1="35" x2="600" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+                <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+                <line x1="0" y1="125" x2="600" y2="125" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+                <line x1="0" y1="155" x2="600" y2="155" stroke="rgba(255,255,255,0.08)" />
+
+                <!-- Asking Numbers Area & Line (Amber) -->
+                <path id="chartBehaviorAskedArea" fill="url(#gradBehaviorAmber)" d="M0,155 L600,155 Z" />
+                <polyline id="chartBehaviorAskedPolyline" fill="none" stroke="#f59e0b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="0,150 600,150" />
+
+                <!-- Slurs Area & Line (Red) -->
+                <path id="chartBehaviorSlursArea" fill="url(#gradBehaviorRed)" d="M0,155 L600,155 Z" />
+                <polyline id="chartBehaviorSlursPolyline" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,152 600,152" />
+
+                <!-- Socials Line (Purple) -->
+                <polyline id="chartBehaviorSocialPolyline" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="0,154 600,154" />
+
+                <!-- Phone Shared Line (Pink) -->
+                <polyline id="chartBehaviorSharedPolyline" fill="none" stroke="#ec4899" stroke-width="1.8" stroke-dasharray="3,3" points="0,154 600,154" />
+              </svg>
+            </div>
+
+            <div class="chart-hud-strip" style="margin-top: 8px;">
+              <div class="hud-item amber"><span class="hud-label">Asking:</span> <strong id="hudBehaviorAsked" class="tabular-nums">0/min</strong></div>
+              <div class="hud-item red"><span class="hud-label">Slurs:</span> <strong id="hudBehaviorSlurs" class="tabular-nums">0/min</strong></div>
+              <div class="hud-item purple"><span class="hud-label">Socials:</span> <strong id="hudBehaviorSocials" class="tabular-nums">0/min</strong></div>
+              <div class="hud-item green"><span class="hud-label">Clean:</span> <strong id="hudBehaviorClean" class="tabular-nums">0/min</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4: Top Intercepted Trigger Terms & Behavioral Patterns Leaderboard -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Top Intercepted Trigger Terms & Behavioral Patterns</h4>
+            <span class="count-pill" id="behaviorTriggersCount">Top Triggers</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Flagged Pattern / Term</th>
+                  <th>Category</th>
+                  <th>Interceptions</th>
+                  <th>Last Detected</th>
+                  <th>Policy Action</th>
+                </tr>
+              </thead>
+              <tbody id="behaviorTriggersTableBody">
+                <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--t-ghost);">No violation triggers recorded yet. Platform operating clean.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Row 4b: Top Repeat Policy & Slur Offenders Leaderboard -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="card-header-bar">
+            <div>
+              <h4 class="card-bar-title">Top Repeat Policy & Slur Offenders</h4>
+              <p class="panel-section-subtitle">Real-time surveillance of users with repeated hate speech, contact solicitation, or harassment strikes</p>
+            </div>
+            <span class="count-pill red" id="repeatOffendersCountPill">0 Flagged</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>User / Session ID</th>
+                  <th>Origin</th>
+                  <th>Total Violations</th>
+                  <th>Slurs Blocked</th>
+                  <th>Numbers / Socials</th>
+                  <th>Last Detected Snippet</th>
+                  <th>Quick Action</th>
+                </tr>
+              </thead>
+              <tbody id="repeatOffendersTableBody">
+                <tr><td colspan="8" style="text-align:center; padding: 22px; color: var(--t-ghost);">No repeat offenders detected. Platform safety healthy.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Row 5: Real-Time Live Interception Wire Stream -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="tab-panel-toolbar" style="padding: 0; margin-bottom: 12px;">
+            <div>
+              <h4 class="card-bar-title">Real-Time Moderation Interception Wire</h4>
+              <p class="panel-section-subtitle">Live stream of blocked messages, phone numbers, slurs, and social handles</p>
+            </div>
+            <div class="events-pill-filters" id="wireFilterPills">
+              <button class="event-filter-pill active" data-wire-filter="all">All</button>
+              <button class="event-filter-pill" data-wire-filter="phone_asked">Asking Numbers</button>
+              <button class="event-filter-pill" data-wire-filter="phone_shared">Phone Numbers</button>
+              <button class="event-filter-pill" data-wire-filter="slur_detected">Slurs & Abuse</button>
+              <button class="event-filter-pill" data-wire-filter="social_handle">Social Handles</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Violation Type</th>
+                  <th>User / Device</th>
+                  <th>Origin</th>
+                  <th>Pattern Snippet</th>
+                  <th>Action Taken</th>
+                  <th>Quick Control</th>
+                </tr>
+              </thead>
+              <tbody id="behaviorWireTableBody">
+                <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">Live wire ready. Interceptions will appear here in real time.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 2. 100K MASS CONTROL & BULK OPERATIONS TAB ═══ -->
+      <div id="adminTabMasscontrol" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">100k Fleet User Control & Mass Operations</h3>
+            <p class="panel-section-subtitle">Multi-target batch moderation, automated mass purges, and geographic perimeter fencing</p>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Card A: Multi-Target Batch Action Console -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Multi-Target Batch Moderation Console</h4>
+              <span class="count-pill cyan">Batch Operations</span>
+            </div>
+            <p class="admin-desc-text">Paste identifiers (user IDs, device hashes, or socket IDs) to enforce bulk policies in a single batch operation:</p>
+
+            <form id="bulkActionForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="bulkTargetsInput" class="admin-label">Target Identifiers (one per line, or comma-separated)</label>
+                <textarea 
+                  id="bulkTargetsInput" 
+                  class="admin-textarea" 
+                  rows="4" 
+                  placeholder="u_abc123&#10;dh_xyz789&#10;192.168.1.1&#10;u_spambot456" 
+                  required
+                ></textarea>
+                <div class="bulk-presets-row">
+                  <button type="button" class="btn-table-action" id="bulkFillReportsBtn">Paste Targets from Recent Reports</button>
+                  <button type="button" class="btn-table-action" id="bulkClearTargetsBtn">Clear</button>
+                </div>
+              </div>
+
+              <div class="admin-grid-2col" style="gap: 12px; margin-bottom: 12px;">
+                <div class="admin-field-group" style="margin-bottom:0;">
+                  <label for="bulkDurationSelect" class="admin-label">Duration</label>
+                  <select id="bulkDurationSelect" class="admin-select">
+                    <option value="15">15 Minutes</option>
+                    <option value="60" selected>1 Hour</option>
+                    <option value="1440">24 Hours (1 Day)</option>
+                    <option value="10080">7 Days</option>
+                    <option value="43200">30 Days</option>
+                    <option value="525600">Permanent (1 Year)</option>
+                  </select>
+                </div>
+                <div class="admin-field-group" style="margin-bottom:0;">
+                  <label for="bulkReasonInput" class="admin-label">Reason / Policy Note</label>
+                  <input type="text" id="bulkReasonInput" class="admin-input" value="Bulk administrative safety policy" required />
+                </div>
+              </div>
+
+              <div class="bulk-action-buttons-grid">
+                <button type="button" id="executeBulkBanBtn" class="btn-primary-admin danger">
+                  <span>🚫 Batch Device Ban</span>
+                </button>
+                <button type="button" id="executeBulkShadowbanBtn" class="btn-primary-admin warning">
+                  <span>👻 Batch Ghost Shadowban</span>
+                </button>
+                <button type="button" id="executeBulkKickBtn" class="btn-ghost-admin">
+                  <span>🚪 Batch Disconnect (Kick)</span>
+                </button>
+              </div>
+            </form>
+
+            <div id="bulkActionOutputLog" class="terminal-output-box" style="display:none;"></div>
+          </div>
+
+          <!-- Card B: Instant Load Relief & Mass Purge Tools -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Surge Relief & Mass Traffic Purge</h4>
+              <span class="count-pill pink">High Load Defense</span>
+            </div>
+            <p class="admin-desc-text">Instantly shed dead or unauthenticated connections during traffic spikes up to 100k users:</p>
+
+            <div class="purge-actions-list">
+              <div class="purge-action-row">
+                <div>
+                  <strong>Purge Stale Idle Connections</strong>
+                  <p class="switch-desc">Closes sockets idle for >5 minutes without an active room</p>
+                </div>
+                <button type="button" id="purgeIdleSocketsBtn" class="btn-primary-admin" style="font-size: 0.8rem; padding: 8px 14px;">
+                  🧹 Purge Idle
+                </button>
+              </div>
+
+              <div class="purge-action-row">
+                <div>
+                  <strong>Mass Disconnect Regional Traffic</strong>
+                  <p class="switch-desc">Drop all connections from a specific country under distributed attack</p>
+                </div>
+                <div class="flex-align-gap" style="display:flex; gap:8px;">
+                  <input type="text" id="purgeCountryInput" class="admin-input" placeholder="e.g. United States or Russia" style="width: 140px; font-size: 0.8rem; padding: 6px 10px;" />
+                  <button type="button" id="purgeCountryBtn" class="btn-primary-admin danger" style="font-size: 0.8rem; padding: 8px 12px;">
+                    Drop Country
+                  </button>
+                </div>
+              </div>
+
+              <div class="purge-action-row">
+                <div>
+                  <strong>Drain Matchmaking Waiting Queue</strong>
+                  <p class="switch-desc">Resets all waiting match seekers if queue experiences stall</p>
+                </div>
+                <button type="button" id="drainQueueBtn" class="btn-ghost-admin" style="font-size: 0.8rem; padding: 8px 14px;">
+                  ⚡ Reset Queue
+                </button>
+              </div>
+            </div>
+
+            <!-- Regional Quarantine / Geo-Fencing Table -->
+            <div class="card-header-bar" style="margin-top: 14px;">
+              <h4 class="card-bar-title">Regional Geo-Fence Perimeters</h4>
+              <span class="count-pill" id="geoRulesActiveCount">0 Quarantined</span>
+            </div>
+            <div class="table-responsive" style="max-height: 220px;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Location / Origin</th>
+                    <th>Online Sockets</th>
+                    <th>Perimeter Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="geoRulesTableBody">
+                  <tr><td colspan="4" style="text-align:center; padding: 16px; color: var(--t-ghost);">Loading regional rules...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 3. GHOST SHADOWBAN MANAGEMENT TAB (NEW) ═══ -->
+      <div id="adminTabShadowbans" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Ghost Mode & Silent Shadowbans</h3>
+            <p class="panel-section-subtitle">Isolate persistent harassment and bot accounts without triggering filter-evasion alerts</p>
+          </div>
+        </div>
+
+        <!-- Explanatory Architecture Banner -->
+        <div class="architecture-banner-box">
+          <div class="arch-banner-icon">👻</div>
+          <div class="arch-banner-text">
+            <strong>How Ghost Mode Operates at Scale:</strong>
+            <span>When a user is shadowbanned, messages sent by them are delivered only to themselves—their chat partner never receives anything. The bad actor believes they are chatting normally, preventing them from rotating IP addresses, device identifiers, or clearing browser cookies to bypass bans.</span>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Add Shadowban Card -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Add Ghost Shadowban</h4>
+              <span class="count-pill pink">Silent Quarantine</span>
+            </div>
+
+            <form id="addShadowbanForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="shadowbanTargetInput" class="admin-label">Device Hash, User ID, or Socket ID</label>
+                <input type="text" id="shadowbanTargetInput" class="admin-input" placeholder="e.g. dh_abc123 or u_xyz456" required />
+              </div>
+              <div class="admin-field-group">
+                <label for="shadowbanDurationSelect" class="admin-label">Quarantine Duration</label>
+                <select id="shadowbanDurationSelect" class="admin-select">
+                  <option value="60">1 Hour</option>
+                  <option value="1440" selected>24 Hours (1 Day)</option>
+                  <option value="10080">7 Days</option>
+                  <option value="43200">30 Days</option>
+                  <option value="525600">Permanent (1 Year)</option>
+                </select>
+              </div>
+              <div class="admin-field-group">
+                <label for="shadowbanReasonInput" class="admin-label">Quarantine Reason</label>
+                <input type="text" id="shadowbanReasonInput" class="admin-input" value="Spam bot or unsolicited solicitation" required />
+              </div>
+              <button type="submit" id="submitShadowbanBtn" class="btn-primary-admin warning" style="width: 100%;">
+                <span>👻 Enforce Ghost Shadowban</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Active Shadowbans List -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Active Silently Quarantined Targets</h4>
+              <span class="count-pill" id="shadowbansCountPill">0 active</span>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Target Identifier</th>
+                    <th>Remaining Time</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="shadowbansTableBody">
+                  <tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--t-ghost);">No users are currently shadowbanned.</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
