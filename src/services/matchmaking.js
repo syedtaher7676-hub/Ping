@@ -352,6 +352,32 @@ function leaveWaitingQueue(userId) {
   matchmakingStartTimes.delete(userId);
 }
 
+function drainWaitingQueue(io = null) {
+  let count = 0;
+  if (waitingQueue && Array.isArray(waitingQueue)) {
+    while (waitingQueue.length > 0) {
+      const uid = waitingQueue.shift();
+      if (uid) {
+        waitingSet.delete(uid);
+        const user = users.get(uid);
+        if (user) {
+          user.status = "idle";
+          if (io && user.socketId && io.sockets?.sockets?.has(user.socketId)) {
+            const s = io.sockets.sockets.get(user.socketId);
+            s.emit("search_cancelled", { reason: "Queue reset by administration" });
+          }
+        }
+        count++;
+      }
+    }
+  }
+  if (waitingSet && typeof waitingSet.clear === "function") {
+    waitingSet.clear();
+  }
+  matchmakingStartTimes.clear();
+  return count;
+}
+
 function getMatchStats() {
   return {
     users: users.size,
@@ -364,6 +390,7 @@ module.exports = {
   enqueueForMatchmaking,
   attemptMatchmaking,
   leaveWaitingQueue,
+  drainWaitingQueue,
   getMatchStats,
   isUserAvailableForMatch,
   setMatchmakingPaused,

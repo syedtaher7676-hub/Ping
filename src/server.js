@@ -32,6 +32,7 @@ const {
 const {
   getMatchStats,
   attemptMatchmaking,
+  drainWaitingQueue,
   setMatchmakingPaused,
   setGeoPreference,
   getMatchmakingSettings,
@@ -46,7 +47,7 @@ const {
   detectSlurWithContext,
   getSlurStats,
 } = require("./data/slurFilter");
-const { getBehaviorAnalyticsSnapshot } = require("./services/behaviorAnalytics");
+const { getBehaviorAnalyticsSnapshot, getUserPsychologyProfile, recordUserAction } = require("./services/behaviorAnalytics");
 const { terminateSession } = require("./services/sessionManager");
 const { rooms, users, waitingSet, redisClient, isRedisReady } = require("./state/store");
 const { createId } = require("./utils/ids");
@@ -452,11 +453,19 @@ function recordAdminEvent(type, title, detail, level = "info") {
   if (adminEvents.length > MAX_ADMIN_EVENTS) {
     adminEvents.length = MAX_ADMIN_EVENTS;
   }
+  if (typeof io !== "undefined" && io && io.emit) {
+    io.emit("admin_live_event", evt);
+  }
   return evt;
 }
 
 // Attach globally for system hooks
 global.recordAdminEvent = recordAdminEvent;
+global.broadcastUserAction = (act) => {
+  if (typeof io !== "undefined" && io && io.emit) {
+    io.emit("admin_user_action", act);
+  }
+};
 recordAdminEvent("system", "Gateway Initialized", "Ping real-time server ready", "success");
 
 // Telemetry history samples for silky smooth SVG sparklines & multi-metric graphs (last 40 intervals)
@@ -617,10 +626,14 @@ app.get("/api/admin/overview", verifyAdmin, (_req, res) => {
     shadowbansCount: typeof getAllShadowbans === "function" ? getAllShadowbans().length : 0,
     slowModeSeconds: typeof getGlobalSlowMode === "function" ? getGlobalSlowMode() : 0,
     raidShield: typeof isRaidShield === "function" ? isRaidShield() : false,
+    raidShieldEnabled: typeof isRaidShield === "function" ? isRaidShield() : false,
     strictMode: typeof isEmergencyStrictMode === "function" ? isEmergencyStrictMode() : false,
+    strictEmergencyMode: typeof isEmergencyStrictMode === "function" ? isEmergencyStrictMode() : false,
     blockLinks: typeof isBlockExternalLinks === "function" ? isBlockExternalLinks() : true,
+    blockExternalLinks: typeof isBlockExternalLinks === "function" ? isBlockExternalLinks() : true,
     quarantinedCountriesCount: typeof getQuarantinedCountries === "function" ? getQuarantinedCountries().length : 0,
     queueCapLimit: typeof getQueueCap === "function" ? getQueueCap() : 0,
+    queueCap: typeof getQueueCap === "function" ? getQueueCap() : 0,
     msgsPerSec: currentMsgsPerSec,
     violationsPerSec: currentViolationsPerSec,
     eventLoopLagMs: lastEventLoopLag,
@@ -1076,16 +1089,16 @@ app.post("/api/admin/system/strict-mode", verifyAdmin, (req, res) => {
     setEmergencyStrictMode(strict);
   }
   recordAdminEvent("system", "Strict Safety Mode", `Strict safety mode ${strict ? "ENABLED (1-strike ban)" : "DISABLED (standard 3-strikes)"}`, strict ? "alert" : "info");
-  res.json({ success: true, strictMode: strict });
+  res.json({ success: true, strictMode: strict, strictEmergencyMode: strict });
 });
 
 app.get("/api/admin/system/strict-mode", verifyAdmin, (_req, res) => {
   const strict = typeof isEmergencyStrictMode === "function" ? isEmergencyStrictMode() : false;
-  res.json({ success: true, strictMode: strict });
+  res.json({ success: true, strictMode: strict, strictEmergencyMode: strict });
 });
 
-// 16f. Flush Idle Sockets
-app.post("/api/admin/flush-sockets", verifyAdmin, (_req, res) => {
+// 16f. Flush Idle Sockets (support both /flush-sockets and /system/flush-sockets)
+const handleFlushSockets = (_req, res) => {
   const now = Date.now();
   let closedCount = 0;
   for (const [id, user] of users.entries()) {
@@ -1095,8 +1108,10 @@ app.post("/api/admin/flush-sockets", verifyAdmin, (_req, res) => {
     }
   }
   recordAdminEvent("system", "Memory Cleanup", `Flushed ${closedCount} stale idle connections`, "info");
-  res.json({ success: true, closedCount, message: `Flushed ${closedCount} stale connection records.` });
-});
+  res.json({ success: true, closedCount, purgedCount: closedCount, message: `Flushed ${closedCount} stale connection records.` });
+};
+app.post("/api/admin/flush-sockets", verifyAdmin, handleFlushSockets);
+app.post("/api/admin/system/flush-sockets", verifyAdmin, handleFlushSockets);
 
 // 16g. Global Slow Mode Cooldown (Chat rate governor)
 app.post("/api/admin/system/slow-mode", verifyAdmin, (req, res) => {
@@ -1113,25 +1128,27 @@ app.post("/api/admin/system/raid-shield", verifyAdmin, (req, res) => {
   const active = Boolean(enabled);
   const updated = typeof setRaidShield === "function" ? setRaidShield(active) : active;
   recordAdminEvent("system", "Raid Shield Toggled", updated ? "Surge raid defense ENABLED" : "Raid defense DISABLED", updated ? "alert" : "info");
-  res.json({ success: true, raidShield: updated });
+  res.json({ success: true, raidShield: updated, raidShieldEnabled: updated });
 });
 
-// 16i. Aggressive External Link Filter
-app.post("/api/admin/system/link-filter", verifyAdmin, (req, res) => {
+// 16i. Aggressive External Link Filter (support both /link-filter and /link-shield)
+const handleLinkFilter = (req, res) => {
   const { enabled } = req.body || {};
   const active = Boolean(enabled);
   const updated = typeof setBlockExternalLinks === "function" ? setBlockExternalLinks(active) : active;
   recordAdminEvent("system", "Link Shield Toggled", updated ? "External links/invites strictly BLOCKED" : "Standard link policy", "info");
-  res.json({ success: true, blockLinks: updated });
-});
+  res.json({ success: true, blockLinks: updated, blockExternalLinks: updated });
+};
+app.post("/api/admin/system/link-filter", verifyAdmin, handleLinkFilter);
+app.post("/api/admin/system/link-shield", verifyAdmin, handleLinkFilter);
 
-// 16j. Matchmaking Queue Capacity Governor
+// 16j. Matchmaking Queue Capacity Governor (accept both cap and limit)
 app.post("/api/admin/system/queue-cap", verifyAdmin, (req, res) => {
-  const { cap } = req.body || {};
-  const limit = Math.max(0, Number(cap) || 0);
+  const { cap, limit: reqLimit } = req.body || {};
+  const limit = Math.max(0, Number(cap !== undefined ? cap : reqLimit) || 0);
   const updated = typeof setQueueCap === "function" ? setQueueCap(limit) : limit;
   recordAdminEvent("system", "Queue Capacity Set", updated > 0 ? `Max queue cap set to ${updated} users` : "Queue capacity UNLIMITED", "info");
-  res.json({ success: true, queueCapLimit: updated });
+  res.json({ success: true, queueCapLimit: updated, queueCap: updated });
 });
 
 // 16k. Shadowban (Ghost Mode) Management
@@ -1171,7 +1188,7 @@ app.post("/api/admin/shadowbans/remove", verifyAdmin, (req, res) => {
 });
 
 // 16l. Bulk Moderation - Batch Ban
-app.post("/api/admin/bulk-ban", verifyAdmin, (req, res) => {
+const handleBulkBan = (req, res) => {
   const { targets, durationMinutes, reason } = req.body || {};
   if (!targets) {
     return res.status(400).json({ success: false, error: "Targets list is required" });
@@ -1207,10 +1224,12 @@ app.post("/api/admin/bulk-ban", verifyAdmin, (req, res) => {
 
   recordAdminEvent("ban", "Bulk Devices Suspended", `Batch-banned ${count} target(s) for ${mins}m`, "alert");
   res.json({ success: true, processedCount: count, message: `Batch-banned ${count} target(s) successfully.` });
-});
+};
+app.post("/api/admin/bulk-ban", verifyAdmin, handleBulkBan);
+app.post("/api/admin/mass/ban", verifyAdmin, handleBulkBan);
 
 // 16m. Bulk Moderation - Batch Shadowban
-app.post("/api/admin/bulk-shadowban", verifyAdmin, (req, res) => {
+const handleBulkShadowban = (req, res) => {
   const { targets, durationMinutes, reason } = req.body || {};
   let list = [];
   if (Array.isArray(targets)) {
@@ -1237,10 +1256,12 @@ app.post("/api/admin/bulk-shadowban", verifyAdmin, (req, res) => {
 
   recordAdminEvent("moderation", "Bulk Shadowban Applied", `Ghost-isolated ${count} target(s)`, "warning");
   res.json({ success: true, processedCount: count, message: `Bulk ghost-shadowban applied to ${count} target(s).` });
-});
+};
+app.post("/api/admin/bulk-shadowban", verifyAdmin, handleBulkShadowban);
+app.post("/api/admin/mass/shadowban", verifyAdmin, handleBulkShadowban);
 
 // 16n. Bulk Moderation - Mass Disconnect (Purge by criteria)
-app.post("/api/admin/bulk-kick", verifyAdmin, (req, res) => {
+const handleBulkKick = (req, res) => {
   const { mode = "targets", targets, country } = req.body || {};
   let kickedCount = 0;
 
@@ -1257,7 +1278,7 @@ app.post("/api/admin/bulk-kick", verifyAdmin, (req, res) => {
   } else if (mode === "all_idle") {
     const now = Date.now();
     for (const [id, user] of users.entries()) {
-      if (user.status === "idle" && (now - (user.lastActionAt || user.joinedAt || 0) > 300000)) {
+      if (user.status === "idle" && (now - (user.lastActionAt || user.joinedAt || 0) > 60000)) {
         if (user.socketId && io.sockets.sockets.has(user.socketId)) {
           const s = io.sockets.sockets.get(user.socketId);
           s.disconnect(true);
@@ -1284,6 +1305,131 @@ app.post("/api/admin/bulk-kick", verifyAdmin, (req, res) => {
 
   recordAdminEvent("system", "Mass Disconnect", `Purged ${kickedCount} socket connections (Mode: ${mode})`, "warning");
   res.json({ success: true, kickedCount, message: `Disconnected ${kickedCount} connections.` });
+};
+app.post("/api/admin/bulk-kick", verifyAdmin, handleBulkKick);
+app.post("/api/admin/mass/kick", verifyAdmin, handleBulkKick);
+app.post("/api/admin/mass/purge-idle", verifyAdmin, (req, res) => {
+  req.body = { mode: "all_idle" };
+  handleBulkKick(req, res);
+});
+app.post("/api/admin/mass/purge-country", verifyAdmin, (req, res) => {
+  req.body = { mode: "by_country", country: req.body?.country };
+  handleBulkKick(req, res);
+});
+
+// 16n-2. Matchmaking Queue Drain / Reset
+const handleDrainQueue = (_req, res) => {
+  const drainedCount = typeof drainWaitingQueue === "function" ? drainWaitingQueue(io) : 0;
+  recordAdminEvent("system", "Queue Flushed", `Admin drained ${drainedCount} user(s) from waiting queue`, "warning");
+  res.json({ success: true, drainedCount, message: `Drained ${drainedCount} users from queue.` });
+};
+app.post("/api/admin/matchmaking/drain", verifyAdmin, handleDrainQueue);
+app.post("/api/admin/mass/drain-queue", verifyAdmin, handleDrainQueue);
+
+// 16n-3. User Psychological Profile Inspection
+app.get("/api/admin/user/psychology/:userId", verifyAdmin, (req, res) => {
+  const { userId } = req.params;
+  const user = users.get(userId);
+  const profile = typeof getUserPsychologyProfile === "function" ? getUserPsychologyProfile(userId, user) : { userId, archetype: "Standard" };
+  res.json({ success: true, profile });
+});
+
+// 16n-4. Live User Actions Stream
+app.get("/api/admin/user-actions", verifyAdmin, (_req, res) => {
+  const analytics = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : {};
+  res.json({
+    success: true,
+    actions: analytics.liveUserActions || [],
+    archetypes: analytics.psychologyArchetypes || {},
+  });
+});
+
+// 16n-5. Interactive User Handling: Send Direct Warning Alert
+app.post("/api/admin/user/warn", verifyAdmin, (req, res) => {
+  const { userId, message } = req.body || {};
+  if (!userId) return res.status(400).json({ success: false, error: "userId is required" });
+  const warnText = message || "⚠️ Administrative Notice: Please ensure conversations remain respectful and adhere to platform guidelines.";
+  let delivered = false;
+
+  for (const socket of io.sockets.sockets.values()) {
+    if (socket.id === userId || socket.data?.userId === userId) {
+      socket.emit("warning_message", { message: warnText, type: "admin_direct_notice" });
+      socket.emit("error_message", { message: warnText });
+      delivered = true;
+    }
+  }
+
+  recordAdminEvent("moderation", "Admin Warning Sent", `Issued official warning to user ${userId}: "${warnText.slice(0, 40)}..."`, "warning");
+  res.json({ success: true, delivered, message: delivered ? "Warning sent to user" : "User socket not currently active" });
+});
+
+// 16n-6. Interactive User Handling: Force Skip Conversation
+app.post("/api/admin/user/force-skip", verifyAdmin, (req, res) => {
+  const { userId } = req.body || {};
+  if (!userId) return res.status(400).json({ success: false, error: "userId is required" });
+  const user = users.get(userId);
+  if (!user || !user.roomId) {
+    return res.status(400).json({ success: false, error: "User is not in an active room" });
+  }
+
+  const roomId = user.roomId;
+  const room = rooms.get(roomId);
+  if (room) {
+    io.to(roomId).emit("chat_ended", { reason: "admin_skip", message: "⚡ This conversation was concluded by administrator." });
+    room.status = "ended";
+    rooms.delete(roomId);
+  }
+  user.roomId = null;
+  user.status = "idle";
+
+  recordAdminEvent("moderation", "Force Skip Executed", `Admin ended room ${roomId} for user ${userId}`, "info");
+  res.json({ success: true, message: `Ended chat session for user ${userId}.` });
+});
+
+// 16n-7. Interactive Room Handling: Send Admin Nudge / Icebreaker
+app.post("/api/admin/rooms/nudge", verifyAdmin, (req, res) => {
+  const { roomId, message, type = "icebreaker" } = req.body || {};
+  if (!roomId) return res.status(400).json({ success: false, error: "roomId is required" });
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ success: false, error: "Room not found or no longer active" });
+
+  const nudgeText = message || "✨ Host Icebreaker: What's the coolest place you've ever traveled to?";
+  io.to(roomId).emit("new_message", {
+    from: "ADMIN_NUDGE",
+    message: nudgeText,
+    sentAt: Date.now(),
+    roomId,
+    msgId: "nudge_" + Date.now(),
+    isAdmin: true,
+  });
+
+  recordAdminEvent("chat", "Admin Icebreaker Injected", `Injected icebreaker into room ${roomId}: "${nudgeText.slice(0, 30)}..."`, "info");
+  res.json({ success: true, message: "Icebreaker delivered to room." });
+});
+
+// 16n-8. Interactive Room Handling: Force Close Room
+app.post("/api/admin/rooms/close", verifyAdmin, (req, res) => {
+  const { roomId, reason } = req.body || {};
+  if (!roomId) return res.status(400).json({ success: false, error: "roomId is required" });
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ success: false, error: "Room not found or no longer active" });
+
+  const closeReason = reason || "Closed by admin moderation.";
+  io.to(roomId).emit("chat_ended", { reason: "admin_closed", message: `🔒 Session terminated: ${closeReason}` });
+  room.status = "ended";
+  if (Array.isArray(room.users)) {
+    room.users.forEach((uid) => {
+      const u = users.get(uid);
+      if (u) {
+        u.roomId = null;
+        u.status = "idle";
+      }
+    });
+  }
+  rooms.delete(roomId);
+
+  recordAdminEvent("moderation", "Room Force-Closed", `Admin terminated active room ${roomId} (${closeReason})`, "warning");
+  res.json({ success: true, message: `Room ${roomId} terminated.` });
 });
 
 // 16o. Country Quarantine & Geo-Fencing Control

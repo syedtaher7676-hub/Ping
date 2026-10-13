@@ -9524,7 +9524,7 @@ html.is-ios .chat-app {
   .admin-table td {
     padding: 9px 8px;
     font-size: 0.76rem;
-    white-space: nowrap;
+    white-space: normal;
   }
 
   .action-btns-cell {
@@ -10625,6 +10625,534 @@ html.is-ios .chat-app {
     margin-left: 0;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PSYCHOLOGY ARCHETYPES & RETENTION METRICS STYLES
+   ═══════════════════════════════════════════════════════════════ */
+.psychology-archetypes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+  width: 100%;
+}
+
+.archetype-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.archetype-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.archetype-card.card-harvester { border-top: 3px solid #ef4444; }
+.archetype-card.card-swapper { border-top: 3px solid #f59e0b; }
+.archetype-card.card-curious { border-top: 3px solid #06b6d4; }
+.archetype-card.card-authentic { border-top: 3px solid #10b981; }
+.archetype-card.card-provocateur { border-top: 3px solid #dc2626; }
+
+.archetype-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.archetype-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.archetype-risk-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.archetype-risk-badge.critical { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.35); }
+.archetype-risk-badge.high { background: rgba(239, 68, 68, 0.2); color: var(--red-l); border: 1px solid rgba(239, 68, 68, 0.35); }
+.archetype-risk-badge.med { background: rgba(245, 158, 11, 0.2); color: var(--amber-l); border: 1px solid rgba(245, 158, 11, 0.35); }
+.archetype-risk-badge.low { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.35); }
+.archetype-risk-badge.safe { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+
+.archetype-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--t-primary);
+  margin: 0;
+}
+
+.archetype-desc {
+  font-size: 0.73rem;
+  color: var(--t-secondary);
+  line-height: 1.35;
+  margin: 0;
+  flex: 1;
+}
+
+.archetype-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.archetype-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.archetype-label {
+  font-size: 0.65rem;
+  color: var(--t-ghost);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.archetype-val {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--t-primary);
+}
+
+.archetype-recommendation {
+  font-size: 0.68rem;
+  color: var(--t-ghost);
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+/* ── Live User Action Feed Styles ── */
+.user-action-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--t-primary);
+}
+
+.user-action-tag.connect { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+.user-action-tag.queue { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.user-action-tag.match { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.user-action-tag.message { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.user-action-tag.skip { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.user-action-tag.violation { background: rgba(220, 38, 38, 0.25); color: #fca5a5; font-weight: 700; }
+
+.action-btn-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.btn-control-tiny {
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--t-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-control-tiny:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.btn-control-tiny.inspect {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.3);
+  color: #22d3ee;
+}
+.btn-control-tiny.inspect:hover {
+  background: rgba(6, 182, 212, 0.22);
+}
+
+.btn-control-tiny.warn {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.btn-control-tiny.danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+/* ── Psychology Profiler Modal ── */
+.psychology-modal-card {
+  width: 92vw;
+  max-width: 600px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.psych-diag-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.psych-diag-stat {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.psych-stat-label {
+  font-size: 0.68rem;
+  color: var(--t-ghost);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.psych-stat-val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--t-primary);
+  word-break: break-all;
+}
+
+.psych-traits-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.psych-trait-pill {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--t-secondary);
+}
+
+.psych-action-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.btn-psych-action {
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--t-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.btn-psych-action:hover {
+  transform: translateY(-1px);
+}
+
+.btn-psych-action.warn { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.35); color: #fbbf24; }
+.btn-psych-action.mute { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.35); color: #c084fc; }
+.btn-psych-action.skip { background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.35); color: #22d3ee; }
+.btn-psych-action.ghost { background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.35); color: var(--pink-l); }
+.btn-psych-action.ban { background: rgba(220, 38, 38, 0.2); border-color: rgba(220, 38, 38, 0.4); color: #f87171; }
+
+/* ── Room Controls In Live Chats ── */
+.btn-nudge-room {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-nudge-room:hover {
+  background: rgba(6, 182, 212, 0.25);
+  border-color: rgba(6, 182, 212, 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CRITICAL MOBILE OVERFLOW ELIMINATION (100% RESPONSIVE)
+   ═══════════════════════════════════════════════════════════════ */
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+.admin-dashboard-view {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.admin-header {
+  width: 100% !important;
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+}
+
+.admin-main-content {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.admin-tab-panel {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: visible !important;
+}
+
+.admin-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.table-responsive {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  display: block !important;
+  box-sizing: border-box !important;
+}
+
+.admin-table {
+  width: 100% !important;
+  min-width: 580px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  .admin-tab-panel,
+  .admin-card,
+  .admin-input,
+  .admin-textarea,
+  .admin-select,
+  .architecture-banner-box,
+  .purge-action-row,
+  .bulk-action-buttons-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  .admin-grid-2col {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .tab-panel-toolbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .events-toolbar-actions,
+  .toolbar-right-search-wrap {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+  }
+
+  .admin-filter-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .events-filter-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .admin-event-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+  }
+
+  .event-title-row {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+
+  .panel-section-title {
+    font-size: 1.05rem !important;
+    word-break: break-word !important;
+  }
+
+  .panel-section-subtitle {
+    font-size: 0.78rem !important;
+    word-break: break-word !important;
+  }
+
+  .admin-header {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+
+  .admin-header-controls {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .admin-pill-btn, .admin-exit-btn {
+    padding: 6px 9px !important;
+    font-size: 0.72rem !important;
+    min-height: 36px !important;
+  }
+
+  .admin-nav-tabs {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 0 8px 4px !important;
+    gap: 4px !important;
+    scrollbar-width: none !important;
+  }
+
+  .admin-nav-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .admin-tab-btn {
+    flex-shrink: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-main-content {
+    padding: 10px 8px calc(24px + env(safe-area-inset-bottom, 12px)) !important;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .admin-stat-card {
+    padding: 10px !important;
+    min-width: 0 !important;
+  }
+
+  .stat-value {
+    font-size: 1.25rem !important;
+    word-break: break-all !important;
+  }
+
+  .psychology-archetypes-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .psych-diag-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .psych-action-buttons-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .admin-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .admin-auth-card {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 10px !important;
+    padding: 16px 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+
+  .stat-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+
+  .stat-title {
+    font-size: 0.7rem !important;
+  }
+
+  .stat-icon-wrap {
+    display: none !important;
+  }
+
+  .psych-action-buttons-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 
 
 

@@ -5681,10 +5681,64 @@ function initAdminModule() {
   const searchRoomsInput = $('searchRoomsInput');
   const searchBansInput = $('searchBansInput');
   const searchReportsInput = $('searchReportsInput');
+  const searchEventsInput = $('searchEventsInput');
   let currentReportsFilter = 'all';
   let cachedRoomsList = [];
   let cachedBansList = [];
   let cachedReportsList = [];
+
+  // Psychology Archetypes DOM
+  const archCountHarvester = $('archCountHarvester');
+  const archCountSwapper = $('archCountSwapper');
+  const archCountCurious = $('archCountCurious');
+  const archCountAuthentic = $('archCountAuthentic');
+  const archCountProvocateur = $('archCountProvocateur');
+
+  // Real-Time Retention Curve SVG Chart DOM
+  const svgRetentionChart = $('svgRetentionChart');
+  const chartRetentionPolyline = $('chartRetentionPolyline');
+  const chartRetentionArea = $('chartRetentionArea');
+  const chartChurnPolyline = $('chartChurnPolyline');
+  const retentionChartOverlay = $('retentionChartOverlay');
+  const retentionScrubLine = $('retentionScrubLine');
+  const retentionScrubDot = $('retentionScrubDot');
+  const hudRetSurvival = $('hudRetSurvival');
+  const hudRetSkipChurn = $('hudRetSkipChurn');
+  const hudRetPatience = $('hudRetPatience');
+
+  // Real-Time Live User Actions Feed DOM
+  const liveUserActionsTableBody = $('liveUserActionsTableBody');
+  const userActionsLivePill = $('userActionsLivePill');
+  let cachedUserActionsList = [];
+
+  // User Psychology Profiler Modal DOM
+  const adminPsychologyModal = $('adminPsychologyModal');
+  const closePsychModalBtn = $('closePsychModalBtn');
+  const psychModalArchetypeBadge = $('psychModalArchetypeBadge');
+  const psychUserIdVal = $('psychUserIdVal');
+  const psychCountryVal = $('psychCountryVal');
+  const psychStatusVal = $('psychStatusVal');
+  const psychPatienceVal = $('psychPatienceVal');
+  const psychRiskScoreText = $('psychRiskScoreText');
+  const psychRiskLevelBadge = $('psychRiskLevelBadge');
+  const psychRiskGaugeFill = $('psychRiskGaugeFill');
+  const psychTraitsTags = $('psychTraitsTags');
+  const btnPsychWarn = $('btnPsychWarn');
+  const btnPsychMute = $('btnPsychMute');
+  const btnPsychForceSkip = $('btnPsychForceSkip');
+  const btnPsychGhost = $('btnPsychGhost');
+  const btnPsychBan = $('btnPsychBan');
+  let activeInspectedUserId = null;
+
+  // Admin Room Icebreaker & Nudge Modal DOM
+  const adminRoomNudgeModal = $('adminRoomNudgeModal');
+  const closeRoomNudgeModalBtn = $('closeRoomNudgeModalBtn');
+  const cancelRoomNudgeBtn = $('cancelRoomNudgeBtn');
+  const adminRoomNudgeForm = $('adminRoomNudgeForm');
+  const nudgeRoomIdInput = $('nudgeRoomIdInput');
+  const nudgeMessageInput = $('nudgeMessageInput');
+  const submitRoomNudgeBtn = $('submitRoomNudgeBtn');
+  const roomNudgeModalSubtitle = $('roomNudgeModalSubtitle');
 
   // Word Filter DOM
   const statTotalBlockedWords = $('statTotalBlockedWords');
@@ -6710,6 +6764,20 @@ function initAdminModule() {
     // 10. Interception Wire
     cachedWireEvents = data.recentInterceptions || [];
     renderWireTable();
+
+    // 11. Psychology Archetypes
+    if (data.psychologyArchetypes) {
+      renderPsychologyArchetypes(data.psychologyArchetypes);
+    }
+
+    // 12. Retention Curve
+    renderRetentionChart();
+
+    // 13. Live User Actions Stream
+    if (Array.isArray(data.liveUserActions) && data.liveUserActions.length > 0) {
+      cachedUserActionsList = data.liveUserActions;
+      renderLiveUserActions();
+    }
   }
 
   function renderBehaviorTimelineChart(timeSeries) {
@@ -6816,10 +6884,412 @@ function initAdminModule() {
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // PSYCHOLOGY ARCHETYPES & RETENTION SURVIVAL GRAPH CONTROLLER
+  // ═══════════════════════════════════════════════════════════════
+  function renderPsychologyArchetypes(pa = {}) {
+    if (archCountHarvester) archCountHarvester.textContent = (pa.socialHarvester || 0).toLocaleString();
+    if (archCountSwapper) archCountSwapper.textContent = (pa.speedSwapper || 0).toLocaleString();
+    if (archCountCurious) archCountCurious.textContent = (pa.curiousExplorer || 0).toLocaleString();
+    if (archCountAuthentic) archCountAuthentic.textContent = (pa.authenticConnector || 0).toLocaleString();
+    if (archCountProvocateur) archCountProvocateur.textContent = (pa.provocateur || 0).toLocaleString();
+  }
+
+  function renderRetentionChart() {
+    if (!svgRetentionChart) return;
+    const W = 600;
+    const H = 175;
+    const padBottom = 15;
+    const chartHeight = H - 25 - padBottom;
+
+    const quickSkips = Number(durQuickSkipsCount?.textContent) || 0;
+    const shortChats = Number(durShortChatsCount?.textContent) || 0;
+    const mediumChats = Number(durMediumChatsCount?.textContent) || 0;
+    const deepChats = Number(durDeepChatsCount?.textContent) || 0;
+    const totalSessions = quickSkips + shortChats + mediumChats + deepChats || 8;
+
+    const skipRatio = quickSkips / totalSessions;
+    const p15 = Math.max(25, Math.min(95, Math.round((1 - skipRatio) * 100)));
+    const p60 = Math.max(12, Math.min(85, Math.round(((mediumChats + deepChats) / totalSessions) * 100) || 52));
+    const p180 = Math.max(5, Math.min(70, Math.round((deepChats / totalSessions) * 100) || 32));
+
+    const y0 = Math.round(H - padBottom - chartHeight);
+    const y15 = Math.round(H - padBottom - (p15 / 100) * chartHeight);
+    const y60 = Math.round(H - padBottom - (p60 / 100) * chartHeight);
+    const y180 = Math.round(H - padBottom - (p180 / 100) * chartHeight);
+
+    const retPoints = `0,${y0} 60,${y15} 180,${Math.round((y15 + y60) / 2)} 360,${y60} 600,${y180}`;
+    if (chartRetentionPolyline) chartRetentionPolyline.setAttribute('points', retPoints);
+    if (chartRetentionArea) {
+      chartRetentionArea.setAttribute('d', `M0,${H - padBottom} L${retPoints.replace(/ /g, ' L')} L600,${H - padBottom} Z`);
+    }
+
+    const churnPoints = `0,${H - padBottom} 60,${Math.round(H - padBottom - ((100 - p15) / 100) * chartHeight)} 180,${Math.round(H - padBottom - ((100 - (p15 + p60) / 2) / 100) * chartHeight)} 360,${Math.round(H - padBottom - ((100 - p60) / 100) * chartHeight)} 600,${Math.round(H - padBottom - ((100 - p180) / 100) * chartHeight)}`;
+    if (chartChurnPolyline) chartChurnPolyline.setAttribute('points', churnPoints);
+
+    if (hudRetSurvival) hudRetSurvival.textContent = `${p180}%`;
+    if (hudRetSkipChurn) hudRetSkipChurn.textContent = `${Math.round(skipRatio * 100)}%`;
+    const patienceQ = Math.round((p15 * 0.35 + p60 * 0.45 + p180 * 0.2));
+    if (hudRetPatience) hudRetPatience.textContent = `${Math.max(20, Math.min(99, patienceQ))}%`;
+  }
+
+  function setupRetentionScrubbing() {
+    if (!retentionChartOverlay) return;
+    retentionChartOverlay.addEventListener('mousemove', (e) => {
+      const rect = retentionChartOverlay.getBoundingClientRect();
+      if (!rect.width) return;
+      const x = Math.max(0, Math.min(600, (e.clientX - rect.left) / rect.width * 600));
+      if (retentionScrubLine) {
+        retentionScrubLine.setAttribute('x1', x);
+        retentionScrubLine.setAttribute('x2', x);
+        retentionScrubLine.setAttribute('opacity', '0.8');
+      }
+    });
+    retentionChartOverlay.addEventListener('mouseleave', () => {
+      if (retentionScrubLine) retentionScrubLine.setAttribute('opacity', '0');
+    });
+  }
+  setupRetentionScrubbing();
+
+  // ═══════════════════════════════════════════════════════════════
+  // REAL-TIME LIVE USER ACTION STREAM & INTERACTIVE HANDLING
+  // ═══════════════════════════════════════════════════════════════
+  async function fetchLiveUserActions() {
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/user-actions`, { headers: authHeaders() });
+      if (await checkAuthFailure(res)) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      if (Array.isArray(data.actions) && data.actions.length > 0) {
+        cachedUserActionsList = data.actions;
+        renderLiveUserActions();
+      }
+      if (data.archetypes) {
+        renderPsychologyArchetypes(data.archetypes);
+      }
+    } catch (_) {}
+  }
+
+  function renderLiveUserActions() {
+    if (!liveUserActionsTableBody) return;
+    if (cachedUserActionsList.length === 0) {
+      liveUserActionsTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">Streaming live user actions... Active events will appear here in real time.</td></tr>`;
+      return;
+    }
+
+    liveUserActionsTableBody.innerHTML = cachedUserActionsList.slice(0, 40).map(action => {
+      const timeStr = action.timestamp ? new Date(action.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+      let tagClass = 'connect';
+      if (action.type === 'search_partner') tagClass = 'queue';
+      else if (action.type === 'match_created') tagClass = 'match';
+      else if (action.type === 'message_sent' || action.type === 'send_msg') tagClass = 'message';
+      else if (action.type === 'skip_partner') tagClass = 'skip';
+      else if (String(action.type).includes('violation') || action.type === 'report_submitted') tagClass = 'violation';
+
+      const archetype = action.archetype || 'Explorer';
+      let archRisk = 'low';
+      if (archetype === 'Social Harvester' || archetype === 'Provocateur') archRisk = 'high';
+      else if (archetype === 'Speed Swapper') archRisk = 'med';
+      else if (archetype === 'Authentic Connector') archRisk = 'safe';
+
+      return `
+        <tr>
+          <td class="tabular-nums" style="font-size:0.75rem; color:var(--t-ghost);">${timeStr}</td>
+          <td><span class="user-action-tag ${tagClass}">${action.icon || '⚡'} ${escapeHtml(action.type || 'action')}</span></td>
+          <td><code class="clickable-user-id" data-inspect-psych="${action.userId}" style="color:var(--pink-l); font-size:0.78rem;" title="Click to profile user">${escapeHtml(action.userId || 'u_anon')}</code></td>
+          <td style="font-size:0.75rem;">🌐 ${escapeHtml(action.country || 'Global')}</td>
+          <td><span class="archetype-risk-badge ${archRisk}">${escapeHtml(archetype)}</span></td>
+          <td style="font-size:0.75rem; color:var(--t-secondary); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            ${escapeHtml(action.details || '')}
+          </td>
+          <td>
+            <div class="action-btn-group">
+              <button class="btn-control-tiny inspect" data-action="inspect-psych" data-user="${action.userId}" title="Inspect user psychology profile">
+                🧠 Profile
+              </button>
+              <button class="btn-control-tiny warn" data-action="quick-warn" data-user="${action.userId}" title="Send warning notice">
+                ⚠️ Warn
+              </button>
+              <button class="btn-control-tiny" data-action="quick-skip" data-user="${action.userId}" title="Force skip chat">
+                ⏭️ Skip
+              </button>
+              <button class="btn-control-tiny danger" data-action="quick-mute" data-user="${action.userId}" title="Mute for 15m">
+                🔇 Mute
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    liveUserActionsTableBody.querySelectorAll('[data-inspect-psych], [data-action="inspect-psych"]').forEach(el => {
+      el.addEventListener('click', () => {
+        const uid = el.getAttribute('data-user') || el.getAttribute('data-inspect-psych');
+        if (uid) openPsychologyModal(uid);
+      });
+    });
+
+    liveUserActionsTableBody.querySelectorAll('[data-action="quick-warn"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.getAttribute('data-user');
+        if (!uid) return;
+        const msg = prompt(`Enter administrative warning for user ${uid}:`, '⚠️ Notice: Please ensure conversations remain respectful.');
+        if (!msg) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/user/warn`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ userId: uid, message: msg }),
+          });
+          const d = await res.json();
+          if (d.success && typeof showToast === 'function') showToast(`Warning dispatched to ${uid}`);
+        } catch (_) {}
+      });
+    });
+
+    liveUserActionsTableBody.querySelectorAll('[data-action="quick-skip"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.getAttribute('data-user');
+        if (!uid) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/user/force-skip`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ userId: uid }),
+          });
+          const d = await res.json();
+          if (d.success && typeof showToast === 'function') showToast(`Force-skipped chat for ${uid}`);
+        } catch (_) {}
+      });
+    });
+
+    liveUserActionsTableBody.querySelectorAll('[data-action="quick-mute"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const uid = btn.getAttribute('data-user');
+        if (!uid) return;
+        try {
+          const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ deviceHash: uid, minutes: 15, reason: 'Administrative 15m suspension' }),
+          });
+          const d = await res.json();
+          if (d.success && typeof showToast === 'function') showToast(`Muted user ${uid} for 15m`);
+        } catch (_) {}
+      });
+    });
+  }
+
+  // Real-time Socket.IO handler for user actions
+  if (socket) {
+    socket.on('admin_user_action', (action) => {
+      if (!action) return;
+      cachedUserActionsList.unshift(action);
+      if (cachedUserActionsList.length > 80) cachedUserActionsList.pop();
+
+      // Dynamic counter bump
+      if (action.type === 'message_sent' || action.type === 'send_msg') {
+        const aut = Number(archCountAuthentic?.textContent || 0) + 1;
+        if (archCountAuthentic) archCountAuthentic.textContent = aut;
+      } else if (action.type === 'skip_partner') {
+        const sw = Number(archCountSwapper?.textContent || 0) + 1;
+        if (archCountSwapper) archCountSwapper.textContent = sw;
+      }
+
+      if (adminActiveTab === 'behavior' && adminDashboardView?.style.display !== 'none') {
+        renderLiveUserActions();
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // USER PSYCHOLOGY PROFILER MODAL CONTROLLER
+  // ═══════════════════════════════════════════════════════════════
+  async function openPsychologyModal(userId) {
+    if (!userId || userId === 'Anonymous' || userId === 'unknown') return;
+    activeInspectedUserId = userId;
+    if (psychUserIdVal) psychUserIdVal.textContent = userId;
+    if (psychCountryVal) psychCountryVal.textContent = 'Loading...';
+    if (psychStatusVal) psychStatusVal.textContent = 'Analyzing...';
+    if (psychModalArchetypeBadge) psychModalArchetypeBadge.textContent = 'Diagnosing Archetype...';
+    if (adminPsychologyModal) adminPsychologyModal.style.display = 'flex';
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/user/psychology/${encodeURIComponent(userId)}`, {
+        headers: authHeaders(),
+      });
+      const d = await res.json();
+      if (d.success && d.profile) {
+        const p = d.profile;
+        if (psychUserIdVal) psychUserIdVal.textContent = p.userId;
+        if (psychCountryVal) psychCountryVal.textContent = p.country || 'Global Explorer';
+        if (psychStatusVal) psychStatusVal.textContent = (p.status || 'Active').toUpperCase();
+        if (psychPatienceVal) psychPatienceVal.textContent = `${p.patienceQuotient || 65}%`;
+        if (psychModalArchetypeBadge) {
+          psychModalArchetypeBadge.textContent = `${p.archetype || 'Connector'}`;
+          psychModalArchetypeBadge.className = `count-pill ${p.riskLevel === 'critical' || p.riskLevel === 'high' ? 'pink' : 'cyan'}`;
+        }
+        if (psychRiskScoreText) psychRiskScoreText.textContent = `${p.intentRiskScore || 0} / 100`;
+        if (psychRiskGaugeFill) {
+          const score = p.intentRiskScore || 0;
+          psychRiskGaugeFill.style.width = `${Math.min(100, Math.max(5, score))}%`;
+          psychRiskGaugeFill.style.background = score > 60 ? '#ef4444' : (score > 30 ? '#f59e0b' : '#10b981');
+        }
+        if (psychRiskLevelBadge) {
+          psychRiskLevelBadge.textContent = (p.riskLevel || 'normal').toUpperCase();
+          psychRiskLevelBadge.className = `badge-tag ${p.riskLevel === 'critical' ? 'rejected' : (p.riskLevel === 'high' ? 'pending' : 'safe')}`;
+        }
+        if (psychTraitsTags) {
+          const traits = Array.isArray(p.signals) && p.signals.length > 0 ? p.signals : [
+            `Pacing: ${p.pacing || 'Normal'}`,
+            `Retention: ${p.durationSeconds || 0}s in session`,
+            `Action Count: ${p.actionsCount || 1}`,
+            `Recommended Policy: ${p.recommendedAction || 'Normal Monitoring'}`
+          ];
+          psychTraitsTags.innerHTML = traits.map(t => `<span class="psych-trait-pill">${escapeHtml(t)}</span>`).join('');
+        }
+      }
+    } catch (_) {}
+  }
+
+  btnPsychWarn?.addEventListener('click', async () => {
+    if (!activeInspectedUserId) return;
+    const msg = prompt('Enter official warning shown directly to user in chat:', '⚠️ Administrative Notice: Please keep conversations respectful and adhere to platform guidelines.');
+    if (!msg) return;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/user/warn`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ userId: activeInspectedUserId, message: msg }),
+      });
+      const d = await res.json();
+      if (d.success && typeof showToast === 'function') {
+        showToast(`⚠️ Warning dispatched to user ${activeInspectedUserId}`);
+      }
+    } catch (_) {}
+  });
+
+  btnPsychMute?.addEventListener('click', async () => {
+    if (!activeInspectedUserId) return;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ deviceHash: activeInspectedUserId, minutes: 15, reason: 'Temporarily muted via Psychological Profiler' }),
+      });
+      const d = await res.json();
+      if (d.success && typeof showToast === 'function') {
+        showToast(`🔇 Muted user ${activeInspectedUserId} for 15 minutes.`);
+        if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
+      }
+    } catch (_) {}
+  });
+
+  btnPsychForceSkip?.addEventListener('click', async () => {
+    if (!activeInspectedUserId) return;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/user/force-skip`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ userId: activeInspectedUserId }),
+      });
+      const d = await res.json();
+      if (d.success && typeof showToast === 'function') {
+        showToast(`⏭️ Force-skipped chat for ${activeInspectedUserId}`);
+      }
+    } catch (_) {}
+  });
+
+  btnPsychGhost?.addEventListener('click', async () => {
+    if (!activeInspectedUserId) return;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/shadowbans/add`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ target: activeInspectedUserId, durationMinutes: 1440, reason: 'High risk bad actor via Psychological Profiler' }),
+      });
+      const d = await res.json();
+      if (d.success && typeof showToast === 'function') {
+        showToast(`👻 User ${activeInspectedUserId} ghost shadowbanned for 24h.`);
+        if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
+      }
+    } catch (_) {}
+  });
+
+  btnPsychBan?.addEventListener('click', async () => {
+    if (!activeInspectedUserId) return;
+    if (!confirm(`Are you sure you want to suspend device ${activeInspectedUserId} for 24 hours?`)) return;
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ deviceHash: activeInspectedUserId, minutes: 1440, reason: 'Suspended via Psychological Profiler' }),
+      });
+      const d = await res.json();
+      if (d.success && typeof showToast === 'function') {
+        showToast(`🚫 Banned device ${activeInspectedUserId} for 24h.`);
+        if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
+      }
+    } catch (_) {}
+  });
+
+  closePsychModalBtn?.addEventListener('click', () => {
+    if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
+  });
+  adminPsychologyModal?.addEventListener('click', (e) => {
+    if (e.target === adminPsychologyModal) adminPsychologyModal.style.display = 'none';
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // ADMIN ROOM ICEBREAKER & NUDGE MODAL CONTROLLER
+  // ═══════════════════════════════════════════════════════════════
+  adminRoomNudgeForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const roomId = (nudgeRoomIdInput?.value || '').trim();
+    const message = (nudgeMessageInput?.value || '').trim();
+    if (!roomId || !message) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/rooms/nudge`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ roomId, message }),
+      });
+      const d = await res.json();
+      if (d.success) {
+        if (typeof showToast === 'function') showToast(`✨ Prompt delivered into room ${roomId}!`);
+        if (adminRoomNudgeModal) adminRoomNudgeModal.style.display = 'none';
+      } else {
+        if (typeof showToast === 'function') showToast(`Failed: ${d.error || 'Could not deliver prompt'}`);
+      }
+    } catch (_) {}
+  });
+
+  document.querySelectorAll('#adminRoomNudgeModal .preset-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const promptText = btn.getAttribute('data-nudge-preset');
+      if (nudgeMessageInput && promptText) nudgeMessageInput.value = promptText;
+    });
+  });
+
+  closeRoomNudgeModalBtn?.addEventListener('click', () => {
+    if (adminRoomNudgeModal) adminRoomNudgeModal.style.display = 'none';
+  });
+  cancelRoomNudgeBtn?.addEventListener('click', () => {
+    if (adminRoomNudgeModal) adminRoomNudgeModal.style.display = 'none';
+  });
+  adminRoomNudgeModal?.addEventListener('click', (e) => {
+    if (e.target === adminRoomNudgeModal) adminRoomNudgeModal.style.display = 'none';
+  });
+
   async function refreshAllAdminData() {
     if (!adminToken) return;
     await fetchOverviewStats();
-    if (adminActiveTab === 'behavior') fetchBehaviorAnalytics();
+    if (adminActiveTab === 'behavior') {
+      fetchBehaviorAnalytics();
+      fetchLiveUserActions();
+    }
     else if (adminActiveTab === 'masscontrol') fetchGeoRules();
     else if (adminActiveTab === 'shadowbans') fetchShadowbans();
     else if (adminActiveTab === 'events') fetchAdminEvents();
@@ -6836,6 +7306,7 @@ function initAdminModule() {
       fetchTelemetryHistory();
     } else if (tabKey === 'behavior') {
       fetchBehaviorAnalytics();
+      fetchLiveUserActions();
     } else if (tabKey === 'masscontrol') {
       fetchGeoRules();
     } else if (tabKey === 'shadowbans') {
@@ -6994,9 +7465,14 @@ function initAdminModule() {
 
   function renderEventsList() {
     if (!adminEventsContainer) return;
-    const filtered = currentEventFilter === 'all'
+    const q = (searchEventsInput?.value || '').trim().toLowerCase();
+    let filtered = currentEventFilter === 'all'
       ? cachedEventsList
       : cachedEventsList.filter((e) => e.type === currentEventFilter);
+
+    if (q) {
+      filtered = filtered.filter((e) => (e.title || '').toLowerCase().includes(q) || (e.detail || '').toLowerCase().includes(q));
+    }
 
     if (eventsCountNote) {
       eventsCountNote.textContent = `Showing ${filtered.length} of ${cachedEventsList.length} events`;
@@ -7069,6 +7545,10 @@ function initAdminModule() {
       currentEventFilter = pill.getAttribute('data-type') || 'all';
       renderEventsList();
     });
+  });
+
+  searchEventsInput?.addEventListener('input', () => {
+    renderEventsList();
   });
 
   // Real-time listener for incoming admin events
@@ -7153,14 +7633,30 @@ function initAdminModule() {
             </div>
             <div class="room-card-actions">
               <span style="font-size:0.75rem; color:var(--t-ghost);">Messages: ${rm.messageCount || 0}</span>
-              <button class="btn-terminate-room" data-action="terminate-room" data-room="${rm.roomId}">
-                Force Terminate
-              </button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-nudge-room" data-action="nudge-room" data-room="${rm.roomId}" title="Send icebreaker prompt into this room">
+                  ✨ Nudge
+                </button>
+                <button class="btn-terminate-room" data-action="terminate-room" data-room="${rm.roomId}">
+                  Force Close
+                </button>
+              </div>
             </div>
           </div>
         `;
       })
       .join('');
+
+    adminRoomsContainer.querySelectorAll('[data-action="nudge-room"]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const rId = btn.getAttribute('data-room');
+        if (!rId) return;
+        if (nudgeRoomIdInput) nudgeRoomIdInput.value = rId;
+        if (roomNudgeModalSubtitle) roomNudgeModalSubtitle.textContent = `Inject icebreaker prompt into room: ${rId}`;
+        if (nudgeMessageInput) nudgeMessageInput.value = "✨ Host Icebreaker: What's the coolest place you've ever traveled to?";
+        if (adminRoomNudgeModal) adminRoomNudgeModal.style.display = 'flex';
+      });
+    });
 
     adminRoomsContainer.querySelectorAll('[data-action="terminate-room"]').forEach((btn) => {
       btn.addEventListener('click', async () => {
@@ -7959,8 +8455,9 @@ function initAdminModule() {
       });
       const data = await res.json();
       if (data.success) {
-        showBulkOutputLog(`Batch operation complete: ${data.appliedCount} devices banned for ${durationMinutes}m.`);
-        if (typeof showToast === 'function') showToast(`🚫 Banned ${data.appliedCount} devices.`);
+        const count = data.processedCount !== undefined ? data.processedCount : (data.appliedCount || 0);
+        showBulkOutputLog(`Batch operation complete: ${count} devices banned for ${durationMinutes}m.`);
+        if (typeof showToast === 'function') showToast(`🚫 Banned ${count} devices.`);
         fetchActiveBans();
       } else {
         showBulkOutputLog(`Error: ${data.error || 'Operation failed'}`, false);
@@ -7987,8 +8484,9 @@ function initAdminModule() {
       });
       const data = await res.json();
       if (data.success) {
-        showBulkOutputLog(`Ghost quarantine enforced on ${data.appliedCount} targets.`);
-        if (typeof showToast === 'function') showToast(`👻 Shadowbanned ${data.appliedCount} targets.`);
+        const count = data.processedCount !== undefined ? data.processedCount : (data.appliedCount || 0);
+        showBulkOutputLog(`Ghost quarantine enforced on ${count} targets.`);
+        if (typeof showToast === 'function') showToast(`👻 Shadowbanned ${count} targets.`);
         fetchShadowbans();
       } else {
         showBulkOutputLog(`Error: ${data.error || 'Operation failed'}`, false);

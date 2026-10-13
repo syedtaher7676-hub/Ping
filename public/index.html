@@ -2198,6 +2198,225 @@
             </table>
           </div>
         </div>
+
+        <!-- ═══ Row 6: REAL-TIME USER PSYCHOLOGY ARCHETYPES & INTENT PROFILING ═══ -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div>
+              <h4 class="card-bar-title">🧠 User Psychology Archetypes & Intent Taxonomy</h4>
+              <p class="panel-section-subtitle">Real-time algorithmic behavioral categorization based on chat duration, contact solicitation, and conversational pacing</p>
+            </div>
+            <div class="archetype-legend-pill">
+              <span class="count-pill cyan" id="activeArchetypesPill">5 Archetypes Tracked</span>
+            </div>
+          </div>
+
+          <!-- 5 Archetypes Responsive Grid (Adaptive 1-col mobile, 2-col tablet, 5-col desktop) -->
+          <div class="psychology-archetypes-grid" id="psychologyArchetypesGrid">
+            <!-- 1. Social Harvester -->
+            <div class="archetype-card card-harvester" data-archetype="socialHarvester">
+              <div class="archetype-card-head">
+                <span class="archetype-icon">🦹‍♂️</span>
+                <span class="archetype-risk-badge high">High Risk</span>
+              </div>
+              <h5 class="archetype-name">Social Harvester</h5>
+              <p class="archetype-desc">Fast solicitation of WhatsApp, phone numbers, Snapchat, or Instagram.</p>
+              <div class="archetype-metrics-row">
+                <div class="archetype-metric">
+                  <span class="archetype-label">Count</span>
+                  <strong class="archetype-val tabular-nums" id="archCountHarvester">0</strong>
+                </div>
+                <div class="archetype-metric">
+                  <span class="archetype-label">Patience</span>
+                  <strong class="archetype-val tabular-nums" style="color:var(--red-l);">14%</strong>
+                </div>
+              </div>
+              <div class="archetype-recommendation">Policy: Link Shield & Quarantine</div>
+            </div>
+
+            <!-- 2. Speed Swapper -->
+            <div class="archetype-card card-swapper" data-archetype="speedSwapper">
+              <div class="archetype-card-head">
+                <span class="archetype-icon">⚡</span>
+                <span class="archetype-risk-badge med">Dopamine Seeker</span>
+              </div>
+              <h5 class="archetype-name">Speed Swapper</h5>
+              <p class="archetype-desc">Immediate skips (&lt;15s). Constantly cycling through partners.</p>
+              <div class="archetype-metrics-row">
+                <div class="archetype-metric">
+                  <span class="archetype-label">Count</span>
+                  <strong class="archetype-val tabular-nums" id="archCountSwapper">0</strong>
+                </div>
+                <div class="archetype-metric">
+                  <span class="archetype-label">Patience</span>
+                  <strong class="archetype-val tabular-nums" style="color:var(--amber-l);">26%</strong>
+                </div>
+              </div>
+              <div class="archetype-recommendation">Policy: Rate Cooldown Enforced</div>
+            </div>
+
+            <!-- 3. Curious Explorer -->
+            <div class="archetype-card card-curious" data-archetype="curiousExplorer">
+              <div class="archetype-card-head">
+                <span class="archetype-icon">🧐</span>
+                <span class="archetype-risk-badge low">Inquisitive</span>
+              </div>
+              <h5 class="archetype-name">Curious Explorer</h5>
+              <p class="archetype-desc">Asks questions, icebreakers, explores diverse cultures and topics.</p>
+              <div class="archetype-metrics-row">
+                <div class="archetype-metric">
+                  <span class="archetype-label">Count</span>
+                  <strong class="archetype-val tabular-nums" id="archCountCurious">0</strong>
+                </div>
+                <div class="archetype-metric">
+                  <span class="archetype-label">Patience</span>
+                  <strong class="archetype-val tabular-nums" style="color:var(--cyan-l);">79%</strong>
+                </div>
+              </div>
+              <div class="archetype-recommendation">Policy: High Engagement Healthy</div>
+            </div>
+
+            <!-- 4. Authentic Connector -->
+            <div class="archetype-card card-authentic" data-archetype="authenticConnector">
+              <div class="archetype-card-head">
+                <span class="archetype-icon">🤝</span>
+                <span class="archetype-risk-badge safe">Ideal User</span>
+              </div>
+              <h5 class="archetype-name">Authentic Connector</h5>
+              <p class="archetype-desc">Engages in long discussions (&gt;3m) with natural conversation flow.</p>
+              <div class="archetype-metrics-row">
+                <div class="archetype-metric">
+                  <span class="archetype-label">Count</span>
+                  <strong class="archetype-val tabular-nums" id="archCountAuthentic">0</strong>
+                </div>
+                <div class="archetype-metric">
+                  <span class="archetype-label">Patience</span>
+                  <strong class="archetype-val tabular-nums" style="color:var(--green-l);">94%</strong>
+                </div>
+              </div>
+              <div class="archetype-recommendation">Policy: Core Platform Retention</div>
+            </div>
+
+            <!-- 5. Provocateur / Troll -->
+            <div class="archetype-card card-provocateur" data-archetype="provocateur">
+              <div class="archetype-card-head">
+                <span class="archetype-icon">🤬</span>
+                <span class="archetype-risk-badge critical">Critical Risk</span>
+              </div>
+              <h5 class="archetype-name">Provocateur / Troll</h5>
+              <p class="archetype-desc">Edgy insults, offensive baiting, test boundary violations.</p>
+              <div class="archetype-metrics-row">
+                <div class="archetype-metric">
+                  <span class="archetype-label">Count</span>
+                  <strong class="archetype-val tabular-nums" id="archCountProvocateur">0</strong>
+                </div>
+                <div class="archetype-metric">
+                  <span class="archetype-label">Patience</span>
+                  <strong class="archetype-val tabular-nums" style="color:var(--red-l);">18%</strong>
+                </div>
+              </div>
+              <div class="archetype-recommendation">Policy: 1-Strike Instant Ban</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ Row 7: ADVANCED REAL-TIME GRAPH 3: PSYCHOLOGICAL RETENTION & CHURN CURVE ═══ -->
+        <div class="admin-card chart-main-card" style="margin-top: 14px;">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div class="chart-header-left">
+              <h4 class="card-bar-title">📈 Real-Time Psychological Retention & Churn Curve</h4>
+              <span class="chart-subtitle-text">Empirical survival probability: How long users stay matched before dropping off</span>
+            </div>
+            <div class="chart-legend-row" style="font-size:0.75rem;">
+              <span class="legend-indicator green"><span class="legend-dot green"></span> Authentic Retention (%)</span>
+              <span class="legend-indicator red"><span class="legend-dot red"></span> Speed Swapper Churn (%)</span>
+              <span class="legend-indicator amber"><span class="legend-dot amber"></span> Solicitous Drop-off</span>
+            </div>
+          </div>
+
+          <!-- Retention Curve Interactive SVG Chart -->
+          <div class="advanced-chart-wrapper" style="height: 175px;" id="retentionChartWrapper">
+            <svg id="svgRetentionChart" class="advanced-chart-svg" viewBox="0 0 600 175" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradRetentionGreen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.32" />
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
+                </linearGradient>
+                <linearGradient id="gradRetentionRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.25" />
+                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Grid Lines -->
+              <line x1="0" y1="35" x2="600" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="85" x2="600" y2="85" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="135" x2="600" y2="135" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="165" x2="600" y2="165" stroke="rgba(255,255,255,0.08)" />
+
+              <!-- Vertical Time Window Markers -->
+              <line x1="60" y1="15" x2="60" y2="165" stroke="rgba(255,255,255,0.08)" stroke-dasharray="2,2" />
+              <line x1="180" y1="15" x2="180" y2="165" stroke="rgba(255,255,255,0.08)" stroke-dasharray="2,2" />
+              <line x1="360" y1="15" x2="360" y2="165" stroke="rgba(255,255,255,0.08)" stroke-dasharray="2,2" />
+
+              <text x="62" y="30" fill="rgba(255,255,255,0.3)" font-size="9">15s</text>
+              <text x="182" y="30" fill="rgba(255,255,255,0.3)" font-size="9">1m</text>
+              <text x="362" y="30" fill="rgba(255,255,255,0.3)" font-size="9">3m</text>
+
+              <!-- Retention Curve Area & Polyline (Green) -->
+              <path id="chartRetentionArea" fill="url(#gradRetentionGreen)" d="M0,165 L600,165 Z" />
+              <polyline id="chartRetentionPolyline" fill="none" stroke="#10b981" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" points="0,25 60,65 180,110 360,135 600,150" />
+
+              <!-- Churn Curve Polyline (Red) -->
+              <polyline id="chartChurnPolyline" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,160 60,120 180,75 360,45 600,30" />
+
+              <!-- Crosshair Scrubber -->
+              <line id="retentionScrubLine" x1="300" y1="15" x2="300" y2="165" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2,2" opacity="0" />
+              <circle id="retentionScrubDot" cx="300" cy="100" r="4" fill="#10b981" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+            </svg>
+            <div id="retentionChartOverlay" class="chart-interaction-overlay"></div>
+          </div>
+
+          <!-- Retention HUD Strip -->
+          <div class="chart-hud-strip" id="retentionChartHud">
+            <div class="hud-item"><span class="hud-label">Window:</span> <strong id="hudRetWindow">15s – 3m Range</strong></div>
+            <div class="hud-item green"><span class="hud-label">3m Survival Rate:</span> <strong id="hudRetSurvival" class="tabular-nums">68.4%</strong></div>
+            <div class="hud-item red"><span class="hud-label">15s Skip Churn:</span> <strong id="hudRetSkipChurn" class="tabular-nums">24.2%</strong></div>
+            <div class="hud-item cyan"><span class="hud-label">Patience Quotient:</span> <strong id="hudRetPatience" class="tabular-nums">74.8%</strong></div>
+          </div>
+        </div>
+
+        <!-- ═══ Row 8: REAL-TIME USER ACTIONS STREAM & ADVANCED PSYCHOLOGY CONTROLLER ═══ -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="tab-panel-toolbar" style="padding: 0; margin-bottom: 12px;">
+            <div>
+              <h4 class="card-bar-title">⚡ Real-Time User Action Stream & Dynamic Handling</h4>
+              <p class="panel-section-subtitle">Live real-time event feed of individual user decisions, session flows, and instant psychological intervention controls</p>
+            </div>
+            <div class="toolbar-right-search-wrap">
+              <span class="count-pill cyan" id="userActionsLivePill">🟢 Live Stream Active</span>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 85px;">Time</th>
+                  <th style="width: 140px;">Action Event</th>
+                  <th>User / Session</th>
+                  <th>Origin</th>
+                  <th>Archetype</th>
+                  <th>Action Detail</th>
+                  <th style="min-width: 220px;">Advanced User Controls</th>
+                </tr>
+              </thead>
+              <tbody id="liveUserActionsTableBody">
+                <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">Streaming live user actions... Active events will appear here in real time.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- ═══ 2. 100K MASS CONTROL & BULK OPERATIONS TAB ═══ -->
@@ -2886,6 +3105,124 @@
         <div class="admin-auth-actions">
           <button type="button" id="cancelActionModalBtn" class="btn-ghost-admin">Cancel</button>
           <button type="submit" id="submitActionModalBtn" class="btn-primary-admin">Confirm Action</button>
+        </div>
+      </form>
+    </div>
+  <!-- ═══ USER PSYCHOLOGY INSPECTOR MODAL ═══ -->
+  <div id="adminPsychologyModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="psychModalTitle">
+    <div class="admin-auth-card psychology-modal-card">
+      <button id="closePsychModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <h3 id="psychModalTitle" class="admin-auth-title">🧠 User Psychology Profiler</h3>
+          <span class="count-pill cyan" id="psychModalArchetypeBadge">Archetype: Loading</span>
+        </div>
+        <p class="admin-auth-subtitle" id="psychModalUserSubtitle">Comprehensive behavioral diagnostic & instant control console</p>
+      </div>
+
+      <div class="psych-modal-content" id="psychModalContent">
+        <!-- Diagnostic Summary -->
+        <div class="psych-diag-grid">
+          <div class="psych-diag-stat">
+            <span class="psych-stat-label">User / Session ID</span>
+            <strong class="psych-stat-val" id="psychUserIdVal">-</strong>
+          </div>
+          <div class="psych-diag-stat">
+            <span class="psych-stat-label">Origin Location</span>
+            <strong class="psych-stat-val" id="psychCountryVal">-</strong>
+          </div>
+          <div class="psych-diag-stat">
+            <span class="psych-stat-label">Current Status</span>
+            <strong class="psych-stat-val" id="psychStatusVal">-</strong>
+          </div>
+          <div class="psych-diag-stat">
+            <span class="psych-stat-label">Patience Quotient</span>
+            <strong class="psych-stat-val tabular-nums" id="psychPatienceVal">--%</strong>
+          </div>
+        </div>
+
+        <!-- Intent & Threat Gauge -->
+        <div class="psych-intent-gauge-box" style="margin: 14px 0;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+            <span><strong>Intent Risk Score:</strong> <span id="psychRiskScoreText" class="tabular-nums font-bold">0 / 100</span></span>
+            <span id="psychRiskLevelBadge" class="badge-tag safe">Normal User</span>
+          </div>
+          <div class="duration-progress-track" style="height: 10px;">
+            <div id="psychRiskGaugeFill" class="duration-progress-fill" style="width: 15%; background: #10b981;"></div>
+          </div>
+        </div>
+
+        <!-- Behavioral Traits & Signals -->
+        <div class="psych-traits-box">
+          <h5 style="font-size: 0.82rem; margin-bottom: 8px; color: var(--t-secondary);">Behavioral Traits & Detected Patterns:</h5>
+          <div class="psych-traits-tags" id="psychTraitsTags">
+            <!-- populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Quick Interactive Interventions -->
+        <div class="psych-actions-section" style="margin-top: 16px;">
+          <h5 style="font-size: 0.82rem; margin-bottom: 10px; color: var(--t-secondary);">Administrative Interventions:</h5>
+          <div class="psych-action-buttons-grid">
+            <button type="button" class="btn-psych-action warn" id="btnPsychWarn">
+              <span>⚠️ Issue Warning Notice</span>
+            </button>
+            <button type="button" class="btn-psych-action mute" id="btnPsychMute">
+              <span>🔇 Mute Messages (15m)</span>
+            </button>
+            <button type="button" class="btn-psych-action skip" id="btnPsychForceSkip">
+              <span>⏭️ Force Partner Swap</span>
+            </button>
+            <button type="button" class="btn-psych-action ghost" id="btnPsychGhost">
+              <span>👻 Ghost Shadowban</span>
+            </button>
+            <button type="button" class="btn-psych-action ban" id="btnPsychBan">
+              <span>🚫 Hardware Ban Device</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN ROOM ICEBREAKER / NUDGE MODAL ═══ -->
+  <div id="adminRoomNudgeModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="roomNudgeModalTitle">
+    <div class="admin-auth-card">
+      <button id="closeRoomNudgeModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <h3 id="roomNudgeModalTitle" class="admin-auth-title">✨ Send Room Icebreaker / Nudge</h3>
+        <p class="admin-auth-subtitle" id="roomNudgeModalSubtitle">Inject an official prompt into an active conversation</p>
+      </div>
+
+      <form id="adminRoomNudgeForm" onsubmit="return false;">
+        <input type="hidden" id="nudgeRoomIdInput" />
+        
+        <div class="admin-field-group">
+          <label for="nudgeMessageInput" class="admin-label">Host Prompt / Icebreaker Message</label>
+          <textarea id="nudgeMessageInput" class="admin-textarea" rows="3" placeholder="Enter conversation prompt for both users..."></textarea>
+        </div>
+
+        <div class="broadcast-presets-section" style="margin-bottom: 14px;">
+          <span class="broadcast-presets-title">Quick Icebreaker Presets:</span>
+          <div class="broadcast-presets-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <button type="button" class="preset-pill-btn" data-nudge-preset="✨ Host Icebreaker: What is the most exciting adventure or travel story you have?">
+              <span>✈️ Travel story</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-nudge-preset="🎶 Host Icebreaker: What song or artist have you had on repeat all week?">
+              <span>🎵 Music recommendation</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-nudge-preset="🍕 Host Icebreaker: Fun debate: Pineapple on pizza — absolute yes or huge crime?">
+              <span>🍕 Food debate</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-nudge-preset="🎮 Host Icebreaker: If you could master any skill or game in 1 day, what would it be?">
+              <span>⚡ Dream superpower</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelRoomNudgeBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitRoomNudgeBtn" class="btn-primary-admin">Deliver to Room</button>
         </div>
       </form>
     </div>

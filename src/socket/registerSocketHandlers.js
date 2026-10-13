@@ -1136,6 +1136,15 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     log(isNewUser ? "user_connected" : "user_reconnected", {
       userId, socketId: socket.id, activeUsers: users.size,
     });
+    if (typeof global.broadcastUserAction === "function") {
+      global.broadcastUserAction(
+        isNewUser ? "connect_new" : "reconnect",
+        userId,
+        user.country || "Someone nearby",
+        isNewUser ? "New visitor session started" : "Returning visitor reconnected",
+        "👋"
+      );
+    }
 
     // Heartbeat mechanism
     const heartbeatInterval = setInterval(() => {
@@ -1261,6 +1270,15 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           redisSetUser(userId, currentUser).catch(() => {});
         }
         queueUserForMatch(socket, io, userId);
+        if (typeof global.broadcastUserAction === "function") {
+          global.broadcastUserAction(
+            "search_partner",
+            userId,
+            currentUser.country || "Someone nearby",
+            interests.length > 0 ? `Queued searching [${interests.join(", ")}]` : "Queued searching random partner",
+            "🔍"
+          );
+        }
       } catch (err) {
         log("start_chat_error", { userId, message: err.message });
       }
@@ -2351,6 +2369,15 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
           // Terminate session cleanly (terminateSession will broadcast chat_ended once to the room and leave sockets)
           terminateSession(io, targetRoomId, "next_clicked");
+          if (typeof global.broadcastUserAction === "function") {
+            global.broadcastUserAction(
+              "skip_partner",
+              userId,
+              currentUser.country || "Someone nearby",
+              "User skipped current conversation partner",
+              "⏭️"
+            );
+          }
 
           // Reset user and partner states synchronously
           currentUser.status = "idle";
