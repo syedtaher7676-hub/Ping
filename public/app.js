@@ -6348,6 +6348,7 @@ function initAdminModule() {
       cachedTelemetryHistory = data.history || [];
       renderAdvancedThroughputChart(cachedTelemetryHistory, currentThroughputTimeframe);
       renderAdvancedThreatChart(cachedTelemetryHistory);
+      renderRetentionChart();
 
       if (data.current) {
         if (statMsgsPerSec) statMsgsPerSec.textContent = `${data.current.msgsPerSec || 0}/s`;
@@ -6612,6 +6613,7 @@ function initAdminModule() {
       if (durMediumChatsFill) durMediumChatsFill.style.width = `${Math.min(100, (mc / durSum) * 100).toFixed(1)}%`;
       if (durDeepChatsFill) durDeepChatsFill.style.width = `${Math.min(100, (dc / durSum) * 100).toFixed(1)}%`;
     }
+    renderRetentionChart();
 
     // 6. Conversational Tone & Vibe Taxonomy
     const vb = eng.vibes || {};
@@ -7286,8 +7288,10 @@ function initAdminModule() {
   async function refreshAllAdminData() {
     if (!adminToken) return;
     await fetchOverviewStats();
+    fetchTelemetryHistory();
+    fetchBehaviorAnalytics();
+    renderRetentionChart();
     if (adminActiveTab === 'behavior') {
-      fetchBehaviorAnalytics();
       fetchLiveUserActions();
     }
     else if (adminActiveTab === 'masscontrol') fetchGeoRules();
