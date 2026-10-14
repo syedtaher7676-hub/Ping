@@ -2264,29 +2264,8 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
     socket.on("left_screen", (rawPayload = {}) => {
       try {
-        const payload = safeObject(rawPayload);
-        const roomId = safeId(payload.roomId) || user?.roomId;
-        if (!roomId) return;
-        const room = rooms.get(roomId);
-        if (!room || room.status !== "active") return;
-
-        const partnerId = room.users?.find(id => id !== userId);
-        const partnerUser = partnerId ? users.get(partnerId) : null;
-        if (partnerUser?.socketId) {
-          const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
-          partnerSocket?.emit("partner_disconnected", {
-            roomId,
-            message: "Stranger left the screen...",
-            gracePeriod: 15000,
-          });
-        }
-
-        if (room.disconnectTimeoutRef) {
-          clearTimeout(room.disconnectTimeoutRef);
-        }
-        room.disconnectTimeoutRef = setTimeout(() => {
-          handlePartnerDisconnect(io, roomId, userId);
-        }, 15000);
+        // Per requirement: when a user just leaves a screen, do NOT implement the 15sec timer.
+        // The 15sec timer/disconnect grace period only runs when the user exits the application completely (disconnect).
       } catch (err) {
         log("left_screen_error", { userId, error: err?.message });
       }

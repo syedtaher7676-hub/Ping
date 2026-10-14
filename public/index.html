@@ -1521,8 +1521,9 @@
             </div>
           </div>
 
-          <div class="advanced-chart-wrapper" id="threatChartWrapper">
-            <svg id="svgThreatChart" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
+          <div class="advanced-chart-wrapper" id="threatChartWrapper" style="position: relative;">
+            <canvas id="threatChartCanvas" class="advanced-chart-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></canvas>
+            <svg id="svgThreatChart" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;">
               <defs>
                 <linearGradient id="gradThreatRed" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stop-color="#ef4444" stop-opacity="0.35" />
@@ -2063,9 +2064,10 @@
               </div>
             </div>
 
-            <!-- SVG Timeline Canvas -->
-            <div class="advanced-chart-wrapper" style="margin-top: 10px; height: 160px;">
-              <svg id="svgBehaviorTimeline" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
+            <!-- Behavioral Timeline Chart Canvas & SVG Fallback -->
+            <div class="advanced-chart-wrapper" style="margin-top: 10px; height: 160px; position: relative;" id="behaviorTimelineChartWrapper">
+              <canvas id="behaviorTimelineCanvas" class="advanced-chart-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></canvas>
+              <svg id="svgBehaviorTimeline" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;">
                 <defs>
                   <linearGradient id="gradBehaviorAmber" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
@@ -2217,7 +2219,10 @@
             <div class="archetype-card card-harvester" data-archetype="socialHarvester">
               <div class="archetype-card-head">
                 <span class="archetype-icon">🦹‍♂️</span>
-                <span class="archetype-risk-badge high">High Risk</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="archetype-pct-badge" id="archPctHarvester" style="font-size:0.68rem; font-weight:700; color:var(--red-l); background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
+                  <span class="archetype-risk-badge high">High Risk</span>
+                </div>
               </div>
               <h5 class="archetype-name">Social Harvester</h5>
               <p class="archetype-desc">Fast solicitation of WhatsApp, phone numbers, Snapchat, or Instagram.</p>
@@ -2228,8 +2233,11 @@
                 </div>
                 <div class="archetype-metric">
                   <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" style="color:var(--red-l);">14%</strong>
+                  <strong class="archetype-val tabular-nums" id="archPatienceHarvester" style="color:var(--red-l);">14%</strong>
                 </div>
+              </div>
+              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
+                <div class="archetype-bar-fill" id="archBarHarvester" style="width:0%; height:100%; background:#ef4444; transition:width 0.3s ease;"></div>
               </div>
               <div class="archetype-recommendation">Policy: Link Shield & Quarantine</div>
             </div>
@@ -2238,7 +2246,10 @@
             <div class="archetype-card card-swapper" data-archetype="speedSwapper">
               <div class="archetype-card-head">
                 <span class="archetype-icon">⚡</span>
-                <span class="archetype-risk-badge med">Dopamine Seeker</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="archetype-pct-badge" id="archPctSwapper" style="font-size:0.68rem; font-weight:700; color:var(--amber-l); background:rgba(245,158,11,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
+                  <span class="archetype-risk-badge med">Dopamine Seeker</span>
+                </div>
               </div>
               <h5 class="archetype-name">Speed Swapper</h5>
               <p class="archetype-desc">Immediate skips (&lt;15s). Constantly cycling through partners.</p>
@@ -2249,8 +2260,11 @@
                 </div>
                 <div class="archetype-metric">
                   <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" style="color:var(--amber-l);">26%</strong>
+                  <strong class="archetype-val tabular-nums" id="archPatienceSwapper" style="color:var(--amber-l);">26%</strong>
                 </div>
+              </div>
+              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
+                <div class="archetype-bar-fill" id="archBarSwapper" style="width:0%; height:100%; background:#f59e0b; transition:width 0.3s ease;"></div>
               </div>
               <div class="archetype-recommendation">Policy: Rate Cooldown Enforced</div>
             </div>
@@ -2259,7 +2273,10 @@
             <div class="archetype-card card-curious" data-archetype="curiousExplorer">
               <div class="archetype-card-head">
                 <span class="archetype-icon">🧐</span>
-                <span class="archetype-risk-badge low">Inquisitive</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="archetype-pct-badge" id="archPctCurious" style="font-size:0.68rem; font-weight:700; color:#22d3ee; background:rgba(6,182,212,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
+                  <span class="archetype-risk-badge low">Inquisitive</span>
+                </div>
               </div>
               <h5 class="archetype-name">Curious Explorer</h5>
               <p class="archetype-desc">Asks questions, icebreakers, explores diverse cultures and topics.</p>
@@ -2270,8 +2287,11 @@
                 </div>
                 <div class="archetype-metric">
                   <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" style="color:var(--cyan-l);">79%</strong>
+                  <strong class="archetype-val tabular-nums" id="archPatienceCurious" style="color:var(--cyan-l);">79%</strong>
                 </div>
+              </div>
+              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
+                <div class="archetype-bar-fill" id="archBarCurious" style="width:0%; height:100%; background:#06b6d4; transition:width 0.3s ease;"></div>
               </div>
               <div class="archetype-recommendation">Policy: High Engagement Healthy</div>
             </div>
@@ -2280,7 +2300,10 @@
             <div class="archetype-card card-authentic" data-archetype="authenticConnector">
               <div class="archetype-card-head">
                 <span class="archetype-icon">🤝</span>
-                <span class="archetype-risk-badge safe">Ideal User</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="archetype-pct-badge" id="archPctAuthentic" style="font-size:0.68rem; font-weight:700; color:#34d399; background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
+                  <span class="archetype-risk-badge safe">Ideal User</span>
+                </div>
               </div>
               <h5 class="archetype-name">Authentic Connector</h5>
               <p class="archetype-desc">Engages in long discussions (&gt;3m) with natural conversation flow.</p>
@@ -2291,8 +2314,11 @@
                 </div>
                 <div class="archetype-metric">
                   <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" style="color:var(--green-l);">94%</strong>
+                  <strong class="archetype-val tabular-nums" id="archPatienceAuthentic" style="color:var(--green-l);">94%</strong>
                 </div>
+              </div>
+              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
+                <div class="archetype-bar-fill" id="archBarAuthentic" style="width:0%; height:100%; background:#10b981; transition:width 0.3s ease;"></div>
               </div>
               <div class="archetype-recommendation">Policy: Core Platform Retention</div>
             </div>
@@ -2301,7 +2327,10 @@
             <div class="archetype-card card-provocateur" data-archetype="provocateur">
               <div class="archetype-card-head">
                 <span class="archetype-icon">🤬</span>
-                <span class="archetype-risk-badge critical">Critical Risk</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                  <span class="archetype-pct-badge" id="archPctProvocateur" style="font-size:0.68rem; font-weight:700; color:#f87171; background:rgba(220,38,38,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
+                  <span class="archetype-risk-badge critical">Critical Risk</span>
+                </div>
               </div>
               <h5 class="archetype-name">Provocateur / Troll</h5>
               <p class="archetype-desc">Edgy insults, offensive baiting, test boundary violations.</p>
@@ -2312,8 +2341,11 @@
                 </div>
                 <div class="archetype-metric">
                   <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" style="color:var(--red-l);">18%</strong>
+                  <strong class="archetype-val tabular-nums" id="archPatienceProvocateur" style="color:var(--red-l);">18%</strong>
                 </div>
+              </div>
+              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
+                <div class="archetype-bar-fill" id="archBarProvocateur" style="width:0%; height:100%; background:#dc2626; transition:width 0.3s ease;"></div>
               </div>
               <div class="archetype-recommendation">Policy: 1-Strike Instant Ban</div>
             </div>
@@ -2334,9 +2366,10 @@
             </div>
           </div>
 
-          <!-- Retention Curve Interactive SVG Chart -->
-          <div class="advanced-chart-wrapper" style="height: 175px;" id="retentionChartWrapper">
-            <svg id="svgRetentionChart" class="advanced-chart-svg" viewBox="0 0 600 175" preserveAspectRatio="none">
+          <!-- Retention Curve Interactive Canvas & SVG Chart -->
+          <div class="advanced-chart-wrapper" style="height: 175px; position: relative;" id="retentionChartWrapper">
+            <canvas id="retentionChartCanvas" class="advanced-chart-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></canvas>
+            <svg id="svgRetentionChart" class="advanced-chart-svg" viewBox="0 0 600 175" preserveAspectRatio="none" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;">
               <defs>
                 <linearGradient id="gradRetentionGreen" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stop-color="#10b981" stop-opacity="0.32" />
@@ -3228,6 +3261,8 @@
     </div>
   </div>
 
+  <script src="/chart.umd.js"></script>
+  <script>if (typeof Chart === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"><\\/script>'); }</script>
   <script type="module" src="/firebase-client.js"></script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/app.js?v=1.1.4"></script>

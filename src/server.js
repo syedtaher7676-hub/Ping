@@ -466,6 +466,11 @@ global.broadcastUserAction = (act) => {
     io.emit("admin_user_action", act);
   }
 };
+global.broadcastArchetypes = (archetypes) => {
+  if (typeof io !== "undefined" && io && io.emit) {
+    io.emit("archetype_state_update", archetypes);
+  }
+};
 recordAdminEvent("system", "Gateway Initialized", "Ping real-time server ready", "success");
 
 // Telemetry history samples for silky smooth SVG sparklines & multi-metric graphs (last 40 intervals)
@@ -508,6 +513,7 @@ setInterval(() => {
   const mem = process.memoryUsage();
   const sample = {
     t: Date.now(),
+    timestamp: Date.now(),
     online: io.sockets?.sockets?.size || 0,
     rooms: rooms.size || 0,
     waiting: waitingSet ? waitingSet.size : 0,
@@ -521,7 +527,43 @@ setInterval(() => {
   if (telemetryHistory.length > MAX_TELEMETRY_SAMPLES) {
     telemetryHistory.shift();
   }
-}, 3000).unref();
+
+  // Live real-time socket streaming to admin dashboards
+  if (io && io.emit) {
+    io.emit("telemetry", sample);
+    io.emit("system_telemetry", sample);
+
+    // 100k scale simulation stream buffer tick
+    const scale100k = Math.max(1, Math.round(sample.online * 1250) + Math.round(sample.msgsPerSec * 15));
+    const sample100k = {
+      timestamp: sample.timestamp,
+      online: Math.max(100000, scale100k),
+      rooms: Math.max(44000, Math.round(scale100k * 0.44)),
+      waiting: Math.max(250, sample.waiting * 25),
+      msgsPerSec: Math.max(14000, sample.msgsPerSec * 450),
+      violationsPerSec: Math.max(12, sample.violationsPerSec * 15),
+      eventLoopLagMs: Math.max(1, sample.eventLoopLagMs),
+    };
+    io.emit("100k_sim_buffer", sample100k);
+
+    const snap = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : null;
+    io.emit("system_metrics", {
+      activeUsers: sample.online,
+      activeRooms: sample.rooms,
+      queueSize: sample.waiting,
+      msgsPerSec: sample.msgsPerSec,
+      violationsPerSec: sample.violationsPerSec,
+      heapMb: sample.heapMb,
+      rssMb: sample.rssMb,
+      eventLoopLagMs: sample.eventLoopLagMs,
+      archetypes: snap ? snap.psychologyArchetypes : null,
+      behaviorStats: snap,
+    });
+    if (snap && snap.psychologyArchetypes) {
+      io.emit("archetype_state_update", snap.psychologyArchetypes);
+    }
+  }
+}, 2000).unref();
 
 // Cleanup expired admin tokens
 setInterval(() => {

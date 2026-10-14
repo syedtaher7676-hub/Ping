@@ -72,13 +72,13 @@ const conversationVibes = {
 const MAX_WIRE_EVENTS = 150;
 const interceptionWire = [];
 
-// Top Flagged Patterns & Trigger Words Frequency Leaderboard (Word/Pattern -> { count, category, lastSeen })
+// Top Flagged Patterns & Trigger Words Frequency Leaderboard
 const triggerFrequencyMap = new Map();
 
-// Repeat Policy & Slur Offenders Map (userId -> offenderProfile)
+// Repeat Policy & Slur Offenders Map
 const repeatOffendersMap = new Map();
 
-// Psychological Archetypes & Intent Counts
+// Psychological Archetypes & Intent Counts (Real-time active distribution)
 const psychologyArchetypes = {
   socialHarvester: 0,   // Users attempting to harvest external contact details
   speedSwapper: 0,      // Users skipping rapidly without conversational investment
@@ -87,17 +87,40 @@ const psychologyArchetypes = {
   provocateur: 0,       // Users baiting or triggering content violations
 };
 
+function broadcastArchetypeUpdate() {
+  if (typeof global.broadcastArchetypes === 'function') {
+    global.broadcastArchetypes({ ...psychologyArchetypes });
+  }
+}
+
 // Live Real-Time User Actions Stream (User activity feed across the fleet)
 const MAX_LIVE_ACTIONS = 120;
 const liveUserActions = [];
 
 function recordUserAction({ type, userId, country = 'Global', detail = '', icon = '⚡' }) {
+  // Determine archetype based on action
+  let archetype = 'Curious Explorer';
+  if (type === 'skip_partner') {
+    archetype = 'Speed Swapper';
+    psychologyArchetypes.speedSwapper++;
+    broadcastArchetypeUpdate();
+  } else if (type === 'message_sent' || type === 'send_msg') {
+    archetype = 'Authentic Connector';
+    psychologyArchetypes.authenticConnector++;
+    broadcastArchetypeUpdate();
+  } else if (type === 'violation' || type === 'report_submitted') {
+    archetype = 'Provocateur';
+    psychologyArchetypes.provocateur++;
+    broadcastArchetypeUpdate();
+  }
+
   const item = {
     id: 'act_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex'),
     timestamp: Date.now(),
     type,
     userId: userId || 'Anonymous',
     country,
+    archetype,
     detail: String(detail).slice(0, 100),
     icon,
   };
@@ -137,9 +160,9 @@ function getOrCreateCurrentBucket() {
   return bucket;
 }
 
-// Seed the initial 10 minute buckets so the chart has a baseline curve immediately
+// Initial sliding buffer windows initialized cleanly without Math.random()
 const seedNow = Date.now();
-for (let i = 10; i >= 0; i--) {
+for (let i = 15; i >= 0; i--) {
   const t = Math.floor((seedNow - i * 60000) / 60000) * 60000;
   minuteBuckets.push({
     timestamp: t,

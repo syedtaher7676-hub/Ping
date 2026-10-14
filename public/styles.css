@@ -10159,6 +10159,19 @@ html.is-ios .chat-app {
   font-size: 0.72rem;
 }
 
+.threat-stream-ticker-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#threatOverviewStreamList::-webkit-scrollbar {
+  width: 4px;
+}
+#threatOverviewStreamList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
 /* ═══ ARCHITECTURE BANNER (GHOST MODE) ═══ */
 .architecture-banner-box {
   background: rgba(124, 58, 237, 0.1);
