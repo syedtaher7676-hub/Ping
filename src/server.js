@@ -432,6 +432,7 @@ app.get("/api/firebase-config", (_req, res) => {
 // ADMIN DASHBOARD REST API & AUTHENTICATION
 // ═══════════════════════════════════════════════════════════════
 const adminSessions = new Map(); // token -> { createdAt, expiresAt }
+global.adminSessionsMap = adminSessions;
 const ADMIN_TOKEN_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 // ═══════════════════════════════════════════════════════════════
@@ -799,31 +800,50 @@ setInterval(() => {
 }, 2000).unref();
 
 // Cleanup expired admin tokens
-setInterval(() => {
+setInterval(async () => {
   const now = Date.now();
   for (const [token, session] of adminSessions.entries()) {
     if (now > session.expiresAt) {
       adminSessions.delete(token);
+      if (typeof isRedisReady === "function" && isRedisReady()) {
+        redisClient.del(`ping:admin_session:${token}`).catch(() => {});
+      }
     }
   }
 }, 300000).unref();
 
-function verifyAdmin(req, res, next) {
+async function verifyAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Unauthorized: Missing admin token" });
   }
   const token = authHeader.slice(7).trim();
-  const session = adminSessions.get(token);
+  let session = adminSessions.get(token);
+
+  if (!session && typeof isRedisReady === "function" && isRedisReady()) {
+    try {
+      const cached = await redisClient.get(`ping:admin_session:${token}`);
+      if (cached) {
+        session = JSON.parse(cached);
+        adminSessions.set(token, session);
+      }
+    } catch {}
+  }
+
   if (!session || Date.now() > session.expiresAt) {
-    if (session) adminSessions.delete(token);
+    if (session) {
+      adminSessions.delete(token);
+      if (typeof isRedisReady === "function" && isRedisReady()) {
+        redisClient.del(`ping:admin_session:${token}`).catch(() => {});
+      }
+    }
     return res.status(401).json({ error: "Unauthorized: Session expired or invalid" });
   }
   next();
 }
 
 // 1. Admin login endpoint
-app.post("/api/admin/login", (req, res) => {
+app.post("/api/admin/login", async (req, res) => {
   const { password } = req.body || {};
   if (!password || typeof password !== "string") {
     return res.status(400).json({ success: false, error: "Password is required" });
@@ -848,10 +868,17 @@ app.post("/api/admin/login", (req, res) => {
 
   const token = "adm_" + crypto.randomBytes(24).toString("hex");
   const now = Date.now();
-  adminSessions.set(token, {
+  const session = {
     createdAt: now,
     expiresAt: now + ADMIN_TOKEN_TTL,
-  });
+  };
+  adminSessions.set(token, session);
+
+  if (typeof isRedisReady === "function" && isRedisReady()) {
+    try {
+      await redisClient.set(`ping:admin_session:${token}`, JSON.stringify(session), "EX", 86400);
+    } catch {}
+  }
 
   recordAdminEvent("auth", "Admin Authenticated", "Command console accessed", "success");
 
@@ -863,11 +890,16 @@ app.post("/api/admin/login", (req, res) => {
 });
 
 // Admin logout endpoint (invalidates session token immediately)
-app.post("/api/admin/logout", verifyAdmin, (req, res) => {
+app.post("/api/admin/logout", verifyAdmin, async (req, res) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7).trim();
     adminSessions.delete(token);
+    if (typeof isRedisReady === "function" && isRedisReady()) {
+      try {
+        await redisClient.del(`ping:admin_session:${token}`);
+      } catch {}
+    }
     recordAdminEvent("auth", "Admin Signed Out", "Session token cleared", "info");
     log("admin_logout_success", { token: token.slice(0, 10) + "..." });
   }

@@ -5786,7 +5786,7 @@ function initAdminModule() {
   const announcementIcon = $('announcementIcon');
   const closeAnnouncementBtn = $('closeAnnouncementBtn');
 
-  // 1. Easter Egg: 15 Clicks/Taps on Ping Logo on Landing Page (discreet & silent)
+  // 1. Easter Egg: 10 Clicks/Taps on Ping Logo on Landing Page (discreet & silent)
   let lastLogoTapTime = 0;
   function handleLogoClick(e) {
     if (landingPage && landingPage.style.display === 'none') {
@@ -5794,22 +5794,22 @@ function initAdminModule() {
     }
 
     const now = Date.now();
-    if (now - lastLogoTapTime < 60) return; // Debounce touch+click synthetic events
+    if (now - lastLogoTapTime < 40) return; // Debounce touch+click synthetic events
     lastLogoTapTime = now;
 
     adminLogoClicks++;
     clearTimeout(adminClickTimeout);
 
-    if (adminLogoClicks >= 15) {
+    if (adminLogoClicks >= 10) {
       adminLogoClicks = 0;
       openAdminAuthModal();
       return;
     }
 
-    // Reset clicks after 5 seconds of inactivity
+    // Reset clicks after 4 seconds of inactivity
     adminClickTimeout = setTimeout(() => {
       adminLogoClicks = 0;
-    }, 5000);
+    }, 4000);
   }
 
   // Bind to landing logo elements with touch support
@@ -5818,6 +5818,7 @@ function initAdminModule() {
     $('landingLogoLockup'),
     document.querySelector('.brand-logo-img'),
     document.querySelector('.logo-mark'),
+    document.querySelector('.logo-wordmark'),
     $('headerCenterLogo'),
   ].filter(Boolean);
 
@@ -5876,6 +5877,7 @@ function initAdminModule() {
         adminToken = data.token;
         try {
           sessionStorage.setItem('ping_admin_token', adminToken);
+          localStorage.setItem('ping_admin_token', adminToken);
         } catch (_) {}
         closeAdminAuthModal();
         openAdminDashboard();
@@ -5904,6 +5906,18 @@ function initAdminModule() {
     setupChartScrubbing();
     startAdminPolling();
     refreshAllAdminData();
+
+    if (socket) {
+      socket.emit('join_admin');
+      socket.emit('admin_join');
+      if (adminToken) {
+        socket.emit('admin_rejoin', { token: adminToken });
+      }
+    }
+
+    if (window.PingAdmin && typeof window.PingAdmin.refreshAdminDashboardData === 'function') {
+      window.PingAdmin.refreshAdminDashboardData();
+    }
   }
 
   function closeAdminDashboard() {
@@ -5911,6 +5925,9 @@ function initAdminModule() {
     adminDashboardView.style.display = 'none';
     document.body.style.overflow = '';
     stopAdminPolling();
+    if (socket) {
+      socket.emit('leave_admin');
+    }
 
     // Invalidate token on server (fire-and-forget)
     if (adminToken) {
@@ -5926,6 +5943,7 @@ function initAdminModule() {
     adminToken = null;
     try {
       sessionStorage.removeItem('ping_admin_token');
+      localStorage.removeItem('ping_admin_token');
     } catch (_) {}
 
     if (adminPasswordInput) {

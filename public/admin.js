@@ -522,9 +522,20 @@
     if (!socket || socket === socketInstance) return;
     socketInstance = socket;
 
-    // Join admin room for high-frequency low-overhead telemetry channel
-    socket.emit('join_admin');
-    socket.emit('admin_join');
+    // Auto-rejoin on socket connect/reconnect ONLY when admin dashboard is active
+    const performJoin = () => {
+      if (isAdminDashboardVisible()) {
+        socket.emit('join_admin');
+        socket.emit('admin_join');
+        const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
+        if (token) {
+          socket.emit('admin_rejoin', { token });
+        }
+        refreshAdminDashboardData();
+      }
+    };
+
+    socket.on('connect', performJoin);
 
     socket.on('system_metrics', (data) => {
       if (!data) return;
@@ -913,14 +924,41 @@
   // ═════════════════════════════════════════════════════════════
   // PAST DATA & TELEMETRY HYDRATION ENGINE
   // ═════════════════════════════════════════════════════════════
-  async function refreshAdminDashboardData() {
-    try {
-      const token = localStorage.getItem('ping_admin_token') || '';
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+  function isAdminDashboardVisible() {
+    const v = $('adminDashboardView');
+    return Boolean(v && v.style.display !== 'none' && v.style.display !== '');
+  }
 
+  async function adminFetch(url, options = {}) {
+    const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || '';
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+      localStorage.removeItem('ping_admin_token');
+      sessionStorage.removeItem('ping_admin_token');
+      // Only show admin auth modal if admin dashboard is actively visible
+      if (isAdminDashboardVisible()) {
+        const adminView = $('adminDashboardView');
+        if (adminView) {
+          adminView.style.display = 'none';
+          document.body.style.overflow = '';
+        }
+        const modal = document.getElementById('adminAuthModal');
+        if (modal) {
+          modal.style.display = 'flex';
+        }
+      }
+    }
+    return res;
+  }
+
+  async function refreshAdminDashboardData() {
+    // Never refresh admin data if dashboard is hidden
+    if (!isAdminDashboardVisible()) return;
+    try {
       // 1. Overview & Health Stats
-      const ovRes = await fetch('/api/admin/overview', { headers });
+      const ovRes = await adminFetch('/api/admin/overview');
       if (ovRes.ok) {
         const ov = await ovRes.json();
         if (ov.success) {
@@ -943,7 +981,7 @@
       }
 
       // 2. Reports Feed
-      const repRes = await fetch('/api/admin/reports', { headers });
+      const repRes = await adminFetch('/api/admin/reports');
       if (repRes.ok) {
         const repJson = await repRes.json();
         if (repJson.success && Array.isArray(repJson.reports)) {
@@ -972,7 +1010,7 @@
       }
 
       // 3. Active Bans
-      const banRes = await fetch('/api/admin/bans', { headers });
+      const banRes = await adminFetch('/api/admin/bans');
       if (banRes.ok) {
         const banJson = await banRes.json();
         if (banJson.success && Array.isArray(banJson.bans)) {
@@ -999,7 +1037,7 @@
       }
 
       // 4. Live Rooms
-      const roomRes = await fetch('/api/admin/rooms', { headers });
+      const roomRes = await adminFetch('/api/admin/rooms');
       if (roomRes.ok) {
         const roomJson = await roomRes.json();
         if (roomJson.success && Array.isArray(roomJson.rooms)) {
@@ -1026,7 +1064,7 @@
       }
 
       // 5. Traffic & Geo
-      const geoRes = await fetch('/api/admin/geo', { headers });
+      const geoRes = await adminFetch('/api/admin/geo');
       if (geoRes.ok) {
         const geoJson = await geoRes.json();
         if (geoJson.success && Array.isArray(geoJson.geo)) {
@@ -1046,7 +1084,7 @@
       }
 
       // 6. Behavior Analytics
-      const behRes = await fetch('/api/admin/behavior-analytics', { headers });
+      const behRes = await adminFetch('/api/admin/behavior-analytics');
       if (behRes.ok) {
         const beh = await behRes.json();
         if (beh.success) {
@@ -1077,7 +1115,7 @@
     setupTabNavigation();
     initAdminCharts();
     hydrateTelemetryFromFirestore();
-    refreshAdminDashboardData();
+    // Do NOT refreshAdminDashboardData() on startup — dashboard remains hidden until 10 clicks on logo
 
     // Bind automated Excel (.xlsx) export to Export button
     const exportBtn = $('adminExportBtn');
@@ -1116,10 +1154,12 @@
     }, 1000);
     setTimeout(() => clearInterval(socketCheckInterval), 15000);
 
-    // Periodic Firestore & Admin Data refresh (every 30s)
+    // Periodic Firestore & Admin Data refresh (every 30s) ONLY when dashboard is open
     setInterval(() => {
-      hydrateTelemetryFromFirestore();
-      refreshAdminDashboardData();
+      if (isAdminDashboardVisible()) {
+        hydrateTelemetryFromFirestore();
+        refreshAdminDashboardData();
+      }
     }, 30000);
   }
 
@@ -1138,10 +1178,8 @@
     getTelemetryState: () => ({ ...telemetryState }),
     resolveReport: async (reportId, status) => {
       try {
-        const token = localStorage.getItem('ping_admin_token') || '';
-        await fetch('/api/admin/reports/update-status', {
+        await adminFetch('/api/admin/reports/update-status', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ reportId, status })
         });
         refreshAdminDashboardData();
@@ -1149,10 +1187,8 @@
     },
     removeBan: async (deviceHash) => {
       try {
-        const token = localStorage.getItem('ping_admin_token') || '';
-        await fetch('/api/admin/bans/remove', {
+        await adminFetch('/api/admin/bans/remove', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ deviceHash })
         });
         refreshAdminDashboardData();
@@ -1160,10 +1196,8 @@
     },
     terminateRoom: async (roomId) => {
       try {
-        const token = localStorage.getItem('ping_admin_token') || '';
-        await fetch('/api/admin/terminate-room', {
+        await adminFetch('/api/admin/terminate-room', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ roomId })
         });
         refreshAdminDashboardData();

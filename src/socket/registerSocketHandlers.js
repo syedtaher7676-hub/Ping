@@ -972,14 +972,53 @@ function registerSocketHandlers(io, getCountryFromSocket) {
     // Subscribe socket to its personal user room for targeted notifications
     socket.join(`user_${userId}`);
 
-    // Admin room subscription for real-time telemetry streaming (exclude from online user count)
+    // Admin room subscription for real-time telemetry streaming
     socket.on("join_admin", () => {
       socket.join("admin");
-      socket.data.isAdmin = true;
     });
     socket.on("admin_join", () => {
       socket.join("admin");
-      socket.data.isAdmin = true;
+    });
+    socket.on("leave_admin", () => {
+      socket.leave("admin");
+    });
+    socket.on("admin_rejoin", async (rawPayload, ack) => {
+      try {
+        const payload = safeObject(rawPayload);
+        const token = safeString(payload.token);
+        if (!token) {
+          if (typeof ack === "function") ack({ ok: false });
+          return;
+        }
+        let isValid = false;
+        const { isRedisReady, redisClient } = require("../state/store");
+        if (typeof isRedisReady === "function" && isRedisReady()) {
+          try {
+            const cached = await redisClient.get(`ping:admin_session:${token}`);
+            if (cached) {
+              const session = JSON.parse(cached);
+              if (session && Date.now() <= session.expiresAt) {
+                isValid = true;
+              }
+            }
+          } catch {}
+        }
+        if (!isValid && global.adminSessionsMap && global.adminSessionsMap.has(token)) {
+          const session = global.adminSessionsMap.get(token);
+          if (session && Date.now() <= session.expiresAt) {
+            isValid = true;
+          }
+        }
+
+        if (isValid) {
+          socket.join("admin");
+          if (typeof ack === "function") ack({ ok: true, success: true });
+        } else {
+          if (typeof ack === "function") ack({ ok: false, error: "expired" });
+        }
+      } catch (err) {
+        if (typeof ack === "function") ack({ ok: false });
+      }
     });
 
     // Allow explicit client authentication / auto-rejoin of active friend room
