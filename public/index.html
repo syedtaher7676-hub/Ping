@@ -1282,9 +1282,13 @@
         <span>User Behavior & Intel</span>
         <span class="admin-badge-count" id="adminBehaviorBadge">0</span>
       </button>
+      <button class="admin-tab-btn" data-tab="archetypes" id="adminNavTabArchetypes">
+        <span class="tab-icon">🧠</span>
+        <span>User Psychology Archetypes</span>
+      </button>
       <button class="admin-tab-btn" data-tab="masscontrol" id="adminNavTabMassControl">
         <span class="tab-icon">⚡</span>
-        <span>100k Control</span>
+        <span>100k Sim & Control</span>
       </button>
       <button class="admin-tab-btn" data-tab="shadowbans" id="adminNavTabShadowbans">
         <span class="tab-icon">👻</span>
@@ -1458,6 +1462,7 @@
 
           <!-- Interactive High-Resolution SVG Chart Canvas -->
           <div class="advanced-chart-wrapper" id="throughputChartWrapper">
+            <canvas id="canvasThroughputChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;"></canvas>
             <svg id="svgThroughputChart" class="advanced-chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="gradThroughputSockets" x1="0" y1="0" x2="0" y2="1">
@@ -1521,9 +1526,9 @@
             </div>
           </div>
 
-          <div class="advanced-chart-wrapper" id="threatChartWrapper" style="position: relative;">
-            <canvas id="threatChartCanvas" class="advanced-chart-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></canvas>
-            <svg id="svgThreatChart" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;">
+          <div class="advanced-chart-wrapper" id="threatChartWrapper">
+            <canvas id="canvasThreatChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;"></canvas>
+            <svg id="svgThreatChart" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="gradThreatRed" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stop-color="#ef4444" stop-opacity="0.35" />
@@ -2064,10 +2069,10 @@
               </div>
             </div>
 
-            <!-- Behavioral Timeline Chart Canvas & SVG Fallback -->
-            <div class="advanced-chart-wrapper" style="margin-top: 10px; height: 160px; position: relative;" id="behaviorTimelineChartWrapper">
-              <canvas id="behaviorTimelineCanvas" class="advanced-chart-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></canvas>
-              <svg id="svgBehaviorTimeline" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;">
+            <!-- SVG Timeline Canvas -->
+            <div class="advanced-chart-wrapper" id="behaviorTimelineWrapper" style="margin-top: 10px; height: 160px; position:relative;">
+              <canvas id="canvasBehaviorChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;"></canvas>
+              <svg id="svgBehaviorTimeline" class="advanced-chart-svg" viewBox="0 0 600 160" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="gradBehaviorAmber" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
@@ -2201,156 +2206,7 @@
           </div>
         </div>
 
-        <!-- ═══ Row 6: REAL-TIME USER PSYCHOLOGY ARCHETYPES & INTENT PROFILING ═══ -->
-        <div class="admin-card" style="margin-top: 14px;">
-          <div class="card-header-bar flex-wrap-mobile">
-            <div>
-              <h4 class="card-bar-title">🧠 User Psychology Archetypes & Intent Taxonomy</h4>
-              <p class="panel-section-subtitle">Real-time algorithmic behavioral categorization based on chat duration, contact solicitation, and conversational pacing</p>
-            </div>
-            <div class="archetype-legend-pill">
-              <span class="count-pill cyan" id="activeArchetypesPill">5 Archetypes Tracked</span>
-            </div>
-          </div>
 
-          <!-- 5 Archetypes Responsive Grid (Adaptive 1-col mobile, 2-col tablet, 5-col desktop) -->
-          <div class="psychology-archetypes-grid" id="psychologyArchetypesGrid">
-            <!-- 1. Social Harvester -->
-            <div class="archetype-card card-harvester" data-archetype="socialHarvester">
-              <div class="archetype-card-head">
-                <span class="archetype-icon">🦹‍♂️</span>
-                <div style="display:flex; gap:6px; align-items:center;">
-                  <span class="archetype-pct-badge" id="archPctHarvester" style="font-size:0.68rem; font-weight:700; color:var(--red-l); background:rgba(239,68,68,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
-                  <span class="archetype-risk-badge high">High Risk</span>
-                </div>
-              </div>
-              <h5 class="archetype-name">Social Harvester</h5>
-              <p class="archetype-desc">Fast solicitation of WhatsApp, phone numbers, Snapchat, or Instagram.</p>
-              <div class="archetype-metrics-row">
-                <div class="archetype-metric">
-                  <span class="archetype-label">Count</span>
-                  <strong class="archetype-val tabular-nums" id="archCountHarvester">0</strong>
-                </div>
-                <div class="archetype-metric">
-                  <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" id="archPatienceHarvester" style="color:var(--red-l);">14%</strong>
-                </div>
-              </div>
-              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
-                <div class="archetype-bar-fill" id="archBarHarvester" style="width:0%; height:100%; background:#ef4444; transition:width 0.3s ease;"></div>
-              </div>
-              <div class="archetype-recommendation">Policy: Link Shield & Quarantine</div>
-            </div>
-
-            <!-- 2. Speed Swapper -->
-            <div class="archetype-card card-swapper" data-archetype="speedSwapper">
-              <div class="archetype-card-head">
-                <span class="archetype-icon">⚡</span>
-                <div style="display:flex; gap:6px; align-items:center;">
-                  <span class="archetype-pct-badge" id="archPctSwapper" style="font-size:0.68rem; font-weight:700; color:var(--amber-l); background:rgba(245,158,11,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
-                  <span class="archetype-risk-badge med">Dopamine Seeker</span>
-                </div>
-              </div>
-              <h5 class="archetype-name">Speed Swapper</h5>
-              <p class="archetype-desc">Immediate skips (&lt;15s). Constantly cycling through partners.</p>
-              <div class="archetype-metrics-row">
-                <div class="archetype-metric">
-                  <span class="archetype-label">Count</span>
-                  <strong class="archetype-val tabular-nums" id="archCountSwapper">0</strong>
-                </div>
-                <div class="archetype-metric">
-                  <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" id="archPatienceSwapper" style="color:var(--amber-l);">26%</strong>
-                </div>
-              </div>
-              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
-                <div class="archetype-bar-fill" id="archBarSwapper" style="width:0%; height:100%; background:#f59e0b; transition:width 0.3s ease;"></div>
-              </div>
-              <div class="archetype-recommendation">Policy: Rate Cooldown Enforced</div>
-            </div>
-
-            <!-- 3. Curious Explorer -->
-            <div class="archetype-card card-curious" data-archetype="curiousExplorer">
-              <div class="archetype-card-head">
-                <span class="archetype-icon">🧐</span>
-                <div style="display:flex; gap:6px; align-items:center;">
-                  <span class="archetype-pct-badge" id="archPctCurious" style="font-size:0.68rem; font-weight:700; color:#22d3ee; background:rgba(6,182,212,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
-                  <span class="archetype-risk-badge low">Inquisitive</span>
-                </div>
-              </div>
-              <h5 class="archetype-name">Curious Explorer</h5>
-              <p class="archetype-desc">Asks questions, icebreakers, explores diverse cultures and topics.</p>
-              <div class="archetype-metrics-row">
-                <div class="archetype-metric">
-                  <span class="archetype-label">Count</span>
-                  <strong class="archetype-val tabular-nums" id="archCountCurious">0</strong>
-                </div>
-                <div class="archetype-metric">
-                  <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" id="archPatienceCurious" style="color:var(--cyan-l);">79%</strong>
-                </div>
-              </div>
-              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
-                <div class="archetype-bar-fill" id="archBarCurious" style="width:0%; height:100%; background:#06b6d4; transition:width 0.3s ease;"></div>
-              </div>
-              <div class="archetype-recommendation">Policy: High Engagement Healthy</div>
-            </div>
-
-            <!-- 4. Authentic Connector -->
-            <div class="archetype-card card-authentic" data-archetype="authenticConnector">
-              <div class="archetype-card-head">
-                <span class="archetype-icon">🤝</span>
-                <div style="display:flex; gap:6px; align-items:center;">
-                  <span class="archetype-pct-badge" id="archPctAuthentic" style="font-size:0.68rem; font-weight:700; color:#34d399; background:rgba(16,185,129,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
-                  <span class="archetype-risk-badge safe">Ideal User</span>
-                </div>
-              </div>
-              <h5 class="archetype-name">Authentic Connector</h5>
-              <p class="archetype-desc">Engages in long discussions (&gt;3m) with natural conversation flow.</p>
-              <div class="archetype-metrics-row">
-                <div class="archetype-metric">
-                  <span class="archetype-label">Count</span>
-                  <strong class="archetype-val tabular-nums" id="archCountAuthentic">0</strong>
-                </div>
-                <div class="archetype-metric">
-                  <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" id="archPatienceAuthentic" style="color:var(--green-l);">94%</strong>
-                </div>
-              </div>
-              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
-                <div class="archetype-bar-fill" id="archBarAuthentic" style="width:0%; height:100%; background:#10b981; transition:width 0.3s ease;"></div>
-              </div>
-              <div class="archetype-recommendation">Policy: Core Platform Retention</div>
-            </div>
-
-            <!-- 5. Provocateur / Troll -->
-            <div class="archetype-card card-provocateur" data-archetype="provocateur">
-              <div class="archetype-card-head">
-                <span class="archetype-icon">🤬</span>
-                <div style="display:flex; gap:6px; align-items:center;">
-                  <span class="archetype-pct-badge" id="archPctProvocateur" style="font-size:0.68rem; font-weight:700; color:#f87171; background:rgba(220,38,38,0.15); padding:2px 6px; border-radius:8px;">0.0%</span>
-                  <span class="archetype-risk-badge critical">Critical Risk</span>
-                </div>
-              </div>
-              <h5 class="archetype-name">Provocateur / Troll</h5>
-              <p class="archetype-desc">Edgy insults, offensive baiting, test boundary violations.</p>
-              <div class="archetype-metrics-row">
-                <div class="archetype-metric">
-                  <span class="archetype-label">Count</span>
-                  <strong class="archetype-val tabular-nums" id="archCountProvocateur">0</strong>
-                </div>
-                <div class="archetype-metric">
-                  <span class="archetype-label">Patience</span>
-                  <strong class="archetype-val tabular-nums" id="archPatienceProvocateur" style="color:var(--red-l);">18%</strong>
-                </div>
-              </div>
-              <div class="archetype-bar-track" style="height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:4px;">
-                <div class="archetype-bar-fill" id="archBarProvocateur" style="width:0%; height:100%; background:#dc2626; transition:width 0.3s ease;"></div>
-              </div>
-              <div class="archetype-recommendation">Policy: 1-Strike Instant Ban</div>
-            </div>
-          </div>
-        </div>
 
         <!-- ═══ Row 7: ADVANCED REAL-TIME GRAPH 3: PSYCHOLOGICAL RETENTION & CHURN CURVE ═══ -->
         <div class="admin-card chart-main-card" style="margin-top: 14px;">
@@ -2366,10 +2222,10 @@
             </div>
           </div>
 
-          <!-- Retention Curve Interactive Canvas & SVG Chart -->
-          <div class="advanced-chart-wrapper" style="height: 175px; position: relative;" id="retentionChartWrapper">
-            <canvas id="retentionChartCanvas" class="advanced-chart-canvas" style="position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1;"></canvas>
-            <svg id="svgRetentionChart" class="advanced-chart-svg" viewBox="0 0 600 175" preserveAspectRatio="none" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;">
+          <!-- Retention Curve Interactive SVG Chart -->
+          <div class="advanced-chart-wrapper" style="height: 175px; position:relative;" id="retentionChartWrapper">
+            <canvas id="canvasRetentionChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none;"></canvas>
+            <svg id="svgRetentionChart" class="advanced-chart-svg" viewBox="0 0 600 175" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="gradRetentionGreen" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stop-color="#10b981" stop-opacity="0.32" />
@@ -2448,6 +2304,119 @@
                 <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">Streaming live user actions... Active events will appear here in real time.</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 1c. USER PSYCHOLOGY ARCHETYPES TAB ═══ -->
+      <div id="adminTabArchetypes" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User Psychology Archetypes & Behavioral Clusters</h3>
+            <p class="panel-section-subtitle">Real-time classification of active conversational intents, depth profiles, and psychological personas</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <button class="btn-refresh-sm" id="refreshArchetypesBtn" type="button">🔄 Sync Archetypes</button>
+          </div>
+        </div>
+
+        <div class="admin-stats-grid" style="margin-bottom: 20px;">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Authentic Connectors</span>
+              <span class="stat-icon-wrap green">🤝</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statArchConnectors">0</div>
+            <div class="stat-sub">High depth & reciprocal flow</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Curious Explorers</span>
+              <span class="stat-icon-wrap cyan">🧭</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statArchExplorers">0</div>
+            <div class="stat-sub">Icebreakers & inquiries</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Speed Swappers</span>
+              <span class="stat-icon-wrap amber">⚡</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statArchSwappers">0</div>
+            <div class="stat-sub">&lt;15s skip churn rate</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Social Harvesters</span>
+              <span class="stat-icon-wrap purple">📱</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statArchHarvesters">0</div>
+            <div class="stat-sub">External contact attempts</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Provocateurs</span>
+              <span class="stat-icon-wrap red">⚠️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statArchProvocateurs">0</div>
+            <div class="stat-sub">Toxic / policy triggers</div>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Archetype Proportional Radar / Breakdown</h4>
+              <span class="count-pill cyan">Live Persona Weight</span>
+            </div>
+            <div style="height: 240px; position: relative;">
+              <canvas id="canvasArchetypeChart" style="width:100%; height:100%;"></canvas>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Psychological Health Indicators</h4>
+              <span class="count-pill green">Platform Vibe Index</span>
+            </div>
+            <div class="duration-bars-list" style="margin-top: 14px;">
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>Civility & Politeness Index</span>
+                  <strong class="tabular-nums" id="archPolitenessVal">94.2%</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="archPolitenessFill" style="width:94.2%; background:#10b981;"></div>
+                </div>
+              </div>
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>Curiosity & Engagement Ratio</span>
+                  <strong class="tabular-nums" id="archCuriosityVal">68.5%</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="archCuriosityFill" style="width:68.5%; background:#06b6d4;"></div>
+                </div>
+              </div>
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>Harvester Contact Extraction Resistance</span>
+                  <strong class="tabular-nums" id="archExtractionResistVal">99.1%</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="archExtractionResistFill" style="width:99.1%; background:#8b5cf6;"></div>
+                </div>
+              </div>
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>Speed Skip Quarantine Level</span>
+                  <strong class="tabular-nums" id="archSwapperQuarantineVal">18.4%</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="archSwapperQuarantineFill" style="width:18.4%; background:#f59e0b;"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -3261,11 +3230,12 @@
     </div>
   </div>
 
-  <script src="/chart.umd.js"></script>
-  <script>if (typeof Chart === 'undefined') { document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"><\\/script>'); }</script>
   <script type="module" src="/firebase-client.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="/app.js?v=1.1.4"></script>
+  <script src="/admin.js?v=1.1.4"></script>
   <script src="/animations.js?v=1.1.4"></script>
 </body>
 

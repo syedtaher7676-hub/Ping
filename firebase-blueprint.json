@@ -87,6 +87,17 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["reportId", "reporterId", "reportedUserId"]
+    },
+    "Telemetry": {
+      "title": "Telemetry",
+      "description": "Aggregated anonymous system telemetry metrics",
+      "type": "object",
+      "properties": {
+        "system_summary": { "type": "object" },
+        "sentiment_distribution": { "type": "object" },
+        "session_durations": { "type": "object" },
+        "retention_metrics": { "type": "object" }
+      }
     }
   },
   "firestore": {
@@ -113,6 +124,10 @@
     "/reports/{reportId}": {
       "schema": "Report",
       "description": "User moderation and behavior reports"
+    },
+    "/telemetry/{docId}": {
+      "schema": "Telemetry",
+      "description": "Aggregated anonymous system telemetry and health metrics"
     }
   }
 }

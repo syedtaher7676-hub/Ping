@@ -473,6 +473,215 @@ global.broadcastArchetypes = (archetypes) => {
 };
 recordAdminEvent("system", "Gateway Initialized", "Ping real-time server ready", "success");
 
+// ═══════════════════════════════════════════════════════════════
+// IN-MEMORY RAM BUFFER & 30-SECOND FIRESTORE BATCH FLUSH
+// ═══════════════════════════════════════════════════════════════
+const { getDb, isFirebaseConfigured, FieldValue } = require("./config/firebase");
+
+function loadAppletConfig() {
+  try {
+    const configPath = path.resolve(__dirname, "../firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      return JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    }
+  } catch {}
+  return null;
+}
+
+const memoryBuffer = {
+  system_summary: {
+    total_sessions_logged: 0,
+    active_ccu_peak: 0,
+  },
+  sentiment_distribution: {
+    friendly_greetings: 0,
+    curious_questions: 0,
+    casual_dialogue: 0,
+    playful_humor: 0,
+    toxic_messages: 0,
+  },
+  session_durations: {
+    quick_skips_under_15s: 0,
+    short_chats_15s_1m: 0,
+    medium_chats_1m_3m: 0,
+    deep_chats_over_3m: 0,
+  },
+  retention_metrics: {
+    survival_rate_3m_pct: 0,
+    skip_churn_15s_pct: 0,
+    patience_quotient_pct: 0,
+  },
+};
+
+global.recordTelemetrySentiment = (key) => {
+  if (memoryBuffer.sentiment_distribution[key] !== undefined) {
+    memoryBuffer.sentiment_distribution[key]++;
+  }
+};
+
+global.recordTelemetrySession = (durationSeconds = 0) => {
+  memoryBuffer.system_summary.total_sessions_logged++;
+  if (durationSeconds < 15) {
+    memoryBuffer.session_durations.quick_skips_under_15s++;
+  } else if (durationSeconds <= 60) {
+    memoryBuffer.session_durations.short_chats_15s_1m++;
+  } else if (durationSeconds <= 180) {
+    memoryBuffer.session_durations.medium_chats_1m_3m++;
+  } else {
+    memoryBuffer.session_durations.deep_chats_over_3m++;
+  }
+
+  // Recalculate empirical retention metrics
+  const durs = memoryBuffer.session_durations;
+  const total = durs.quick_skips_under_15s + durs.short_chats_15s_1m + durs.medium_chats_1m_3m + durs.deep_chats_over_3m;
+  if (total > 0) {
+    memoryBuffer.retention_metrics.survival_rate_3m_pct = Math.round((durs.deep_chats_over_3m / total) * 1000) / 10;
+    memoryBuffer.retention_metrics.skip_churn_15s_pct = Math.round((durs.quick_skips_under_15s / total) * 1000) / 10;
+    memoryBuffer.retention_metrics.patience_quotient_pct = Math.max(0, Math.round((100 - memoryBuffer.retention_metrics.skip_churn_15s_pct) * 10) / 10);
+  }
+};
+
+async function flushViaRestApi(snapshot) {
+  const config = loadAppletConfig();
+  if (!config || !config.apiKey || !config.projectId) return;
+
+  const commitUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents:commit?key=${config.apiKey}`;
+  const docPath = `projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics`;
+
+  const fieldTransforms = [
+    {
+      fieldPath: "system_summary.last_updated",
+      setToServerValue: "REQUEST_TIME",
+    },
+  ];
+
+  if (snapshot.system_summary.total_sessions_logged > 0) {
+    fieldTransforms.push({
+      fieldPath: "system_summary.total_sessions_logged",
+      increment: { integerValue: String(snapshot.system_summary.total_sessions_logged) },
+    });
+  }
+
+  for (const [key, val] of Object.entries(snapshot.sentiment_distribution)) {
+    if (val > 0) {
+      fieldTransforms.push({
+        fieldPath: `sentiment_distribution.${key}`,
+        increment: { integerValue: String(val) },
+      });
+    }
+  }
+
+  for (const [key, val] of Object.entries(snapshot.session_durations)) {
+    if (val > 0) {
+      fieldTransforms.push({
+        fieldPath: `session_durations.${key}`,
+        increment: { integerValue: String(val) },
+      });
+    }
+  }
+
+  const payload = {
+    writes: [
+      {
+        transform: {
+          document: docPath,
+          fieldTransforms,
+        },
+      },
+    ],
+  };
+
+  const res = await fetch(commitUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Firestore REST commit failed (${res.status}): ${errText}`);
+  }
+}
+
+async function flushTelemetryToFirestore() {
+  const pending = {
+    system_summary: { ...memoryBuffer.system_summary },
+    sentiment_distribution: { ...memoryBuffer.sentiment_distribution },
+    session_durations: { ...memoryBuffer.session_durations },
+    retention_metrics: { ...memoryBuffer.retention_metrics },
+  };
+
+  const hasActivity =
+    pending.system_summary.total_sessions_logged > 0 ||
+    pending.sentiment_distribution.friendly_greetings > 0 ||
+    pending.sentiment_distribution.curious_questions > 0 ||
+    pending.sentiment_distribution.casual_dialogue > 0 ||
+    pending.sentiment_distribution.playful_humor > 0 ||
+    pending.sentiment_distribution.toxic_messages > 0 ||
+    pending.session_durations.quick_skips_under_15s > 0 ||
+    pending.session_durations.short_chats_15s_1m > 0 ||
+    pending.session_durations.medium_chats_1m_3m > 0 ||
+    pending.session_durations.deep_chats_over_3m > 0 ||
+    pending.system_summary.active_ccu_peak > 0;
+
+  if (!hasActivity) return;
+
+  try {
+    const db = getDb();
+    if (db && isFirebaseConfigured()) {
+      const updatePayload = {
+        "system_summary.last_updated": FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
+      };
+      if (pending.system_summary.total_sessions_logged > 0) {
+        updatePayload["system_summary.total_sessions_logged"] = FieldValue.increment(pending.system_summary.total_sessions_logged);
+      }
+      if (pending.system_summary.active_ccu_peak > 0) {
+        updatePayload["system_summary.active_ccu_peak"] = pending.system_summary.active_ccu_peak;
+      }
+      for (const [key, val] of Object.entries(pending.sentiment_distribution)) {
+        if (val > 0) updatePayload[`sentiment_distribution.${key}`] = FieldValue.increment(val);
+      }
+      for (const [key, val] of Object.entries(pending.session_durations)) {
+        if (val > 0) updatePayload[`session_durations.${key}`] = FieldValue.increment(val);
+      }
+      if (pending.retention_metrics.survival_rate_3m_pct > 0) {
+        updatePayload["retention_metrics.survival_rate_3m_pct"] = pending.retention_metrics.survival_rate_3m_pct;
+      }
+      if (pending.retention_metrics.skip_churn_15s_pct > 0) {
+        updatePayload["retention_metrics.skip_churn_15s_pct"] = pending.retention_metrics.skip_churn_15s_pct;
+      }
+      if (pending.retention_metrics.patience_quotient_pct > 0) {
+        updatePayload["retention_metrics.patience_quotient_pct"] = pending.retention_metrics.patience_quotient_pct;
+      }
+
+      await db.doc("telemetry/live_metrics").set(updatePayload, { merge: true });
+    } else {
+      await flushViaRestApi(pending);
+    }
+
+    // STRICT RESILIENT ERROR HANDLING: Reset memoryBuffer ONLY inside the successful write block
+    memoryBuffer.system_summary.total_sessions_logged -= pending.system_summary.total_sessions_logged;
+    memoryBuffer.system_summary.active_ccu_peak = 0;
+    for (const key of Object.keys(memoryBuffer.sentiment_distribution)) {
+      memoryBuffer.sentiment_distribution[key] -= pending.sentiment_distribution[key];
+    }
+    for (const key of Object.keys(memoryBuffer.session_durations)) {
+      memoryBuffer.session_durations[key] -= pending.session_durations[key];
+    }
+    log("telemetry_flush_success", { timestamp: Date.now() });
+  } catch (err) {
+    // Hold counts for next flush cycle if write fails
+    log("telemetry_flush_error", { message: err.message });
+  }
+}
+
+// 30-Second Batch Flush
+const telemetryFlushInterval = setInterval(() => {
+  flushTelemetryToFirestore().catch((err) => {
+    log("telemetry_batch_error", { message: err.message });
+  });
+}, 30000);
+
 // Telemetry history samples for silky smooth SVG sparklines & multi-metric graphs (last 40 intervals)
 const telemetryHistory = [];
 const MAX_TELEMETRY_SAMPLES = 40;
@@ -509,12 +718,17 @@ setInterval(() => {
   lastThroughputSampleTime = now;
 }, 3000).unref();
 
+// WebSocket Ticker: Broadcast an aggregated system_metrics event to the admin room once every 2 seconds
 setInterval(() => {
+  const currentCCU = io.sockets?.sockets?.size || 0;
+  if (currentCCU > memoryBuffer.system_summary.active_ccu_peak) {
+    memoryBuffer.system_summary.active_ccu_peak = currentCCU;
+  }
   const mem = process.memoryUsage();
   const sample = {
     t: Date.now(),
     timestamp: Date.now(),
-    online: io.sockets?.sockets?.size || 0,
+    online: currentCCU,
     rooms: rooms.size || 0,
     waiting: waitingSet ? waitingSet.size : 0,
     msgsPerSec: currentMsgsPerSec,
@@ -547,7 +761,7 @@ setInterval(() => {
     io.emit("100k_sim_buffer", sample100k);
 
     const snap = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : null;
-    io.emit("system_metrics", {
+    const systemMetricsPayload = {
       activeUsers: sample.online,
       activeRooms: sample.rooms,
       queueSize: sample.waiting,
@@ -556,11 +770,30 @@ setInterval(() => {
       heapMb: sample.heapMb,
       rssMb: sample.rssMb,
       eventLoopLagMs: sample.eventLoopLagMs,
-      archetypes: snap ? snap.psychologyArchetypes : null,
+      sentiment: {
+        friendly_greetings: memoryBuffer.sentiment_distribution.friendly_greetings + (snap?.engagement?.vibes?.friendlyGreetings || 0),
+        curious_questions: memoryBuffer.sentiment_distribution.curious_questions + (snap?.engagement?.vibes?.curiousQuestions || 0),
+        casual_dialogue: memoryBuffer.sentiment_distribution.casual_dialogue + (snap?.engagement?.vibes?.casualChat || 0),
+        playful_humor: memoryBuffer.sentiment_distribution.playful_humor + (snap?.engagement?.vibes?.playfulHumor || 0),
+        toxic_messages: memoryBuffer.sentiment_distribution.toxic_messages + (snap?.engagement?.vibes?.hostileAbuse || 0),
+      },
+      durations: {
+        quick_skips_under_15s: memoryBuffer.session_durations.quick_skips_under_15s + (snap?.engagement?.durationBuckets?.quickSkips || 0),
+        short_chats_15s_1m: memoryBuffer.session_durations.short_chats_15s_1m + (snap?.engagement?.durationBuckets?.shortChats || 0),
+        medium_chats_1m_3m: memoryBuffer.session_durations.medium_chats_1m_3m + (snap?.engagement?.durationBuckets?.mediumChats || 0),
+        deep_chats_over_3m: memoryBuffer.session_durations.deep_chats_over_3m + (snap?.engagement?.durationBuckets?.deepConversations || 0),
+      },
+      retention: { ...memoryBuffer.retention_metrics },
+      archetypes: snap ? snap.psychology?.archetypes : null,
       behaviorStats: snap,
-    });
-    if (snap && snap.psychologyArchetypes) {
-      io.emit("archetype_state_update", snap.psychologyArchetypes);
+    };
+
+    io.to("admin").emit("system_metrics", systemMetricsPayload);
+    io.emit("system_metrics", systemMetricsPayload);
+
+    if (snap && snap.psychology?.archetypes) {
+      io.to("admin").emit("archetype_state_update", snap.psychology.archetypes);
+      io.emit("archetype_state_update", snap.psychology.archetypes);
     }
   }
 }, 2000).unref();
@@ -1518,6 +1751,58 @@ app.get("/api/admin/telemetry-history", verifyAdmin, (_req, res) => {
   });
 });
 
+// 16q. Permanent Aggregated Telemetry Live Metrics (Direct Firestore Fetch)
+app.get("/api/admin/telemetry-live", async (_req, res) => {
+  try {
+    let data = null;
+    const db = getDb();
+    if (db && isFirebaseConfigured()) {
+      const snap = await db.doc("telemetry/live_metrics").get();
+      if (snap.exists) data = snap.data();
+    }
+    if (!data) {
+      const config = loadAppletConfig();
+      if (config && config.apiKey && config.projectId) {
+        const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
+        const restRes = await fetch(url);
+        if (restRes.ok) {
+          const raw = await restRes.json();
+          if (raw.fields) {
+            data = {
+              system_summary: {
+                last_updated: raw.fields.system_summary?.mapValue?.fields?.last_updated?.stringValue || new Date().toISOString(),
+                total_sessions_logged: Number(raw.fields.system_summary?.mapValue?.fields?.total_sessions_logged?.integerValue || 0),
+                active_ccu_peak: Number(raw.fields.system_summary?.mapValue?.fields?.active_ccu_peak?.integerValue || 0),
+              },
+              sentiment_distribution: {
+                friendly_greetings: Number(raw.fields.sentiment_distribution?.mapValue?.fields?.friendly_greetings?.integerValue || 0),
+                curious_questions: Number(raw.fields.sentiment_distribution?.mapValue?.fields?.curious_questions?.integerValue || 0),
+                casual_dialogue: Number(raw.fields.sentiment_distribution?.mapValue?.fields?.casual_dialogue?.integerValue || 0),
+                playful_humor: Number(raw.fields.sentiment_distribution?.mapValue?.fields?.playful_humor?.integerValue || 0),
+                toxic_messages: Number(raw.fields.sentiment_distribution?.mapValue?.fields?.toxic_messages?.integerValue || 0),
+              },
+              session_durations: {
+                quick_skips_under_15s: Number(raw.fields.session_durations?.mapValue?.fields?.quick_skips_under_15s?.integerValue || 0),
+                short_chats_15s_1m: Number(raw.fields.session_durations?.mapValue?.fields?.short_chats_15s_1m?.integerValue || 0),
+                medium_chats_1m_3m: Number(raw.fields.session_durations?.mapValue?.fields?.medium_chats_1m_3m?.integerValue || 0),
+                deep_chats_over_3m: Number(raw.fields.session_durations?.mapValue?.fields?.deep_chats_over_3m?.integerValue || 0),
+              },
+              retention_metrics: {
+                survival_rate_3m_pct: Number(raw.fields.retention_metrics?.mapValue?.fields?.survival_rate_3m_pct?.doubleValue || raw.fields.retention_metrics?.mapValue?.fields?.survival_rate_3m_pct?.integerValue || 0),
+                skip_churn_15s_pct: Number(raw.fields.retention_metrics?.mapValue?.fields?.skip_churn_15s_pct?.doubleValue || raw.fields.retention_metrics?.mapValue?.fields?.skip_churn_15s_pct?.integerValue || 0),
+                patience_quotient_pct: Number(raw.fields.retention_metrics?.mapValue?.fields?.patience_quotient_pct?.doubleValue || raw.fields.retention_metrics?.mapValue?.fields?.patience_quotient_pct?.integerValue || 0),
+              },
+            };
+          }
+        }
+      }
+    }
+    res.json({ success: true, data: data || memoryBuffer });
+  } catch (e) {
+    res.json({ success: true, data: memoryBuffer });
+  }
+});
+
 // 17. Export Full System Telemetry Snapshot (JSON Backup)
 app.get("/api/admin/export", verifyAdmin, (_req, res) => {
   const snapshot = {
@@ -1605,13 +1890,22 @@ server.listen(PORT, "0.0.0.0", () => {
 // closes Socket.IO and HTTP servers, and cleanly disconnects Redis.
 let isShuttingDown = false;
 
-function shutdown(signal) {
+async function shutdown(signal) {
   if (isShuttingDown) {
     log("shutdown_already_in_progress", { signal });
     return;
   }
   isShuttingDown = true;
   log("shutdown_started", { signal, timestamp: Date.now() });
+
+  // 0. Stop recurring telemetry batch flush & perform final sync to Firestore
+  clearInterval(telemetryFlushInterval);
+  try {
+    await flushTelemetryToFirestore();
+    log("shutdown_final_telemetry_synced");
+  } catch (syncErr) {
+    log("shutdown_final_telemetry_error", { message: syncErr.message });
+  }
 
   // 1. Stop recurring matchmaking interval
   clearInterval(matchmakingInterval);

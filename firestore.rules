@@ -121,5 +121,13 @@ service cloud.firestore {
       allow create: if isValidId(reportId) && isValidReport(incoming());
       allow update, delete: if false;
     }
+
+    // ── TELEMETRY COLLECTION ────────────────────────────────────
+    match /telemetry/{docId} {
+      allow get: if docId == 'live_metrics';
+      allow list: if false;
+      allow create, update: if docId == 'live_metrics';
+      allow delete: if false;
+    }
   }
 }

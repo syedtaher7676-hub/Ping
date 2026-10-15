@@ -271,12 +271,16 @@ function recordMessageDelivered(text = '') {
   const lower = str.toLowerCase();
   if (/^(hi|hey|hello|yo|sup|hlo|heyy|namaste|hola)\b/i.test(lower)) {
     conversationVibes.friendlyGreetings++;
+    if (typeof global.recordTelemetrySentiment === 'function') global.recordTelemetrySentiment('friendly_greetings');
   } else if (/\?|^(what|where|how|who|why|which|are you|do you)\b/i.test(lower)) {
     conversationVibes.curiousQuestions++;
+    if (typeof global.recordTelemetrySentiment === 'function') global.recordTelemetrySentiment('curious_questions');
   } else if (/haha|hehe|lol|lmao|rofl|😂|🤣|xd|😆/i.test(lower)) {
     conversationVibes.playfulHumor++;
+    if (typeof global.recordTelemetrySentiment === 'function') global.recordTelemetrySentiment('playful_humor');
   } else {
     conversationVibes.casualChat++;
+    if (typeof global.recordTelemetrySentiment === 'function') global.recordTelemetrySentiment('casual_dialogue');
   }
 
   // Record to current time-series minute bucket
@@ -298,6 +302,7 @@ function recordViolationEvent({
   totalMessagesProcessed++;
   totalMessagesBlocked++;
   conversationVibes.hostileAbuse++;
+  if (typeof global.recordTelemetrySentiment === 'function') global.recordTelemetrySentiment('toxic_messages');
 
   const id = 'evt_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex');
   let categoryName = 'Community Safety';
@@ -415,6 +420,9 @@ function recordViolationEvent({
 function recordSessionCompleted(durationSeconds = 0, messageCount = 0, reason = 'session_ended') {
   completedSessionsCount++;
   totalDurationSecondsSum += durationSeconds;
+  if (typeof global.recordTelemetrySession === 'function') {
+    global.recordTelemetrySession(durationSeconds);
+  }
 
   // Duration Buckets & Psychology Archetype Tracking
   if (durationSeconds < 15) {

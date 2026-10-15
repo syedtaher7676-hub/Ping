@@ -858,7 +858,6 @@ function notifyFriendsOfStatusChange(io, userId, online) {
 function broadcastOnlineMetrics(io) {
   if (!io) return;
   const metrics = getMetrics(io);
-  io.emit("system_metrics", metrics);
   io.emit("onlineCount", metrics.activeUsers);
   io.emit("count", metrics.activeUsers);
 }
@@ -972,6 +971,16 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
     // Subscribe socket to its personal user room for targeted notifications
     socket.join(`user_${userId}`);
+
+    // Admin room subscription for real-time telemetry streaming (exclude from online user count)
+    socket.on("join_admin", () => {
+      socket.join("admin");
+      socket.data.isAdmin = true;
+    });
+    socket.on("admin_join", () => {
+      socket.join("admin");
+      socket.data.isAdmin = true;
+    });
 
     // Allow explicit client authentication / auto-rejoin of active friend room
     socket.on("authenticate", async (rawPayload, ack) => {

@@ -770,7 +770,7 @@ function getMetrics(io = null) {
   if (io && io.sockets && io.sockets.sockets) {
     const connectedUserIds = new Set();
     for (const socket of io.sockets.sockets.values()) {
-      if (socket.connected) {
+      if (socket.connected && !socket.data?.isAdmin) {
         const uid = socket.data?.userId || socket.id;
         connectedUserIds.add(uid);
       }
@@ -778,7 +778,7 @@ function getMetrics(io = null) {
     activeCount = connectedUserIds.size;
   } else {
     for (const user of memoryUsers.values()) {
-      if (user.isActive) activeCount++;
+      if (user.isActive && !user.isAdmin) activeCount++;
     }
   }
 
