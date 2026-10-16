@@ -5790,11 +5790,12 @@ function initAdminModule() {
 
     if (adminLogoClicks >= 10) {
       adminLogoClicks = 0;
-      if (adminToken) {
-        openAdminDashboard();
-      } else {
-        openAdminAuthModal();
-      }
+      adminToken = null;
+      try {
+        localStorage.removeItem('ping_admin_token');
+        sessionStorage.removeItem('ping_admin_token');
+      } catch (_) {}
+      openAdminAuthModal();
       return;
     }
 

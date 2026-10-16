@@ -1750,96 +1750,27 @@
           </div>
         </div>
 
-        <!-- Row 2: Visual Comparison Graph & Contact Extraction Breakdown -->
-        <div class="admin-grid-2col">
-          <!-- Card 1: Interactive Category Ratio Bar / Visualizer -->
-          <div class="admin-card">
-            <div class="card-header-bar">
-              <h4 class="card-bar-title">Violation Category Composition</h4>
-              <span class="count-pill cyan">Proportional Breakdown</span>
-            </div>
-            <p class="admin-desc-text">Visual distribution of blocked conversational violations across categories:</p>
+        <!-- Card 1: Interactive Category Ratio Bar / Visualizer -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Violation Category Composition</h4>
+            <span class="count-pill cyan">Proportional Breakdown</span>
+          </div>
+          <p class="admin-desc-text">Visual distribution of blocked conversational violations across categories:</p>
 
-            <!-- Visual Ratio Track -->
-            <div class="behavior-ratio-bar-wrap" style="margin: 14px 0 16px;">
-              <div class="behavior-ratio-bar" id="behaviorRatioBar" style="display:flex; height:18px; border-radius:9px; overflow:hidden; background:rgba(255,255,255,0.06); width:100%;">
-                <div id="ratioBarAsked" style="width:0%; background:#f59e0b; transition:width 0.4s;" title="Asking Numbers"></div>
-                <div id="ratioBarShared" style="width:0%; background:#ef4444; transition:width 0.4s;" title="Numbers Shared"></div>
-                <div id="ratioBarSlurs" style="width:0%; background:#dc2626; transition:width 0.4s;" title="Slurs & Abuse"></div>
-                <div id="ratioBarSocial" style="width:0%; background:#a855f7; transition:width 0.4s;" title="Social Handles"></div>
-                <div id="ratioBarLinks" style="width:0%; background:#3b82f6; transition:width 0.4s;" title="Links & Invites"></div>
-              </div>
-            </div>
-
-            <div class="behavior-legend-list" id="behaviorLegendList" style="display:flex; flex-direction:column; gap:8px;">
-              <!-- Populated dynamically with exact counts & percentages -->
+          <!-- Visual Ratio Track -->
+          <div class="behavior-ratio-bar-wrap" style="margin: 14px 0 16px;">
+            <div class="behavior-ratio-bar" id="behaviorRatioBar" style="display:flex; height:18px; border-radius:9px; overflow:hidden; background:rgba(255,255,255,0.06); width:100%;">
+              <div id="ratioBarAsked" style="width:0%; background:#f59e0b; transition:width 0.4s;" title="Asking Numbers"></div>
+              <div id="ratioBarShared" style="width:0%; background:#ef4444; transition:width 0.4s;" title="Numbers Shared"></div>
+              <div id="ratioBarSlurs" style="width:0%; background:#dc2626; transition:width 0.4s;" title="Slurs & Abuse"></div>
+              <div id="ratioBarSocial" style="width:0%; background:#a855f7; transition:width 0.4s;" title="Social Handles"></div>
+              <div id="ratioBarLinks" style="width:0%; background:#3b82f6; transition:width 0.4s;" title="Links & Invites"></div>
             </div>
           </div>
 
-          <!-- Card 2: Contact Extraction & Solicitation Details -->
-          <div class="admin-card">
-            <div class="card-header-bar">
-              <h4 class="card-bar-title">Contact & Number Solicitation Breakdown</h4>
-              <span class="count-pill amber">Privacy Shield</span>
-            </div>
-            <p class="admin-desc-text">Breakdown of specific contact extraction techniques attempted by users:</p>
-            
-            <div class="contact-extraction-items">
-              <div class="contact-extract-row">
-                <div class="extract-info">
-                  <span class="extract-icon">📱</span>
-                  <div>
-                    <strong>"Asking For Numbers" / WhatsApp Requests</strong>
-                    <span class="extract-hint">"whats ur num", "give me number", "wa no do"</span>
-                  </div>
-                </div>
-                <strong class="extract-count tabular-nums" id="countExtractAsked">0</strong>
-              </div>
-
-              <div class="contact-extract-row">
-                <div class="extract-info">
-                  <span class="extract-icon">📞</span>
-                  <div>
-                    <strong>Phone Numbers Shared (Digits / Words)</strong>
-                    <span class="extract-hint">Standard, spaced, vertical or written digits</span>
-                  </div>
-                </div>
-                <strong class="extract-count tabular-nums" id="countExtractShared">0</strong>
-              </div>
-
-              <div class="contact-extract-row">
-                <div class="extract-info">
-                  <span class="extract-icon">📸</span>
-                  <div>
-                    <strong>Instagram Profiles & Handles</strong>
-                    <span class="extract-hint">"add my insta", "ig: @username"</span>
-                  </div>
-                </div>
-                <strong class="extract-count tabular-nums" id="countExtractInstagram">0</strong>
-              </div>
-
-              <div class="contact-extract-row">
-                <div class="extract-info">
-                  <span class="extract-icon">👻</span>
-                  <div>
-                    <strong>Snapchat Usernames</strong>
-                    <span class="extract-hint">"snap: username", "add my snap"</span>
-                  </div>
-                </div>
-                <strong class="extract-count tabular-nums" id="countExtractSnapchat">0</strong>
-              </div>
-
-              <div class="contact-extract-row">
-                <div class="extract-info">
-                  <span class="extract-icon">💬</span>
-                  <div>
-                    <strong>Telegram & Discord Handles</strong>
-                    <span class="extract-hint">t.me links, telegram handles, discord tags</span>
-                  </div>
-                </div>
-                <strong class="extract-count tabular-nums" id="countExtractTelegram">0</strong>
-              </div>
-            </div>
+          <div class="behavior-legend-list" id="behaviorLegendList" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Populated dynamically with exact counts & percentages -->
           </div>
         </div>
 
@@ -2079,30 +2010,7 @@
           </div>
         </div>
 
-        <!-- Row 4: Top Intercepted Trigger Terms & Behavioral Patterns Leaderboard -->
-        <div class="admin-card" style="margin-top: 14px;">
-          <div class="card-header-bar">
-            <h4 class="card-bar-title">Top Intercepted Trigger Terms & Behavioral Patterns</h4>
-            <span class="count-pill" id="behaviorTriggersCount">Top Triggers</span>
-          </div>
-          <div class="table-responsive">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Flagged Pattern / Term</th>
-                  <th>Category</th>
-                  <th>Interceptions</th>
-                  <th>Last Detected</th>
-                  <th>Policy Action</th>
-                </tr>
-              </thead>
-              <tbody id="behaviorTriggersTableBody">
-                <tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--t-ghost);">No violation triggers recorded yet. Platform operating clean.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+
 
         <!-- Row 4b: Top Repeat Policy & Slur Offenders Leaderboard -->
         <div class="admin-card" style="margin-top: 14px;">
@@ -2134,41 +2042,7 @@
           </div>
         </div>
 
-        <!-- Row 5: Real-Time Live Interception Wire Stream -->
-        <div class="admin-card" style="margin-top: 14px;">
-          <div class="tab-panel-toolbar" style="padding: 0; margin-bottom: 12px;">
-            <div>
-              <h4 class="card-bar-title">Real-Time Moderation Interception Wire</h4>
-              <p class="panel-section-subtitle">Live stream of blocked messages, phone numbers, slurs, and social handles</p>
-            </div>
-            <div class="events-pill-filters" id="wireFilterPills">
-              <button class="event-filter-pill active" data-wire-filter="all">All</button>
-              <button class="event-filter-pill" data-wire-filter="phone_asked">Asking Numbers</button>
-              <button class="event-filter-pill" data-wire-filter="phone_shared">Phone Numbers</button>
-              <button class="event-filter-pill" data-wire-filter="slur_detected">Slurs & Abuse</button>
-              <button class="event-filter-pill" data-wire-filter="social_handle">Social Handles</button>
-            </div>
-          </div>
 
-          <div class="table-responsive">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Violation Type</th>
-                  <th>User / Device</th>
-                  <th>Origin</th>
-                  <th>Pattern Snippet</th>
-                  <th>Action Taken</th>
-                  <th>Quick Control</th>
-                </tr>
-              </thead>
-              <tbody id="behaviorWireTableBody">
-                <tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">Live wire ready. Interceptions will appear here in real time.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
 
 
 
@@ -2239,36 +2113,7 @@
           </div>
         </div>
 
-        <!-- ═══ Row 8: REAL-TIME USER ACTIONS STREAM & ADVANCED PSYCHOLOGY CONTROLLER ═══ -->
-        <div class="admin-card" style="margin-top: 14px;">
-          <div class="tab-panel-toolbar" style="padding: 0; margin-bottom: 12px;">
-            <div>
-              <h4 class="card-bar-title">⚡ Real-Time User Action Stream & Dynamic Handling</h4>
-              <p class="panel-section-subtitle">Live real-time event feed of individual user decisions, session flows, and instant psychological intervention controls</p>
-            </div>
-            <div class="toolbar-right-search-wrap">
-              <span class="count-pill cyan" id="userActionsLivePill">🟢 Live Stream Active</span>
-            </div>
-          </div>
 
-          <div class="table-responsive">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th style="width: 85px;">Time</th>
-                  <th style="width: 140px;">Action Event</th>
-                  <th>User / Session</th>
-                  <th>Origin</th>
-                  <th>Action Detail</th>
-                  <th style="min-width: 180px;">User Controls</th>
-                </tr>
-              </thead>
-              <tbody id="liveUserActionsTableBody">
-                <tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--t-ghost);">Streaming live user actions... Active events will appear here in real time.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
       <!-- ═══ 2. 100K MASS CONTROL & BULK OPERATIONS TAB ═══ -->
