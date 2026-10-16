@@ -2966,6 +2966,12 @@ function handleSuccessfulConnection() {
     }
   });
 
+  // 6. Automatic Socket Re-subscription: Persistent Admin channel re-subscription
+  const savedAdminToken = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
+  if (savedAdminToken) {
+    socket.emit('admin_rejoin', { token: savedAdminToken });
+  }
+
   startHeartbeat();
 }
 
@@ -5444,7 +5450,8 @@ if (document.readyState === 'loading') {
 function initAdminModule() {
   let adminLogoClicks = 0;
   let adminClickTimeout = null;
-  let adminToken = null; // Always require authentication upon entering dashboard
+  // Persistent Multi-Device Session: Restore admin token from localStorage across reboots/days
+  let adminToken = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || null;
 
   let adminActiveTab = 'overview';
   let adminPollingInterval = null;
@@ -5707,25 +5714,6 @@ function initAdminModule() {
   const userActionsLivePill = $('userActionsLivePill');
   let cachedUserActionsList = [];
 
-  // User Psychology Profiler Modal DOM
-  const adminPsychologyModal = $('adminPsychologyModal');
-  const closePsychModalBtn = $('closePsychModalBtn');
-  const psychModalArchetypeBadge = $('psychModalArchetypeBadge');
-  const psychUserIdVal = $('psychUserIdVal');
-  const psychCountryVal = $('psychCountryVal');
-  const psychStatusVal = $('psychStatusVal');
-  const psychPatienceVal = $('psychPatienceVal');
-  const psychRiskScoreText = $('psychRiskScoreText');
-  const psychRiskLevelBadge = $('psychRiskLevelBadge');
-  const psychRiskGaugeFill = $('psychRiskGaugeFill');
-  const psychTraitsTags = $('psychTraitsTags');
-  const btnPsychWarn = $('btnPsychWarn');
-  const btnPsychMute = $('btnPsychMute');
-  const btnPsychForceSkip = $('btnPsychForceSkip');
-  const btnPsychGhost = $('btnPsychGhost');
-  const btnPsychBan = $('btnPsychBan');
-  let activeInspectedUserId = null;
-
   // Admin Room Icebreaker & Nudge Modal DOM
   const adminRoomNudgeModal = $('adminRoomNudgeModal');
   const closeRoomNudgeModalBtn = $('closeRoomNudgeModalBtn');
@@ -5802,7 +5790,11 @@ function initAdminModule() {
 
     if (adminLogoClicks >= 10) {
       adminLogoClicks = 0;
-      openAdminAuthModal();
+      if (adminToken) {
+        openAdminDashboard();
+      } else {
+        openAdminAuthModal();
+      }
       return;
     }
 
@@ -5928,30 +5920,8 @@ function initAdminModule() {
     if (socket) {
       socket.emit('leave_admin');
     }
-
-    // Invalidate token on server (fire-and-forget)
-    if (adminToken) {
-      try {
-        fetch(`${backendUrl}/api/admin/logout`, {
-          method: 'POST',
-          headers: authHeaders(),
-        }).catch(() => {});
-      } catch (_) {}
-    }
-
-    // Clear session token so re-entering requires password again
-    adminToken = null;
-    try {
-      sessionStorage.removeItem('ping_admin_token');
-      localStorage.removeItem('ping_admin_token');
-    } catch (_) {}
-
-    if (adminPasswordInput) {
-      adminPasswordInput.value = '';
-    }
-    if (adminAuthError) {
-      adminAuthError.style.display = 'none';
-    }
+    // Note: We preserve localStorage.getItem('ping_admin_token') so this device stays
+    // authenticated for up to 30 days across browser closes, restarts, and container sleeps.
   }
 
   exitAdminBtn?.addEventListener('click', closeAdminDashboard);
@@ -6043,10 +6013,15 @@ function initAdminModule() {
     if (res.status === 401) {
       try {
         sessionStorage.removeItem('ping_admin_token');
+        localStorage.removeItem('ping_admin_token');
       } catch (_) {}
       adminToken = null;
       closeAdminDashboard();
       openAdminAuthModal();
+      if (adminAuthError) {
+        adminAuthError.textContent = 'Session expired. Please enter admin password.';
+        adminAuthError.style.display = 'block';
+      }
       return true;
     }
     return false;
@@ -6988,16 +6963,13 @@ function initAdminModule() {
         cachedUserActionsList = data.actions;
         renderLiveUserActions();
       }
-      if (data.archetypes) {
-        renderPsychologyArchetypes(data.archetypes);
-      }
     } catch (_) {}
   }
 
   function renderLiveUserActions() {
     if (!liveUserActionsTableBody) return;
     if (cachedUserActionsList.length === 0) {
-      liveUserActionsTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--t-ghost);">Streaming live user actions... Active events will appear here in real time.</td></tr>`;
+      liveUserActionsTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--t-ghost);">Streaming live user actions... Active events will appear here in real time.</td></tr>`;
       return;
     }
 
@@ -7010,27 +6982,17 @@ function initAdminModule() {
       else if (action.type === 'skip_partner') tagClass = 'skip';
       else if (String(action.type).includes('violation') || action.type === 'report_submitted') tagClass = 'violation';
 
-      const archetype = action.archetype || 'Explorer';
-      let archRisk = 'low';
-      if (archetype === 'Social Harvester' || archetype === 'Provocateur') archRisk = 'high';
-      else if (archetype === 'Speed Swapper') archRisk = 'med';
-      else if (archetype === 'Authentic Connector') archRisk = 'safe';
-
       return `
         <tr>
           <td class="tabular-nums" style="font-size:0.75rem; color:var(--t-ghost);">${timeStr}</td>
           <td><span class="user-action-tag ${tagClass}">${action.icon || '⚡'} ${escapeHtml(action.type || 'action')}</span></td>
-          <td><code class="clickable-user-id" data-inspect-psych="${action.userId}" style="color:var(--pink-l); font-size:0.78rem;" title="Click to profile user">${escapeHtml(action.userId || 'u_anon')}</code></td>
+          <td><code style="color:var(--pink-l); font-size:0.78rem;">${escapeHtml(action.userId || 'u_anon')}</code></td>
           <td style="font-size:0.75rem;">🌐 ${escapeHtml(action.country || 'Global')}</td>
-          <td><span class="archetype-risk-badge ${archRisk}">${escapeHtml(archetype)}</span></td>
           <td style="font-size:0.75rem; color:var(--t-secondary); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
             ${escapeHtml(action.details || '')}
           </td>
           <td>
             <div class="action-btn-group">
-              <button class="btn-control-tiny inspect" data-action="inspect-psych" data-user="${action.userId}" title="Inspect user psychology profile">
-                🧠 Profile
-              </button>
               <button class="btn-control-tiny warn" data-action="quick-warn" data-user="${action.userId}" title="Send warning notice">
                 ⚠️ Warn
               </button>
@@ -7045,13 +7007,6 @@ function initAdminModule() {
         </tr>
       `;
     }).join('');
-
-    liveUserActionsTableBody.querySelectorAll('[data-inspect-psych], [data-action="inspect-psych"]').forEach(el => {
-      el.addEventListener('click', () => {
-        const uid = el.getAttribute('data-user') || el.getAttribute('data-inspect-psych');
-        if (uid) openPsychologyModal(uid);
-      });
-    });
 
     liveUserActionsTableBody.querySelectorAll('[data-action="quick-warn"]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -7111,151 +7066,11 @@ function initAdminModule() {
       cachedUserActionsList.unshift(action);
       if (cachedUserActionsList.length > 80) cachedUserActionsList.pop();
 
-
-
       if (adminActiveTab === 'behavior' && adminDashboardView?.style.display !== 'none') {
         renderLiveUserActions();
       }
     });
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // USER PSYCHOLOGY PROFILER MODAL CONTROLLER
-  // ═══════════════════════════════════════════════════════════════
-  async function openPsychologyModal(userId) {
-    if (!userId || userId === 'Anonymous' || userId === 'unknown') return;
-    activeInspectedUserId = userId;
-    if (psychUserIdVal) psychUserIdVal.textContent = userId;
-    if (psychCountryVal) psychCountryVal.textContent = 'Loading...';
-    if (psychStatusVal) psychStatusVal.textContent = 'Analyzing...';
-    if (psychModalArchetypeBadge) psychModalArchetypeBadge.textContent = 'Diagnosing Archetype...';
-    if (adminPsychologyModal) adminPsychologyModal.style.display = 'flex';
-
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/user/psychology/${encodeURIComponent(userId)}`, {
-        headers: authHeaders(),
-      });
-      const d = await res.json();
-      if (d.success && d.profile) {
-        const p = d.profile;
-        if (psychUserIdVal) psychUserIdVal.textContent = p.userId;
-        if (psychCountryVal) psychCountryVal.textContent = p.country || 'Global Explorer';
-        if (psychStatusVal) psychStatusVal.textContent = (p.status || 'Active').toUpperCase();
-        if (psychPatienceVal) psychPatienceVal.textContent = `${p.patienceQuotient || 65}%`;
-        if (psychModalArchetypeBadge) {
-          psychModalArchetypeBadge.textContent = `${p.archetype || 'Connector'}`;
-          psychModalArchetypeBadge.className = `count-pill ${p.riskLevel === 'critical' || p.riskLevel === 'high' ? 'pink' : 'cyan'}`;
-        }
-        if (psychRiskScoreText) psychRiskScoreText.textContent = `${p.intentRiskScore || 0} / 100`;
-        if (psychRiskGaugeFill) {
-          const score = p.intentRiskScore || 0;
-          psychRiskGaugeFill.style.width = `${Math.min(100, Math.max(5, score))}%`;
-          psychRiskGaugeFill.style.background = score > 60 ? '#ef4444' : (score > 30 ? '#f59e0b' : '#10b981');
-        }
-        if (psychRiskLevelBadge) {
-          psychRiskLevelBadge.textContent = (p.riskLevel || 'normal').toUpperCase();
-          psychRiskLevelBadge.className = `badge-tag ${p.riskLevel === 'critical' ? 'rejected' : (p.riskLevel === 'high' ? 'pending' : 'safe')}`;
-        }
-        if (psychTraitsTags) {
-          const traits = Array.isArray(p.signals) && p.signals.length > 0 ? p.signals : [
-            `Pacing: ${p.pacing || 'Normal'}`,
-            `Retention: ${p.durationSeconds || 0}s in session`,
-            `Action Count: ${p.actionsCount || 1}`,
-            `Recommended Policy: ${p.recommendedAction || 'Normal Monitoring'}`
-          ];
-          psychTraitsTags.innerHTML = traits.map(t => `<span class="psych-trait-pill">${escapeHtml(t)}</span>`).join('');
-        }
-      }
-    } catch (_) {}
-  }
-
-  btnPsychWarn?.addEventListener('click', async () => {
-    if (!activeInspectedUserId) return;
-    const msg = prompt('Enter official warning shown directly to user in chat:', '⚠️ Administrative Notice: Please keep conversations respectful and adhere to platform guidelines.');
-    if (!msg) return;
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/user/warn`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ userId: activeInspectedUserId, message: msg }),
-      });
-      const d = await res.json();
-      if (d.success && typeof showToast === 'function') {
-        showToast(`⚠️ Warning dispatched to user ${activeInspectedUserId}`);
-      }
-    } catch (_) {}
-  });
-
-  btnPsychMute?.addEventListener('click', async () => {
-    if (!activeInspectedUserId) return;
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ deviceHash: activeInspectedUserId, minutes: 15, reason: 'Temporarily muted via Psychological Profiler' }),
-      });
-      const d = await res.json();
-      if (d.success && typeof showToast === 'function') {
-        showToast(`🔇 Muted user ${activeInspectedUserId} for 15 minutes.`);
-        if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
-      }
-    } catch (_) {}
-  });
-
-  btnPsychForceSkip?.addEventListener('click', async () => {
-    if (!activeInspectedUserId) return;
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/user/force-skip`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ userId: activeInspectedUserId }),
-      });
-      const d = await res.json();
-      if (d.success && typeof showToast === 'function') {
-        showToast(`⏭️ Force-skipped chat for ${activeInspectedUserId}`);
-      }
-    } catch (_) {}
-  });
-
-  btnPsychGhost?.addEventListener('click', async () => {
-    if (!activeInspectedUserId) return;
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/shadowbans/add`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ target: activeInspectedUserId, durationMinutes: 1440, reason: 'High risk bad actor via Psychological Profiler' }),
-      });
-      const d = await res.json();
-      if (d.success && typeof showToast === 'function') {
-        showToast(`👻 User ${activeInspectedUserId} ghost shadowbanned for 24h.`);
-        if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
-      }
-    } catch (_) {}
-  });
-
-  btnPsychBan?.addEventListener('click', async () => {
-    if (!activeInspectedUserId) return;
-    if (!confirm(`Are you sure you want to suspend device ${activeInspectedUserId} for 24 hours?`)) return;
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/bans/add`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ deviceHash: activeInspectedUserId, minutes: 1440, reason: 'Suspended via Psychological Profiler' }),
-      });
-      const d = await res.json();
-      if (d.success && typeof showToast === 'function') {
-        showToast(`🚫 Banned device ${activeInspectedUserId} for 24h.`);
-        if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
-      }
-    } catch (_) {}
-  });
-
-  closePsychModalBtn?.addEventListener('click', () => {
-    if (adminPsychologyModal) adminPsychologyModal.style.display = 'none';
-  });
-  adminPsychologyModal?.addEventListener('click', (e) => {
-    if (e.target === adminPsychologyModal) adminPsychologyModal.style.display = 'none';
-  });
 
   // ═══════════════════════════════════════════════════════════════
   // ADMIN ROOM ICEBREAKER & NUDGE MODAL CONTROLLER
@@ -8864,6 +8679,59 @@ function initAdminModule() {
     fetchBehaviorAnalytics();
     if (typeof showToast === 'function') showToast('🔄 Refreshing user behavior & violation intelligence...');
   });
+
+  // ═══════════════════════════════════════════════════════════════
+  // PERSISTENT DEVICE AUTO-AUTH & AUTO-REJOIN LOGIC
+  // ═══════════════════════════════════════════════════════════════
+
+  // 1. Boot Auto-Auth: If admin token is stored in localStorage, immediately fetch persistent stats
+  if (adminToken) {
+    fetchOverviewStats();
+  }
+
+  // 2. Tab Return Auto-Sync (visibilitychange listener)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      const activeToken = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
+      if (activeToken) {
+        adminToken = activeToken;
+        fetchOverviewStats();
+        if (socket && socket.connected) {
+          socket.emit('admin_rejoin', { token: activeToken });
+        }
+        if (adminDashboardView && adminDashboardView.style.display !== 'none') {
+          refreshAllAdminData();
+        }
+      }
+    }
+  });
+
+  // 3. Socket Rejoin Handlers for Admin Dashboard
+  if (socket) {
+    socket.on('admin_rejoined', (data) => {
+      console.log('[Ping Admin] Successfully re-subscribed to admin channel', data);
+      if (adminDashboardView && adminDashboardView.style.display !== 'none') {
+        refreshAllAdminData();
+      }
+    });
+
+    socket.on('admin_auth_failed', (err) => {
+      console.warn('[Ping Admin] Server rejected admin token:', err);
+      try {
+        localStorage.removeItem('ping_admin_token');
+        sessionStorage.removeItem('ping_admin_token');
+      } catch (_) {}
+      adminToken = null;
+      if (adminDashboardView && adminDashboardView.style.display !== 'none') {
+        closeAdminDashboard();
+        openAdminAuthModal();
+        if (adminAuthError) {
+          adminAuthError.textContent = 'Session expired or invalid. Please re-enter password.';
+          adminAuthError.style.display = 'block';
+        }
+      }
+    });
+  }
 }
 
 if (document.readyState === 'loading') {

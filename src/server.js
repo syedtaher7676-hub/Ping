@@ -429,11 +429,12 @@ app.get("/api/firebase-config", (_req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// ADMIN DASHBOARD REST API & AUTHENTICATION
+// ADMIN DASHBOARD REST API & 30-DAY PERSISTENT MULTI-DEVICE AUTH
 // ═══════════════════════════════════════════════════════════════
 const adminSessions = new Map(); // token -> { createdAt, expiresAt }
 global.adminSessionsMap = adminSessions;
-const ADMIN_TOKEN_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const ADMIN_TOKEN_TTL = 30 * 24 * 60 * 60 * 1000; // 30 days (2,592,000,000 ms)
+const ADMIN_REDIS_TTL_SEC = 30 * 24 * 3600; // 2,592,000 seconds (EX 2592000)
 
 // ═══════════════════════════════════════════════════════════════
 // REAL-TIME AUDIT LOG & ZERO-LAG TELEMETRY SAMPLER
@@ -467,12 +468,8 @@ global.broadcastUserAction = (act) => {
     io.emit("admin_user_action", act);
   }
 };
-global.broadcastArchetypes = (archetypes) => {
-  if (typeof io !== "undefined" && io && io.emit) {
-    io.emit("archetype_state_update", archetypes);
-  }
-};
 recordAdminEvent("system", "Gateway Initialized", "Ping real-time server ready", "success");
+
 
 // ═══════════════════════════════════════════════════════════════
 // IN-MEMORY RAM BUFFER & 30-SECOND FIRESTORE BATCH FLUSH
@@ -489,9 +486,16 @@ function loadAppletConfig() {
   return null;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PERSISTENT TELEMETRY & METRICS (FIRESTORE CORE WITH IN-MEMORY DELTAS)
+// ═══════════════════════════════════════════════════════════════
+// In-memory delta buffer capturing activity between atomic 30s Firestore flushes
 const memoryBuffer = {
   system_summary: {
     total_sessions_logged: 0,
+    total_matches: 0,
+    total_messages: 0,
+    total_violations: 0,
     active_ccu_peak: 0,
   },
   sentiment_distribution: {
@@ -513,6 +517,102 @@ const memoryBuffer = {
     patience_quotient_pct: 0,
   },
 };
+
+// Cached historical telemetry metrics retrieved from Cloud Firestore on cold boot / startup
+const cachedHistoricalTelemetry = {
+  system_summary: {
+    total_sessions_logged: 0,
+    total_matches: 0,
+    total_messages: 0,
+    total_violations: 0,
+    active_ccu_peak: 0,
+    last_updated: null,
+  },
+  sentiment_distribution: {
+    friendly_greetings: 0,
+    curious_questions: 0,
+    casual_dialogue: 0,
+    playful_humor: 0,
+    toxic_messages: 0,
+  },
+  session_durations: {
+    quick_skips_under_15s: 0,
+    short_chats_15s_1m: 0,
+    medium_chats_1m_3m: 0,
+    deep_chats_over_3m: 0,
+  },
+  retention_metrics: {
+    survival_rate_3m_pct: 0,
+    skip_churn_15s_pct: 0,
+    patience_quotient_pct: 0,
+  },
+};
+let isHistoricalTelemetryHydrated = false;
+
+// Helper to parse Firestore REST API document format
+function parseFirestoreRestDoc(fields) {
+  if (!fields || typeof fields !== "object") return {};
+  const out = {};
+  for (const [k, v] of Object.entries(fields)) {
+    if (v.mapValue && v.mapValue.fields) {
+      out[k] = parseFirestoreRestDoc(v.mapValue.fields);
+    } else if (v.integerValue !== undefined) {
+      out[k] = Number(v.integerValue);
+    } else if (v.doubleValue !== undefined) {
+      out[k] = Number(v.doubleValue);
+    } else if (v.stringValue !== undefined) {
+      out[k] = v.stringValue;
+    } else if (v.booleanValue !== undefined) {
+      out[k] = v.booleanValue;
+    }
+  }
+  return out;
+}
+
+/**
+ * Cold-Boot Recovery: Reads aggregated historical metrics directly from Firestore on app startup.
+ * Guarantees that even if the container sleeps for 15+ days or resets, the Admin Dashboard
+ * always displays permanent historical system counters.
+ */
+async function hydrateHistoricalTelemetryFromFirestore() {
+  try {
+    let data = null;
+    if (dbService.isFirebaseConfigured()) {
+      data = await dbService.getLiveTelemetryMetrics();
+    }
+    if (!data) {
+      // Fallback via Firestore REST API if Admin SDK credentials are fail-opened
+      const config = loadAppletConfig();
+      if (config && config.apiKey && config.projectId) {
+        const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
+        const restRes = await fetch(url);
+        if (restRes.ok) {
+          const raw = await restRes.json();
+          if (raw.fields) {
+            data = parseFirestoreRestDoc(raw.fields);
+          }
+        }
+      }
+    }
+
+    if (data) {
+      if (data.system_summary) Object.assign(cachedHistoricalTelemetry.system_summary, data.system_summary);
+      if (data.sentiment_distribution) Object.assign(cachedHistoricalTelemetry.sentiment_distribution, data.sentiment_distribution);
+      if (data.session_durations) Object.assign(cachedHistoricalTelemetry.session_durations, data.session_durations);
+      if (data.retention_metrics) Object.assign(cachedHistoricalTelemetry.retention_metrics, data.retention_metrics);
+      isHistoricalTelemetryHydrated = true;
+      log("telemetry_cold_boot_hydrated", {
+        totalSessions: cachedHistoricalTelemetry.system_summary.total_sessions_logged,
+        totalMatches: cachedHistoricalTelemetry.system_summary.total_matches,
+      });
+    }
+  } catch (err) {
+    log("telemetry_hydration_error", { message: err?.message });
+  }
+}
+
+// Trigger initial hydration immediately on script load
+hydrateHistoricalTelemetryFromFirestore();
 
 global.recordTelemetrySentiment = (key) => {
   if (memoryBuffer.sentiment_distribution[key] !== undefined) {
@@ -563,6 +663,27 @@ async function flushViaRestApi(snapshot) {
     });
   }
 
+  if (snapshot.system_summary.total_matches > 0) {
+    fieldTransforms.push({
+      fieldPath: "system_summary.total_matches",
+      increment: { integerValue: String(snapshot.system_summary.total_matches) },
+    });
+  }
+
+  if (snapshot.system_summary.total_messages > 0) {
+    fieldTransforms.push({
+      fieldPath: "system_summary.total_messages",
+      increment: { integerValue: String(snapshot.system_summary.total_messages) },
+    });
+  }
+
+  if (snapshot.system_summary.total_violations > 0) {
+    fieldTransforms.push({
+      fieldPath: "system_summary.total_violations",
+      increment: { integerValue: String(snapshot.system_summary.total_violations) },
+    });
+  }
+
   for (const [key, val] of Object.entries(snapshot.sentiment_distribution)) {
     if (val > 0) {
       fieldTransforms.push({
@@ -604,6 +725,10 @@ async function flushViaRestApi(snapshot) {
   }
 }
 
+/**
+ * Periodically syncs all system metrics, message counts, durations, and sentiment breakdowns
+ * to Cloud Firestore (telemetry/live_metrics) using atomic increments (FieldValue.increment).
+ */
 async function flushTelemetryToFirestore() {
   const pending = {
     system_summary: { ...memoryBuffer.system_summary },
@@ -614,6 +739,9 @@ async function flushTelemetryToFirestore() {
 
   const hasActivity =
     pending.system_summary.total_sessions_logged > 0 ||
+    pending.system_summary.total_matches > 0 ||
+    pending.system_summary.total_messages > 0 ||
+    pending.system_summary.total_violations > 0 ||
     pending.sentiment_distribution.friendly_greetings > 0 ||
     pending.sentiment_distribution.curious_questions > 0 ||
     pending.sentiment_distribution.casual_dialogue > 0 ||
@@ -635,6 +763,15 @@ async function flushTelemetryToFirestore() {
       };
       if (pending.system_summary.total_sessions_logged > 0) {
         updatePayload["system_summary.total_sessions_logged"] = FieldValue.increment(pending.system_summary.total_sessions_logged);
+      }
+      if (pending.system_summary.total_matches > 0) {
+        updatePayload["system_summary.total_matches"] = FieldValue.increment(pending.system_summary.total_matches);
+      }
+      if (pending.system_summary.total_messages > 0) {
+        updatePayload["system_summary.total_messages"] = FieldValue.increment(pending.system_summary.total_messages);
+      }
+      if (pending.system_summary.total_violations > 0) {
+        updatePayload["system_summary.total_violations"] = FieldValue.increment(pending.system_summary.total_violations);
       }
       if (pending.system_summary.active_ccu_peak > 0) {
         updatePayload["system_summary.active_ccu_peak"] = pending.system_summary.active_ccu_peak;
@@ -660,8 +797,26 @@ async function flushTelemetryToFirestore() {
       await flushViaRestApi(pending);
     }
 
+    // Accumulate into cachedHistoricalTelemetry so in-memory view reflects persistent state
+    cachedHistoricalTelemetry.system_summary.total_sessions_logged += pending.system_summary.total_sessions_logged;
+    cachedHistoricalTelemetry.system_summary.total_matches += pending.system_summary.total_matches;
+    cachedHistoricalTelemetry.system_summary.total_messages += pending.system_summary.total_messages;
+    cachedHistoricalTelemetry.system_summary.total_violations += pending.system_summary.total_violations;
+    if (pending.system_summary.active_ccu_peak > cachedHistoricalTelemetry.system_summary.active_ccu_peak) {
+      cachedHistoricalTelemetry.system_summary.active_ccu_peak = pending.system_summary.active_ccu_peak;
+    }
+    for (const [key, val] of Object.entries(pending.sentiment_distribution)) {
+      cachedHistoricalTelemetry.sentiment_distribution[key] = (cachedHistoricalTelemetry.sentiment_distribution[key] || 0) + val;
+    }
+    for (const [key, val] of Object.entries(pending.session_durations)) {
+      cachedHistoricalTelemetry.session_durations[key] = (cachedHistoricalTelemetry.session_durations[key] || 0) + val;
+    }
+
     // STRICT RESILIENT ERROR HANDLING: Reset memoryBuffer ONLY inside the successful write block
     memoryBuffer.system_summary.total_sessions_logged -= pending.system_summary.total_sessions_logged;
+    memoryBuffer.system_summary.total_matches -= pending.system_summary.total_matches;
+    memoryBuffer.system_summary.total_messages -= pending.system_summary.total_messages;
+    memoryBuffer.system_summary.total_violations -= pending.system_summary.total_violations;
     memoryBuffer.system_summary.active_ccu_peak = 0;
     for (const key of Object.keys(memoryBuffer.sentiment_distribution)) {
       memoryBuffer.sentiment_distribution[key] -= pending.sentiment_distribution[key];
@@ -683,6 +838,7 @@ const telemetryFlushInterval = setInterval(() => {
   });
 }, 30000);
 
+
 // Telemetry history samples for silky smooth SVG sparklines & multi-metric graphs (last 40 intervals)
 const telemetryHistory = [];
 const MAX_TELEMETRY_SAMPLES = 40;
@@ -696,10 +852,12 @@ let lastEventLoopLag = 1;
 
 global.recordMessageSent = () => {
   messageThroughputWindow++;
+  memoryBuffer.system_summary.total_messages = (memoryBuffer.system_summary.total_messages || 0) + 1;
 };
 
 global.recordViolationIntercepted = () => {
   violationsThroughputWindow++;
+  memoryBuffer.system_summary.total_violations = (memoryBuffer.system_summary.total_violations || 0) + 1;
 };
 
 setInterval(() => {
@@ -785,21 +943,15 @@ setInterval(() => {
         deep_chats_over_3m: memoryBuffer.session_durations.deep_chats_over_3m + (snap?.engagement?.durationBuckets?.deepConversations || 0),
       },
       retention: { ...memoryBuffer.retention_metrics },
-      archetypes: snap ? snap.psychology?.archetypes : null,
       behaviorStats: snap,
     };
 
     io.to("admin").emit("system_metrics", systemMetricsPayload);
     io.emit("system_metrics", systemMetricsPayload);
-
-    if (snap && snap.psychology?.archetypes) {
-      io.to("admin").emit("archetype_state_update", snap.psychology.archetypes);
-      io.emit("archetype_state_update", snap.psychology.archetypes);
-    }
   }
 }, 2000).unref();
 
-// Cleanup expired admin tokens
+// Cleanup expired admin tokens from memory
 setInterval(async () => {
   const now = Date.now();
   for (const [token, session] of adminSessions.entries()) {
@@ -812,37 +964,81 @@ setInterval(async () => {
   }
 }, 300000).unref();
 
+/**
+ * Validates an admin Bearer token against Redis or Firestore first, falling back to memory.
+ * Enables persistent multi-device authentication across container sleeps / restarts.
+ * @param {string} token
+ * @returns {Promise<boolean>}
+ */
+async function validateAdminToken(token) {
+  if (!token || typeof token !== "string") return false;
+  const now = Date.now();
+
+  // 1. In-memory hot cache
+  const memSession = adminSessions.get(token);
+  if (memSession && memSession.expiresAt > now) {
+    return true;
+  }
+
+  // 2. Redis distributed store check (30-day TTL)
+  if (typeof isRedisReady === "function" && isRedisReady()) {
+    try {
+      const cached = await redisClient.get(`ping:admin_session:${token}`);
+      if (cached) {
+        const session = JSON.parse(cached);
+        if (session && session.expiresAt > now) {
+          adminSessions.set(token, session);
+          return true;
+        }
+      }
+    } catch (err) {
+      log("redis_verify_admin_error", { message: err?.message });
+    }
+  }
+
+  // 3. Cloud Firestore persistent store check (Primary persistent truth across cold container resets)
+  try {
+    const dbSession = await dbService.getAdminSession(token);
+    if (dbSession && dbSession.expiresAt > now) {
+      adminSessions.set(token, dbSession);
+      // Re-hydrate Redis cache
+      if (typeof isRedisReady === "function" && isRedisReady()) {
+        const remainingTtlSec = Math.max(60, Math.floor((dbSession.expiresAt - now) / 1000));
+        redisClient.set(`ping:admin_session:${token}`, JSON.stringify(dbSession), "EX", remainingTtlSec).catch(() => {});
+      }
+      return true;
+    }
+  } catch (err) {
+    log("firestore_verify_admin_error", { message: err?.message });
+  }
+
+  return false;
+}
+
+/**
+ * Express middleware to verify Bearer tokens for all protected admin endpoints
+ */
 async function verifyAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Unauthorized: Missing admin token" });
   }
   const token = authHeader.slice(7).trim();
-  let session = adminSessions.get(token);
+  const isValid = await validateAdminToken(token);
 
-  if (!session && typeof isRedisReady === "function" && isRedisReady()) {
-    try {
-      const cached = await redisClient.get(`ping:admin_session:${token}`);
-      if (cached) {
-        session = JSON.parse(cached);
-        adminSessions.set(token, session);
-      }
-    } catch {}
-  }
-
-  if (!session || Date.now() > session.expiresAt) {
-    if (session) {
-      adminSessions.delete(token);
-      if (typeof isRedisReady === "function" && isRedisReady()) {
-        redisClient.del(`ping:admin_session:${token}`).catch(() => {});
-      }
+  if (!isValid) {
+    adminSessions.delete(token);
+    if (typeof isRedisReady === "function" && isRedisReady()) {
+      redisClient.del(`ping:admin_session:${token}`).catch(() => {});
     }
     return res.status(401).json({ error: "Unauthorized: Session expired or invalid" });
   }
+
+  req.adminToken = token;
   next();
 }
 
-// 1. Admin login endpoint
+// 1. Admin login endpoint with 30-day multi-device persistence across Redis & Firestore
 app.post("/api/admin/login", async (req, res) => {
   const { password } = req.body || {};
   if (!password || typeof password !== "string") {
@@ -868,19 +1064,34 @@ app.post("/api/admin/login", async (req, res) => {
 
   const token = "adm_" + crypto.randomBytes(24).toString("hex");
   const now = Date.now();
+  const expiresAt = now + ADMIN_TOKEN_TTL; // 30-Day TTL (2,592,000,000 ms)
   const session = {
+    token,
     createdAt: now,
-    expiresAt: now + ADMIN_TOKEN_TTL,
+    expiresAt,
+    valid: true,
   };
+
+  // 1. In-memory cache
   adminSessions.set(token, session);
 
+  // 2. Redis Store with 30-day TTL (EX 2592000)
   if (typeof isRedisReady === "function" && isRedisReady()) {
     try {
-      await redisClient.set(`ping:admin_session:${token}`, JSON.stringify(session), "EX", 86400);
-    } catch {}
+      await redisClient.set(`ping:admin_session:${token}`, JSON.stringify(session), "EX", ADMIN_REDIS_TTL_SEC);
+    } catch (err) {
+      log("redis_session_write_error", { message: err?.message });
+    }
   }
 
-  recordAdminEvent("auth", "Admin Authenticated", "Command console accessed", "success");
+  // 3. Firestore Persistent Store (admin_sessions collection) for 100% recovery across cold restarts
+  try {
+    await dbService.saveAdminSession(token, session);
+  } catch (err) {
+    log("firestore_session_write_error", { message: err?.message });
+  }
+
+  recordAdminEvent("auth", "Admin Authenticated", "30-day multi-device session established", "success");
 
   res.json({
     success: true,
@@ -889,36 +1100,74 @@ app.post("/api/admin/login", async (req, res) => {
   });
 });
 
-// Admin logout endpoint (invalidates session token immediately)
+// Admin logout endpoint (invalidates session token across RAM, Redis & Firestore)
 app.post("/api/admin/logout", verifyAdmin, async (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith("Bearer ")) {
-    const token = authHeader.slice(7).trim();
+  const token = req.adminToken || (req.headers.authorization?.slice(7).trim());
+  if (token) {
     adminSessions.delete(token);
     if (typeof isRedisReady === "function" && isRedisReady()) {
       try {
         await redisClient.del(`ping:admin_session:${token}`);
       } catch {}
     }
-    recordAdminEvent("auth", "Admin Signed Out", "Session token cleared", "info");
+    try {
+      await dbService.deleteAdminSession(token);
+    } catch {}
+    recordAdminEvent("auth", "Admin Signed Out", "Session token cleared from RAM, Redis & Firestore", "info");
     log("admin_logout_success", { token: token.slice(0, 10) + "..." });
   }
   res.json({ success: true, message: "Logged out successfully" });
 });
 
-// 2. Admin overview & health stats with sparkline telemetry
-app.get("/api/admin/overview", verifyAdmin, (_req, res) => {
+// 2. Admin overview & health stats with Cold-Boot Recovery & Firestore Telemetry Merge
+app.get("/api/admin/overview", verifyAdmin, async (_req, res) => {
+  if (!isHistoricalTelemetryHydrated) {
+    await hydrateHistoricalTelemetryFromFirestore();
+  }
+
   const stats = getMatchStats() || {};
   const mem = process.memoryUsage();
   const mmSettings = getMatchmakingSettings ? getMatchmakingSettings() : {};
   const slurStats = getSlurStats ? getSlurStats() : {};
-  
+
+  // Aggregate persistent telemetry: combine Firestore historical baseline + un-flushed memoryBuffer deltas
+  const hist = cachedHistoricalTelemetry || {};
+  const histSummary = hist.system_summary || {};
+  const histSentiment = hist.sentiment_distribution || {};
+  const histDurations = hist.session_durations || {};
+
+  const totalMatchesPersistent = (histSummary.total_matches || 0) + (stats.totalMatches || 0) + (memoryBuffer.system_summary.total_matches || 0);
+  const totalSessionsPersistent = (histSummary.total_sessions_logged || 0) + (memoryBuffer.system_summary.total_sessions_logged || 0);
+
+  const mergedSentiment = {
+    friendly_greetings: (histSentiment.friendly_greetings || 0) + memoryBuffer.sentiment_distribution.friendly_greetings,
+    curious_questions: (histSentiment.curious_questions || 0) + memoryBuffer.sentiment_distribution.curious_questions,
+    casual_dialogue: (histSentiment.casual_dialogue || 0) + memoryBuffer.sentiment_distribution.casual_dialogue,
+    playful_humor: (histSentiment.playful_humor || 0) + memoryBuffer.sentiment_distribution.playful_humor,
+    toxic_messages: (histSentiment.toxic_messages || 0) + memoryBuffer.sentiment_distribution.toxic_messages,
+  };
+
+  const mergedDurations = {
+    quick_skips_under_15s: (histDurations.quick_skips_under_15s || 0) + memoryBuffer.session_durations.quick_skips_under_15s,
+    short_chats_15s_1m: (histDurations.short_chats_15s_1m || 0) + memoryBuffer.session_durations.short_chats_15s_1m,
+    medium_chats_1m_3m: (histDurations.medium_chats_1m_3m || 0) + memoryBuffer.session_durations.medium_chats_1m_3m,
+    deep_chats_over_3m: (histDurations.deep_chats_over_3m || 0) + memoryBuffer.session_durations.deep_chats_over_3m,
+  };
+
+  const durTotal = mergedDurations.quick_skips_under_15s + mergedDurations.short_chats_15s_1m + mergedDurations.medium_chats_1m_3m + mergedDurations.deep_chats_over_3m;
+  const mergedRetention = {
+    survival_rate_3m_pct: durTotal > 0 ? Math.round((mergedDurations.deep_chats_over_3m / durTotal) * 1000) / 10 : (hist.retention_metrics?.survival_rate_3m_pct || 0),
+    skip_churn_15s_pct: durTotal > 0 ? Math.round((mergedDurations.quick_skips_under_15s / durTotal) * 1000) / 10 : (hist.retention_metrics?.skip_churn_15s_pct || 0),
+    patience_quotient_pct: durTotal > 0 ? Math.max(0, Math.round((100 - (Math.round((mergedDurations.quick_skips_under_15s / durTotal) * 1000) / 10)) * 10) / 10) : (hist.retention_metrics?.patience_quotient_pct || 0),
+  };
+
   res.json({
     success: true,
     onlineUsers: io.sockets?.sockets?.size || 0,
     activeRooms: rooms.size || 0,
     waitingQueue: waitingSet ? waitingSet.size : 0,
-    totalMatches: stats.totalMatches || 0,
+    totalMatches: totalMatchesPersistent,
+    totalSessions: totalSessionsPersistent,
     uptimeSeconds: Math.floor(process.uptime()),
     memory: {
       heapUsedMb: Math.round(mem.heapUsed / 1024 / 1024),
@@ -946,11 +1195,15 @@ app.get("/api/admin/overview", verifyAdmin, (_req, res) => {
     eventLoopLagMs: lastEventLoopLag,
     matchmakingSettings: mmSettings,
     slurStats,
+    sentiment: mergedSentiment,
+    durations: mergedDurations,
+    retention: mergedRetention,
     behaviorStats: typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : null,
     sparkline: telemetryHistory,
     eventsCount: adminEvents.length,
   });
 });
+
 
 // 2b. Comprehensive Behavioral & Violation Analytics Feed
 app.get("/api/admin/behavior-analytics", verifyAdmin, (_req, res) => {
@@ -1633,21 +1886,12 @@ const handleDrainQueue = (_req, res) => {
 app.post("/api/admin/matchmaking/drain", verifyAdmin, handleDrainQueue);
 app.post("/api/admin/mass/drain-queue", verifyAdmin, handleDrainQueue);
 
-// 16n-3. User Psychological Profile Inspection
-app.get("/api/admin/user/psychology/:userId", verifyAdmin, (req, res) => {
-  const { userId } = req.params;
-  const user = users.get(userId);
-  const profile = typeof getUserPsychologyProfile === "function" ? getUserPsychologyProfile(userId, user) : { userId, archetype: "Standard" };
-  res.json({ success: true, profile });
-});
-
 // 16n-4. Live User Actions Stream
 app.get("/api/admin/user-actions", verifyAdmin, (_req, res) => {
   const analytics = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : {};
   res.json({
     success: true,
     actions: analytics.liveUserActions || [],
-    archetypes: analytics.psychologyArchetypes || {},
   });
 });
 
@@ -1855,6 +2099,36 @@ app.get("/api/admin/export", verifyAdmin, (_req, res) => {
 
 registerSocketHandlers(io, getCountryFromSocket);
 const matchmakingInterval = setInterval(() => attemptMatchmaking(io), MATCHMAKING_INTERVAL_MS);
+
+/**
+ * Backend Socket Rejoin Handler:
+ * Listens for `admin_rejoin` on incoming socket connections, validates the token
+ * against Redis/Firestore via validateAdminToken(), and joins the socket to the
+ * 'admin' room so live telemetry and system metric broadcasts resume seamlessly.
+ */
+io.on("connection", (socket) => {
+  socket.on("admin_rejoin", async (payload) => {
+    try {
+      const token = payload?.token;
+      if (!token || typeof token !== "string") {
+        socket.emit("admin_auth_failed", { error: "Missing or invalid admin token" });
+        return;
+      }
+
+      const isValid = await validateAdminToken(token);
+      if (isValid) {
+        socket.join("admin");
+        socket.emit("admin_rejoined", { success: true, timestamp: Date.now() });
+        log("admin_socket_rejoined", { socketId: socket.id, tokenPrefix: token.slice(0, 10) });
+      } else {
+        socket.emit("admin_auth_failed", { error: "Unauthorized: Token expired or invalid" });
+      }
+    } catch (err) {
+      log("admin_socket_rejoin_error", { message: err?.message });
+      socket.emit("admin_auth_failed", { error: "Authentication verification failed" });
+    }
+  });
+});
 
 // SPA fallback - serve index.html for client-side routing
 app.use((req, res) => {

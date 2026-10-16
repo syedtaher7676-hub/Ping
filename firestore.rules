@@ -129,5 +129,11 @@ service cloud.firestore {
       allow create, update: if docId == 'live_metrics';
       allow delete: if false;
     }
+
+    // ── ADMIN SESSIONS COLLECTION (SERVER-MANAGED) ─────────────
+    match /admin_sessions/{token} {
+      allow read, write: if false;
+    }
   }
 }
+

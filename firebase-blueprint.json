@@ -98,6 +98,18 @@
         "session_durations": { "type": "object" },
         "retention_metrics": { "type": "object" }
       }
+    },
+    "AdminSession": {
+      "title": "AdminSession",
+      "description": "Multi-device persistent admin session tokens with TTL",
+      "type": "object",
+      "properties": {
+        "token": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "number" },
+        "valid": { "type": "boolean" }
+      },
+      "required": ["token", "expiresAt"]
     }
   },
   "firestore": {
@@ -128,6 +140,11 @@
     "/telemetry/{docId}": {
       "schema": "Telemetry",
       "description": "Aggregated anonymous system telemetry and health metrics"
+    },
+    "/admin_sessions/{token}": {
+      "schema": "AdminSession",
+      "description": "Persistent multi-device admin session tokens"
     }
   }
 }
+

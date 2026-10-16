@@ -295,54 +295,6 @@
         },
       });
     }
-
-    // 5. Psychology Archetypes Radar / Polar Chart
-    const canvasArchetype = $('canvasArchetypeChart');
-    if (canvasArchetype && !activeCharts.archetype) {
-      const ctx = canvasArchetype.getContext('2d');
-      activeCharts.archetype = new window.Chart(ctx, {
-        type: 'radar',
-        data: {
-          labels: [
-            'Authentic Connector',
-            'Curious Explorer',
-            'Speed Swapper',
-            'Social Harvester',
-            'Provocateur',
-          ],
-          datasets: [
-            {
-              label: 'Fleet Weight',
-              data: [
-                telemetryState.archetypes.authenticConnector || 10,
-                telemetryState.archetypes.curiousExplorer || 8,
-                telemetryState.archetypes.speedSwapper || 5,
-                telemetryState.archetypes.socialHarvester || 3,
-                telemetryState.archetypes.provocateur || 1,
-              ],
-              borderColor: '#06b6d4',
-              backgroundColor: 'rgba(6, 182, 212, 0.25)',
-              borderWidth: 2,
-              pointBackgroundColor: '#06b6d4',
-            },
-          ],
-        },
-        options: {
-          scales: {
-            r: {
-              grid: { color: 'rgba(255, 255, 255, 0.1)' },
-              angleLines: { color: 'rgba(255, 255, 255, 0.08)' },
-              pointLabels: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 10 } },
-              ticks: { display: false },
-              beginAtZero: true,
-            },
-          },
-          plugins: {
-            legend: { display: false },
-          },
-        },
-      });
-    }
   }
 
   // ═════════════════════════════════════════════════════════════
@@ -575,11 +527,6 @@
       if (data.retention) {
         Object.assign(telemetryState.retention_metrics, data.retention);
       }
-      if (data.archetypes) {
-        Object.assign(telemetryState.archetypes, data.archetypes);
-        updateArchetypeCardStats(data.archetypes);
-      }
-
       renderAllHydratedMetrics();
 
       // Push new data point and shift oldest for smooth rolling curve
@@ -615,22 +562,6 @@
       // Smooth 0-lag rolling curve update (animation disabled via 'none')
       updateAllChartsNoAnim();
     });
-
-    socket.on('archetype_state_update', (arch) => {
-      if (!arch) return;
-      Object.assign(telemetryState.archetypes, arch);
-      updateArchetypeCardStats(arch);
-      if (activeCharts.archetype) {
-        activeCharts.archetype.data.datasets[0].data = [
-          arch.authenticConnector || 0,
-          arch.curiousExplorer || 0,
-          arch.speedSwapper || 0,
-          arch.socialHarvester || 0,
-          arch.provocateur || 0,
-        ];
-        activeCharts.archetype.update('none');
-      }
-    });
   }
 
   function updateAllChartsNoAnim() {
@@ -639,14 +570,6 @@
         chart.update('none');
       }
     }
-  }
-
-  function updateArchetypeCardStats(arch) {
-    if ($('statArchConnectors')) $('statArchConnectors').textContent = formatNum(arch.authenticConnector || 0);
-    if ($('statArchExplorers')) $('statArchExplorers').textContent = formatNum(arch.curiousExplorer || 0);
-    if ($('statArchSwappers')) $('statArchSwappers').textContent = formatNum(arch.speedSwapper || 0);
-    if ($('statArchHarvesters')) $('statArchHarvesters').textContent = formatNum(arch.socialHarvester || 0);
-    if ($('statArchProvocateurs')) $('statArchProvocateurs').textContent = formatNum(arch.provocateur || 0);
   }
 
   // ═════════════════════════════════════════════════════════════
@@ -672,14 +595,6 @@
           handle100kSimScale();
         }
       });
-    });
-
-    // Refresh archetypes button
-    $('refreshArchetypesBtn')?.addEventListener('click', () => {
-      if (socketInstance) {
-        socketInstance.emit('get_archetype_state');
-      }
-      hydrateTelemetryFromFirestore();
     });
   }
 

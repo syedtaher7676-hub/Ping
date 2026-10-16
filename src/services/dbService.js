@@ -32,7 +32,10 @@ const COLLECTIONS = {
   FRIEND_REQUESTS: "friend_requests",
   FRIEND_CHATS: "friend_chats",
   REPORTS: "reports",
+  ADMIN_SESSIONS: "admin_sessions",
+  TELEMETRY: "telemetry",
 };
+
 
 let hasWarnedAuthError = false;
 
@@ -722,6 +725,169 @@ async function getUserConversations(userId) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  PERSISTENT ADMIN SESSIONS (30-DAY MULTI-DEVICE AUTH)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Persists an admin session token in Firestore with 30-day expiration
+ * @param {string} token
+ * @param {object} session
+ * @param {number} session.expiresAt
+ * @param {number} [session.createdAt]
+ * @returns {Promise<boolean>}
+ */
+async function saveAdminSession(token, session = {}) {
+  const db = getDb();
+  if (!db || !token) return false;
+
+  try {
+    const docRef = db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(token);
+    await docRef.set({
+      token,
+      createdAt: FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
+      expiresAt: session.expiresAt || (Date.now() + 30 * 24 * 3600 * 1000),
+      valid: true,
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    handleDbError("saveAdminSession", error, token);
+    return false;
+  }
+}
+
+/**
+ * Retrieves and validates an admin session token from Firestore
+ * @param {string} token
+ * @returns {Promise<object|null>}
+ */
+async function getAdminSession(token) {
+  const db = getDb();
+  if (!db || !token) return null;
+
+  try {
+    const docSnap = await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(token).get();
+    if (!docSnap.exists) return null;
+    const data = docSnap.data();
+    if (!data || data.valid === false) return null;
+    if (data.expiresAt && Date.now() > Number(data.expiresAt)) {
+      // Expired token
+      return null;
+    }
+    return {
+      token: data.token || token,
+      createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
+      expiresAt: Number(data.expiresAt) || (Date.now() + 30 * 24 * 3600 * 1000),
+      valid: true,
+    };
+  } catch (error) {
+    handleDbError("getAdminSession", error, token);
+    return null;
+  }
+}
+
+/**
+ * Deletes or revokes an admin session token from Firestore
+ * @param {string} token
+ * @returns {Promise<boolean>}
+ */
+async function deleteAdminSession(token) {
+  const db = getDb();
+  if (!db || !token) return false;
+
+  try {
+    await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(token).delete();
+    return true;
+  } catch (error) {
+    handleDbError("deleteAdminSession", error, token);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PERSISTENT TELEMETRY (COLD-BOOT RECOVERY & ATOMIC INCREMENTS)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Fetches the aggregated persistent telemetry metrics document from Firestore
+ * @returns {Promise<object|null>}
+ */
+async function getLiveTelemetryMetrics() {
+  const db = getDb();
+  if (!db) return null;
+
+  try {
+    const docSnap = await db.collection(COLLECTIONS.TELEMETRY).doc("live_metrics").get();
+    if (!docSnap.exists) return null;
+    return docSnap.data();
+  } catch (error) {
+    handleDbError("getLiveTelemetryMetrics", error, "live_metrics");
+    return null;
+  }
+}
+
+/**
+ * Atomically flushes metric counters to Firestore using FieldValue.increment
+ * @param {object} pending
+ * @returns {Promise<boolean>}
+ */
+async function atomicSyncTelemetry(pending = {}) {
+  const db = getDb();
+  if (!db) return false;
+
+  try {
+    const updatePayload = {
+      "system_summary.last_updated": FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
+    };
+
+    if (pending.system_summary?.total_sessions_logged > 0) {
+      updatePayload["system_summary.total_sessions_logged"] = FieldValue.increment(pending.system_summary.total_sessions_logged);
+    }
+    if (pending.system_summary?.total_matches > 0) {
+      updatePayload["system_summary.total_matches"] = FieldValue.increment(pending.system_summary.total_matches);
+    }
+    if (pending.system_summary?.total_messages > 0) {
+      updatePayload["system_summary.total_messages"] = FieldValue.increment(pending.system_summary.total_messages);
+    }
+    if (pending.system_summary?.total_violations > 0) {
+      updatePayload["system_summary.total_violations"] = FieldValue.increment(pending.system_summary.total_violations);
+    }
+    if (pending.system_summary?.active_ccu_peak > 0) {
+      updatePayload["system_summary.active_ccu_peak"] = pending.system_summary.active_ccu_peak;
+    }
+
+    if (pending.sentiment_distribution) {
+      for (const [key, val] of Object.entries(pending.sentiment_distribution)) {
+        if (val > 0) updatePayload[`sentiment_distribution.${key}`] = FieldValue.increment(val);
+      }
+    }
+
+    if (pending.session_durations) {
+      for (const [key, val] of Object.entries(pending.session_durations)) {
+        if (val > 0) updatePayload[`session_durations.${key}`] = FieldValue.increment(val);
+      }
+    }
+
+    if (pending.retention_metrics) {
+      if (pending.retention_metrics.survival_rate_3m_pct > 0) {
+        updatePayload["retention_metrics.survival_rate_3m_pct"] = pending.retention_metrics.survival_rate_3m_pct;
+      }
+      if (pending.retention_metrics.skip_churn_15s_pct > 0) {
+        updatePayload["retention_metrics.skip_churn_15s_pct"] = pending.retention_metrics.skip_churn_15s_pct;
+      }
+      if (pending.retention_metrics.patience_quotient_pct > 0) {
+        updatePayload["retention_metrics.patience_quotient_pct"] = pending.retention_metrics.patience_quotient_pct;
+      }
+    }
+
+    await db.collection(COLLECTIONS.TELEMETRY).doc("live_metrics").set(updatePayload, { merge: true });
+    return true;
+  } catch (error) {
+    handleDbError("atomicSyncTelemetry", error, "live_metrics");
+    return false;
+  }
+}
+
 // ── MODULE EXPORTS ────────────────────────────────────────────
 module.exports = {
   COLLECTIONS,
@@ -749,5 +915,13 @@ module.exports = {
   saveReport,
   getRecentReports,
   updateReportStatus,
+  // Admin session operations
+  saveAdminSession,
+  getAdminSession,
+  deleteAdminSession,
+  // Telemetry operations
+  getLiveTelemetryMetrics,
+  atomicSyncTelemetry,
   isFirebaseConfigured,
 };
+
