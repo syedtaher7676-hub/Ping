@@ -1334,73 +1334,60 @@
     <div class="admin-main-content">
       <!-- 1. OVERVIEW TAB -->
       <div id="adminTabOverview" class="admin-tab-panel active">
-        <!-- 8-Card High-Scale Telemetry Grid (Responsive 1-col mobile, 2-col tablet, 4-col desktop) -->
-        <div class="admin-stats-grid">
+        <!-- Unified Key Metrics Grid (Active CCU, Active Rooms, Waiting Queue, Msgs/Sec, Violations/Sec, Heap Memory) -->
+        <div class="admin-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Active Sockets</span>
+              <span class="stat-title">Active CCU</span>
               <span class="stat-icon-wrap cyan">👥</span>
             </div>
             <div class="stat-value tabular-nums" id="statOnlineUsers">0</div>
-            <div class="stat-sub">100k fleet scale capacity</div>
+            <div class="stat-sub">Live connected users</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Active 1-on-1 Rooms</span>
+              <span class="stat-title">Active Rooms</span>
               <span class="stat-icon-wrap purple">💬</span>
             </div>
             <div class="stat-value tabular-nums" id="statActiveRooms">0</div>
-            <div class="stat-sub">Live concurrent sessions</div>
+            <div class="stat-sub">Concurrent 1-on-1 pairs</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Matchmaking Queue</span>
+              <span class="stat-title">Waiting Queue</span>
               <span class="stat-icon-wrap yellow">⏳</span>
             </div>
             <div class="stat-value tabular-nums" id="statWaitingQueue">0</div>
-            <div class="stat-sub">Instant pairing buffer</div>
+            <div class="stat-sub">Instant pairing pool</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Message Velocity</span>
+              <span class="stat-title">Msgs/Sec</span>
               <span class="stat-icon-wrap green">⚡</span>
             </div>
             <div class="stat-value tabular-nums" id="statMsgsPerSec">0/s</div>
-            <div class="stat-sub">Throughput delivery rate</div>
+            <div class="stat-sub">Message delivery rate</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Threat Interceptions</span>
+              <span class="stat-title">Violations/Sec</span>
               <span class="stat-icon-wrap red">🛡️</span>
             </div>
             <div class="stat-value tabular-nums" id="statViolationsIntercepted">0</div>
-            <div class="stat-sub">Slurs, links & spam blocked</div>
+            <div class="stat-sub">Threats blocked per sec</div>
           </div>
           <div class="admin-stat-card">
             <div class="stat-card-header">
-              <span class="stat-title">Ghost Shadowbans</span>
-              <span class="stat-icon-wrap pink">👻</span>
-            </div>
-            <div class="stat-value tabular-nums" id="statShadowbansCount">0</div>
-            <div class="stat-sub">Silently quarantined</div>
-          </div>
-          <div class="admin-stat-card">
-            <div class="stat-card-header">
-              <span class="stat-title">Active Device Bans</span>
-              <span class="stat-icon-wrap red">🚫</span>
-            </div>
-            <div class="stat-value tabular-nums" id="statActiveBansCount">0</div>
-            <div class="stat-sub">Hardware restricted</div>
-          </div>
-          <div class="admin-stat-card">
-            <div class="stat-card-header">
-              <span class="stat-title">Cluster Memory & Lag</span>
+              <span class="stat-title">Heap Memory</span>
               <span class="stat-icon-wrap cyan">💾</span>
             </div>
             <div class="stat-value tabular-nums" id="statMemoryUsage">0 MB</div>
             <div class="stat-sub tabular-nums" id="statMemoryDetails">Heap · 0ms event lag</div>
           </div>
         </div>
+        <!-- Hidden DOM bridges for secondary stats required by legacy badge bindings -->
+        <span id="statShadowbansCount" style="display:none;">0</span>
+        <span id="statActiveBansCount" style="display:none;">0</span>
 
         <!-- ═══ ADVANCED INTERACTIVE GRAPH 1: 100K CONCURRENCY & THROUGHPUT MONITOR ═══ -->
         <div class="admin-card chart-main-card">

@@ -78,49 +78,17 @@ const triggerFrequencyMap = new Map();
 // Repeat Policy & Slur Offenders Map
 const repeatOffendersMap = new Map();
 
-// Psychological Archetypes & Intent Counts (Real-time active distribution)
-const psychologyArchetypes = {
-  socialHarvester: 0,   // Users attempting to harvest external contact details
-  speedSwapper: 0,      // Users skipping rapidly without conversational investment
-  authenticConnector: 0,// Users with high conversational depth and mutual engagement
-  curiousExplorer: 0,   // Users actively asking questions / using icebreakers
-  provocateur: 0,       // Users baiting or triggering content violations
-};
-
-function broadcastArchetypeUpdate() {
-  if (typeof global.broadcastArchetypes === 'function') {
-    global.broadcastArchetypes({ ...psychologyArchetypes });
-  }
-}
-
 // Live Real-Time User Actions Stream (User activity feed across the fleet)
 const MAX_LIVE_ACTIONS = 120;
 const liveUserActions = [];
 
 function recordUserAction({ type, userId, country = 'Global', detail = '', icon = '⚡' }) {
-  // Determine archetype based on action
-  let archetype = 'Curious Explorer';
-  if (type === 'skip_partner') {
-    archetype = 'Speed Swapper';
-    psychologyArchetypes.speedSwapper++;
-    broadcastArchetypeUpdate();
-  } else if (type === 'message_sent' || type === 'send_msg') {
-    archetype = 'Authentic Connector';
-    psychologyArchetypes.authenticConnector++;
-    broadcastArchetypeUpdate();
-  } else if (type === 'violation' || type === 'report_submitted') {
-    archetype = 'Provocateur';
-    psychologyArchetypes.provocateur++;
-    broadcastArchetypeUpdate();
-  }
-
   const item = {
     id: 'act_' + Date.now() + '_' + crypto.randomBytes(3).toString('hex'),
     timestamp: Date.now(),
     type,
     userId: userId || 'Anonymous',
     country,
-    archetype,
     detail: String(detail).slice(0, 100),
     icon,
   };
@@ -424,18 +392,15 @@ function recordSessionCompleted(durationSeconds = 0, messageCount = 0, reason = 
     global.recordTelemetrySession(durationSeconds);
   }
 
-  // Duration Buckets & Psychology Archetype Tracking
+  // Duration Buckets
   if (durationSeconds < 15) {
     sessionDurationBuckets.quickSkips++;
-    psychologyArchetypes.speedSwapper++;
   } else if (durationSeconds <= 60) {
     sessionDurationBuckets.shortChats++;
   } else if (durationSeconds <= 180) {
     sessionDurationBuckets.mediumChats++;
-    if (messageCount >= 6) psychologyArchetypes.authenticConnector++;
   } else {
     sessionDurationBuckets.deepConversations++;
-    psychologyArchetypes.authenticConnector++;
   }
 
   // Messages per chat buckets
@@ -450,59 +415,7 @@ function recordSessionCompleted(durationSeconds = 0, messageCount = 0, reason = 
   }
 }
 
-function getUserPsychologyProfile(userId, deviceHash) {
-  const offender = (userId && repeatOffendersMap.get(userId)) || (deviceHash && repeatOffendersMap.get(deviceHash)) || null;
-  const violations = offender ? offender.violationCount : 0;
-  const slurs = offender ? offender.slursCount : 0;
-  const contacts = offender ? (offender.askedNumbersCount + offender.sharedNumbersCount + offender.socialsCount) : 0;
 
-  let archetype = 'Authentic Connector';
-  let intentScore = 12; // 0-100 risk
-  let riskLevel = 'Low';
-  let recommendedAction = 'Standard Session — No Action Needed';
-  let pacing = 'Reciprocal Conversational Flow';
-
-  if (slurs >= 2) {
-    archetype = 'Provocateur / Troll';
-    intentScore = Math.min(100, 70 + slurs * 10);
-    riskLevel = 'Critical';
-    recommendedAction = 'Immediate 1-Click Ban or Ghost Shadowban';
-    pacing = 'Hostile Disruptor';
-  } else if (contacts >= 2) {
-    archetype = 'Social Extractor';
-    intentScore = Math.min(95, 55 + contacts * 12);
-    riskLevel = 'High';
-    recommendedAction = 'Ghost Shadowban (Prevents Off-Platform Solicitation)';
-    pacing = 'Rapid Solicitation Urgency';
-  } else if (violations === 1) {
-    archetype = 'Boundary Tester';
-    intentScore = 40;
-    riskLevel = 'Moderate';
-    recommendedAction = 'Issue Friendly Community Warning Notice';
-    pacing = 'Testing Filter Boundaries';
-  } else {
-    archetype = 'Authentic Connector';
-    intentScore = 8;
-    riskLevel = 'Clean';
-    recommendedAction = 'Good Standing — Organic Chat';
-    pacing = 'Natural Dialogue';
-  }
-
-  return {
-    userId: userId || 'Anonymous',
-    deviceHash: deviceHash || 'None',
-    archetype,
-    intentScore,
-    riskLevel,
-    recommendedAction,
-    pacing,
-    strikes: violations,
-    slursCount: slurs,
-    contactAttempts: contacts,
-    lastDetectedSnippet: offender?.lastSnippet || 'Clean conversationalist',
-    lastViolationType: offender?.lastType || 'None',
-  };
-}
 
 function getBehaviorAnalyticsSnapshot() {
   const cleanPassRate = totalMessagesProcessed > 0
@@ -532,11 +445,6 @@ function getBehaviorAnalyticsSnapshot() {
     ? Number(((totalContactAttempts / totalMessagesProcessed) * 100).toFixed(1))
     : 0;
 
-  // Update cumulative archetypes
-  psychologyArchetypes.socialHarvester = totalContactAttempts;
-  psychologyArchetypes.provocateur = slursInterceptedCount;
-  psychologyArchetypes.curiousExplorer = conversationVibes.curiousQuestions;
-
   return {
     overview: {
       totalMessagesProcessed,
@@ -564,13 +472,6 @@ function getBehaviorAnalyticsSnapshot() {
       durationBuckets: { ...sessionDurationBuckets },
       messagesPerChatBuckets: { ...messagesPerChatBuckets },
       vibes: { ...conversationVibes },
-      archetypes: { ...psychologyArchetypes },
-    },
-    psychology: {
-      archetypes: { ...psychologyArchetypes },
-      politenessScore: Math.min(100, Math.round(((conversationVibes.friendlyGreetings + conversationVibes.casualChat) / Math.max(1, totalMessagesDelivered)) * 100)),
-      curiosityQuotient: Math.min(100, Math.round((conversationVibes.curiousQuestions / Math.max(1, totalMessagesDelivered)) * 100)),
-      toxicityRatio: Math.min(100, Math.round((slursInterceptedCount / Math.max(1, totalMessagesProcessed)) * 100)),
     },
     timeSeries: minuteBuckets.slice(-20),
     topTriggers,
@@ -585,7 +486,6 @@ module.exports = {
   recordViolationEvent,
   recordSessionCompleted,
   recordUserAction,
-  getUserPsychologyProfile,
   getBehaviorAnalyticsSnapshot,
   classifySlurWord,
 };

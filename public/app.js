@@ -861,13 +861,85 @@ socket.on('dm_edited', ({ msgId, newMessage }) => {
   }
 });
 
-socket.off('dm_deleted');
-socket.on('dm_deleted', ({ msgId }) => {
-  const el = friendChatBox.querySelector(`[data-msg-id="${msgId}"]`);
-  if (!el) return;
-  el.classList.add('deleted');
-  const textNode = el.querySelector('.msg-text');
-  if (textNode) textNode.textContent = 'Message deleted 🗑️';
+socket.off('admin_auth_failed');
+socket.on('admin_auth_failed', () => {
+  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+  if (!token) return;
+  localStorage.removeItem('ping_admin_token');
+  localStorage.removeItem('admin_token');
+  sessionStorage.removeItem('ping_admin_token');
+  sessionStorage.removeItem('admin_token');
+  const modal = document.getElementById('adminAuthModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+    if (title) title.textContent = 'Session expired.';
+  }
+});
+
+socket.on('connect', () => {
+  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+  if (!token) return;
+  fetch('/api/admin/overview', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(res => {
+    if (res.status === 401) {
+      localStorage.removeItem('ping_admin_token');
+      localStorage.removeItem('admin_token');
+      sessionStorage.removeItem('ping_admin_token');
+      sessionStorage.removeItem('admin_token');
+      const modal = document.getElementById('adminAuthModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+        if (title) title.textContent = 'Session expired.';
+      }
+    }
+  }).catch(() => {});
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+    if (!token) return;
+    fetch('/api/admin/overview', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => {
+      if (res.status === 401) {
+        localStorage.removeItem('ping_admin_token');
+        localStorage.removeItem('admin_token');
+        sessionStorage.removeItem('ping_admin_token');
+        sessionStorage.removeItem('admin_token');
+        const modal = document.getElementById('adminAuthModal');
+        if (modal) {
+          modal.style.display = 'flex';
+          const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+          if (title) title.textContent = 'Session expired.';
+        }
+      }
+    }).catch(() => {});
+  }
+});
+
+window.addEventListener('pageshow', () => {
+  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+  if (!token) return;
+  fetch('/api/admin/overview', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  }).then(res => {
+    if (res.status === 401) {
+      localStorage.removeItem('ping_admin_token');
+      localStorage.removeItem('admin_token');
+      sessionStorage.removeItem('ping_admin_token');
+      sessionStorage.removeItem('admin_token');
+      const modal = document.getElementById('adminAuthModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+        if (title) title.textContent = 'Session expired.';
+      }
+    }
+  }).catch(() => {});
 });
 
 // ── INSTAGRAM-STYLE ATTACHED EMOJI REACTIONS ────────────────────────

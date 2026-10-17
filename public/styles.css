@@ -10639,120 +10639,6 @@ html.is-ios .chat-app {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PSYCHOLOGY ARCHETYPES & RETENTION METRICS STYLES
-   ═══════════════════════════════════════════════════════════════ */
-.psychology-archetypes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 14px;
-  width: 100%;
-}
-
-.archetype-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.archetype-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-}
-
-.archetype-card.card-harvester { border-top: 3px solid #ef4444; }
-.archetype-card.card-swapper { border-top: 3px solid #f59e0b; }
-.archetype-card.card-curious { border-top: 3px solid #06b6d4; }
-.archetype-card.card-authentic { border-top: 3px solid #10b981; }
-.archetype-card.card-provocateur { border-top: 3px solid #dc2626; }
-
-.archetype-card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.archetype-icon {
-  font-size: 1.5rem;
-  line-height: 1;
-}
-
-.archetype-risk-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.archetype-risk-badge.critical { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid rgba(220, 38, 38, 0.35); }
-.archetype-risk-badge.high { background: rgba(239, 68, 68, 0.2); color: var(--red-l); border: 1px solid rgba(239, 68, 68, 0.35); }
-.archetype-risk-badge.med { background: rgba(245, 158, 11, 0.2); color: var(--amber-l); border: 1px solid rgba(245, 158, 11, 0.35); }
-.archetype-risk-badge.low { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.35); }
-.archetype-risk-badge.safe { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
-
-.archetype-name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--t-primary);
-  margin: 0;
-}
-
-.archetype-desc {
-  font-size: 0.73rem;
-  color: var(--t-secondary);
-  line-height: 1.35;
-  margin: 0;
-  flex: 1;
-}
-
-.archetype-metrics-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 6px 10px;
-  border-radius: 6px;
-  margin-top: 4px;
-}
-
-.archetype-metric {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.archetype-label {
-  font-size: 0.65rem;
-  color: var(--t-ghost);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.archetype-val {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--t-primary);
-}
-
-.archetype-recommendation {
-  font-size: 0.68rem;
-  color: var(--t-ghost);
-  border-top: 1px dashed rgba(255, 255, 255, 0.08);
-  padding-top: 6px;
-  margin-top: 2px;
-}
-
 /* ── Live User Action Feed Styles ── */
 .user-action-tag {
   display: inline-flex;
@@ -10818,66 +10704,7 @@ html.is-ios .chat-app {
   color: #f87171;
 }
 
-/* ── Psychology Profiler Modal ── */
-.psychology-modal-card {
-  width: 92vw;
-  max-width: 600px;
-  max-height: 88vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
 
-.psych-diag-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.psych-diag-stat {
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 9px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.psych-stat-label {
-  font-size: 0.68rem;
-  color: var(--t-ghost);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.psych-stat-val {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--t-primary);
-  word-break: break-all;
-}
-
-.psych-traits-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.psych-trait-pill {
-  font-size: 0.72rem;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--t-secondary);
-}
-
-.psych-action-buttons-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 8px;
-}
 
 .btn-psych-action {
   padding: 8px 10px;
@@ -11115,18 +10942,7 @@ html, body {
     word-break: break-all !important;
   }
 
-  .psychology-archetypes-grid {
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-  }
 
-  .psych-diag-grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  .psych-action-buttons-grid {
-    grid-template-columns: 1fr 1fr !important;
-  }
 
   .admin-grid-2col {
     grid-template-columns: 1fr !important;

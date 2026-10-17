@@ -913,6 +913,148 @@ setInterval(() => {
   }
 }, 60000).unref();
 
+// ── PERMANENT ADMIN SESSION PERSISTENCE (30-DAY TTL & FIRESTORE FALLBACK) ──
+const memoryAdminSessions = new Map();
+const DEFAULT_ADMIN_SESSION_TTL_SECONDS = 2592000; // 30 days (2,592,000 seconds)
+
+async function setAdminSession(token, adminData = {}, ttlSeconds = DEFAULT_ADMIN_SESSION_TTL_SECONDS) {
+  if (!token) return false;
+  const now = Date.now();
+  const session = {
+    token,
+    ...(typeof adminData === "object" ? adminData : {}),
+    createdAt: (adminData && adminData.createdAt) || now,
+    expiresAt: (adminData && adminData.expiresAt) || (now + ttlSeconds * 1000),
+    valid: true,
+  };
+
+  memoryAdminSessions.set(token, session);
+
+  if (isRedisReady()) {
+    try {
+      const payload = JSON.stringify(session);
+      const pipeline = redisClient.pipeline();
+      pipeline.set(`admin_session:${token}`, payload, "EX", ttlSeconds);
+      pipeline.set(`${PREFIX}admin_session:${token}`, payload, "EX", ttlSeconds);
+      await pipeline.exec();
+    } catch (err) {
+      log("redis_set_admin_session_error", { token, message: err?.message });
+    }
+  }
+
+  try {
+    const dbService = require("../services/dbService");
+    if (dbService && typeof dbService.saveAdminSession === "function") {
+      await dbService.saveAdminSession(token, session);
+    }
+  } catch (err) {
+    log("firestore_set_admin_session_error", { token, message: err?.message });
+  }
+
+  return true;
+}
+
+async function getAdminSession(token) {
+  if (!token) return null;
+  const now = Date.now();
+
+  const mem = memoryAdminSessions.get(token);
+  if (mem && mem.expiresAt > now && mem.valid !== false) {
+    return mem;
+  }
+
+  if (isRedisReady()) {
+    try {
+      let raw = await redisClient.get(`admin_session:${token}`);
+      if (!raw) {
+        raw = await redisClient.get(`${PREFIX}admin_session:${token}`);
+      }
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session && session.expiresAt > now && session.valid !== false) {
+          memoryAdminSessions.set(token, session);
+          return session;
+        }
+      }
+    } catch (err) {
+      log("redis_get_admin_session_error", { token, message: err?.message });
+    }
+  }
+
+  try {
+    const dbService = require("../services/dbService");
+    if (dbService && typeof dbService.getAdminSession === "function") {
+      const session = await dbService.getAdminSession(token);
+      if (session && session.expiresAt > now && session.valid !== false) {
+        memoryAdminSessions.set(token, session);
+        if (isRedisReady()) {
+          const remainingSec = Math.max(60, Math.floor((session.expiresAt - now) / 1000));
+          const payload = JSON.stringify(session);
+          redisClient.set(`admin_session:${token}`, payload, "EX", remainingSec).catch(() => {});
+          redisClient.set(`${PREFIX}admin_session:${token}`, payload, "EX", remainingSec).catch(() => {});
+        }
+        return session;
+      }
+    }
+  } catch (err) {
+    log("firestore_get_admin_session_error", { token, message: err?.message });
+  }
+
+  return null;
+}
+
+async function deleteAdminSession(token) {
+  if (!token) return false;
+  memoryAdminSessions.delete(token);
+
+  if (isRedisReady()) {
+    try {
+      const pipeline = redisClient.pipeline();
+      pipeline.del(`admin_session:${token}`);
+      pipeline.del(`${PREFIX}admin_session:${token}`);
+      await pipeline.exec();
+    } catch (err) {
+      log("redis_delete_admin_session_error", { token, message: err?.message });
+    }
+  }
+
+  try {
+    const dbService = require("../services/dbService");
+    if (dbService && typeof dbService.deleteAdminSession === "function") {
+      await dbService.deleteAdminSession(token);
+    }
+  } catch (err) {
+    log("firestore_delete_admin_session_error", { token, message: err?.message });
+  }
+
+  return true;
+}
+
+class RedisStore {
+  constructor(client = null) {
+    this.client = client || redisClient;
+    this.defaultTtl = DEFAULT_ADMIN_SESSION_TTL_SECONDS;
+  }
+
+  isReady() {
+    return isRedisReady();
+  }
+
+  async setAdminSession(token, adminData, ttlSeconds = DEFAULT_ADMIN_SESSION_TTL_SECONDS) {
+    return setAdminSession(token, adminData, ttlSeconds);
+  }
+
+  async getAdminSession(token) {
+    return getAdminSession(token);
+  }
+
+  async deleteAdminSession(token) {
+    return deleteAdminSession(token);
+  }
+}
+
+const defaultRedisStore = new RedisStore();
+
 // ── MODULE EXPORTS ────────────────────────────────────────────
 module.exports = {
   // Underlying redis instances & helpers
@@ -920,6 +1062,14 @@ module.exports = {
   isRedisReady,
   initializeRedis,
   checkSlidingWindowRateLimit,
+
+  // RedisStore Class & Session API
+  RedisStore,
+  redisStore: defaultRedisStore,
+  setAdminSession,
+  getAdminSession,
+  deleteAdminSession,
+  DEFAULT_ADMIN_SESSION_TTL_SECONDS,
 
   // Ban management
   addTemporaryBan,

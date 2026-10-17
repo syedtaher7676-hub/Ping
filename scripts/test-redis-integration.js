@@ -52,6 +52,28 @@ async function runTests() {
   assert.strictEqual(messages[0].text, "hi");
   console.log("✅ Friendship and DM management test passed");
 
+  // Test 5: Permanent Admin Sessions & RedisStore Class (30-Day TTL)
+  const rootRedisStore = require("../redisStore");
+  assert.ok(rootRedisStore.RedisStore, "RedisStore class should be exported");
+  assert.ok(typeof rootRedisStore.setAdminSession === "function", "setAdminSession should be a function");
+  assert.ok(typeof rootRedisStore.getAdminSession === "function", "getAdminSession should be a function");
+  assert.ok(typeof rootRedisStore.deleteAdminSession === "function", "deleteAdminSession should be a function");
+
+  const testToken = `adm_test_${Date.now()}`;
+  const sessionData = { adminId: "syed_admin", role: "superadmin" };
+  await rootRedisStore.setAdminSession(testToken, sessionData, 2592000);
+
+  const retrieved = await rootRedisStore.getAdminSession(testToken);
+  assert.ok(retrieved, "Session should be retrieved");
+  assert.strictEqual(retrieved.token, testToken);
+  assert.strictEqual(retrieved.role, "superadmin");
+  assert.ok(retrieved.expiresAt > Date.now() + 1000000000, "Should have 30-day expiration");
+
+  await rootRedisStore.deleteAdminSession(testToken);
+  const afterDelete = await rootRedisStore.getAdminSession(testToken);
+  assert.strictEqual(afterDelete, null, "Deleted session should return null");
+  console.log("✅ Permanent Admin Session & RedisStore class test passed (30-Day TTL & storage)");
+
   // Cleanup
   await redisStore.redisDeleteUser("test_user_a");
   await redisStore.redisDeleteUser("test_user_b");

@@ -476,18 +476,28 @@
 
     // Auto-rejoin on socket connect/reconnect ONLY when admin dashboard is active
     const performJoin = () => {
+      const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+      if (!token) return;
       if (isAdminDashboardVisible()) {
         socket.emit('join_admin');
         socket.emit('admin_join');
-        const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
-        if (token) {
-          socket.emit('admin_rejoin', { token });
-        }
+        socket.emit('admin_rejoin', { token });
         refreshAdminDashboardData();
       }
     };
 
-    socket.on('connect', performJoin);
+    socket.on('connect', () => {
+      performJoin();
+      const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+      if (token && isAdminDashboardVisible()) {
+        hydrateTelemetryFromFirestore();
+        refreshAdminDashboardData();
+      }
+    });
+
+    socket.on('admin_auth_failed', () => {
+      handleSessionExpired();
+    });
 
     socket.on('system_metrics', (data) => {
       if (!data) return;
@@ -844,26 +854,31 @@
     return Boolean(v && v.style.display !== 'none' && v.style.display !== '');
   }
 
+  function handleSessionExpired() {
+    localStorage.removeItem('ping_admin_token');
+    sessionStorage.removeItem('ping_admin_token');
+    if (isAdminDashboardVisible()) {
+      const adminView = $('adminDashboardView');
+      if (adminView) {
+        adminView.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    }
+    const modal = document.getElementById('adminAuthModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+      if (title) title.textContent = 'Session expired.';
+    }
+  }
+
   async function adminFetch(url, options = {}) {
     const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || '';
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(url, { ...options, headers });
     if (res.status === 401) {
-      localStorage.removeItem('ping_admin_token');
-      sessionStorage.removeItem('ping_admin_token');
-      // Only show admin auth modal if admin dashboard is actively visible
-      if (isAdminDashboardVisible()) {
-        const adminView = $('adminDashboardView');
-        if (adminView) {
-          adminView.style.display = 'none';
-          document.body.style.overflow = '';
-        }
-        const modal = document.getElementById('adminAuthModal');
-        if (modal) {
-          modal.style.display = 'flex';
-        }
-      }
+      handleSessionExpired();
     }
     return res;
   }
@@ -1027,6 +1042,10 @@
   // 6. BOOTSTRAP ON DOMCONTENTLOADED
   // ═════════════════════════════════════════════════════════════
   function initializeAdmin() {
+    const authModal = $('adminAuthModal');
+    if (authModal) {
+      authModal.style.display = 'none';
+    }
     setupTabNavigation();
     initAdminCharts();
     hydrateTelemetryFromFirestore();
@@ -1076,6 +1095,14 @@
         refreshAdminDashboardData();
       }
     }, 30000);
+
+    // Re-sync on tab visibility change
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && isAdminDashboardVisible()) {
+        hydrateTelemetryFromFirestore();
+        refreshAdminDashboardData();
+      }
+    });
   }
 
   if (document.readyState === 'loading') {

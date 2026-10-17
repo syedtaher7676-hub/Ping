@@ -569,50 +569,77 @@ function parseFirestoreRestDoc(fields) {
   return out;
 }
 
+let hydrationPromise = null;
+
 /**
- * Cold-Boot Recovery: Reads aggregated historical metrics directly from Firestore on app startup.
+ * Singleton Cold-Boot Recovery: Reads aggregated historical metrics directly from Firestore on app startup.
  * Guarantees that even if the container sleeps for 15+ days or resets, the Admin Dashboard
  * always displays permanent historical system counters.
  */
-async function hydrateHistoricalTelemetryFromFirestore() {
-  try {
-    let data = null;
-    if (dbService.isFirebaseConfigured()) {
-      data = await dbService.getLiveTelemetryMetrics();
-    }
-    if (!data) {
-      // Fallback via Firestore REST API if Admin SDK credentials are fail-opened
-      const config = loadAppletConfig();
-      if (config && config.apiKey && config.projectId) {
-        const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
-        const restRes = await fetch(url);
-        if (restRes.ok) {
-          const raw = await restRes.json();
-          if (raw.fields) {
-            data = parseFirestoreRestDoc(raw.fields);
+async function hydrateTelemetryFromFirestore() {
+  if (hydrationPromise) return hydrationPromise;
+  hydrationPromise = (async () => {
+    try {
+      let data = null;
+      if (dbService.isFirebaseConfigured()) {
+        data = await dbService.getLiveTelemetryMetrics();
+      }
+      if (!data) {
+        // Fallback via Firestore REST API if Admin SDK credentials are fail-opened
+        const config = loadAppletConfig();
+        if (config && config.apiKey && config.projectId) {
+          const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
+          const restRes = await fetch(url);
+          if (restRes.ok) {
+            const raw = await restRes.json();
+            if (raw.fields) {
+              data = parseFirestoreRestDoc(raw.fields);
+            }
           }
         }
       }
-    }
 
-    if (data) {
-      if (data.system_summary) Object.assign(cachedHistoricalTelemetry.system_summary, data.system_summary);
-      if (data.sentiment_distribution) Object.assign(cachedHistoricalTelemetry.sentiment_distribution, data.sentiment_distribution);
-      if (data.session_durations) Object.assign(cachedHistoricalTelemetry.session_durations, data.session_durations);
-      if (data.retention_metrics) Object.assign(cachedHistoricalTelemetry.retention_metrics, data.retention_metrics);
-      isHistoricalTelemetryHydrated = true;
-      log("telemetry_cold_boot_hydrated", {
-        totalSessions: cachedHistoricalTelemetry.system_summary.total_sessions_logged,
-        totalMatches: cachedHistoricalTelemetry.system_summary.total_matches,
-      });
+      if (data) {
+        if (data.system_summary) {
+          Object.assign(cachedHistoricalTelemetry.system_summary, data.system_summary);
+          Object.assign(memoryBuffer.system_summary, data.system_summary);
+        }
+        if (data.sentiment_distribution) {
+          Object.assign(cachedHistoricalTelemetry.sentiment_distribution, data.sentiment_distribution);
+          Object.assign(memoryBuffer.sentiment_distribution, data.sentiment_distribution);
+        }
+        if (data.session_durations) {
+          Object.assign(cachedHistoricalTelemetry.session_durations, data.session_durations);
+          Object.assign(memoryBuffer.session_durations, data.session_durations);
+        }
+        if (data.retention_metrics) {
+          Object.assign(cachedHistoricalTelemetry.retention_metrics, data.retention_metrics);
+          Object.assign(memoryBuffer.retention_metrics, data.retention_metrics);
+        }
+        isHistoricalTelemetryHydrated = true;
+        log("telemetry_cold_boot_hydrated", {
+          totalSessions: memoryBuffer.system_summary.total_sessions_logged,
+          totalMatches: memoryBuffer.system_summary.total_matches,
+        });
+      }
+    } catch (err) {
+      log("telemetry_hydration_error", { message: err?.message });
     }
-  } catch (err) {
-    log("telemetry_hydration_error", { message: err?.message });
-  }
+  })();
+  return hydrationPromise;
 }
 
-// Trigger initial hydration immediately on script load
-hydrateHistoricalTelemetryFromFirestore();
+// Trigger initial hydration immediately on server start
+hydrateTelemetryFromFirestore();
+
+async function ensureTelemetryHydrated(req, res, next) {
+  try {
+    await hydrateTelemetryFromFirestore();
+  } catch (err) {
+    log("ensure_telemetry_hydrated_error", { message: err?.message });
+  }
+  next();
+}
 
 global.recordTelemetrySentiment = (key) => {
   if (memoryBuffer.sentiment_distribution[key] !== undefined) {
@@ -1120,10 +1147,7 @@ app.post("/api/admin/logout", verifyAdmin, async (req, res) => {
 });
 
 // 2. Admin overview & health stats with Cold-Boot Recovery & Firestore Telemetry Merge
-app.get("/api/admin/overview", verifyAdmin, async (_req, res) => {
-  if (!isHistoricalTelemetryHydrated) {
-    await hydrateHistoricalTelemetryFromFirestore();
-  }
+app.get("/api/admin/overview", verifyAdmin, ensureTelemetryHydrated, async (_req, res) => {
 
   const stats = getMatchStats() || {};
   const mem = process.memoryUsage();
@@ -2028,7 +2052,7 @@ app.get("/api/admin/telemetry-history", verifyAdmin, (_req, res) => {
 });
 
 // 16q. Permanent Aggregated Telemetry Live Metrics (Direct Firestore Fetch)
-app.get("/api/admin/telemetry-live", async (_req, res) => {
+app.get("/api/admin/telemetry-live", ensureTelemetryHydrated, async (_req, res) => {
   try {
     let data = null;
     const db = getDb();
