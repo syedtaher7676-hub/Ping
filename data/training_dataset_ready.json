@@ -1,0 +1,5742 @@
+[
+  {
+    "text": "hey! how is your day going?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what kind of music do you listen to?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "just studying for my exam tomorrow",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that movie was incredible, 10/10 recommend",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "lol that is hilarious",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "nice to meet you! where are you from?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "have a wonderful evening ahead!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love coding in javascript and python",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "no worries, take your time",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "gg good game",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i'm going to kill this workout session today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i feel so tired today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "which university do you attend?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that was a killer guitar solo!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what are your hobbies?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "see you later, peace out",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "thanks for the conversation!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what books have you been reading lately?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i really like playing chess and soccer",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "hope you have a great week!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the weather is super nice today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what is your favorite food to cook?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am learning how to play the piano",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "do you watch anime or read manga?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "can you recommend a good sci-fi movie?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that was such a classic moment",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i need to pass this mathematics test",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the assistant helped me with my code",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love walking on the green grass",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the bass guitar sounded amazing in that song",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "can you pass the butter please?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am traveling to another country next month",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "this Indian curry is deliciously spicy",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "we need to assemble the furniture together",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the data analytics showed great results",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "charles dickens wrote wonderful novels",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "niger is a country in west africa",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the river flows smoothly through the valley",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i ordered a non-alcoholic cocktail at the cafe",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am wearing a black shirt and blue jeans",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "welcome to Ping! having fun chatting?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "let's share some fun riddles",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "do you play any video games like valorant or minecraft?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "happy birthday! hope you have an awesome day",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i had a cucumber sandwich for lunch",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "we visited the grand canal in venice",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the document was saved successfully",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love drinking hot chocolate in winter",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "good luck on your interview tomorrow!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "let's stay positive and keep trying",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "shut up you faggot",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$hut up y0u f@gg0t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you dumb nigger",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y.o.u d.u.m.b n.i.g.g.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "y...o...u d...u...m...b n...i...g...g...e...r",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "y-o-u d-u-m-b n-i-g-g-e-r",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "y*o*u d*u*m*b n*i*g*g*e*r",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "y o u   d u m b   n i g g e r",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "y\no\nu\n\nd\nu\nm\nb\n\nn\ni\ng\ng\ne\nr",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "y0u dumb n1gg3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f@ggot gtfo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.@.g.g.o.t g.t.f.o",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "f...@...g...g...o...t g...t...f...o",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "f-@-g-g-o-t g-t-f-o",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "f*@*g*g*o*t g*t*f*o",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "f @ g g o t   g t f o",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "f\n@\ng\ng\no\nt\n\ng\nt\nf\no",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "f@gg0t gtf0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f.a.g.g.o.t get out of here",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.@.g.g.0.t g3t 0ut 0f h3r3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "stupid retard",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "s.t.u.p.i.d r.e.t.a.r.d",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "s...t...u...p...i...d r...e...t...a...r...d",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "s-t-u-p-i-d r-e-t-a-r-d",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "s*t*u*p*i*d r*e*t*a*r*d",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "s t u p i d   r e t a r d",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "s\nt\nu\np\ni\nd\n\nr\ne\nt\na\nr\nd",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "$tup1d r3t@rd",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you are an absolute r3tard",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u @r3 @n @b$0lut3 r3t@rd",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "fucking retards everywhere",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.u.c.k.i.n.g r.e.t.a.r.d.s e.v.e.r.y.w.h.e.r.e",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "f...u...c...k...i...n...g r...e...t...a...r...d...s e...v...e...r...y...w...h...e...r...e",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "f-u-c-k-i-n-g r-e-t-a-r-d-s e-v-e-r-y-w-h-e-r-e",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "f*u*c*k*i*n*g r*e*t*a*r*d*s e*v*e*r*y*w*h*e*r*e",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "f u c k i n g   r e t a r d s   e v e r y w h e r e",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "f\nu\nc\nk\ni\nn\ng\n\nr\ne\nt\na\nr\nd\ns\n\ne\nv\ne\nr\ny\nw\nh\ne\nr\ne",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "fuck1ng r3t@rd$ 3v3rywh3r3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you fucking cunt",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y.o.u f.u.c.k.i.n.g c.u.n.t",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "y...o...u f...u...c...k...i...n...g c...u...n...t",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "y-o-u f-u-c-k-i-n-g c-u-n-t",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "y*o*u f*u*c*k*i*n*g c*u*n*t",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "y o u   f u c k i n g   c u n t",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "y\no\nu\n\nf\nu\nc\nk\ni\nn\ng\n\nc\nu\nn\nt",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "y0u fuck1ng cunt",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f.u.c.k you bitch",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f...u...c...k y.o.u b.i.t.c.h",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "f.......u.......c.......k y...o...u b...i...t...c...h",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "f-.-u-.-c-.-k y-o-u b-i-t-c-h",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "f*.*u*.*c*.*k y*o*u b*i*t*c*h",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "f . u . c . k   y o u   b i t c h",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "f\n.\nu\n.\nc\n.\nk\n\ny\no\nu\n\nb\ni\nt\nc\nh",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "f.u.c.k y0u b1tch",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you ugly bitch",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y.o.u u.g.l.y b.i.t.c.h",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "y...o...u u...g...l...y b...i...t...c...h",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "y-o-u u-g-l-y b-i-t-c-h",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "y*o*u u*g*l*y b*i*t*c*h",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "y o u   u g l y   b i t c h",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "y\no\nu\n\nu\ng\nl\ny\n\nb\ni\nt\nc\nh",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "y0u ugly b1tch",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "dumb wh0re go away",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "dumb wh0r3 g0 @w@y",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "she is a dirty slut",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$h3 1$ @ d1rty $lut",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "dirty kike go home",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "d1rty k1k3 g0 h0m3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "k1k3 trash",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "k.1.k.3 t.r.a.s.h",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "k...1...k...3 t...r...a...s...h",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "k-1-k-3 t-r-a-s-h",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "k*1*k*3 t*r*a*s*h",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "k 1 k 3   t r a s h",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "k\n1\nk\n3\n\nt\nr\na\ns\nh",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "k1k3 tr@$h",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "stupid chink",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "s.t.u.p.i.d c.h.i.n.k",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "s...t...u...p...i...d c...h...i...n...k",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "s-t-u-p-i-d c-h-i-n-k",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "s*t*u*p*i*d c*h*i*n*k",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "s t u p i d   c h i n k",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "s\nt\nu\np\ni\nd\n\nc\nh\ni\nn\nk",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "$tup1d ch1nk",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "ch1nk go back to your country",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "ch1nk g0 b@ck t0 y0ur c0untry",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you filthy gook",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y.o.u f.i.l.t.h.y g.o.o.k",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "y...o...u f...i...l...t...h...y g...o...o...k",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "y-o-u f-i-l-t-h-y g-o-o-k",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "y*o*u f*i*l*t*h*y g*o*o*k",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "y o u   f i l t h y   g o o k",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "y\no\nu\n\nf\ni\nl\nt\nh\ny\n\ng\no\no\nk",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "y0u f1lthy g00k",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "spic get out of here",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$p1c g3t 0ut 0f h3r3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "wetback loser",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "w.e.t.b.a.c.k l.o.s.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "w...e...t...b...a...c...k l...o...s...e...r",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "w-e-t-b-a-c-k l-o-s-e-r",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "w*e*t*b*a*c*k l*o*s*e*r",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "w e t b a c k   l o s e r",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "w\ne\nt\nb\na\nc\nk\n\nl\no\ns\ne\nr",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "w3tb@ck l0$3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "n!gg3r leave now",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n.!.g.g.3.r l.e.a.v.e n.o.w",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "n...!...g...g...3...r l...e...a...v...e n...o...w",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "n-!-g-g-3-r l-e-a-v-e n-o-w",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "n*!*g*g*3*r l*e*a*v*e n*o*w",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "n ! g g 3 r   l e a v e   n o w",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "n\n!\ng\ng\n3\nr\n\nl\ne\na\nv\ne\n\nn\no\nw",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "n!gg3r l3@v3 n0w",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "n1gger piece of shit",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n1gg3r p13c3 0f $h1t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "you are a f.a.g",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "y0u @r3 @ f.@.g",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "stupid dyke nobody asked you",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$tup1d dyk3 n0b0dy @$k3d y0u",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "trans tranny freak",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "t.r.a.n.s t.r.a.n.n.y f.r.e.a.k",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "t...r...a...n...s t...r...a...n...n...y f...r...e...a...k",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "t-r-a-n-s t-r-a-n-n-y f-r-e-a-k",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "t*r*a*n*s t*r*a*n*n*y f*r*e*a*k",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "t r a n s   t r a n n y   f r e a k",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "t\nr\na\nn\ns\n\nt\nr\na\nn\nn\ny\n\nf\nr\ne\na\nk",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "tr@n$ tr@nny fr3@k",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "ugly shemale go die",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "ugly $h3m@l3 g0 d13",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "dirty raghead terrorist",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "d.i.r.t.y r.a.g.h.e.a.d t.e.r.r.o.r.i.s.t",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "d...i...r...t...y r...a...g...h...e...a...d t...e...r...r...o...r...i...s...t",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "d-i-r-t-y r-a-g-h-e-a-d t-e-r-r-o-r-i-s-t",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "d*i*r*t*y r*a*g*h*e*a*d t*e*r*r*o*r*i*s*t",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "d i r t y   r a g h e a d   t e r r o r i s t",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "d\ni\nr\nt\ny\n\nr\na\ng\nh\ne\na\nd\n\nt\ne\nr\nr\no\nr\ni\ns\nt",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "d1rty r@gh3@d t3rr0r1$t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "towelhead loser",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "t.o.w.e.l.h.e.a.d l.o.s.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "t...o...w...e...l...h...e...a...d l...o...s...e...r",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "t-o-w-e-l-h-e-a-d l-o-s-e-r",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "t*o*w*e*l*h*e*a*d l*o*s*e*r",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "t o w e l h e a d   l o s e r",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "t\no\nw\ne\nl\nh\ne\na\nd\n\nl\no\ns\ne\nr",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "t0w3lh3@d l0$3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "stupid paki get lost",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "$tup1d p@k1 g3t l0$t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "terrible beaner",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "t.e.r.r.i.b.l.e b.e.a.n.e.r",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "t...e...r...r...i...b...l...e b...e...a...n...e...r",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "t-e-r-r-i-b-l-e b-e-a-n-e-r",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "t*e*r*r*i*b*l*e b*e*a*n*e*r",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "t e r r i b l e   b e a n e r",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "t\ne\nr\nr\ni\nb\nl\ne\n\nb\ne\na\nn\ne\nr",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "t3rr1bl3 b3@n3r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "fck you bhenchod",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.c.k y.o.u b.h.e.n.c.h.o.d",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "f...c...k y...o...u b...h...e...n...c...h...o...d",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "f-c-k y-o-u b-h-e-n-c-h-o-d",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "f*c*k y*o*u b*h*e*n*c*h*o*d",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "f c k   y o u   b h e n c h o d",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "f\nc\nk\n\ny\no\nu\n\nb\nh\ne\nn\nc\nh\no\nd",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "fck y0u bh3nch0d",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "madarchod teri maa ki",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "m@d@rch0d t3r1 m@@ k1",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "chutiya saale bhag yaha se",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "chut1y@ $@@l3 bh@g y@h@ $3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "tu ek number ka gandu hai",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tu 3k numb3r k@ g@ndu h@1",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "bhosadike nikal yaha se",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bh0$@d1k3 n1k@l y@h@ $3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "bhosdike chup kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "b.h.o.s.d.i.k.e c.h.u.p k.a.r",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "b...h...o...s...d...i...k...e c...h...u...p k...a...r",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "b-h-o-s-d-i-k-e c-h-u-p k-a-r",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "b*h*o*s*d*i*k*e c*h*u*p k*a*r",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "b h o s d i k e   c h u p   k a r",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "b\nh\no\ns\nd\ni\nk\ne\n\nc\nh\nu\np\n\nk\na\nr",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "bh0$d1k3 chup k@r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "randi ki aulad",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "r.a.n.d.i k.i a.u.l.a.d",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "r...a...n...d...i k...i a...u...l...a...d",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "r-a-n-d-i k-i a-u-l-a-d",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "r*a*n*d*i k*i a*u*l*a*d",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "r a n d i   k i   a u l a d",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "r\na\nn\nd\ni\n\nk\ni\n\na\nu\nl\na\nd",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "r@nd1 k1 @ul@d",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "haramkhor kutte",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "h.a.r.a.m.k.h.o.r k.u.t.t.e",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "h...a...r...a...m...k...h...o...r k...u...t...t...e",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "h-a-r-a-m-k-h-o-r k-u-t-t-e",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "h*a*r*a*m*k*h*o*r k*u*t*t*e",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "h a r a m k h o r   k u t t e",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "h\na\nr\na\nm\nk\nh\no\nr\n\nk\nu\nt\nt\ne",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "h@r@mkh0r kutt3",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "kamine suar ki tarah",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "k@m1n3 $u@r k1 t@r@h",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "bhadwe chup reh",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "b.h.a.d.w.e c.h.u.p r.e.h",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "b...h...a...d...w...e c...h...u...p r...e...h",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "b-h-a-d-w-e c-h-u-p r-e-h",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "b*h*a*d*w*e c*h*u*p r*e*h",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "b h a d w e   c h u p   r e h",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "b\nh\na\nd\nw\ne\n\nc\nh\nu\np\n\nr\ne\nh",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "bh@dw3 chup r3h",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "laude apna muh band kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "l@ud3 @pn@ muh b@nd k@r",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "jhantu aadmi",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "j.h.a.n.t.u a.a.d.m.i",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "j...h...a...n...t...u a...a...d...m...i",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "j-h-a-n-t-u a-a-d-m-i",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "j*h*a*n*t*u a*a*d*m*i",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "j h a n t u   a a d m i",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "j\nh\na\nn\nt\nu\n\na\na\nd\nm\ni",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "jh@ntu @@dm1",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "eres un maricon de mierda",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "3r3$ un m@r1c0n d3 m13rd@",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "hijo de puta vete al diablo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "h1j0 d3 put@ v3t3 @l d1@bl0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "pinche pendejo culero",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "p.i.n.c.h.e p.e.n.d.e.j.o c.u.l.e.r.o",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "p...i...n...c...h...e p...e...n...d...e...j...o c...u...l...e...r...o",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "p-i-n-c-h-e p-e-n-d-e-j-o c-u-l-e-r-o",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "p*i*n*c*h*e p*e*n*d*e*j*o c*u*l*e*r*o",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "p i n c h e   p e n d e j o   c u l e r o",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "p\ni\nn\nc\nh\ne\n\np\ne\nn\nd\ne\nj\no\n\nc\nu\nl\ne\nr\no",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "p1nch3 p3nd3j0 cul3r0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "tu eres una puta",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tu 3r3$ un@ put@",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "b!tch stfu",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "b.!.t.c.h s.t.f.u",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "b...!...t...c...h s...t...f...u",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "b-!-t-c-h s-t-f-u",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "b*!*t*c*h s*t*f*u",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "b ! t c h   s t f u",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "b\n!\nt\nc\nh\n\ns\nt\nf\nu",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "b!tch $tfu",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "c*nt gtfo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "c.*.n.t g.t.f.o",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "c...*...n...t g...t...f...o",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "c-*-n-t g-t-f-o",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "c***n*t g*t*f*o",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "c * n t   g t f o",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "c\n*\nn\nt\n\ng\nt\nf\no",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "c*nt gtf0",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "wh0r3 die already",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "w.h.0.r.3 d.i.e a.l.r.e.a.d.y",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "w...h...0...r...3 d...i...e a...l...r...e...a...d...y",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "w-h-0-r-3 d-i-e a-l-r-e-a-d-y",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "w*h*0*r*3 d*i*e a*l*r*e*a*d*y",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "w h 0 r 3   d i e   a l r e a d y",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "w\nh\n0\nr\n3\n\nd\ni\ne\n\na\nl\nr\ne\na\nd\ny",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "wh0r3 d13 @lr3@dy",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "n-i-g-g-a get out",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n.-.i.-.g.-.g.-.a g.e.t o.u.t",
+    "label": 1,
+    "category": "hate_speech_slurs_dotted"
+  },
+  {
+    "text": "n...-...i...-...g...-...g...-...a g...e...t o...u...t",
+    "label": 1,
+    "category": "hate_speech_slurs_multidot"
+  },
+  {
+    "text": "n---i---g---g---a g-e-t o-u-t",
+    "label": 1,
+    "category": "hate_speech_slurs_hyphenated"
+  },
+  {
+    "text": "n*-*i*-*g*-*g*-*a g*e*t o*u*t",
+    "label": 1,
+    "category": "hate_speech_slurs_starred"
+  },
+  {
+    "text": "n - i - g - g - a   g e t   o u t",
+    "label": 1,
+    "category": "hate_speech_slurs_spaced"
+  },
+  {
+    "text": "n\n-\ni\n-\ng\n-\ng\n-\na\n\ng\ne\nt\n\no\nu\nt",
+    "label": 1,
+    "category": "hate_speech_slurs_vertical"
+  },
+  {
+    "text": "n-1-g-g-@ g3t 0ut",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "f a g g o t",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f @ g g 0 t",
+    "label": 1,
+    "category": "hate_speech_slurs_leet"
+  },
+  {
+    "text": "kys loser nobody wants you here",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "ky$ l0$3r n0b0dy w@nt$ y0u h3r3",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "kill yourself you worthless idiot",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "k1ll y0ur$3lf y0u w0rthl3$$ 1d10t",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "you are ugly and stupid go die",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "y0u @r3 ugly @nd $tup1d g0 d13",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "i hope you get cancer and die",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "1 h0p3 y0u g3t c@nc3r @nd d13",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "nobody loves you, end it all",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "n0b0dy l0v3$ y0u, 3nd 1t @ll",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "k.y.s trash",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "k...y...s t.r.a.s.h",
+    "label": 1,
+    "category": "harassment_threats_dotted"
+  },
+  {
+    "text": "k.......y.......s t...r...a...s...h",
+    "label": 1,
+    "category": "harassment_threats_multidot"
+  },
+  {
+    "text": "k-.-y-.-s t-r-a-s-h",
+    "label": 1,
+    "category": "harassment_threats_hyphenated"
+  },
+  {
+    "text": "k*.*y*.*s t*r*a*s*h",
+    "label": 1,
+    "category": "harassment_threats_starred"
+  },
+  {
+    "text": "k . y . s   t r a s h",
+    "label": 1,
+    "category": "harassment_threats_spaced"
+  },
+  {
+    "text": "k\n.\ny\n.\ns\n\nt\nr\na\ns\nh",
+    "label": 1,
+    "category": "harassment_threats_vertical"
+  },
+  {
+    "text": "k.y.$ tr@$h",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "i will find where you live and beat you up",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "1 w1ll f1nd wh3r3 y0u l1v3 @nd b3@t y0u up",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "commit suicide idiot",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "c.o.m.m.i.t s.u.i.c.i.d.e i.d.i.o.t",
+    "label": 1,
+    "category": "harassment_threats_dotted"
+  },
+  {
+    "text": "c...o...m...m...i...t s...u...i...c...i...d...e i...d...i...o...t",
+    "label": 1,
+    "category": "harassment_threats_multidot"
+  },
+  {
+    "text": "c-o-m-m-i-t s-u-i-c-i-d-e i-d-i-o-t",
+    "label": 1,
+    "category": "harassment_threats_hyphenated"
+  },
+  {
+    "text": "c*o*m*m*i*t s*u*i*c*i*d*e i*d*i*o*t",
+    "label": 1,
+    "category": "harassment_threats_starred"
+  },
+  {
+    "text": "c o m m i t   s u i c i d e   i d i o t",
+    "label": 1,
+    "category": "harassment_threats_spaced"
+  },
+  {
+    "text": "c\no\nm\nm\ni\nt\n\ns\nu\ni\nc\ni\nd\ne\n\ni\nd\ni\no\nt",
+    "label": 1,
+    "category": "harassment_threats_vertical"
+  },
+  {
+    "text": "c0mm1t $u1c1d3 1d10t",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "go jump off a bridge",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "g0 jump 0ff @ br1dg3",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "i'm going to dox you and leak your address",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "1'm g01ng t0 d0x y0u @nd l3@k y0ur @xxr3$$",
+    "label": 1,
+    "category": "harassment_threats_leet"
+  },
+  {
+    "text": "m 18 looking for girl snapchat me",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m 18 l00k1ng f0r g1rl $n@pch@t m3",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "any female here? m19 horny",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "@ny f3m@l3 h3r3? m19 h0rny",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "m16 looking for f",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m16 l00k1ng f0r f",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "send nudes or snap me",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "$3nd nud3$ 0r $n@p m3",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "show boobies",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "s.h.o.w b.o.o.b.i.e.s",
+    "label": 1,
+    "category": "solicitation_dotted"
+  },
+  {
+    "text": "s...h...o...w b...o...o...b...i...e...s",
+    "label": 1,
+    "category": "solicitation_multidot"
+  },
+  {
+    "text": "s-h-o-w b-o-o-b-i-e-s",
+    "label": 1,
+    "category": "solicitation_hyphenated"
+  },
+  {
+    "text": "s*h*o*w b*o*o*b*i*e*s",
+    "label": 1,
+    "category": "solicitation_starred"
+  },
+  {
+    "text": "s h o w   b o o b i e s",
+    "label": 1,
+    "category": "solicitation_spaced"
+  },
+  {
+    "text": "s\nh\no\nw\n\nb\no\no\nb\ni\ne\ns",
+    "label": 1,
+    "category": "solicitation_vertical"
+  },
+  {
+    "text": "$h0w b00b13$",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "looking for dirty chat add my snap",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "l00k1ng f0r d1rty ch@t @xx my $n@p",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "f15 looking for older guy",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "f15 l00k1ng f0r 0ld3r guy",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "are you a boy or girl? send pic",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "@r3 y0u @ b0y 0r g1rl? $3nd p1c",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "how old are you? are you a girl?",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "h0w 0ld @r3 y0u? @r3 y0u @ g1rl?",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "m4f looking for naughty chat",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m4f l00k1ng f0r n@ughty ch@t",
+    "label": 1,
+    "category": "solicitation_leet"
+  },
+  {
+    "text": "add my snap: coolguy_99",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "@xx my $n@p: c00lguy_99",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "follow my insta @john_doe23",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "f0ll0w my 1n$t@ @j0hn_d0323",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "hit me up on telegram @fastbucks",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "h1t m3 up 0n t3l3gr@m @f@$tbuck$",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "whatsapp me at +14155552671",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "wh@t$@pp m3 @t +14155552671",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "join my discord server discord.gg/abc1234",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "j01n my d1$c0rd $3rv3r d1$c0rd.gg/@bc1234",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "insta in bio message me there",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "1n$t@ 1n b10 m3$$@g3 m3 th3r3",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "add me on kik: user123",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "@xx m3 0n k1k: u$3r123",
+    "label": 1,
+    "category": "contact_exchange_leet"
+  },
+  {
+    "text": "dixxy",
+    "label": 1,
+    "category": "predatory_slang_diddy"
+  },
+  {
+    "text": "d.i.x.x.y",
+    "label": 1,
+    "category": "predatory_slang_diddy_dotted"
+  },
+  {
+    "text": "d...i...x...x...y",
+    "label": 1,
+    "category": "predatory_slang_diddy_multidot"
+  },
+  {
+    "text": "d-i-x-x-y",
+    "label": 1,
+    "category": "predatory_slang_diddy_hyphenated"
+  },
+  {
+    "text": "d*i*x*x*y",
+    "label": 1,
+    "category": "predatory_slang_diddy_starred"
+  },
+  {
+    "text": "d i x x y",
+    "label": 1,
+    "category": "predatory_slang_diddy_spaced"
+  },
+  {
+    "text": "d\ni\nx\nx\ny",
+    "label": 1,
+    "category": "predatory_slang_diddy_vertical"
+  },
+  {
+    "text": "d1xxy",
+    "label": 1,
+    "category": "predatory_slang_diddy_leet"
+  },
+  {
+    "text": "diddy",
+    "label": 1,
+    "category": "predatory_slang_diddy"
+  },
+  {
+    "text": "d.i.d.d.y",
+    "label": 1,
+    "category": "predatory_slang_diddy_dotted"
+  },
+  {
+    "text": "d...i...d...d...y",
+    "label": 1,
+    "category": "predatory_slang_diddy_multidot"
+  },
+  {
+    "text": "d-i-d-d-y",
+    "label": 1,
+    "category": "predatory_slang_diddy_hyphenated"
+  },
+  {
+    "text": "d*i*d*d*y",
+    "label": 1,
+    "category": "predatory_slang_diddy_starred"
+  },
+  {
+    "text": "d i d d y",
+    "label": 1,
+    "category": "predatory_slang_diddy_spaced"
+  },
+  {
+    "text": "d\ni\nd\nd\ny",
+    "label": 1,
+    "category": "predatory_slang_diddy_vertical"
+  },
+  {
+    "text": "di...dd...y",
+    "label": 1,
+    "category": "predatory_slang_diddy"
+  },
+  {
+    "text": "d.i.......d.d.......y",
+    "label": 1,
+    "category": "predatory_slang_diddy_dotted"
+  },
+  {
+    "text": "d...i...............d...d...............y",
+    "label": 1,
+    "category": "predatory_slang_diddy_multidot"
+  },
+  {
+    "text": "d-i-.-.-.-d-d-.-.-.-y",
+    "label": 1,
+    "category": "predatory_slang_diddy_hyphenated"
+  },
+  {
+    "text": "d*i*.*.*.*d*d*.*.*.*y",
+    "label": 1,
+    "category": "predatory_slang_diddy_starred"
+  },
+  {
+    "text": "d i . . . d d . . . y",
+    "label": 1,
+    "category": "predatory_slang_diddy_spaced"
+  },
+  {
+    "text": "d\ni\n.\n.\n.\nd\nd\n.\n.\n.\ny",
+    "label": 1,
+    "category": "predatory_slang_diddy_vertical"
+  },
+  {
+    "text": "d1...xx...y",
+    "label": 1,
+    "category": "predatory_slang_diddy_leet"
+  },
+  {
+    "text": "diddi",
+    "label": 1,
+    "category": "predatory_slang_diddy"
+  },
+  {
+    "text": "d.i.d.d.i",
+    "label": 1,
+    "category": "predatory_slang_diddy_dotted"
+  },
+  {
+    "text": "d...i...d...d...i",
+    "label": 1,
+    "category": "predatory_slang_diddy_multidot"
+  },
+  {
+    "text": "d-i-d-d-i",
+    "label": 1,
+    "category": "predatory_slang_diddy_hyphenated"
+  },
+  {
+    "text": "d*i*d*d*i",
+    "label": 1,
+    "category": "predatory_slang_diddy_starred"
+  },
+  {
+    "text": "d i d d i",
+    "label": 1,
+    "category": "predatory_slang_diddy_spaced"
+  },
+  {
+    "text": "d\ni\nd\nd\ni",
+    "label": 1,
+    "category": "predatory_slang_diddy_vertical"
+  },
+  {
+    "text": "d1xx1",
+    "label": 1,
+    "category": "predatory_slang_diddy_leet"
+  },
+  {
+    "text": "diddler",
+    "label": 1,
+    "category": "predatory_slang_diddy"
+  },
+  {
+    "text": "d.i.d.d.l.e.r",
+    "label": 1,
+    "category": "predatory_slang_diddy_dotted"
+  },
+  {
+    "text": "d...i...d...d...l...e...r",
+    "label": 1,
+    "category": "predatory_slang_diddy_multidot"
+  },
+  {
+    "text": "d-i-d-d-l-e-r",
+    "label": 1,
+    "category": "predatory_slang_diddy_hyphenated"
+  },
+  {
+    "text": "d*i*d*d*l*e*r",
+    "label": 1,
+    "category": "predatory_slang_diddy_starred"
+  },
+  {
+    "text": "d i d d l e r",
+    "label": 1,
+    "category": "predatory_slang_diddy_spaced"
+  },
+  {
+    "text": "d\ni\nd\nd\nl\ne\nr",
+    "label": 1,
+    "category": "predatory_slang_diddy_vertical"
+  },
+  {
+    "text": "d1xxl3r",
+    "label": 1,
+    "category": "predatory_slang_diddy_leet"
+  },
+  {
+    "text": "diddling",
+    "label": 1,
+    "category": "predatory_slang_diddy"
+  },
+  {
+    "text": "d.i.d.d.l.i.n.g",
+    "label": 1,
+    "category": "predatory_slang_diddy_dotted"
+  },
+  {
+    "text": "d...i...d...d...l...i...n...g",
+    "label": 1,
+    "category": "predatory_slang_diddy_multidot"
+  },
+  {
+    "text": "d-i-d-d-l-i-n-g",
+    "label": 1,
+    "category": "predatory_slang_diddy_hyphenated"
+  },
+  {
+    "text": "d*i*d*d*l*i*n*g",
+    "label": 1,
+    "category": "predatory_slang_diddy_starred"
+  },
+  {
+    "text": "d i d d l i n g",
+    "label": 1,
+    "category": "predatory_slang_diddy_spaced"
+  },
+  {
+    "text": "d\ni\nd\nd\nl\ni\nn\ng",
+    "label": 1,
+    "category": "predatory_slang_diddy_vertical"
+  },
+  {
+    "text": "d1xxl1ng",
+    "label": 1,
+    "category": "predatory_slang_diddy_leet"
+  },
+  {
+    "text": "k\ny\ns",
+    "label": 1,
+    "category": "harassment_vertical"
+  },
+  {
+    "text": "k y s",
+    "label": 1,
+    "category": "harassment_vertical_dotted"
+  },
+  {
+    "text": "k   y   s",
+    "label": 1,
+    "category": "harassment_vertical_spaced"
+  },
+  {
+    "text": "k\n\ny\n\ns",
+    "label": 1,
+    "category": "harassment_vertical_vertical"
+  },
+  {
+    "text": "k\ny\n$",
+    "label": 1,
+    "category": "harassment_vertical_leet"
+  },
+  {
+    "text": "f\na\ng",
+    "label": 1,
+    "category": "hate_speech_vertical"
+  },
+  {
+    "text": "f a g",
+    "label": 1,
+    "category": "hate_speech_vertical_dotted"
+  },
+  {
+    "text": "f   a   g",
+    "label": 1,
+    "category": "hate_speech_vertical_spaced"
+  },
+  {
+    "text": "f\n\na\n\ng",
+    "label": 1,
+    "category": "hate_speech_vertical_vertical"
+  },
+  {
+    "text": "f\n@\ng",
+    "label": 1,
+    "category": "hate_speech_vertical_leet"
+  },
+  {
+    "text": "n\ni\ng\ng\ne\nr",
+    "label": 1,
+    "category": "hate_speech_vertical"
+  },
+  {
+    "text": "n\n1\ng\ng\n3\nr",
+    "label": 1,
+    "category": "hate_speech_vertical_leet"
+  },
+  {
+    "text": "f.a.g.g.o.t",
+    "label": 1,
+    "category": "hate_speech_obfuscated"
+  },
+  {
+    "text": "f...a...g...g...o...t",
+    "label": 1,
+    "category": "hate_speech_obfuscated_dotted"
+  },
+  {
+    "text": "f.......a.......g.......g.......o.......t",
+    "label": 1,
+    "category": "hate_speech_obfuscated_multidot"
+  },
+  {
+    "text": "f-.-a-.-g-.-g-.-o-.-t",
+    "label": 1,
+    "category": "hate_speech_obfuscated_hyphenated"
+  },
+  {
+    "text": "f*.*a*.*g*.*g*.*o*.*t",
+    "label": 1,
+    "category": "hate_speech_obfuscated_starred"
+  },
+  {
+    "text": "f . a . g . g . o . t",
+    "label": 1,
+    "category": "hate_speech_obfuscated_spaced"
+  },
+  {
+    "text": "f\n.\na\n.\ng\n.\ng\n.\no\n.\nt",
+    "label": 1,
+    "category": "hate_speech_obfuscated_vertical"
+  },
+  {
+    "text": "f.@.g.g.0.t",
+    "label": 1,
+    "category": "hate_speech_obfuscated_leet"
+  },
+  {
+    "text": "b.h.e.n.c.h.o.d",
+    "label": 1,
+    "category": "hate_speech_obfuscated"
+  },
+  {
+    "text": "b...h...e...n...c...h...o...d",
+    "label": 1,
+    "category": "hate_speech_obfuscated_dotted"
+  },
+  {
+    "text": "b.......h.......e.......n.......c.......h.......o.......d",
+    "label": 1,
+    "category": "hate_speech_obfuscated_multidot"
+  },
+  {
+    "text": "b-.-h-.-e-.-n-.-c-.-h-.-o-.-d",
+    "label": 1,
+    "category": "hate_speech_obfuscated_hyphenated"
+  },
+  {
+    "text": "b*.*h*.*e*.*n*.*c*.*h*.*o*.*d",
+    "label": 1,
+    "category": "hate_speech_obfuscated_starred"
+  },
+  {
+    "text": "b . h . e . n . c . h . o . d",
+    "label": 1,
+    "category": "hate_speech_obfuscated_spaced"
+  },
+  {
+    "text": "b\n.\nh\n.\ne\n.\nn\n.\nc\n.\nh\n.\no\n.\nd",
+    "label": 1,
+    "category": "hate_speech_obfuscated_vertical"
+  },
+  {
+    "text": "b.h.3.n.c.h.0.d",
+    "label": 1,
+    "category": "hate_speech_obfuscated_leet"
+  },
+  {
+    "text": "m",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "f",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "m?",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "m.?",
+    "label": 1,
+    "category": "low_effort_probe_dotted"
+  },
+  {
+    "text": "m...?",
+    "label": 1,
+    "category": "low_effort_probe_multidot"
+  },
+  {
+    "text": "m-?",
+    "label": 1,
+    "category": "low_effort_probe_hyphenated"
+  },
+  {
+    "text": "m*?",
+    "label": 1,
+    "category": "low_effort_probe_starred"
+  },
+  {
+    "text": "m ?",
+    "label": 1,
+    "category": "low_effort_probe_spaced"
+  },
+  {
+    "text": "m\n?",
+    "label": 1,
+    "category": "low_effort_probe_vertical"
+  },
+  {
+    "text": "asl",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "a.s.l",
+    "label": 1,
+    "category": "low_effort_probe_dotted"
+  },
+  {
+    "text": "a...s...l",
+    "label": 1,
+    "category": "low_effort_probe_multidot"
+  },
+  {
+    "text": "a-s-l",
+    "label": 1,
+    "category": "low_effort_probe_hyphenated"
+  },
+  {
+    "text": "a*s*l",
+    "label": 1,
+    "category": "low_effort_probe_starred"
+  },
+  {
+    "text": "a s l",
+    "label": 1,
+    "category": "low_effort_probe_spaced"
+  },
+  {
+    "text": "a\ns\nl",
+    "label": 1,
+    "category": "low_effort_probe_vertical"
+  },
+  {
+    "text": "@$l",
+    "label": 1,
+    "category": "low_effort_probe_leet"
+  },
+  {
+    "text": "18m",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "1.8.m",
+    "label": 1,
+    "category": "low_effort_probe_dotted"
+  },
+  {
+    "text": "1...8...m",
+    "label": 1,
+    "category": "low_effort_probe_multidot"
+  },
+  {
+    "text": "1-8-m",
+    "label": 1,
+    "category": "low_effort_probe_hyphenated"
+  },
+  {
+    "text": "1*8*m",
+    "label": 1,
+    "category": "low_effort_probe_starred"
+  },
+  {
+    "text": "1 8 m",
+    "label": 1,
+    "category": "low_effort_probe_spaced"
+  },
+  {
+    "text": "1\n8\nm",
+    "label": 1,
+    "category": "low_effort_probe_vertical"
+  },
+  {
+    "text": "f15",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "f.1.5",
+    "label": 1,
+    "category": "low_effort_probe_dotted"
+  },
+  {
+    "text": "f...1...5",
+    "label": 1,
+    "category": "low_effort_probe_multidot"
+  },
+  {
+    "text": "f-1-5",
+    "label": 1,
+    "category": "low_effort_probe_hyphenated"
+  },
+  {
+    "text": "f*1*5",
+    "label": 1,
+    "category": "low_effort_probe_starred"
+  },
+  {
+    "text": "f 1 5",
+    "label": 1,
+    "category": "low_effort_probe_spaced"
+  },
+  {
+    "text": "f\n1\n5",
+    "label": 1,
+    "category": "low_effort_probe_vertical"
+  },
+  {
+    "text": "snap?",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "s.n.a.p.?",
+    "label": 1,
+    "category": "low_effort_probe_dotted"
+  },
+  {
+    "text": "s...n...a...p...?",
+    "label": 1,
+    "category": "low_effort_probe_multidot"
+  },
+  {
+    "text": "s-n-a-p-?",
+    "label": 1,
+    "category": "low_effort_probe_hyphenated"
+  },
+  {
+    "text": "s*n*a*p*?",
+    "label": 1,
+    "category": "low_effort_probe_starred"
+  },
+  {
+    "text": "s n a p ?",
+    "label": 1,
+    "category": "low_effort_probe_spaced"
+  },
+  {
+    "text": "s\nn\na\np\n?",
+    "label": 1,
+    "category": "low_effort_probe_vertical"
+  },
+  {
+    "text": "$n@p?",
+    "label": 1,
+    "category": "low_effort_probe_leet"
+  },
+  {
+    "text": "insta?",
+    "label": 1,
+    "category": "low_effort_probe"
+  },
+  {
+    "text": "i.n.s.t.a.?",
+    "label": 1,
+    "category": "low_effort_probe_dotted"
+  },
+  {
+    "text": "i...n...s...t...a...?",
+    "label": 1,
+    "category": "low_effort_probe_multidot"
+  },
+  {
+    "text": "i-n-s-t-a-?",
+    "label": 1,
+    "category": "low_effort_probe_hyphenated"
+  },
+  {
+    "text": "i*n*s*t*a*?",
+    "label": 1,
+    "category": "low_effort_probe_starred"
+  },
+  {
+    "text": "i n s t a ?",
+    "label": 1,
+    "category": "low_effort_probe_spaced"
+  },
+  {
+    "text": "i\nn\ns\nt\na\n?",
+    "label": 1,
+    "category": "low_effort_probe_vertical"
+  },
+  {
+    "text": "1n$t@?",
+    "label": 1,
+    "category": "low_effort_probe_leet"
+  },
+  {
+    "text": "I'm gonna kill this exam!",
+    "label": 0,
+    "category": "safe_idiom_exam"
+  },
+  {
+    "text": "i am going to kill this exam",
+    "label": 0,
+    "category": "safe_idiom_exam"
+  },
+  {
+    "text": "gonna kill this exam today",
+    "label": 0,
+    "category": "safe_idiom_exam"
+  },
+  {
+    "text": "i killed that test yesterday!",
+    "label": 0,
+    "category": "safe_idiom_exam"
+  },
+  {
+    "text": "you killed that guitar solo",
+    "label": 0,
+    "category": "safe_idiom_performance"
+  },
+  {
+    "text": "that joke killed me lol",
+    "label": 0,
+    "category": "safe_idiom_humor"
+  },
+  {
+    "text": "my phone died earlier",
+    "label": 0,
+    "category": "safe_idiom_battery"
+  },
+  {
+    "text": "my feet are killing me after running",
+    "label": 0,
+    "category": "safe_idiom_fatigue"
+  },
+  {
+    "text": "where are you from? i am from canada",
+    "label": 0,
+    "category": "safe_conversation"
+  },
+  {
+    "text": "good luck with your finals and exams!",
+    "label": 0,
+    "category": "safe_conversation"
+  },
+  {
+    "text": "age",
+    "label": 1,
+    "category": "warning"
+  },
+  {
+    "text": "a.g.e",
+    "label": 1,
+    "category": "warning_dotted"
+  },
+  {
+    "text": "a...g...e",
+    "label": 1,
+    "category": "warning_multidot"
+  },
+  {
+    "text": "a-g-e",
+    "label": 1,
+    "category": "warning_hyphenated"
+  },
+  {
+    "text": "a*g*e",
+    "label": 1,
+    "category": "warning_starred"
+  },
+  {
+    "text": "a g e",
+    "label": 1,
+    "category": "warning_spaced"
+  },
+  {
+    "text": "a\ng\ne",
+    "label": 1,
+    "category": "warning_vertical"
+  },
+  {
+    "text": "@g3",
+    "label": 1,
+    "category": "warning_leet"
+  },
+  {
+    "text": "slut",
+    "label": 1,
+    "category": "warning"
+  },
+  {
+    "text": "s.l.u.t",
+    "label": 1,
+    "category": "warning_dotted"
+  },
+  {
+    "text": "s...l...u...t",
+    "label": 1,
+    "category": "warning_multidot"
+  },
+  {
+    "text": "s-l-u-t",
+    "label": 1,
+    "category": "warning_hyphenated"
+  },
+  {
+    "text": "s*l*u*t",
+    "label": 1,
+    "category": "warning_starred"
+  },
+  {
+    "text": "s l u t",
+    "label": 1,
+    "category": "warning_spaced"
+  },
+  {
+    "text": "s\nl\nu\nt",
+    "label": 1,
+    "category": "warning_vertical"
+  },
+  {
+    "text": "$lut",
+    "label": 1,
+    "category": "warning_leet"
+  },
+  {
+    "text": "bitch",
+    "label": 1,
+    "category": "cooldown"
+  },
+  {
+    "text": "b.i.t.c.h",
+    "label": 1,
+    "category": "cooldown_dotted"
+  },
+  {
+    "text": "b...i...t...c...h",
+    "label": 1,
+    "category": "cooldown_multidot"
+  },
+  {
+    "text": "b-i-t-c-h",
+    "label": 1,
+    "category": "cooldown_hyphenated"
+  },
+  {
+    "text": "b*i*t*c*h",
+    "label": 1,
+    "category": "cooldown_starred"
+  },
+  {
+    "text": "b i t c h",
+    "label": 1,
+    "category": "cooldown_spaced"
+  },
+  {
+    "text": "b\ni\nt\nc\nh",
+    "label": 1,
+    "category": "cooldown_vertical"
+  },
+  {
+    "text": "b1tch",
+    "label": 1,
+    "category": "cooldown_leet"
+  },
+  {
+    "text": "gandu",
+    "label": 1,
+    "category": "warning"
+  },
+  {
+    "text": "g.a.n.d.u",
+    "label": 1,
+    "category": "warning_dotted"
+  },
+  {
+    "text": "g...a...n...d...u",
+    "label": 1,
+    "category": "warning_multidot"
+  },
+  {
+    "text": "g-a-n-d-u",
+    "label": 1,
+    "category": "warning_hyphenated"
+  },
+  {
+    "text": "g*a*n*d*u",
+    "label": 1,
+    "category": "warning_starred"
+  },
+  {
+    "text": "g a n d u",
+    "label": 1,
+    "category": "warning_spaced"
+  },
+  {
+    "text": "g\na\nn\nd\nu",
+    "label": 1,
+    "category": "warning_vertical"
+  },
+  {
+    "text": "g@ndu",
+    "label": 1,
+    "category": "warning_leet"
+  },
+  {
+    "text": "madarchod",
+    "label": 1,
+    "category": "cooldown"
+  },
+  {
+    "text": "m.a.d.a.r.c.h.o.d",
+    "label": 1,
+    "category": "cooldown_dotted"
+  },
+  {
+    "text": "m...a...d...a...r...c...h...o...d",
+    "label": 1,
+    "category": "cooldown_multidot"
+  },
+  {
+    "text": "m-a-d-a-r-c-h-o-d",
+    "label": 1,
+    "category": "cooldown_hyphenated"
+  },
+  {
+    "text": "m*a*d*a*r*c*h*o*d",
+    "label": 1,
+    "category": "cooldown_starred"
+  },
+  {
+    "text": "m a d a r c h o d",
+    "label": 1,
+    "category": "cooldown_spaced"
+  },
+  {
+    "text": "m\na\nd\na\nr\nc\nh\no\nd",
+    "label": 1,
+    "category": "cooldown_vertical"
+  },
+  {
+    "text": "m@d@rch0d",
+    "label": 1,
+    "category": "cooldown_leet"
+  },
+  {
+    "text": "madar chod",
+    "label": 1,
+    "category": "cooldown"
+  },
+  {
+    "text": "m.a.d.a.r c.h.o.d",
+    "label": 1,
+    "category": "cooldown_dotted"
+  },
+  {
+    "text": "m...a...d...a...r c...h...o...d",
+    "label": 1,
+    "category": "cooldown_multidot"
+  },
+  {
+    "text": "m-a-d-a-r c-h-o-d",
+    "label": 1,
+    "category": "cooldown_hyphenated"
+  },
+  {
+    "text": "m*a*d*a*r c*h*o*d",
+    "label": 1,
+    "category": "cooldown_starred"
+  },
+  {
+    "text": "m a d a r   c h o d",
+    "label": 1,
+    "category": "cooldown_spaced"
+  },
+  {
+    "text": "m\na\nd\na\nr\n\nc\nh\no\nd",
+    "label": 1,
+    "category": "cooldown_vertical"
+  },
+  {
+    "text": "m@d@r ch0d",
+    "label": 1,
+    "category": "cooldown_leet"
+  },
+  {
+    "text": "hi bitch",
+    "label": 1,
+    "category": "warning"
+  },
+  {
+    "text": "h.i b.i.t.c.h",
+    "label": 1,
+    "category": "warning_dotted"
+  },
+  {
+    "text": "h...i b...i...t...c...h",
+    "label": 1,
+    "category": "warning_multidot"
+  },
+  {
+    "text": "h-i b-i-t-c-h",
+    "label": 1,
+    "category": "warning_hyphenated"
+  },
+  {
+    "text": "h*i b*i*t*c*h",
+    "label": 1,
+    "category": "warning_starred"
+  },
+  {
+    "text": "h i   b i t c h",
+    "label": 1,
+    "category": "warning_spaced"
+  },
+  {
+    "text": "h\ni\n\nb\ni\nt\nc\nh",
+    "label": 1,
+    "category": "warning_vertical"
+  },
+  {
+    "text": "h1 b1tch",
+    "label": 1,
+    "category": "warning_leet"
+  },
+  {
+    "text": "d.-.i.-.d.-.d.-.y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "d...-...i...-...d...-...d...-...y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "d---i---d---d---y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "d*-*i*-*d*-*d*-*y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "d - i - d - d - y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "d\n-\ni\n-\nd\n-\nd\n-\ny",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "d-1-d-d-y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d.......i.......d.......d.......y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "d-.-i-.-d-.-d-.-y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "d*.*i*.*d*.*d*.*y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "d . i . d . d . y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "d\n.\ni\n.\nd\n.\nd\n.\ny",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "d.1.d.d.y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d.*.i.*.x.*.x.*.y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "d...*...i...*...x...*...x...*...y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "d-*-i-*-x-*-x-*-y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "d***i***x***x***y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "d * i * x * x * y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "d\n*\ni\n*\nx\n*\nx\n*\ny",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "d*1*x*x*y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d\n1\nd\nd\ny",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d\n1\nx\nx\ny",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d 1 d d y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d   i   x   x   y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "d   1   x   x   y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "d1ddy",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "d...1...d...d...y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "d*1*d*d*y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "d.1.x.x.y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "d...1...x...x...y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "d-1-x-x-y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "d 1 x x y",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "k.y.s",
+    "label": 1,
+    "category": "cyberbullying_selfharm"
+  },
+  {
+    "text": "k...y...s",
+    "label": 1,
+    "category": "cyberbullying_selfharm_dotted"
+  },
+  {
+    "text": "k.......y.......s",
+    "label": 1,
+    "category": "cyberbullying_selfharm_multidot"
+  },
+  {
+    "text": "k-.-y-.-s",
+    "label": 1,
+    "category": "cyberbullying_selfharm_hyphenated"
+  },
+  {
+    "text": "k*.*y*.*s",
+    "label": 1,
+    "category": "cyberbullying_selfharm_starred"
+  },
+  {
+    "text": "k . y . s",
+    "label": 1,
+    "category": "cyberbullying_selfharm_spaced"
+  },
+  {
+    "text": "k\n.\ny\n.\ns",
+    "label": 1,
+    "category": "cyberbullying_selfharm_vertical"
+  },
+  {
+    "text": "k.y.$",
+    "label": 1,
+    "category": "cyberbullying_selfharm_leet"
+  },
+  {
+    "text": "b h e n c h o d",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "b h 3 n c h 0 d",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "f19",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "f.1.9",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "f...1...9",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "f-1-9",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "f*1*9",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "f 1 9",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "f\n1\n9",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "m or f",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "m o.r f",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "m o...r f",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "m o-r f",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "m o*r f",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "m   o r   f",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "m\n\no\nr\n\nf",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "m 0r f",
+    "label": 1,
+    "category": "low_effort_conversation_leet"
+  },
+  {
+    "text": "send pic",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "s.e.n.d p.i.c",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "s...e...n...d p...i...c",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "s-e-n-d p-i-c",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "s*e*n*d p*i*c",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "s e n d   p i c",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "s\ne\nn\nd\n\np\ni\nc",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "$3nd p1c",
+    "label": 1,
+    "category": "low_effort_conversation_leet"
+  },
+  {
+    "text": "asdfghjkl",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "a.s.d.f.g.h.j.k.l",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "a...s...d...f...g...h...j...k...l",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "a-s-d-f-g-h-j-k-l",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "a*s*d*f*g*h*j*k*l",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "a s d f g h j k l",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "a\ns\nd\nf\ng\nh\nj\nk\nl",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "@$dfghjkl",
+    "label": 1,
+    "category": "low_effort_conversation_leet"
+  },
+  {
+    "text": "............",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": ".......................",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": ".............................................",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": ".-.-.-.-.-.-.-.-.-.-.-.",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": ".*.*.*.*.*.*.*.*.*.*.*.",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": ". . . . . . . . . . . .",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": ".\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "????????",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "?.?.?.?.?.?.?.?",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "?...?...?...?...?...?...?...?",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "?-?-?-?-?-?-?-?",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "?*?*?*?*?*?*?*?",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "? ? ? ? ? ? ? ?",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "?\n?\n?\n?\n?\n?\n?\n?",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "hhhhhhh",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "h.h.h.h.h.h.h",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "h...h...h...h...h...h...h",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "h-h-h-h-h-h-h",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "h*h*h*h*h*h*h",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "h h h h h h h",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "h\nh\nh\nh\nh\nh\nh",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "k",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "wbu?",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "w.b.u.?",
+    "label": 1,
+    "category": "low_effort_conversation_dotted"
+  },
+  {
+    "text": "w...b...u...?",
+    "label": 1,
+    "category": "low_effort_conversation_multidot"
+  },
+  {
+    "text": "w-b-u-?",
+    "label": 1,
+    "category": "low_effort_conversation_hyphenated"
+  },
+  {
+    "text": "w*b*u*?",
+    "label": 1,
+    "category": "low_effort_conversation_starred"
+  },
+  {
+    "text": "w b u ?",
+    "label": 1,
+    "category": "low_effort_conversation_spaced"
+  },
+  {
+    "text": "w\nb\nu\n?",
+    "label": 1,
+    "category": "low_effort_conversation_vertical"
+  },
+  {
+    "text": "a\nb\nc\nd",
+    "label": 1,
+    "category": "low_effort_conversation"
+  },
+  {
+    "text": "@\nb\nc\nd",
+    "label": 1,
+    "category": "low_effort_conversation_leet"
+  },
+  {
+    "text": "test_violation_sample_1791023316253",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.0.2.3.3.1.6.2.5.3",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...0...2...3...3...1...6...2...5...3",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-0-2-3-3-1-6-2-5-3",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*0*2*3*3*1*6*2*5*3",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 0 2 3 3 1 6 2 5 3",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n0\n2\n3\n3\n1\n6\n2\n5\n3",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791023316253",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  },
+  {
+    "text": "test_violation_sample_1791023350815",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.0.2.3.3.5.0.8.1.5",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...0...2...3...3...5...0...8...1...5",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-0-2-3-3-5-0-8-1-5",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*0*2*3*3*5*0*8*1*5",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 0 2 3 3 5 0 8 1 5",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n0\n2\n3\n3\n5\n0\n8\n1\n5",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791023350815",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  },
+  {
+    "text": "You are a bitch",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "Y0u @r3 @ b1tch",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "Shut up slut",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "S.h.u.t u.p s.l.u.t",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "S...h...u...t u...p s...l...u...t",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "S-h-u-t u-p s-l-u-t",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "S*h*u*t u*p s*l*u*t",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "S h u t   u p   s l u t",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "S\nh\nu\nt\n\nu\np\n\ns\nl\nu\nt",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$hut up $lut",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "fuck off gandu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "f.u.c.k o.f.f g.a.n.d.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "f...u...c...k o...f...f g...a...n...d...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "f-u-c-k o-f-f g-a-n-d-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "f*u*c*k o*f*f g*a*n*d*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "f u c k   o f f   g a n d u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "f\nu\nc\nk\n\no\nf\nf\n\ng\na\nn\nd\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "fuck 0ff g@ndu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "test_violation_sample_1791025176058",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.0.2.5.1.7.6.0.5.8",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...0...2...5...1...7...6...0...5...8",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-0-2-5-1-7-6-0-5-8",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*0*2*5*1*7*6*0*5*8",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 0 2 5 1 7 6 0 5 8",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n0\n2\n5\n1\n7\n6\n0\n5\n8",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791025176058",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  },
+  {
+    "text": "test_violation_sample_1791311878234",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.1.8.7.8.2.3.4",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...1...8...7...8...2...3...4",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-1-8-7-8-2-3-4",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*1*8*7*8*2*3*4",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 1 8 7 8 2 3 4",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n3\n1\n1\n8\n7\n8\n2\n3\n4",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791311878234",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  },
+  {
+    "text": "n\ni\ng\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "n\n1\ng\ng\n@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "////nigga",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "/./././.n.i.g.g.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "/.../.../.../...n...i...g...g...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "/-/-/-/-n-i-g-g-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "/*/*/*/*n*i*g*g*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "/ / / / n i g g a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "/\n/\n/\n/\nn\ni\ng\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "////n1gg@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "////n/i/g/g/a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "/./././.n./.i./.g./.g./.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "/.../.../.../...n.../...i.../...g.../...g.../...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "/-/-/-/-n-/-i-/-g-/-g-/-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "/*/*/*/*n*/*i*/*g*/*g*/*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "/ / / / n / i / g / g / a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "/\n/\n/\n/\nn\n/\ni\n/\ng\n/\ng\n/\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "////n/1/g/g/@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "thevidiya",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.h.e.v.i.d.i.y.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...h...e...v...i...d...i...y...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-h-e-v-i-d-i-y-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*h*e*v*i*d*i*y*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t h e v i d i y a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\nh\ne\nv\ni\nd\ni\ny\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "th3v1d1y@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "punda",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "p.u.n.d.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "p...u...n...d...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "p-u-n-d-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "p*u*n*d*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "p u n d a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "p\nu\nn\nd\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "pund@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "otha",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "o.t.h.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "o...t...h...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "o-t-h-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "o*t*h*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "o t h a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "o\nt\nh\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "0th@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "t.......h.......e.......v.......i.......d.......i.......y.......a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-.-h-.-e-.-v-.-i-.-d-.-i-.-y-.-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*.*h*.*e*.*v*.*i*.*d*.*i*.*y*.*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t . h . e . v . i . d . i . y . a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\n.\nh\n.\ne\n.\nv\n.\ni\n.\nd\n.\ni\n.\ny\n.\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "t.h.3.v.1.d.1.y.@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "p\nu\nn\nd\n@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "lanja",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "l.a.n.j.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "l...a...n...j...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "l-a-n-j-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "l*a*n*j*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "l a n j a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "l\na\nn\nj\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "l@nj@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "lanjakodaka",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "l.a.n.j.a.k.o.d.a.k.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "l...a...n...j...a...k...o...d...a...k...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "l-a-n-j-a-k-o-d-a-k-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "l*a*n*j*a*k*o*d*a*k*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "l a n j a k o d a k a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "l\na\nn\nj\na\nk\no\nd\na\nk\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "l@nj@k0d@k@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "l/a/n/j/a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "l./.a./.n./.j./.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "l.../...a.../...n.../...j.../...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "l-/-a-/-n-/-j-/-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "l*/*a*/*n*/*j*/*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "l / a / n / j / a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "l\n/\na\n/\nn\n/\nj\n/\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "l/@/n/j/@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "s\nu\nl\nl\ni",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "$\nu\nl\nl\n1",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "sule",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.u.l.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...u...l...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-u-l-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*u*l*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s u l e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nu\nl\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$ul3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "sulemaga",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.u.l.e.m.a.g.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...u...l...e...m...a...g...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-u-l-e-m-a-g-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*u*l*e*m*a*g*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s u l e m a g a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nu\nl\ne\nm\na\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$ul3m@g@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "$\nu\nl\n3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "t-h-i-k-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.-.h.-.i.-.k.-.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...-...h...-...i...-...k...-...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t---h---i---k---a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*-*h*-*i*-*k*-*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t - h - i - k - a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\n-\nh\n-\ni\n-\nk\n-\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "t-h-1-k-@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "test_violation_sample_1791312073939",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.2.0.7.3.9.3.9",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...2...0...7...3...9...3...9",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-2-0-7-3-9-3-9",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*2*0*7*3*9*3*9",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 2 0 7 3 9 3 9",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n3\n1\n2\n0\n7\n3\n9\n3\n9",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791312073939",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  },
+  {
+    "text": "tullu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.u.l.l.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...u...l...l...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-u-l-l-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*u*l*l*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t u l l u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\nu\nl\nl\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "shata",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.h.a.t.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...h...a...t...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-h-a-t-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*h*a*t*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s h a t a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nh\na\nt\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$h@t@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "nin amman",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "n.i.n a.m.m.a.n",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "n...i...n a...m...m...a...n",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "n-i-n a-m-m-a-n",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "n*i*n a*m*m*a*n",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "n i n   a m m a n",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "n\ni\nn\n\na\nm\nm\na\nn",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "n1n @mm@n",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "sulay magane",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.u.l.a.y m.a.g.a.n.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...u...l...a...y m...a...g...a...n...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-u-l-a-y m-a-g-a-n-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*u*l*a*y m*a*g*a*n*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s u l a y   m a g a n e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nu\nl\na\ny\n\nm\na\ng\na\nn\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$ul@y m@g@n3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "tikka",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.i.k.k.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...i...k...k...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-i-k-k-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*i*k*k*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t i k k a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\ni\nk\nk\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "t1kk@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "myre",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "m.y.r.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "m...y...r...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "m-y-r-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "m*y*r*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "m y r e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "m\ny\nr\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "myr3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "thaayoli",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.h.a.a.y.o.l.i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...h...a...a...y...o...l...i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-h-a-a-y-o-l-i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*h*a*a*y*o*l*i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t h a a y o l i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\nh\na\na\ny\no\nl\ni",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "th@@y0l1",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "thendi",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.h.e.n.d.i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...h...e...n...d...i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-h-e-n-d-i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*h*e*n*d*i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t h e n d i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\nh\ne\nn\nd\ni",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "th3nd1",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "pulayadi",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "p.u.l.a.y.a.d.i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "p...u...l...a...y...a...d...i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "p-u-l-a-y-a-d-i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "p*u*l*a*y*a*d*i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "p u l a y a d i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "p\nu\nl\na\ny\na\nd\ni",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "pul@y@d1",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "kunna",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "k.u.n.n.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "k...u...n...n...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "k-u-n-n-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "k*u*n*n*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "k u n n a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "k\nu\nn\nn\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "kunn@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "kundi",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "k.u.n.d.i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "k...u...n...d...i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "k-u-n-d-i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "k*u*n*d*i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "k u n d i",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "k\nu\nn\nd\ni",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "kund1",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "pooru",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "p.o.o.r.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "p...o...o...r...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "p-o-o-r-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "p*o*o*r*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "p o o r u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "p\no\no\nr\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "p00ru",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "gaandu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "g.a.a.n.d.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "g...a...a...n...d...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "g-a-a-n-d-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "g*a*a*n*d*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "g a a n d u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "g\na\na\nn\nd\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "g@@ndu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "gxxndu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "g.x.x.n.d.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "g...x...x...n...d...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "g-x-x-n-d-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "g*x*x*n*d*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "g x x n d u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "g\nx\nx\nn\nd\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "g*ndu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "g.*.n.d.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "g...*...n...d...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "g-*-n-d-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "g***n*d*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "g * n d u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "g\n*\nn\nd\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "bxxch",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "b.x.x.c.h",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "b...x...x...c...h",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "b-x-x-c-h",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "b*x*x*c*h",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "b x x c h",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "b\nx\nx\nc\nh",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "nxxga",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "n.x.x.g.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "n...x...x...g...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "n-x-x-g-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "n*x*x*g*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "n x x g a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "n\nx\nx\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "nxxg@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "pxxda",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "p.x.x.d.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "p...x...x...d...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "p-x-x-d-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "p*x*x*d*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "p x x d a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "p\nx\nx\nd\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "pxxd@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "txxlu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.x.x.l.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...x...x...l...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-x-x-l-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*x*x*l*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t x x l u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\nx\nx\nl\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "sxxle",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.x.x.l.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...x...x...l...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-x-x-l-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*x*x*l*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s x x l e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nx\nx\nl\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$xxl3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "lxxja",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "l.x.x.j.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "l...x...x...j...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "l-x-x-j-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "l*x*x*j*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "l x x j a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "l\nx\nx\nj\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "lxxj@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "shxta",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.h.x.t.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...h...x...t...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-h-x-t-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*h*x*t*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s h x t a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nh\nx\nt\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$hxt@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "mxxre",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "m.x.x.r.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "m...x...x...r...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "m-x-x-r-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "m*x*x*r*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "m x x r e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "m\nx\nx\nr\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "mxxr3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "test_violation_sample_1791313274812",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.3.2.7.4.8.1.2",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...3...2...7...4...8...1...2",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-3-2-7-4-8-1-2",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*3*2*7*4*8*1*2",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 3 2 7 4 8 1 2",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n3\n1\n3\n2\n7\n4\n8\n1\n2",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791313274812",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  },
+  {
+    "text": "sule magane",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.u.l.e m.a.g.a.n.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...u...l...e m...a...g...a...n...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-u-l-e m-a-g-a-n-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*u*l*e m*a*g*a*n*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s u l e   m a g a n e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nu\nl\ne\n\nm\na\ng\na\nn\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$ul3 m@g@n3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "bolimaga",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "b.o.l.i.m.a.g.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "b...o...l...i...m...a...g...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "b-o-l-i-m-a-g-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "b*o*l*i*m*a*g*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "b o l i m a g a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "b\no\nl\ni\nm\na\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "b0l1m@g@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "baddimaga",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "b.a.d.d.i.m.a.g.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "b...a...d...d...i...m...a...g...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "b-a-d-d-i-m-a-g-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "b*a*d*d*i*m*a*g*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "b a d d i m a g a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "b\na\nd\nd\ni\nm\na\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "b@xx1m@g@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "bevarsi nan maga",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "b.e.v.a.r.s.i n.a.n m.a.g.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "b...e...v...a...r...s...i n...a...n m...a...g...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "b-e-v-a-r-s-i n-a-n m-a-g-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "b*e*v*a*r*s*i n*a*n m*a*g*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "b e v a r s i   n a n   m a g a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "b\ne\nv\na\nr\ns\ni\n\nn\na\nn\n\nm\na\ng\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "b3v@r$1 n@n m@g@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "pundamavane",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "p.u.n.d.a.m.a.v.a.n.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "p...u...n...d...a...m...a...v...a...n...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "p-u-n-d-a-m-a-v-a-n-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "p*u*n*d*a*m*a*v*a*n*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "p u n d a m a v a n e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "p\nu\nn\nd\na\nm\na\nv\na\nn\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "pund@m@v@n3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "oombu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "o.o.m.b.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "o...o...m...b...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "o-o-m-b-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "o*o*m*b*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "o o m b u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "o\no\nm\nb\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "00mbu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "dengu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "d.e.n.g.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "d...e...n...g...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "d-e-n-g-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "d*e*n*g*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "d e n g u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "d\ne\nn\ng\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "d3ngu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "modda gudu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "m.o.d.d.a g.u.d.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "m...o...d...d...a g...u...d...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "m-o-d-d-a g-u-d-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "m*o*d*d*a g*u*d*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "m o d d a   g u d u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "m\no\nd\nd\na\n\ng\nu\nd\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "m0xx@ gudu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "gudha cheeku",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "g.u.d.h.a c.h.e.e.k.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "g...u...d...h...a c...h...e...e...k...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "g-u-d-h-a c-h-e-e-k-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "g*u*d*h*a c*h*e*e*k*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "g u d h a   c h e e k u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "g\nu\nd\nh\na\n\nc\nh\ne\ne\nk\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "gudh@ ch33ku",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "poorimone",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "p.o.o.r.i.m.o.n.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "p...o...o...r...i...m...o...n...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "p-o-o-r-i-m-o-n-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "p*o*o*r*i*m*o*n*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "p o o r i m o n e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "p\no\no\nr\ni\nm\no\nn\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "p00r1m0n3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "t*llu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.*.l.l.u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...*...l...l...u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-*-l-l-u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t***l*l*u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t * l l u",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\n*\nl\nl\nu",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "sxxle mxgxne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.x.x.l.e m.x.g.x.n.e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...x...x...l...e m...x...g...x...n...e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-x-x-l-e m-x-g-x-n-e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*x*x*l*e m*x*g*x*n*e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s x x l e   m x g x n e",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nx\nx\nl\ne\n\nm\nx\ng\nx\nn\ne",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$xxl3 mxgxn3",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "nxx ammxx",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "n.x.x a.m.m.x.x",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "n...x...x a...m...m...x...x",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "n-x-x a-m-m-x-x",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "n*x*x a*m*m*x*x",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "n x x   a m m x x",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "n\nx\nx\n\na\nm\nm\nx\nx",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "nxx @mmxx",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "txkka",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "t.x.k.k.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "t...x...k...k...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "t-x-k-k-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "t*x*k*k*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "t x k k a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "t\nx\nk\nk\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "txkk@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "sh*ta",
+    "label": 1,
+    "category": "inappropriate_bad_conversation"
+  },
+  {
+    "text": "s.h.*.t.a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_dotted"
+  },
+  {
+    "text": "s...h...*...t...a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_multidot"
+  },
+  {
+    "text": "s-h-*-t-a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_hyphenated"
+  },
+  {
+    "text": "s*h***t*a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_starred"
+  },
+  {
+    "text": "s h * t a",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_spaced"
+  },
+  {
+    "text": "s\nh\n*\nt\na",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_vertical"
+  },
+  {
+    "text": "$h*t@",
+    "label": 1,
+    "category": "inappropriate_bad_conversation_leet"
+  },
+  {
+    "text": "test_violation_sample_1791313399001",
+    "label": 1,
+    "category": "active_learning_test"
+  },
+  {
+    "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.1.3.1.3.3.9.9.0.0.1",
+    "label": 1,
+    "category": "active_learning_test_dotted"
+  },
+  {
+    "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...1...3...1...3...3...9...9...0...0...1",
+    "label": 1,
+    "category": "active_learning_test_multidot"
+  },
+  {
+    "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-1-3-1-3-3-9-9-0-0-1",
+    "label": 1,
+    "category": "active_learning_test_hyphenated"
+  },
+  {
+    "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*1*3*1*3*3*9*9*0*0*1",
+    "label": 1,
+    "category": "active_learning_test_starred"
+  },
+  {
+    "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 1 3 1 3 3 9 9 0 0 1",
+    "label": 1,
+    "category": "active_learning_test_spaced"
+  },
+  {
+    "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n1\n3\n1\n3\n3\n9\n9\n0\n0\n1",
+    "label": 1,
+    "category": "active_learning_test_vertical"
+  },
+  {
+    "text": "t3$t_v10l@t10n_$@mpl3_1791313399001",
+    "label": 1,
+    "category": "active_learning_test_leet"
+  }
+]

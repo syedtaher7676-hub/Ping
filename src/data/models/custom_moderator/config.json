@@ -1,0 +1,15 @@
+{
+  "architectures": [
+    "DistilBertForSequenceClassification"
+  ],
+  "id2label": {
+    "0": "SAFE",
+    "1": "VIOLATION"
+  },
+  "label2id": {
+    "SAFE": 0,
+    "VIOLATION": 1
+  },
+  "model_type": "distilbert",
+  "problem_type": "single_label_classification"
+}

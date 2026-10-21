@@ -1,0 +1,2850 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="description" content="Ping – anonymous chat. No login, no data stored, instant connection." />
+  <meta name="ping-backend-url" content="" />
+  <title>Ping — Anonymous Chat</title>
+
+  <!-- Step 1: Synchronous Device & In-App Browser Auto-Detection for Instant Performance & Zero Lag -->
+  <script>
+    (function() {
+      var ua = navigator.userAgent || navigator.vendor || window.opera || "";
+      var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var isAndroid = /Android/i.test(ua);
+      var isMobile = isIOS || isAndroid || /Mobi|Mobile|Tablet|Samsung|SM-[A-Z0-9]+/i.test(ua) || ('ontouchstart' in window);
+      var isSafari = (/^((?!chrome|android).)*safari/i.test(ua) || (window.safari !== undefined)) && !/CriOS/i.test(ua);
+      var isChrome = /Chrome|CriOS/i.test(ua);
+      var isSamsung = /SamsungBrowser|SM-[A-Z0-9]+/i.test(ua);
+      var isLowMemory = (navigator.deviceMemory && navigator.deviceMemory <= 4);
+      var isLowCores = (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+      var isLowEnd = isMobile && (isSamsung || isLowMemory || isLowCores || /SM-M[0-9]+/i.test(ua));
+      var isInApp = (ua.indexOf("Instagram") > -1) || 
+                     (ua.indexOf("FBAN") > -1) || 
+                     (ua.indexOf("FBAV") > -1) || 
+                     (ua.indexOf("FB_IAB") > -1) ||
+                     (ua.indexOf("TikTok") > -1) ||
+                     (ua.indexOf("Snapchat") > -1) ||
+                     (ua.indexOf("Line/") > -1) ||
+                     (ua.indexOf("MicroMessenger") > -1) ||
+                     (ua.indexOf("ByteLocale") > -1);
+
+      var cl = document.documentElement.classList;
+      if (isInApp) cl.add("is-inapp-browser");
+      if (isIOS) cl.add("is-ios");
+      if (isSafari) cl.add("is-safari");
+      if (isAndroid) cl.add("is-android");
+      if (isChrome) cl.add("is-chrome");
+      if (isMobile) cl.add("is-mobile");
+      if (isLowEnd || isSamsung) cl.add("is-low-end");
+      if (isInApp || isIOS || isSafari || isMobile || isAndroid || isLowEnd) {
+        cl.add("fast-mode");
+      }
+
+      // Synchronously sync viewport height
+      var vh = window.innerHeight;
+      document.documentElement.style.setProperty('--visual-viewport-height', vh + 'px');
+    })();
+  </script>
+
+  <!-- Step 3: Critical Asset Preloading for Instant FOUC-Free Paint -->
+  <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" fetchpriority="high" />
+  <link rel="preload" href="/styles.css?v=1.1.4" as="style" fetchpriority="high" />
+
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="alternate icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ping" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=1.1.4" />
+  <link rel="stylesheet" href="/animations.css?v=1.1.4" />
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+  <style>
+    .emoji-picker-popup {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      right: 12px;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      border-radius: 12px;
+      overflow: hidden;
+      animation: pop-up 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .emoji-picker-popup.visible {
+      display: block;
+    }
+
+    @keyframes pop-up {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    emoji-picker {
+      --background: #0a0a1c;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --num-columns: 8;
+      --category-font-color: var(--purple-l);
+    }
+
+    .eq-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 0 4px;
+    }
+
+    .eq-more-btn {
+      background: transparent;
+      border: none;
+      color: var(--t-hi);
+      width: 36px;
+      height: 36px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+      opacity: .7;
+    }
+
+    .eq-more-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, .05);
+      opacity: 1;
+    }
+
+    .reply-preview-bar {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 12px;
+      right: 12px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(18, 14, 38, 0.95);
+      border: 1px solid rgba(124, 58, 237, .45);
+      border-radius: 14px;
+      color: #fff;
+      font-size: .85rem;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, .5);
+      animation: rp-pop .2s var(--spring) both;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .rp-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .rp-left span:first-of-type {
+      color: var(--purple-l);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .rp-text {
+      color: var(--t-med);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-style: italic;
+      border-left: 2px solid rgba(255, 255, 255, .2);
+      padding-left: 8px;
+    }
+
+    .rp-close {
+      background: transparent;
+      border: none;
+      color: var(--t-ghost);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      transition: color .15s;
+    }
+
+    .rp-close:hover {
+      color: var(--red);
+    }
+
+    @keyframes rp-pop {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .msg-reply-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 6px;
+      padding: 6px 10px;
+      background: rgba(0, 0, 0, .2);
+      border-left: 3px solid var(--purple-l);
+      border-radius: 4px 8px 8px 4px;
+      font-size: .8rem;
+      opacity: .9;
+      cursor: pointer;
+    }
+
+    .msg-reply-block strong {
+      color: var(--purple-l);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .msg-reply-block span {
+      color: var(--t-med);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      line-height: 1.3;
+    }
+
+    .msg.self .msg-reply-block strong {
+      color: #fff;
+    }
+
+    .msg.self .msg-reply-block span {
+      color: rgba(255, 255, 255, .8);
+    }
+
+    /* Inline reaction and reply triggers disabled on message click/hover */
+    .msg-reply-trigger,
+    .msg-reactions,
+    .msg:hover .msg-reply-trigger,
+    .msg:hover .msg-reactions,
+    .msg.self:hover .msg-reply-trigger {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      opacity: 0 !important;
+    }
+
+    /* ═══ LEAN MVP LAUNCH: FOCUS 100% ON ANONYMOUS CHAT ═══ */
+    .home-tabs,
+    #homeTabs,
+    #tabFriends,
+    #tabSettings,
+    #friendsView,
+    #friendDMView,
+    #settingsView,
+    #friendBtn,
+    #exploreAuthBtn,
+    #chatTranscriptModal {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══ IN-APP BROWSER FALLBACK PROMPT BANNER ═══ -->
+  <div id="iabBanner" class="iab-banner" style="display:none;" role="banner">
+    <div class="iab-banner-content">
+      <span class="iab-icon">💡</span>
+      <span class="iab-text">For the smoothest experience, tap <strong>⋮</strong> or <strong>•••</strong> and choose <strong>Open in External Browser</strong>.</span>
+    </div>
+    <button id="closeIabBannerBtn" class="iab-close-btn" type="button" aria-label="Dismiss banner">✕</button>
+  </div>
+
+  <!-- ═══ REAL-TIME SYSTEM ANNOUNCEMENT BANNER ═══ -->
+  <div id="systemAnnouncementBanner" class="system-announcement-banner" style="display:none;" role="alert">
+    <div class="announcement-content">
+      <span class="announcement-icon" id="announcementIcon">📢</span>
+      <span id="announcementText" class="announcement-text"></span>
+    </div>
+    <button id="closeAnnouncementBtn" class="announcement-close" type="button" aria-label="Dismiss announcement">✕</button>
+  </div>
+
+  <!-- ═══ SPLASH ═══ -->
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-logo">
+      <img src="/logo.svg" alt="Ping" class="splash-logo-img" width="120" height="120" fetchpriority="high" />
+    </div>
+    <p class="splash-wordmark">Ping</p>
+    <div class="splash-bar-wrap">
+      <div class="splash-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ LANDING PAGE ═══════════════════ -->
+  <div id="landingPage" class="landing" style="opacity:0;">
+    <!-- BACKGROUND STACK -->
+    <canvas id="particleCanvas" aria-hidden="true"></canvas>
+    <div class="vortex-wheel" aria-hidden="true"></div>
+    <div class="nebula-field" aria-hidden="true">
+      <div class="neb neb-1"></div>
+      <div class="neb neb-2"></div>
+      <div class="neb neb-3"></div>
+      <div class="neb neb-4"></div>
+      <div class="neb neb-5"></div>
+    </div>
+    <div class="aurora-canvas" aria-hidden="true">
+      <div class="aurora-band"></div>
+      <div class="aurora-band"></div>
+      <div class="aurora-band"></div>
+    </div>
+    <div class="mesh-grid" aria-hidden="true"></div>
+    <div class="scan-line" id="scanLine" aria-hidden="true"></div>
+
+    <!-- CONTENT -->
+    <div class="landing-content">
+      <div class="logo-lockup" id="landingLogoLockup" title="Ping">
+        <div class="logo-mark" id="landingLogoMark">
+          <img src="/logo.svg" alt="Ping Logo" class="brand-logo-img" width="72" height="72" fetchpriority="high" />
+        </div>
+        <h1 class="logo-wordmark">
+          <span class="lw-char" style="--i:0">P</span><span class="lw-char" style="--i:1">i</span><span class="lw-char"
+            style="--i:2">n</span><span class="lw-char" style="--i:3">g</span>
+        </h1>
+      </div>
+
+      <p class="hero-tagline">Talk to strangers.<br><strong>Stay anonymous.</strong></p>
+
+      <!-- REAL-TIME online count -->
+      <div class="live-count-row">
+        <span class="live-dot"></span>
+        <span class="live-num" id="liveUsers">0</span>
+        <span class="live-label">online now</span>
+      </div>
+
+      <div class="landing-actions-row">
+        <button id="startLandingBtn" class="cta-btn" type="button">
+          <span class="cta-label">Start Chat</span>
+          <span class="cta-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </span>
+          <span class="cta-glow"></span>
+        </button>
+
+        <button id="downloadLandingBtn" class="download-app-btn" type="button" title="Download & Install Ping from Browser">
+          <span class="download-label">Download App</span>
+          <span class="download-icon-wrap" aria-hidden="true">
+            <svg class="download-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════ CHAT APP ═══════════════════ -->
+  <div id="chatApp" class="chat-app" style="display:none;">
+
+    <!-- BACKGROUND LAYERS (all three views share these) -->
+    <canvas id="appCanvas" aria-hidden="true"></canvas>
+    <div class="app-nebula" aria-hidden="true">
+      <div class="app-neb an-1"></div>
+      <div class="app-neb an-2"></div>
+      <div class="app-neb an-3"></div>
+      <div class="app-neb an-4"></div>
+    </div>
+    <div class="app-vortex" aria-hidden="true"></div>
+
+    <!-- ── HEADER ── -->
+    <header class="app-header">
+      <button id="backBtn" class="icon-btn" title="Back to home" aria-label="Back to home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="header-center" id="headerCenterLogo" title="Ping Anonymous Chat">
+        <div class="header-brand-badge">
+          <img src="/logo-mark.svg" alt="Ping" class="header-logo-mark" width="22" height="22" />
+          <span class="header-brand-text">Ping</span>
+        </div>
+      </div>
+
+      <!-- Real-time online count & Download button in header -->
+      <div class="header-right">
+        <button id="headerDownloadBtn" class="header-download-btn" type="button" title="Download & Install Ping">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          <span>Download</span>
+        </button>
+
+        <div class="header-online-pill" id="headerOnlinePill">
+          <span class="h-online-dot"></span>
+          <span id="headerOnlineCount">—</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Persistent Network Recovery Banner -->
+    <div id="networkStatusBar" class="network-status-bar" style="display:none;" role="status">
+      <div class="nsb-content">
+        <span class="nsb-pulse"></span>
+        <span id="networkStatusText" class="nsb-text">Connection lost. Reconnecting…</span>
+      </div>
+      <button id="reconnectNowBtn" class="nsb-retry-btn" type="button">Reconnect</button>
+    </div>
+
+    <!-- Home Tabs Bar -->
+    <div class="home-tabs" id="homeTabs" style="display:none;">
+      <button class="home-tab active" data-tab="random" id="tabRandom">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M16 8l-4 4-4-4" />
+        </svg>
+        <span>Explore</span>
+      </button>
+      <button class="home-tab" data-tab="friends" id="tabFriends">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span>Friends</span>
+      </button>
+      <button class="home-tab" data-tab="settings" id="tabSettings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        <span>Settings</span>
+      </button>
+    </div>
+
+    <main class="app-main">
+
+      <!-- PRE-CHAT VIEW -->
+      <div id="preChatView" class="view view-prechat">
+        <div class="waiting-shell prechat-card">
+
+          <!-- Top status bar -->
+          <div class="ws-topbar prechat-topbar">
+            <div class="ws-status-pill prechat-status-pill">
+              <span class="wh-pulse"></span>
+              <span class="ws-status-text">Anonymous</span>
+            </div>
+            <div class="ws-elapsed-badge prechat-mode-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
+              <span>Instant</span>
+            </div>
+          </div>
+
+          <!-- Ping Logo Hero Centerpiece -->
+          <div class="prechat-logo-hero" aria-hidden="true">
+            <div class="prechat-logo-wrap">
+              <div class="prechat-logo-glow"></div>
+              <div class="prechat-logo-ring plr-1"></div>
+              <div class="prechat-logo-ring plr-2"></div>
+              <div class="prechat-logo-core">
+                <img src="/logo-mark.svg" alt="Ping Logo" class="prechat-hero-logo-img" width="56" height="56" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Info Section -->
+          <div class="waiting-info prechat-info">
+            <h2 class="waiting-title prechat-title">Explore random chats</h2>
+            <p class="waiting-sub prechat-sub">Match instantly with someone new.</p>
+
+            <!-- Interest Selection Grid -->
+            <div class="interest-grid-section">
+              <div class="interest-pill-grid" id="interestPillGrid">
+                <button type="button" class="interest-pill" data-tag="movies">
+                  <span class="ip-emoji">🎬</span>
+                  <span class="ip-label">Movies</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="music">
+                  <span class="ip-emoji">🎧</span>
+                  <span class="ip-label">Music</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="gaming">
+                  <span class="ip-emoji">🎮</span>
+                  <span class="ip-label">Gaming</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="tech">
+                  <span class="ip-emoji">💻</span>
+                  <span class="ip-label">Tech</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="studies">
+                  <span class="ip-emoji">📚</span>
+                  <span class="ip-label">Studies</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="sports">
+                  <span class="ip-emoji">⚽</span>
+                  <span class="ip-label">Sports</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="food">
+                  <span class="ip-emoji">🍕</span>
+                  <span class="ip-label">Food</span>
+                </button>
+                <button type="button" class="interest-pill" data-tag="travel">
+                  <span class="ip-emoji">✈️</span>
+                  <span class="ip-label">Travel</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="ws-live-row prechat-online">
+              <span class="ws-live-dot"></span>
+              <span id="headerActiveUsers" class="ws-live-num">—</span>
+              <span class="ws-live-label">people online right now</span>
+            </div>
+
+            <button id="startBtn" class="ws-cancel-btn prechat-start-btn" type="button" aria-label="Start Chat">
+              <span>Start Chat</span>
+              <svg class="start-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- WAITING / SEARCHING VIEW -->
+      <div id="waitingView" class="view view-waiting" style="display:none;">
+        <div class="waiting-shell">
+
+          <!-- Top status bar -->
+          <div class="ws-topbar">
+            <div class="ws-status-pill">
+              <span class="wh-pulse"></span>
+              <div class="ws-signal-eq" aria-hidden="true">
+                <span class="eq-bar"></span>
+                <span class="eq-bar"></span>
+                <span class="eq-bar"></span>
+              </div>
+              <span class="ws-status-text">Searching</span>
+            </div>
+            <div class="ws-elapsed-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span id="waitTimer">0s</span>
+            </div>
+          </div>
+
+          <!-- Radar Section -->
+          <div class="radar-pane">
+            <div class="radar-wrap">
+              <div class="radar-grid-crosshair-h" aria-hidden="true"></div>
+              <div class="radar-grid-crosshair-v" aria-hidden="true"></div>
+              <div class="radar-sonar-wave rsw-1"></div>
+              <div class="radar-sonar-wave rsw-2"></div>
+              <div class="radar-sonar-wave rsw-3"></div>
+              <div class="radar-ring rr-1"></div>
+              <div class="radar-ring rr-2"></div>
+              <div class="radar-ring rr-3"></div>
+              <div class="radar-ring rr-4"></div>
+              <div class="radar-sweep"></div>
+              <div class="radar-blip rb-1"><span class="blip-ping"></span></div>
+              <div class="radar-blip rb-2"><span class="blip-ping"></span></div>
+              <div class="radar-blip rb-3"><span class="blip-ping"></span></div>
+              <div class="radar-blip rb-4"><span class="blip-ping"></span></div>
+              <div class="radar-core">
+                <div class="radar-core-inner">
+                  <img src="/logo-mark.svg" alt="Ping Logo" class="radar-core-logo" width="32" height="32" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info Section -->
+          <div class="waiting-info">
+            <h2 class="waiting-title">Finding your match</h2>
+            <p class="waiting-sub">
+              <span id="waitingSubText">Searching across the globe</span>
+              <span class="dot-trail"><span>.</span><span>.</span><span>.</span></span>
+            </p>
+
+            <div class="ws-live-row">
+              <span class="ws-live-dot"></span>
+              <span id="wsCount" class="ws-live-num">—</span>
+              <span class="ws-live-label">people online right now</span>
+            </div>
+
+            <button id="cancelWaitBtn" class="ws-cancel-btn" type="button" aria-label="Cancel Search">
+              <svg class="ws-cancel-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+              <span class="ws-cancel-label">Cancel Search</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ACTIVE CHAT VIEW -->
+      <div id="activeChatView" class="view view-chat" style="display:none;">
+
+        <!-- Enhanced Chat Background -->
+        <div class="chat-glow-orb cgo-1"></div>
+        <div class="chat-glow-orb cgo-2"></div>
+        <div class="chat-glow-orb cgo-3"></div>
+        <div class="chat-grid-overlay"></div>
+
+        <!-- Enhanced Chat Header -->
+        <div class="chat-header">
+          <div class="ch-left">
+            <div class="partner-avatar-wrap">
+              <span class="partner-emoji">👤</span>
+              <span class="partner-online-dot"></span>
+            </div>
+            <div class="ch-info">
+              <span class="ch-label">Chatting with</span>
+              <span class="ch-name" id="partnerCountryMeta"><span class="location-flag" style="font-size: 1.5rem; line-height: 1; vertical-align: middle;">🇮🇳</span></span>
+              <span id="partnerCountryLabel" class="sr-only" style="display:none;">🇮🇳</span>
+            </div>
+          </div>
+
+          <div class="ch-center">
+            <div class="chat-timer-wrap">
+              <svg class="timer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span class="chat-timer" id="timerMeta">--:--</span>
+            </div>
+          </div>
+
+          <div class="ch-actions" style="position: relative;">
+            <button id="exploreAuthBtn" class="top-icon-btn" style="background: rgba(124, 58, 237, 0.2); border: 1px solid rgba(124, 58, 237, 0.4); padding: 4px 10px; height: auto; width: auto; font-size: 0.75rem; font-weight: 600; border-radius: 8px; color: #a78bfa; margin-right: 8px; display: none;" title="Sign in to save this connection">
+              Sign In
+            </button>
+            <button id="threeDotsBtn" class="top-icon-btn action-menu" type="button" title="More options" aria-label="More options">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+              </svg>
+            </button>
+
+            <!-- Overflow Dropdown Menu -->
+            <div id="threeDotsMenu" class="dropdown-menu hidden">
+              <button id="nextBtn" class="dropdown-item" disabled type="button">⏩ Skip Stranger</button>
+              <button id="extendTimeBtn" class="dropdown-item" disabled type="button">🕒 Extend +2 Mins</button>
+              <button id="friendBtn" class="dropdown-item" disabled type="button">👤 Add Friend</button>
+
+              <button id="pingBtn" class="dropdown-item" type="button">📡 Send Ping</button>
+              <div class="dropdown-divider"></div>
+              <button id="reportSkipBtn" class="dropdown-item text-danger" disabled type="button">⚑ Report User</button>
+              <button id="endChatBtn" class="dropdown-item text-danger" type="button">✕ Leave Chat</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto Search Bar (Floating Glass Card) -->
+        <div id="autoSearchBar" class="auto-search-bar" style="display:none;">
+          <div class="asb-content-wrap">
+            <div class="asb-info-group">
+              <span class="asb-pulse-dot" aria-hidden="true"></span>
+              <span class="asb-icon" aria-hidden="true">👋</span>
+              <div class="asb-text-stack">
+                <span id="autoSearchStatus" class="asb-status-text">Stranger left the screen</span>
+                <span class="asb-sub-text">Auto-matching in background</span>
+              </div>
+            </div>
+            <div class="asb-action-group">
+              <div id="autoSearchTimerPill" class="asb-timer-pill" title="Auto search countdown">
+                <svg class="asb-timer-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span id="autoSearchTimerCount">15s</span>
+              </div>
+              <button id="autoSearchNowBtn" class="asb-search-btn" type="button">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <span>Search Now</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages area -->
+        <div class="messages-area" id="chatBox">
+          <div class="msgs-empty">
+            <div class="msgs-empty-pulse" aria-hidden="true"></div>
+            <span class="msgs-empty-icon">💭</span>
+            <p>Say hi — they're waiting!</p>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="typing-bar" id="partnerTypingMeta" aria-live="polite">
+          <div class="typing-bubble">
+            <span class="typing-avatar">👤</span>
+            <span class="typing-dots"><span></span><span></span><span></span></span>
+            <span class="typing-label">Stranger is typing…</span>
+          </div>
+        </div>
+
+        <!-- Input & Emojis -->
+        <div class="chat-bottom-wrapper" style="position:relative;">
+
+          <div class="emoji-picker-popup" id="emojiPickerPopup">
+            <emoji-picker id="fullEmojiPicker"></emoji-picker>
+          </div>
+
+          <!-- Reply Preview Bar -->
+          <div id="replyPreview" class="reply-preview-bar" style="display:none;">
+            <div class="rp-left">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 11l5-5-5-5M21 11H3" />
+              </svg>
+              <span>Replying to:</span>
+              <span class="rp-flash-icon" style="display:none; color:#ffaa00; margin-left:4px;" title="Flash Mode Active">⚡</span>
+              <span class="rp-text">...</span>
+            </div>
+            <button type="button" id="cancelReplyBtn" class="rp-close"><svg width="14" height="14" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg></button>
+          </div>
+
+          <form id="messageForm" class="input-row" autocomplete="off">
+            <div class="input-wrap">
+              <div class="input-pill">
+                <!-- Flash Button - inside left side of type a message input -->
+                <button type="button" class="flash-toggle-btn inside-input-left" id="flashToggleBtn" title="Toggle Flash Mode (Auto-delete in 10s)" aria-label="Toggle Flash Mode">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                </button>
+                <textarea id="messageInput" class="message-input" placeholder="Type a message…" autocomplete="off"
+                  maxlength="500" rows="1" disabled></textarea>
+              </div>
+              <div class="char-counter-wrap">
+                <span class="char-counter" id="charCounter"></span>
+              </div>
+            </div>
+
+            <button type="button" class="dice-prompt-btn" id="dicePromptBtn" title="Get a conversation starter" aria-label="Insert random icebreaker">
+              🎲
+            </button>
+
+            <button type="submit" id="sendBtn" class="send-btn" disabled aria-label="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+
+      </div><!-- /activeChatView -->
+
+      <!-- FRIENDS VIEW -->
+      <div id="friendsView" class="view view-friends" style="display:none;">
+
+        <!-- Glow effects -->
+        <div class="friends-glow-orb fgo-1"></div>
+        <div class="friends-glow-orb fgo-2"></div>
+
+        <!-- Friends Header -->
+        <div class="friends-header">
+          <div class="fh-top">
+            <h2 class="friends-title">Your Friends</h2>
+            <div class="privacy-controls">
+              <span class="privacy-label">Invisible Mode</span>
+              <label class="switch-toggle">
+                <input type="checkbox" id="invisibleToggle">
+                <span class="slider-round"></span>
+              </label>
+            </div>
+          </div>
+          <p class="friends-subtitle">Continue chatting or start a new conversation</p>
+        </div>
+
+        <!-- Friends List -->
+        <div class="friends-list" id="friendsList">
+          <div class="friends-empty">
+            <span class="friends-empty-icon">👥</span>
+            <p>No connections yet</p>
+            <p class="friends-empty-sub">Make friends during a chat to message them later</p>
+            <button class="btn-primary btn-sm" id="findChatBtn">Start Chat</button>
+          </div>
+        </div>
+
+      </div><!-- /friendsView -->
+
+      <!-- FRIENDS DM CHAT VIEW -->
+      <div id="friendDMView" class="view view-chat view-friend-dm" style="display:none;">
+
+        <!-- Enhanced Chat Background -->
+        <div class="chat-glow-orb cgo-1"></div>
+        <div class="chat-glow-orb cgo-2"></div>
+        <div class="chat-glow-orb cgo-3"></div>
+        <div class="chat-grid-overlay"></div>
+
+        <!-- Friends DM Header -->
+        <div class="chat-header friend-dm-header">
+          <div class="ch-left">
+            <button class="back-to-friends-btn" id="backToFriendsBtn" aria-label="Back to friends list" title="Back">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <div class="partner-avatar-wrap">
+              <span class="partner-emoji">👤</span>
+              <span class="partner-online-dot"></span>
+            </div>
+            <div class="ch-info">
+              <span class="ch-label">Messaging</span>
+              <span class="ch-name" id="friendDMNameMeta">Friend</span>
+            </div>
+          </div>
+
+          <div class="ch-actions">
+            <button id="friendReportBtn" class="top-icon-btn action-report" aria-label="Report Friend" title="Report">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7" />
+              </svg>
+            </button>
+            <button id="endFriendDMBtn" class="top-icon-btn action-end" aria-label="Close Chat" title="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages area -->
+        <div class="messages-area" id="friendChatBox">
+          <div class="msgs-empty">
+            <div class="msgs-empty-pulse" aria-hidden="true"></div>
+            <span class="msgs-empty-icon">💭</span>
+            <p>Start a conversation!</p>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="typing-bar" id="friendTypingMeta" aria-live="polite" style="display:none;">
+          <div class="typing-bubble">
+            <span class="typing-avatar">👤</span>
+            <span class="typing-dots"><span></span><span></span><span></span></span>
+            <span class="typing-label">typing…</span>
+          </div>
+        </div>
+
+        <!-- Input & Emojis -->
+        <div class="chat-bottom-wrapper" style="position:relative;">
+
+          <!-- REPLIES -->
+          <div id="friendReplyPreview" class="reply-preview-bar" style="display:none;">
+            <div class="rp-content">
+              <div class="rp-info">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M3 11l5-5-5-5M21 11H3" />
+                </svg>
+                <span>Replying to:</span>
+                <span class="rp-flash-icon" style="display:none; color:#ffaa00; margin-left:4px;" title="Flash Mode Active">⚡</span>
+              </div>
+              <div class="rp-text"></div>
+            </div>
+            <button type="button" id="cancelFriendReplyBtn" class="rp-close" title="Cancel Reply">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="emoji-picker-popup" id="friendEmojiPickerPopup">
+            <emoji-picker id="friendFullEmojiPicker"></emoji-picker>
+          </div>
+
+          <form id="friendMessageForm" class="input-row" autocomplete="off">
+            <div class="input-wrap">
+              <div class="input-pill">
+                <!-- Flash Button - inside left side of message input -->
+                <button type="button" class="flash-toggle-btn inside-input-left" id="friendFlashToggleBtn" title="Toggle Flash Mode (Auto-delete in 10s)"
+                  aria-label="Toggle Flash Mode">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                </button>
+                <textarea id="friendMessageInput" class="message-input" placeholder="Message your friend..." rows="1"
+                  spellcheck="true" maxlength="500"></textarea>
+              </div>
+              <div class="char-counter-wrap">
+                <span class="char-counter" id="friendCharCounter"></span>
+              </div>
+            </div>
+            <button type="button" id="friendPingBtn" class="ping-action-btn" title="Send a Ping nudge">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            </button>
+            <button type="submit" id="friendSendBtn" class="send-btn" aria-label="Send message">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+      </div><!-- /friendDMView -->
+
+      <!-- SETTINGS & PING ACCOUNT VIEW -->
+      <div id="settingsView" class="view view-settings" style="display:none;">
+        <div class="settings-shell">
+
+          <!-- Main Settings Header -->
+          <div class="settings-header">
+            <div class="settings-title-row">
+              <div class="settings-icon">⚙️</div>
+              <div class="settings-titles">
+                <h2>Settings</h2>
+                <p>Account, chat preferences, and community safety</p>
+              </div>
+            </div>
+            <div class="settings-cloud-pill">
+              <span class="scp-dot"></span>
+              <span id="settingsCloudStatusText">Ping Cloud Active</span>
+            </div>
+          </div>
+
+          <div class="settings-container-wrap">
+
+            <!-- SECTION 1: ACCOUNT & SYNC -->
+            <div class="settings-card glass-card">
+              <div class="sc-header">
+                <div class="sc-header-left">
+                  <span class="sc-header-icon">👤</span>
+                  <div>
+                    <h3>Account & Sync</h3>
+                  </div>
+                </div>
+                <span id="settingsAuthBadge" class="sc-badge guest">Guest</span>
+              </div>
+
+              <!-- Unauthenticated / Guest View -->
+              <div id="settingsGuestAuthSection" class="settings-auth-section">
+                <div class="settings-auth-actions">
+                  <button id="settingsGoogleLoginBtn" class="btn-primary auth-google-btn" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"/><path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/><path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/></svg>
+                    <span>Continue with Google</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Logged In / Authenticated View -->
+              <div id="settingsUserAuthSection" class="settings-auth-section" style="display:none;">
+                <div class="user-profile-card">
+                  <div class="up-avatar" id="settingsUserAvatar">👤</div>
+                  <div class="up-info">
+                    <div class="up-name-row">
+                      <h4 id="settingsUserDisplayName">Ping User</h4>
+                      <span class="sync-badge">☁️ Synced</span>
+                    </div>
+                    <p id="settingsUserEmailText">user@example.com</p>
+                    <div class="up-meta">
+                      <span id="settingsUserUid" class="uid-tag">UID: ...</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="setting-row" style="margin-top: 14px; width: 100%; display: flex; flex-direction: column; gap: 6px;">
+                  <label style="font-size: 0.8rem; font-weight: 600; color: var(--t-med);">Username (Displayed in Explore & Friends Chat)</label>
+                  <div style="display: flex; gap: 8px; width: 100%;">
+                    <input type="text" id="customUsernameInput" placeholder="Enter your username..." maxlength="30" style="flex:1; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-brd); padding: 8px 12px; border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none;" />
+                    <button id="saveUsernameBtn" class="btn-primary btn-sm" type="button" style="padding: 8px 16px;">Save</button>
+                  </div>
+                </div>
+
+                <div class="settings-user-actions">
+                  <button id="settingsLogoutBtn" class="btn-danger logout-btn" type="button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: CHAT PREFERENCES -->
+            <div class="settings-card glass-card">
+              <div class="sc-header">
+                <div class="sc-header-left">
+                  <span class="sc-header-icon">🎛️</span>
+                  <div>
+                    <h3>Preferences</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pref-items-list">
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Sound Alerts</span>
+                    <span class="pref-desc">Audio cues on new messages and stranger matches</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefSoundToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Haptic Feedback</span>
+                    <span class="pref-desc">Vibrate on reactions, pings, and friend requests</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefHapticToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Auto-Scroll</span>
+                    <span class="pref-desc">Automatically follow the latest chat messages</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefAutoScrollToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+
+                <div class="pref-item">
+                  <div class="pref-info">
+                    <span class="pref-title">Typing Indicator</span>
+                    <span class="pref-desc">Show indicator when partner is composing</span>
+                  </div>
+                  <label class="pref-switch">
+                    <input type="checkbox" id="prefTypingToggle" checked />
+                    <span class="pref-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /settings-container-wrap -->
+        </div><!-- /settings-shell -->
+      </div><!-- /settingsView -->
+
+    </main>
+
+    <!-- CHAT TRANSCRIPT VIEWER MODAL -->
+    <div id="chatTranscriptModal" class="glass-modal-overlay" style="display:none;">
+      <div class="glass-modal-card transcript-modal-card">
+        <div class="tmc-header">
+          <div class="tmc-title">
+            <span id="transcriptPartnerAvatar" class="tmc-avatar">💬</span>
+            <div>
+              <h3 id="transcriptPartnerName">Chat Transcript</h3>
+              <span id="transcriptMeta" class="tmc-meta">Stored in Cloud Firestore</span>
+            </div>
+          </div>
+          <button id="closeTranscriptBtn" class="tmc-close-btn" type="button" aria-label="Close">✕</button>
+        </div>
+        <div id="transcriptMessagesList" class="transcript-messages-list">
+          <!-- Messages rendered dynamically -->
+        </div>
+        <div class="tmc-footer">
+          <button id="transcriptOpenFriendDmBtn" class="btn-primary" type="button">Open in Friends Chat</button>
+          <button id="transcriptCloseFooterBtn" class="btn-ghost" type="button">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="confirmModal" class="modal-backdrop" style="display:none;">
+      <div class="modal-glass">
+        <div class="modal-icon" id="modalIcon">⚠️</div>
+        <h3 id="confirmTitle">Confirm</h3>
+        <p id="confirmMessage">Are you sure?</p>
+        <div class="modal-btns">
+          <button id="confirmNo" class="btn-ghost">Cancel</button>
+          <button id="confirmYes" class="btn-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DOWNLOAD & INSTALL PWA MODAL ═══ -->
+    <div id="installModal" class="install-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="installModalTitle">
+      <div class="install-modal-card">
+        <button id="closeInstallModal" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+        <div class="install-modal-header">
+          <div class="install-logo-wrap">
+            <img src="/logo.svg" alt="Ping App Icon" class="install-app-logo" />
+          </div>
+          <div class="install-header-info">
+            <h3 id="installModalTitle">Download Ping</h3>
+            <p>Fast, lightweight & 100% anonymous</p>
+          </div>
+        </div>
+        <div class="install-features-list">
+          <div class="install-feat-item">
+            <span class="feat-icon">⚡</span>
+            <div><strong>Instant 1-Click Launch</strong><br><span>Runs in standalone fullscreen window like a native app</span></div>
+          </div>
+          <div class="install-feat-item">
+            <span class="feat-icon">🔒</span>
+            <div><strong>Private & Ephemeral</strong><br><span>Zero account required, zero background tracking</span></div>
+          </div>
+          <div class="install-feat-item">
+            <span class="feat-icon">💾</span>
+            <div><strong>Zero Storage Footprint</strong><br><span>Installs directly from your browser in under 1MB</span></div>
+          </div>
+        </div>
+
+        <div id="installActionArea">
+          <button id="confirmInstallBtn" class="primary-install-btn" type="button">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            <span>Install App Now</span>
+          </button>
+
+          <div id="iosInstallGuide" class="ios-guide-box" style="display:none;">
+            <p class="ios-guide-title">How to install on iPhone & iPad (Home Screen Web App):</p>
+            <div id="iosInAppWarning" style="display:none; margin-bottom:10px; padding:8px 12px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.35); border-radius:10px; font-size:0.78rem; color:#fde047;">
+              <strong>Notice:</strong> You are currently in an In-App Browser (e.g. Instagram/TikTok). Tap <strong>•••</strong> or <strong>⋮</strong> at the top/bottom and choose <strong>Open in Safari</strong> first to install.
+            </div>
+            <ol class="ios-steps">
+              <li>In Safari, tap the <strong>Share</strong> button <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg> in the bottom toolbar.</li>
+              <li>Scroll down the share sheet and tap <strong>Add to Home Screen</strong> <span style="font-size:1rem;">➕</span>.</li>
+              <li>Tap <strong>Add</strong> in the top-right corner to save Ping as an app on your Home Screen.</li>
+            </ol>
+          </div>
+
+          <div id="desktopInstallGuide" class="desktop-guide-box" style="display:none;">
+            <p class="desktop-guide-title">How to install on Desktop (Chrome / Edge):</p>
+            <p class="desktop-guide-text">Click the <strong>Install</strong> icon <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> in your browser address bar at the top right, or choose <strong>Install Ping</strong> in the browser menu.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toastContainer" class="toast-stack" aria-live="polite"></div>
+
+  </div><!-- /chatApp -->
+
+  <!-- ═══ ADMIN PASSWORD AUTHORIZATION MODAL ═══ -->
+  <div id="adminAuthModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
+    <div class="admin-auth-card">
+      <div class="admin-auth-glow" aria-hidden="true"></div>
+      <button id="closeAdminAuthBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      
+      <div class="admin-auth-header">
+        <div class="admin-shield-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <h3 id="adminModalTitle" class="admin-auth-title">Ping Command Center</h3>
+        <p class="admin-auth-subtitle">Restricted administrative access. Enter master password.</p>
+      </div>
+
+      <form id="adminAuthForm" class="admin-auth-form" onsubmit="return false;">
+        <div class="admin-field-group">
+          <label for="adminPasswordInput" class="admin-label">Master Password</label>
+          <div class="admin-input-wrap">
+            <input 
+              type="password" 
+              id="adminPasswordInput" 
+              class="admin-input" 
+              placeholder="Enter admin password..." 
+              autocomplete="current-password"
+              required 
+            />
+            <button type="button" id="toggleAdminPasswordBtn" class="admin-eye-btn" title="Toggle password visibility">
+              <svg id="eyeIconSvg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="adminAuthError" class="admin-error-msg" style="display:none;"></div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelAdminAuthBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitAdminAuthBtn" class="btn-primary-admin">
+            <span>Authenticate</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ FULL-SCREEN ADMIN DASHBOARD ═══ -->
+  <div id="adminDashboardView" class="admin-dashboard-view" style="display:none;" role="region" aria-label="Admin Dashboard">
+    <div class="admin-header">
+      <div class="admin-brand-left">
+        <div class="admin-logo-mark">
+          <img src="/logo-mark.svg" alt="Ping" width="24" height="24" />
+        </div>
+        <div class="admin-brand-text-wrap">
+          <span class="admin-brand-title">Ping Admin</span>
+          <span class="admin-live-badge"><span class="admin-live-dot"></span> LIVE TELEMETRY</span>
+        </div>
+      </div>
+
+      <div class="admin-header-controls">
+        <div class="admin-pill-uptime" id="adminUptimeBadge" title="Server Uptime">
+          <span class="pill-icon">⏱</span>
+          <span id="adminUptimeText">Up: 0m</span>
+        </div>
+        <button id="adminSoundToggle" class="admin-pill-btn active" title="Toggle Sound Chime on Reports">
+          <span class="pill-icon">🔔</span>
+          <span id="adminSoundToggleText">Sound: ON</span>
+        </button>
+        <button id="adminExportBtn" class="admin-pill-btn" title="Export Multi-Tab System Telemetry & Intel Report (.xlsx)">
+          <span class="pill-icon">📊</span>
+          <span>Backup Excel (.xlsx)</span>
+        </button>
+        <button id="adminAutoRefreshToggle" class="admin-pill-btn active" title="Toggle Auto Refresh (3s)">
+          <span class="pill-dot"></span>
+          <span>Auto (3s)</span>
+        </button>
+        <button id="adminManualRefreshBtn" class="admin-icon-btn" title="Refresh Now">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <button id="exitAdminBtn" class="admin-exit-btn" title="Exit Admin Console">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Exit Admin</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-nav-tabs">
+      <button class="admin-tab-btn active" data-tab="overview" id="adminNavTabOverview">
+        <span class="tab-icon">📊</span>
+        <span>Overview</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="behavior" id="adminNavTabBehavior">
+        <span class="tab-icon">🎯</span>
+        <span>User Behavior & Intel</span>
+        <span class="admin-badge-count" id="adminBehaviorBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="masscontrol" id="adminNavTabMassControl">
+        <span class="tab-icon">⚡</span>
+        <span>Control Panel</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="shadowbans" id="adminNavTabShadowbans">
+        <span class="tab-icon">👻</span>
+        <span>Ghost Mode</span>
+        <span class="admin-badge-count" id="adminShadowbansBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="events" id="adminNavTabEvents">
+        <span class="tab-icon">📜</span>
+        <span>Audit Stream</span>
+        <span class="admin-badge-count" id="adminEventsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="rooms" id="adminNavTabRooms">
+        <span class="tab-icon">💬</span>
+        <span>Live Chats</span>
+        <span class="admin-badge-count" id="adminRoomsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="bans" id="adminNavTabBans">
+        <span class="tab-icon">🛡️</span>
+        <span>Moderation & Bans</span>
+        <span class="admin-badge-count" id="adminBansBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="reports" id="adminNavTabReports">
+        <span class="tab-icon">🚨</span>
+        <span>Reports Feed</span>
+        <span class="admin-badge-count" id="adminReportsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="words" id="adminNavTabWords">
+        <span class="tab-icon">🔤</span>
+        <span>Word Filter</span>
+        <span class="admin-badge-count" id="adminWordsBadge">0</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="lookup" id="adminNavTabLookup">
+        <span class="tab-icon">🔍</span>
+        <span>User Lookup</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="broadcast" id="adminNavTabBroadcast">
+        <span class="tab-icon">📢</span>
+        <span>Broadcast</span>
+      </button>
+      <button class="admin-tab-btn" data-tab="geo" id="adminNavTabGeo">
+        <span class="tab-icon">🌍</span>
+        <span>Traffic & Geo</span>
+      </button>
+    </div>
+
+    <!-- Tab Contents Container -->
+    <div class="admin-main-content">
+      <!-- 1. OVERVIEW TAB -->
+      <div id="adminTabOverview" class="admin-tab-panel active">
+        <!-- Unified Key Metrics Grid (Active CCU, Active Rooms, Waiting Queue, Msgs/Sec, Violations/Sec, Heap Memory) -->
+        <div class="admin-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Active CCU</span>
+              <span class="stat-icon-wrap cyan">👥</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statOnlineUsers">0</div>
+            <div class="stat-sub">Live connected users</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Active Rooms</span>
+              <span class="stat-icon-wrap purple">💬</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statActiveRooms">0</div>
+            <div class="stat-sub">Concurrent 1-on-1 pairs</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Waiting Queue</span>
+              <span class="stat-icon-wrap yellow">⏳</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statWaitingQueue">0</div>
+            <div class="stat-sub">Instant pairing pool</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Msgs/Sec</span>
+              <span class="stat-icon-wrap green">⚡</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statMsgsPerSec">0/s</div>
+            <div class="stat-sub">Message delivery rate</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Violations/Sec</span>
+              <span class="stat-icon-wrap red">🛡️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statViolationsIntercepted">0</div>
+            <div class="stat-sub">Threats blocked per sec</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Heap Memory</span>
+              <span class="stat-icon-wrap cyan">💾</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statMemoryUsage">0 MB</div>
+            <div class="stat-sub tabular-nums" id="statMemoryDetails">Heap · 0ms event lag</div>
+          </div>
+        </div>
+        <!-- Hidden DOM bridges for secondary stats required by legacy badge bindings -->
+        <span id="statShadowbansCount" style="display:none;">0</span>
+        <span id="statActiveBansCount" style="display:none;">0</span>
+
+        <!-- ═══ ADVANCED INTERACTIVE GRAPH 1: 100K CONCURRENCY & THROUGHPUT MONITOR ═══ -->
+        <div class="admin-card chart-main-card">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div class="chart-header-left">
+              <h4 class="card-bar-title">Fleet Concurrency & Message Throughput</h4>
+              <span class="chart-subtitle-text">Real-time dual-series telemetry: Sockets vs Active Rooms vs Velocity</span>
+            </div>
+            <div class="chart-header-controls">
+              <div class="chart-legend-row">
+                <span class="legend-indicator cyan"><span class="legend-dot cyan"></span> Sockets</span>
+                <span class="legend-indicator purple"><span class="legend-dot purple"></span> Live Rooms</span>
+                <span class="legend-indicator amber"><span class="legend-dot amber"></span> Velocity (msgs/s)</span>
+              </div>
+              <div class="timeframe-pills-wrap" id="throughputTimeframeWrap">
+                <button type="button" class="timeframe-pill active" data-timeframe="90s">90s Live</button>
+                <button type="button" class="timeframe-pill" data-timeframe="5m">5m Window</button>
+                <button type="button" class="timeframe-pill" data-timeframe="15m">15m Trend</button>
+                <button type="button" class="timeframe-pill" data-timeframe="100k">Simulation</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive High-Resolution Chart Canvas -->
+          <div class="advanced-chart-wrapper" id="throughputChartWrapper" style="height: 190px; position: relative;">
+            <canvas id="canvasThroughputChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:auto;"></canvas>
+            <svg id="svgThroughputChart" class="advanced-chart-svg" style="display:none;" viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradThroughputSockets" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.32" />
+                  <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0" />
+                </linearGradient>
+                <linearGradient id="gradThroughputRooms" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#a855f7" stop-opacity="0.28" />
+                  <stop offset="100%" stop-color="#a855f7" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Grid Lines -->
+              <line x1="0" y1="40" x2="600" y2="40" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="140" x2="600" y2="140" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="190" x2="600" y2="190" stroke="rgba(255,255,255,0.08)" />
+
+              <!-- Sockets Area & Line -->
+              <path id="chartSocketsArea" fill="url(#gradThroughputSockets)" d="M0,190 L600,190 Z" />
+              <polyline id="chartSocketsPolyline" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="0,170 600,170" />
+
+              <!-- Rooms Area & Line -->
+              <path id="chartRoomsArea" fill="url(#gradThroughputRooms)" d="M0,190 L600,190 Z" />
+              <polyline id="chartRoomsPolyline" fill="none" stroke="#a855f7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,180 600,180" />
+
+              <!-- Velocity Line (Amber) -->
+              <polyline id="chartVelocityPolyline" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="0,185 600,185" />
+
+              <!-- Interactive Scrub Cursor Line (Crosshair) -->
+              <line id="chartScrubLine" x1="300" y1="10" x2="300" y2="190" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2,2" opacity="0" />
+              <circle id="chartScrubDotSockets" cx="300" cy="100" r="4" fill="#06b6d4" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+              <circle id="chartScrubDotRooms" cx="300" cy="120" r="4" fill="#a855f7" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+            </svg>
+
+            <!-- Touch / Pointer Crosshair Overlay -->
+            <div id="throughputChartOverlay" class="chart-interaction-overlay"></div>
+          </div>
+
+          <!-- Interactive Precision HUD Strip -->
+          <div class="chart-hud-strip" id="throughputChartHud">
+            <div class="hud-item"><span class="hud-label">Time:</span> <strong id="hudTimeVal" class="tabular-nums">Live</strong></div>
+            <div class="hud-item cyan"><span class="hud-label">Sockets:</span> <strong id="hudSocketsVal" class="tabular-nums">0</strong></div>
+            <div class="hud-item purple"><span class="hud-label">Rooms:</span> <strong id="hudRoomsVal" class="tabular-nums">0</strong></div>
+            <div class="hud-item amber"><span class="hud-label">Velocity:</span> <strong id="hudVelocityVal" class="tabular-nums">0 msgs/s</strong></div>
+            <div class="hud-item green"><span class="hud-label">Queue:</span> <strong id="hudQueueVal" class="tabular-nums">0</strong></div>
+          </div>
+        </div>
+
+        <!-- ═══ ADVANCED INTERACTIVE GRAPH 2: MODERATION & THREAT INTERCEPTION TIMELINE ═══ -->
+        <div class="admin-card chart-main-card">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div class="chart-header-left">
+              <h4 class="card-bar-title">Automated Threat Shield & Interception Stream</h4>
+              <span class="chart-subtitle-text">Real-time timeline of blocked slurs, spam links, and automated rate-throttles</span>
+            </div>
+            <div class="chart-legend-row">
+              <span class="legend-indicator red"><span class="legend-dot red"></span> Slurs & Abuse Blocked</span>
+              <span class="legend-indicator amber"><span class="legend-dot amber"></span> Spam Links & Bots</span>
+              <span class="legend-indicator purple"><span class="legend-dot purple"></span> Auto-Throttled</span>
+            </div>
+          </div>
+
+          <div class="advanced-chart-wrapper" id="threatChartWrapper" style="height: 160px; position: relative;">
+            <canvas id="canvasThreatChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:auto;"></canvas>
+            <svg id="svgThreatChart" class="advanced-chart-svg" style="display:none;" viewBox="0 0 600 160" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradThreatRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.35" />
+                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Grid Lines -->
+              <line x1="0" y1="35" x2="600" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="125" x2="600" y2="125" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="155" x2="600" y2="155" stroke="rgba(255,255,255,0.08)" />
+
+              <!-- Threat Area & Line -->
+              <path id="chartThreatArea" fill="url(#gradThreatRed)" d="M0,155 L600,155 Z" />
+              <polyline id="chartThreatPolyline" fill="none" stroke="#ef4444" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="0,145 600,145" />
+              <polyline id="chartSpamPolyline" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="0,150 600,150" />
+
+              <!-- Scrub Crosshair -->
+              <line id="threatScrubLine" x1="300" y1="10" x2="300" y2="155" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2,2" opacity="0" />
+              <circle id="threatScrubDot" cx="300" cy="100" r="4" fill="#ef4444" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+            </svg>
+            <div id="threatChartOverlay" class="chart-interaction-overlay"></div>
+          </div>
+
+          <div class="chart-hud-strip" id="threatChartHud">
+            <div class="hud-item"><span class="hud-label">Point:</span> <strong id="hudThreatTimeVal" class="tabular-nums">Live Window</strong></div>
+            <div class="hud-item red"><span class="hud-label">Violations Blocked:</span> <strong id="hudThreatVal" class="tabular-nums">0/s</strong></div>
+            <div class="hud-item amber"><span class="hud-label">Spam Intercepted:</span> <strong id="hudSpamVal" class="tabular-nums">0/s</strong></div>
+            <div class="hud-item green"><span class="hud-label">Clean Pass Rate:</span> <strong id="hudCleanRateVal" class="tabular-nums">99.8%</strong></div>
+          </div>
+        </div>
+
+        <!-- ═══ LOAD GOVERNOR & EMERGENCY DEFENSE SWITCHBOARD ═══ -->
+        <div class="admin-grid-2col">
+          <!-- Infrastructure Status -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Cluster Infrastructure & Node Health</h4>
+              <span class="badge-status-ok">Operational</span>
+            </div>
+            <div class="infra-list">
+              <div class="infra-item">
+                <div class="infra-info">
+                  <strong>Distributed Redis Mesh</strong>
+                  <span class="infra-desc">Sub-millisecond matchmaking & ephemeral pub/sub</span>
+                </div>
+                <span class="infra-badge" id="badgeRedisStatus">Checking...</span>
+              </div>
+              <div class="infra-item">
+                <div class="infra-info">
+                  <strong>Cloud Firestore Persistence</strong>
+                  <span class="infra-desc">User accounts, friendship records & report archives</span>
+                </div>
+                <span class="infra-badge" id="badgeFirestoreStatus">Checking...</span>
+              </div>
+              <div class="infra-item">
+                <div class="infra-info">
+                  <strong>Node.js Event Loop & Engine</strong>
+                  <span class="infra-desc" id="infraNodeDesc">v20+ · Linux</span>
+                </div>
+                <span class="infra-badge ok" id="badgeEventLoopLag">Lag: <span class="tabular-nums">1ms</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Emergency Controls & System Switches -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Concurrency Switches & Load Governors</h4>
+              <span class="count-pill" id="systemControlsStatusPill">Normal Mode</span>
+            </div>
+            <div class="system-switches-list">
+              <!-- Switch: Raid Shield -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Raid Shield / Anti-Bot Surge Protection</strong>
+                  <p class="switch-desc">Throttles burst IP floods, duplicate copypasta, and bot clusters</p>
+                </div>
+                <button id="adminToggleRaidShieldBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="raidShieldBtnText">RAID SHIELD (OFF)</span>
+                </button>
+              </div>
+
+              <!-- Switch: Global Slow Mode -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Global Slow Mode (Chat Rate Cooldown)</strong>
+                  <p class="switch-desc">Enforce cooldown between messages to protect servers at 100k load</p>
+                </div>
+                <select id="adminSlowModeSelect" class="admin-select" style="max-width: 140px; padding: 6px 10px; font-size: 0.82rem;">
+                  <option value="0">Off (Normal)</option>
+                  <option value="1">1s Delay</option>
+                  <option value="2">2s Delay</option>
+                  <option value="3">3s Delay</option>
+                  <option value="5">5s Cooldown</option>
+                </select>
+              </div>
+
+              <!-- Switch: Matchmaking Kill Switch -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Matchmaking Kill Switch</strong>
+                  <p class="switch-desc">Pause user matching instantly for maintenance or load control</p>
+                </div>
+                <button id="adminToggleMatchmakingBtn" class="btn-switch active" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="matchmakingBtnText">MATCHING ACTIVE</span>
+                </button>
+              </div>
+
+              <!-- Switch: Strict 1-Strike Emergency Mode -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Strict 1-Strike Emergency Safety Mode</strong>
+                  <p class="switch-desc">Instant 1-strike immediate device ban on any detected slur/violation</p>
+                </div>
+                <button id="adminToggleStrictModeBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="strictModeBtnText">STANDARD (3-STRIKE)</span>
+                </button>
+              </div>
+
+              <!-- Switch: Link & Invite Shield -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>External Link & Invite Shield</strong>
+                  <p class="switch-desc">Block telegram, discord, whatsapp, and external invites</p>
+                </div>
+                <button id="adminToggleLinkShieldBtn" class="btn-switch active" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="linkShieldBtnText">LINKS BLOCKED</span>
+                </button>
+              </div>
+
+              <!-- Switch: Queue Capacity Governor -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Matchmaking Queue Cap</strong>
+                  <p class="switch-desc">Limit peak queue buffer during traffic surges</p>
+                </div>
+                <select id="adminQueueCapSelect" class="admin-select" style="max-width: 140px; padding: 6px 10px; font-size: 0.82rem;">
+                  <option value="0">Unlimited</option>
+                  <option value="10000">10k Cap</option>
+                  <option value="25000">25k Cap</option>
+                  <option value="50000">50k Cap</option>
+                  <option value="100000">100k Cap</option>
+                </select>
+              </div>
+
+              <!-- Action: Flush Sockets & Geo Match -->
+              <div class="switch-row-item">
+                <div>
+                  <strong>Clean Inactive Sockets</strong>
+                  <p class="switch-desc">Purge lingering dead connections and idle memory</p>
+                </div>
+                <button id="adminFlushSocketsBtn" class="btn-primary-admin" type="button" style="padding: 7px 14px; font-size: 0.8rem;">
+                  <span>🧹 Flush Idle</span>
+                </button>
+              </div>
+
+              <div class="switch-row-item">
+                <div>
+                  <strong>Nearby Origin Matching</strong>
+                  <p class="switch-desc">Prioritize matching users from adjacent regions</p>
+                </div>
+                <button id="adminToggleGeoBtn" class="btn-switch" type="button">
+                  <span class="switch-indicator-dot"></span>
+                  <span id="geoMatchBtnText">GLOBAL (OFF)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 1b. USER BEHAVIOR, MESSAGING & VIOLATION INTEL TAB (NEW) ═══ -->
+      <div id="adminTabBehavior" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User Behavior, Messaging & Violation Intelligence</h3>
+            <p class="panel-section-subtitle">Real-time metrics on how users are messaging, asking numbers, slur categories, and contact sharing</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <button class="btn-refresh-sm danger" id="resetBehaviorDataBtn" type="button" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; margin-right: 8px; cursor: pointer;">🗑️ Clear Behaviour Data</button>
+            <button class="btn-refresh-sm" id="refreshBehaviorBtn" type="button">🔄 Refresh Intel</button>
+          </div>
+        </div>
+
+        <!-- 8-Card Behavior & Extraction Metrics Grid -->
+        <div class="admin-stats-grid" id="behaviorStatsGrid" style="margin-bottom: 20px;">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Asking For Numbers</span>
+              <span class="stat-icon-wrap amber">📱</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorAskedNumbers">0</div>
+            <div class="stat-sub">"give me num", wa requests</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Numbers Shared</span>
+              <span class="stat-icon-wrap red">📞</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorSharedNumbers">0</div>
+            <div class="stat-sub">Digits / direct phones blocked</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Slurs & Abuse</span>
+              <span class="stat-icon-wrap red">🛡️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorSlursBlocked">0</div>
+            <div class="stat-sub">Pre-send filter interceptions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Social Handles (IG/Snap)</span>
+              <span class="stat-icon-wrap purple">📸</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorSocialHandles">0</div>
+            <div class="stat-sub">External contact extractions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Clean Pass Rate</span>
+              <span class="stat-icon-wrap green">✨</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorCleanRate">100%</div>
+            <div class="stat-sub">Civil conversation ratio</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Avg Chat Duration</span>
+              <span class="stat-icon-wrap cyan">⏱</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorAvgDuration">0s</div>
+            <div class="stat-sub">Mean completed session length</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Avg Message Depth</span>
+              <span class="stat-icon-wrap purple">📝</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorAvgMsgLength">0 chars</div>
+            <div class="stat-sub">Mean characters per message</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Off-Platform Risk Index</span>
+              <span class="stat-icon-wrap amber">⚠️</span>
+            </div>
+            <div class="stat-value tabular-nums" id="statBehaviorOffPlatformRate">0.0%</div>
+            <div class="stat-sub">Users soliciting external contacts</div>
+          </div>
+        </div>
+
+        <!-- Card 1: Interactive Category Ratio Bar / Visualizer -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Violation Category Composition</h4>
+            <span class="count-pill cyan">Proportional Breakdown</span>
+          </div>
+          <p class="admin-desc-text">Visual distribution of blocked conversational violations across categories:</p>
+
+          <!-- Visual Ratio Track -->
+          <div class="behavior-ratio-bar-wrap" style="margin: 14px 0 16px;">
+            <div class="behavior-ratio-bar" id="behaviorRatioBar" style="display:flex; height:18px; border-radius:9px; overflow:hidden; background:rgba(255,255,255,0.06); width:100%;">
+              <div id="ratioBarAsked" style="width:0%; background:#f59e0b; transition:width 0.4s;" title="Asking Numbers"></div>
+              <div id="ratioBarShared" style="width:0%; background:#ef4444; transition:width 0.4s;" title="Numbers Shared"></div>
+              <div id="ratioBarSlurs" style="width:0%; background:#dc2626; transition:width 0.4s;" title="Slurs & Abuse"></div>
+              <div id="ratioBarSocial" style="width:0%; background:#a855f7; transition:width 0.4s;" title="Social Handles"></div>
+              <div id="ratioBarLinks" style="width:0%; background:#3b82f6; transition:width 0.4s;" title="Links & Invites"></div>
+            </div>
+          </div>
+
+          <div class="behavior-legend-list" id="behaviorLegendList" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- Populated dynamically with exact counts & percentages -->
+          </div>
+        </div>
+
+        <!-- Row 3: Slur Category Distribution & Conversational Engagement Depth -->
+        <div class="admin-grid-2col" style="margin-top: 14px;">
+          <!-- Card 3: Categorized Slurs Distribution -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Slur & Harmful Speech Taxonomy</h4>
+              <span class="count-pill red">Hate Speech & Abuse</span>
+            </div>
+            <p class="admin-desc-text">Distribution of detected prohibited phrases across linguistic categories:</p>
+
+            <div class="slur-categories-grid">
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag red">Racial & Ethnic</span>
+                  <strong class="slur-cat-val tabular-nums" id="catRacialCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Severe racial/ethnic slurs</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag pink">Predatory / Grooming</span>
+                  <strong class="slur-cat-val tabular-nums" id="catPredatoryCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Diddy, Epstein, chomo slang</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag purple">Homophobic / Trans</span>
+                  <strong class="slur-cat-val tabular-nums" id="catHomophobicCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Anti-LGBTQ+ abusive terms</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag amber">Misogynistic Abuse</span>
+                  <strong class="slur-cat-val tabular-nums" id="catMisogynisticCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Gendered insults & degradation</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag red">Cyberbullying / KYS</span>
+                  <strong class="slur-cat-val tabular-nums" id="catCyberbullyingCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">Suicide encouragement & bullying</span>
+              </div>
+
+              <div class="slur-cat-card">
+                <div class="slur-cat-header">
+                  <span class="slur-cat-tag cyan">Regional / Hinglish</span>
+                  <strong class="slur-cat-val tabular-nums" id="catRegionalCount">0</strong>
+                </div>
+                <span class="slur-cat-desc">South Asian / multilingual profanity</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Conversational Engagement & Depth -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Chat Session Depth & Duration</h4>
+              <span class="count-pill green">Engagement Health</span>
+            </div>
+            <p class="admin-desc-text">How long users stay engaged in anonymous 1-on-1 conversations:</p>
+
+            <div class="duration-bars-list">
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>⚡ Quick Skips (&lt;15s)</span>
+                  <strong class="tabular-nums" id="durQuickSkipsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durQuickSkipsFill" style="width:0%; background:#ef4444;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>⏱ Short Chats (15s – 1m)</span>
+                  <strong class="tabular-nums" id="durShortChatsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durShortChatsFill" style="width:0%; background:#f59e0b;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>💬 Medium Chats (1m – 3m)</span>
+                  <strong class="tabular-nums" id="durMediumChatsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durMediumChatsFill" style="width:0%; background:#06b6d4;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>🌟 Deep Chats (&gt;3m)</span>
+                  <strong class="tabular-nums" id="durDeepChatsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="durDeepChatsFill" style="width:0%; background:#10b981;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3b: Conversational Vibe Taxonomy & Behavioral Timeline Graph -->
+        <div class="admin-grid-2col" style="margin-top: 14px;">
+          <!-- Card: Conversational Tone & Vibe Taxonomy -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Conversational Tone & Vibe Distribution</h4>
+              <span class="count-pill cyan">Sentiment & Intent</span>
+            </div>
+            <p class="admin-desc-text">Algorithmic classification of active user conversational styles and opening intents:</p>
+
+            <div class="duration-bars-list" style="margin-top: 12px;">
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>👋 Friendly Greetings ("hi", "hello", "sup")</span>
+                  <strong class="tabular-nums" id="vibeGreetingsCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeGreetingsFill" style="width:0%; background:#06b6d4;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>❓ Curious Questions & Icebreakers ("what", "where", "?")</span>
+                  <strong class="tabular-nums" id="vibeCuriousCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeCuriousFill" style="width:0%; background:#8b5cf6;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>💬 Casual Flowing Dialogue (Standard conversation)</span>
+                  <strong class="tabular-nums" id="vibeCasualCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeCasualFill" style="width:0%; background:#10b981;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>🤣 Playful Humor & Memes ("haha", "lol", emojis)</span>
+                  <strong class="tabular-nums" id="vibeHumorCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeHumorFill" style="width:0%; background:#f59e0b;"></div>
+                </div>
+              </div>
+
+              <div class="duration-bar-item">
+                <div class="duration-bar-label">
+                  <span>⚠️ Toxic / Hostile Messages (Intercepted & Quarantined)</span>
+                  <strong class="tabular-nums" id="vibeHostileCount">0</strong>
+                </div>
+                <div class="duration-progress-track">
+                  <div class="duration-progress-fill" id="vibeHostileFill" style="width:0%; background:#ef4444;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card: Interactive Behavioral & Violation Timeline Graph -->
+          <div class="admin-card">
+            <div class="card-header-bar flex-wrap-mobile">
+              <div>
+                <h4 class="card-bar-title">Behavioral Violation Velocity Timeline</h4>
+                <p class="panel-section-subtitle">Minute-by-minute trend: Asking Numbers vs Slurs vs Socials</p>
+              </div>
+              <div class="chart-legend-row" style="font-size: 0.75rem;">
+                <span class="legend-indicator amber"><span class="legend-dot amber"></span> Asking Numbers</span>
+                <span class="legend-indicator red"><span class="legend-dot red"></span> Slurs</span>
+                <span class="legend-indicator purple"><span class="legend-dot purple"></span> Socials</span>
+              </div>
+            </div>
+
+            <!-- Behavior Timeline Chart -->
+            <div class="advanced-chart-wrapper" id="behaviorTimelineWrapper" style="margin-top: 10px; height: 160px; position:relative;">
+              <canvas id="canvasBehaviorChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:auto;"></canvas>
+              <svg id="svgBehaviorTimeline" class="advanced-chart-svg" style="display:none;" viewBox="0 0 600 160" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="gradBehaviorAmber" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
+                    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.0" />
+                  </linearGradient>
+                  <linearGradient id="gradBehaviorRed" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ef4444" stop-opacity="0.28" />
+                    <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                <!-- Grid lines -->
+                <line x1="0" y1="35" x2="600" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+                <line x1="0" y1="80" x2="600" y2="80" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+                <line x1="0" y1="125" x2="600" y2="125" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+                <line x1="0" y1="155" x2="600" y2="155" stroke="rgba(255,255,255,0.08)" />
+
+                <!-- Asking Numbers Area & Line (Amber) -->
+                <path id="chartBehaviorAskedArea" fill="url(#gradBehaviorAmber)" d="M0,155 L600,155 Z" />
+                <polyline id="chartBehaviorAskedPolyline" fill="none" stroke="#f59e0b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" points="0,150 600,150" />
+
+                <!-- Slurs Area & Line (Red) -->
+                <path id="chartBehaviorSlursArea" fill="url(#gradBehaviorRed)" d="M0,155 L600,155 Z" />
+                <polyline id="chartBehaviorSlursPolyline" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,152 600,152" />
+
+                <!-- Socials Line (Purple) -->
+                <polyline id="chartBehaviorSocialPolyline" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="0,154 600,154" />
+
+                <!-- Phone Shared Line (Pink) -->
+                <polyline id="chartBehaviorSharedPolyline" fill="none" stroke="#ec4899" stroke-width="1.8" stroke-dasharray="3,3" points="0,154 600,154" />
+              </svg>
+            </div>
+
+            <div class="chart-hud-strip" style="margin-top: 8px;">
+              <div class="hud-item amber"><span class="hud-label">Asking:</span> <strong id="hudBehaviorAsked" class="tabular-nums">0/min</strong></div>
+              <div class="hud-item red"><span class="hud-label">Slurs:</span> <strong id="hudBehaviorSlurs" class="tabular-nums">0/min</strong></div>
+              <div class="hud-item purple"><span class="hud-label">Socials:</span> <strong id="hudBehaviorSocials" class="tabular-nums">0/min</strong></div>
+              <div class="hud-item green"><span class="hud-label">Clean:</span> <strong id="hudBehaviorClean" class="tabular-nums">0/min</strong></div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- Row 4b: Top Repeat Policy & Slur Offenders Leaderboard -->
+        <div class="admin-card" style="margin-top: 14px;">
+          <div class="card-header-bar">
+            <div>
+              <h4 class="card-bar-title">Top Repeat Policy & Slur Offenders</h4>
+              <p class="panel-section-subtitle">Real-time surveillance of users with repeated hate speech, contact solicitation, or harassment strikes</p>
+            </div>
+            <span class="count-pill red" id="repeatOffendersCountPill">0 Flagged</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>User / Session ID</th>
+                  <th>Origin</th>
+                  <th>Total Violations</th>
+                  <th>Slurs Blocked</th>
+                  <th>Numbers / Socials</th>
+                  <th>Last Detected Snippet</th>
+                  <th>Quick Action</th>
+                </tr>
+              </thead>
+              <tbody id="repeatOffendersTableBody">
+                <tr><td colspan="8" style="text-align:center; padding: 22px; color: var(--t-ghost);">No repeat offenders detected. Platform safety healthy.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+
+
+
+        <!-- ═══ Row 7: ADVANCED REAL-TIME GRAPH 3: PSYCHOLOGICAL RETENTION & CHURN CURVE ═══ -->
+        <div class="admin-card chart-main-card" style="margin-top: 14px;">
+          <div class="card-header-bar flex-wrap-mobile">
+            <div class="chart-header-left">
+              <h4 class="card-bar-title">📈 Real-Time Psychological Retention & Churn Curve</h4>
+              <span class="chart-subtitle-text">Empirical survival probability: How long users stay matched before dropping off</span>
+            </div>
+            <div class="chart-legend-row" style="font-size:0.75rem;">
+              <span class="legend-indicator green"><span class="legend-dot green"></span> Authentic Retention (%)</span>
+              <span class="legend-indicator red"><span class="legend-dot red"></span> Speed Swapper Churn (%)</span>
+              <span class="legend-indicator amber"><span class="legend-dot amber"></span> Solicitous Drop-off</span>
+            </div>
+          </div>
+
+          <!-- Retention Curve Interactive Chart -->
+          <div class="advanced-chart-wrapper" style="height: 175px; position:relative;" id="retentionChartWrapper">
+            <canvas id="canvasRetentionChart" class="advanced-chart-canvas" style="position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:auto;"></canvas>
+            <svg id="svgRetentionChart" class="advanced-chart-svg" style="display:none;" viewBox="0 0 600 175" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradRetentionGreen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#10b981" stop-opacity="0.32" />
+                  <stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
+                </linearGradient>
+                <linearGradient id="gradRetentionRed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ef4444" stop-opacity="0.25" />
+                  <stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              <!-- Horizontal Grid Lines -->
+              <line x1="0" y1="35" x2="600" y2="35" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="85" x2="600" y2="85" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="135" x2="600" y2="135" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
+              <line x1="0" y1="165" x2="600" y2="165" stroke="rgba(255,255,255,0.08)" />
+
+              <!-- Vertical Time Window Markers -->
+              <line x1="60" y1="15" x2="60" y2="165" stroke="rgba(255,255,255,0.08)" stroke-dasharray="2,2" />
+              <line x1="180" y1="15" x2="180" y2="165" stroke="rgba(255,255,255,0.08)" stroke-dasharray="2,2" />
+              <line x1="360" y1="15" x2="360" y2="165" stroke="rgba(255,255,255,0.08)" stroke-dasharray="2,2" />
+
+              <text x="62" y="30" fill="rgba(255,255,255,0.3)" font-size="9">15s</text>
+              <text x="182" y="30" fill="rgba(255,255,255,0.3)" font-size="9">1m</text>
+              <text x="362" y="30" fill="rgba(255,255,255,0.3)" font-size="9">3m</text>
+
+              <!-- Retention Curve Area & Polyline (Green) -->
+              <path id="chartRetentionArea" fill="url(#gradRetentionGreen)" d="M0,165 L600,165 Z" />
+              <polyline id="chartRetentionPolyline" fill="none" stroke="#10b981" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" points="0,25 60,65 180,110 360,135 600,150" />
+
+              <!-- Churn Curve Polyline (Red) -->
+              <polyline id="chartChurnPolyline" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" points="0,160 60,120 180,75 360,45 600,30" />
+
+              <!-- Crosshair Scrubber -->
+              <line id="retentionScrubLine" x1="300" y1="15" x2="300" y2="165" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="2,2" opacity="0" />
+              <circle id="retentionScrubDot" cx="300" cy="100" r="4" fill="#10b981" stroke="#ffffff" stroke-width="1.5" opacity="0" />
+            </svg>
+            <div id="retentionChartOverlay" class="chart-interaction-overlay"></div>
+          </div>
+
+          <!-- Retention HUD Strip -->
+          <div class="chart-hud-strip" id="retentionChartHud">
+            <div class="hud-item"><span class="hud-label">Window:</span> <strong id="hudRetWindow">15s – 3m Range</strong></div>
+            <div class="hud-item green"><span class="hud-label">3m Survival Rate:</span> <strong id="hudRetSurvival" class="tabular-nums">68.4%</strong></div>
+            <div class="hud-item red"><span class="hud-label">15s Skip Churn:</span> <strong id="hudRetSkipChurn" class="tabular-nums">24.2%</strong></div>
+            <div class="hud-item cyan"><span class="hud-label">Patience Quotient:</span> <strong id="hudRetPatience" class="tabular-nums">74.8%</strong></div>
+          </div>
+        </div>
+
+
+      </div>
+
+      <!-- ═══ 2. MASS CONTROL & BULK OPERATIONS TAB ═══ -->
+      <div id="adminTabMasscontrol" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Fleet User Control & Mass Operations</h3>
+            <p class="panel-section-subtitle">Multi-target batch moderation, automated mass purges, and geographic perimeter fencing</p>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Card A: Multi-Target Batch Action Console -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Multi-Target Batch Moderation Console</h4>
+              <span class="count-pill cyan">Batch Operations</span>
+            </div>
+            <p class="admin-desc-text">Paste identifiers (user IDs, device hashes, or socket IDs) to enforce bulk policies in a single batch operation:</p>
+
+            <form id="bulkActionForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="bulkTargetsInput" class="admin-label">Target Identifiers (one per line, or comma-separated)</label>
+                <textarea 
+                  id="bulkTargetsInput" 
+                  class="admin-textarea" 
+                  rows="4" 
+                  placeholder="u_abc123&#10;dh_xyz789&#10;192.168.1.1&#10;u_spambot456" 
+                  required
+                ></textarea>
+                <div class="bulk-presets-row">
+                  <button type="button" class="btn-table-action" id="bulkFillReportsBtn">Paste Targets from Recent Reports</button>
+                  <button type="button" class="btn-table-action" id="bulkClearTargetsBtn">Clear</button>
+                </div>
+              </div>
+
+              <div class="admin-grid-2col" style="gap: 12px; margin-bottom: 12px;">
+                <div class="admin-field-group" style="margin-bottom:0;">
+                  <label for="bulkDurationSelect" class="admin-label">Duration</label>
+                  <select id="bulkDurationSelect" class="admin-select">
+                    <option value="15">15 Minutes</option>
+                    <option value="60" selected>1 Hour</option>
+                    <option value="1440">24 Hours (1 Day)</option>
+                    <option value="10080">7 Days</option>
+                    <option value="43200">30 Days</option>
+                    <option value="525600">Permanent (1 Year)</option>
+                  </select>
+                </div>
+                <div class="admin-field-group" style="margin-bottom:0;">
+                  <label for="bulkReasonInput" class="admin-label">Reason / Policy Note</label>
+                  <input type="text" id="bulkReasonInput" class="admin-input" value="Bulk administrative safety policy" required />
+                </div>
+              </div>
+
+              <div class="bulk-action-buttons-grid">
+                <button type="button" id="executeBulkBanBtn" class="btn-primary-admin danger">
+                  <span>🚫 Batch Device Ban</span>
+                </button>
+                <button type="button" id="executeBulkShadowbanBtn" class="btn-primary-admin warning">
+                  <span>👻 Batch Ghost Shadowban</span>
+                </button>
+                <button type="button" id="executeBulkKickBtn" class="btn-ghost-admin">
+                  <span>🚪 Batch Disconnect (Kick)</span>
+                </button>
+              </div>
+            </form>
+
+            <div id="bulkActionOutputLog" class="terminal-output-box" style="display:none;"></div>
+          </div>
+
+          <!-- Card B: Instant Load Relief & Mass Purge Tools -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Surge Relief & Mass Traffic Purge</h4>
+              <span class="count-pill pink">High Load Defense</span>
+            </div>
+            <p class="admin-desc-text">Instantly shed dead or unauthenticated connections during traffic spikes up to 100k users:</p>
+
+            <div class="purge-actions-list">
+              <div class="purge-action-row">
+                <div>
+                  <strong>Purge Stale Idle Connections</strong>
+                  <p class="switch-desc">Closes sockets idle for >5 minutes without an active room</p>
+                </div>
+                <button type="button" id="purgeIdleSocketsBtn" class="btn-primary-admin" style="font-size: 0.8rem; padding: 8px 14px;">
+                  🧹 Purge Idle
+                </button>
+              </div>
+
+              <div class="purge-action-row">
+                <div>
+                  <strong>Mass Disconnect Regional Traffic</strong>
+                  <p class="switch-desc">Drop all connections from a specific country under distributed attack</p>
+                </div>
+                <div class="flex-align-gap" style="display:flex; gap:8px;">
+                  <input type="text" id="purgeCountryInput" class="admin-input" placeholder="e.g. United States or Russia" style="width: 140px; font-size: 0.8rem; padding: 6px 10px;" />
+                  <button type="button" id="purgeCountryBtn" class="btn-primary-admin danger" style="font-size: 0.8rem; padding: 8px 12px;">
+                    Drop Country
+                  </button>
+                </div>
+              </div>
+
+              <div class="purge-action-row">
+                <div>
+                  <strong>Drain Matchmaking Waiting Queue</strong>
+                  <p class="switch-desc">Resets all waiting match seekers if queue experiences stall</p>
+                </div>
+                <button type="button" id="drainQueueBtn" class="btn-ghost-admin" style="font-size: 0.8rem; padding: 8px 14px;">
+                  ⚡ Reset Queue
+                </button>
+              </div>
+            </div>
+
+            <!-- Regional Quarantine / Geo-Fencing Table -->
+            <div class="card-header-bar" style="margin-top: 14px;">
+              <h4 class="card-bar-title">Regional Geo-Fence Perimeters</h4>
+              <span class="count-pill" id="geoRulesActiveCount">0 Quarantined</span>
+            </div>
+            <div class="table-responsive" style="max-height: 220px;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Location / Origin</th>
+                    <th>Online Sockets</th>
+                    <th>Perimeter Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="geoRulesTableBody">
+                  <tr><td colspan="4" style="text-align:center; padding: 16px; color: var(--t-ghost);">Loading regional rules...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 3. GHOST SHADOWBAN MANAGEMENT TAB (NEW) ═══ -->
+      <div id="adminTabShadowbans" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Ghost Mode & Silent Shadowbans</h3>
+            <p class="panel-section-subtitle">Isolate persistent harassment and bot accounts without triggering filter-evasion alerts</p>
+          </div>
+        </div>
+
+        <!-- Explanatory Architecture Banner -->
+        <div class="architecture-banner-box">
+          <div class="arch-banner-icon">👻</div>
+          <div class="arch-banner-text">
+            <strong>How Ghost Mode Operates at Scale:</strong>
+            <span>When a user is shadowbanned, messages sent by them are delivered only to themselves—their chat partner never receives anything. The bad actor believes they are chatting normally, preventing them from rotating IP addresses, device identifiers, or clearing browser cookies to bypass bans.</span>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Add Shadowban Card -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Add Ghost Shadowban</h4>
+              <span class="count-pill pink">Silent Quarantine</span>
+            </div>
+
+            <form id="addShadowbanForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="shadowbanTargetInput" class="admin-label">Device Hash, User ID, or Socket ID</label>
+                <input type="text" id="shadowbanTargetInput" class="admin-input" placeholder="e.g. dh_abc123 or u_xyz456" required />
+              </div>
+              <div class="admin-field-group">
+                <label for="shadowbanDurationSelect" class="admin-label">Quarantine Duration</label>
+                <select id="shadowbanDurationSelect" class="admin-select">
+                  <option value="60">1 Hour</option>
+                  <option value="1440" selected>24 Hours (1 Day)</option>
+                  <option value="10080">7 Days</option>
+                  <option value="43200">30 Days</option>
+                  <option value="525600">Permanent (1 Year)</option>
+                </select>
+              </div>
+              <div class="admin-field-group">
+                <label for="shadowbanReasonInput" class="admin-label">Quarantine Reason</label>
+                <input type="text" id="shadowbanReasonInput" class="admin-input" value="Spam bot or unsolicited solicitation" required />
+              </div>
+              <button type="submit" id="submitShadowbanBtn" class="btn-primary-admin warning" style="width: 100%;">
+                <span>👻 Enforce Ghost Shadowban</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Active Shadowbans List -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Active Silently Quarantined Targets</h4>
+              <span class="count-pill" id="shadowbansCountPill">0 active</span>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Target Identifier</th>
+                    <th>Remaining Time</th>
+                    <th>Reason</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="shadowbansTableBody">
+                  <tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--t-ghost);">No users are currently shadowbanned.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. REAL-TIME AUDIT STREAM TAB -->
+      <div id="adminTabEvents" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Real-Time Audit & Event Stream</h3>
+            <p class="panel-section-subtitle">Zero-lag platform event telemetry, matches, moderation, and alerts</p>
+          </div>
+          <div class="events-toolbar-actions">
+            <input type="text" id="searchEventsInput" class="admin-filter-input" placeholder="🔍 Search events..." style="width: 160px; padding: 5px 10px; font-size: 0.76rem;" />
+            <button class="btn-refresh-sm" id="clearEventsBtn" type="button">Clear Feed</button>
+            <button class="btn-refresh-sm active" id="toggleEventsAutoScrollBtn" type="button">Auto-Scroll: ON</button>
+          </div>
+        </div>
+
+        <div class="events-filter-bar">
+          <div class="events-pill-filters">
+            <button class="event-filter-pill active" data-type="all">All Events</button>
+            <button class="event-filter-pill" data-type="match">Matches</button>
+            <button class="event-filter-pill" data-type="ban">Bans & Suspensions</button>
+            <button class="event-filter-pill" data-type="report">Reports</button>
+            <button class="event-filter-pill" data-type="system">System & Broadcast</button>
+          </div>
+          <span class="events-count-note" id="eventsCountNote">Showing recent 50 events</span>
+        </div>
+
+        <div id="adminEventsContainer" class="admin-events-stream-list">
+          <!-- Real-time event cards inserted here -->
+        </div>
+      </div>
+
+      <!-- 3. LIVE CHATS TAB -->
+      <div id="adminTabRooms" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Active 1-on-1 Chat Rooms</h3>
+            <p class="panel-section-subtitle">Real-time inspector of ongoing ephemeral sessions</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <input type="text" id="searchRoomsInput" class="admin-filter-input" placeholder="🔍 Filter rooms by ID or user..." />
+            <button class="btn-refresh-sm" id="refreshRoomsBtn" type="button">Refresh Rooms</button>
+          </div>
+        </div>
+        <div id="adminRoomsContainer" class="admin-rooms-grid">
+          <!-- Room cards will be inserted here -->
+        </div>
+      </div>
+
+      <!-- 4. MODERATION & BANS TAB -->
+      <div id="adminTabBans" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Device Moderation & Bans</h3>
+            <p class="panel-section-subtitle">Enforce safety policies, manage suspensions, or lift restrictions</p>
+          </div>
+          <div class="toolbar-right-search-wrap">
+            <input type="text" id="searchBansInput" class="admin-filter-input" placeholder="🔍 Search device hash or reason..." />
+            <button class="btn-primary-sm" id="openManualBanModalBtn" type="button">+ Manual Ban</button>
+          </div>
+        </div>
+
+        <!-- Fast Moderation Presets Bar -->
+        <div class="broadcast-presets-section" style="margin-bottom: 14px;">
+          <span class="broadcast-presets-title">⚡ Fast Moderation Preset Templates:</span>
+          <div class="broadcast-presets-grid" id="adminBanPresetsGrid">
+            <button type="button" class="preset-pill-btn" data-ban-mins="15" data-ban-reason="Hate speech / harassment policy violation">
+              <span>🚫 15m Hate Speech</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-ban-mins="60" data-ban-reason="Targeted user harassment / bullying">
+              <span>⚠️ 1h Harassment</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-ban-mins="1440" data-ban-reason="Predatory behavior / unsolicited NSFW solicitation">
+              <span>🚨 24h Predatory / NSFW</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-ban-mins="10080" data-ban-reason="Spam bot / unauthorized external promotion">
+              <span>🤖 7d Bot / Spammer</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Active Suspended Devices</h4>
+            <span class="count-pill" id="activeBansCountPill">0 active</span>
+          </div>
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Device Identifier</th>
+                  <th>Remaining Time</th>
+                  <th>Reason / Policy Trigger</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminBansTableBody">
+                <!-- Ban rows inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. REPORTS TAB -->
+      <div id="adminTabReports" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User Reports & Moderation Queue</h3>
+            <p class="panel-section-subtitle">Investigate reported behavior and take immediate action</p>
+          </div>
+          <button class="btn-refresh-sm" id="refreshReportsBtn" type="button">Refresh Feed</button>
+        </div>
+
+        <div class="reports-filter-bar">
+          <input type="text" id="searchReportsInput" class="admin-filter-input" placeholder="🔍 Filter reports by target user or reason..." />
+          <div class="reports-status-pills">
+            <button class="report-filter-pill active" data-status="all">All</button>
+            <button class="report-filter-pill" data-status="pending">Pending</button>
+            <button class="report-filter-pill" data-status="reviewed">Reviewed</button>
+            <button class="report-filter-pill" data-status="dismissed">Dismissed</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Reporter</th>
+                  <th>Reported Target</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminReportsTableBody">
+                <!-- Report rows inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. WORD FILTER & BLACKLIST TAB -->
+      <div id="adminTabWords" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Automated Content Safety & Word Filter</h3>
+            <p class="panel-section-subtitle">Real-time phrase moderation sandbox, prohibited terms, and zero-restart filter sync</p>
+          </div>
+          <button class="btn-refresh-sm" id="refreshWordsBtn" type="button">Refresh Terms</button>
+        </div>
+
+        <div class="admin-stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">System Filter Rules</span>
+              <span class="stat-icon-wrap purple">🛡️</span>
+            </div>
+            <div class="stat-value" id="statTotalBlockedWords">0</div>
+            <div class="stat-sub">Active harmful terms</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Custom Dynamic Rules</span>
+              <span class="stat-icon-wrap cyan">✏️</span>
+            </div>
+            <div class="stat-value" id="statCustomWordsCount">0</div>
+            <div class="stat-sub">Admin additions</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="stat-card-header">
+              <span class="stat-title">Violations Intercepted</span>
+              <span class="stat-icon-wrap pink">⚡</span>
+            </div>
+            <div class="stat-value" id="statSlurViolations">0</div>
+            <div class="stat-sub">Blocked pre-delivery</div>
+          </div>
+        </div>
+
+        <div class="admin-grid-2col">
+          <!-- Live Interactive Sandbox Tester -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Interactive Filter Sandbox Tester</h4>
+              <span class="count-pill cyan">Real-time Engine</span>
+            </div>
+            <p class="admin-desc-text">Test a sentence against multi-format obfuscation (leetspeak, spaced text, vertical text, phonetics):</p>
+            <div class="admin-field-group">
+              <textarea id="wordTestInput" class="admin-textarea" rows="2" placeholder="Type a message to test (e.g. 'I'm gonna kill this test' or a forbidden word)..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 12px;">
+              <button id="testWordBtn" class="btn-primary-admin" type="button" style="padding: 9px 18px; min-height: 38px;">Test Phrase</button>
+              <span id="testWordVerdict" class="badge-tag pending" style="display:none;">Testing...</span>
+            </div>
+            <div id="testWordDetails" class="test-word-details-box" style="display:none;"></div>
+          </div>
+
+          <!-- Add Prohibited Term Form -->
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Add Prohibited Term</h4>
+              <span class="count-pill">Instant Sync</span>
+            </div>
+            <form id="addWordForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="newWordInput" class="admin-label">Prohibited Word or Phrase</label>
+                <input type="text" id="newWordInput" class="admin-input" placeholder="e.g. predatory_term or spam_link" required />
+              </div>
+              <div class="admin-field-group">
+                <label class="admin-label">Policy Action on Match</label>
+                <div class="custom-word-meta">
+                  <span>Matches will trigger automatic chat block and 3-strike policy escalation.</span>
+                </div>
+              </div>
+              <button type="submit" id="addWordSubmitBtn" class="btn-primary-admin" style="width: 100%;">
+                + Add Prohibited Term
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Custom Active Blocklist Chips -->
+        <div class="admin-card" style="margin-top: 20px;">
+          <div class="card-header-bar">
+            <h4 class="card-bar-title">Active Custom Blocklist Terms</h4>
+            <span class="count-pill" id="customWordsCountPill">0 custom</span>
+          </div>
+          <div id="customWordsChipsContainer" class="custom-words-chips-wrap">
+            <!-- Custom word chips inserted here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. USER & DEVICE LIVE INSPECTOR TAB -->
+      <div id="adminTabLookup" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">User & Device Live Inspector</h3>
+            <p class="panel-section-subtitle">Real-time socket diagnostics, connection tracing, and 1-click administrative actions</p>
+          </div>
+        </div>
+
+        <div class="admin-card" style="margin-bottom: 20px;">
+          <form id="adminLookupForm" onsubmit="return false;" class="lookup-search-form">
+            <input 
+              type="text" 
+              id="lookupQueryInput" 
+              class="admin-input lookup-input" 
+              placeholder="Paste Device Hash (dh_...), User ID (u_...), or Socket ID..." 
+              required 
+            />
+            <button type="submit" id="adminLookupSubmitBtn" class="btn-primary-admin" style="min-width: 120px;">
+              <span>Investigate</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <div id="lookupResultCard" class="admin-card" style="display:none;">
+          <!-- Profile details populated dynamically -->
+        </div>
+      </div>
+
+      <!-- 8. BROADCAST TAB -->
+      <div id="adminTabBroadcast" class="admin-tab-panel">
+        <div class="admin-grid-2col">
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Compose Global Announcement</h4>
+            </div>
+
+            <!-- Quick Preset Templates -->
+            <div class="broadcast-presets-section">
+              <span class="broadcast-presets-title">Quick Preset Templates:</span>
+              <div class="broadcast-presets-grid">
+                <button type="button" class="preset-pill-btn" data-preset="maintenance">
+                  <span>⏱ Maintenance in 10m</span>
+                </button>
+                <button type="button" class="preset-pill-btn" data-preset="safety">
+                  <span>🛡️ Safety Notice</span>
+                </button>
+                <button type="button" class="preset-pill-btn" data-preset="healthy">
+                  <span>✨ Smooth Speed</span>
+                </button>
+                <button type="button" class="preset-pill-btn" data-preset="flash">
+                  <span>⚡ Flash Chat Hour</span>
+                </button>
+              </div>
+            </div>
+
+            <form id="adminBroadcastForm" onsubmit="return false;">
+              <div class="admin-field-group">
+                <label for="broadcastMessageInput" class="admin-label">Announcement Message</label>
+                <textarea 
+                  id="broadcastMessageInput" 
+                  class="admin-textarea" 
+                  rows="3" 
+                  maxlength="300" 
+                  placeholder="e.g., Notice: Ping server maintenance in 10 minutes..." 
+                  required
+                ></textarea>
+                <div class="char-count-row"><span id="broadcastCharCount">0</span>/300 chars</div>
+              </div>
+
+              <div class="admin-field-group">
+                <label class="admin-label">Severity Level</label>
+                <div class="severity-picker">
+                  <label class="sev-radio">
+                    <input type="radio" name="broadcastLevel" value="info" checked />
+                    <span class="sev-tag info">ℹ️ Info (Cyan)</span>
+                  </label>
+                  <label class="sev-radio">
+                    <input type="radio" name="broadcastLevel" value="warning" />
+                    <span class="sev-tag warning">⚠️ Warning (Amber)</span>
+                  </label>
+                  <label class="sev-radio">
+                    <input type="radio" name="broadcastLevel" value="alert" />
+                    <span class="sev-tag alert">🚨 Urgent (Rose)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="broadcast-submit-row">
+                <button type="submit" id="sendBroadcastBtn" class="btn-primary-admin">
+                  <span>Send Broadcast to All Users</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="admin-card">
+            <div class="card-header-bar">
+              <h4 class="card-bar-title">Live Preview & Banner Testing</h4>
+            </div>
+            <p class="preview-label">How connected users will see it at the top of their screen:</p>
+            <div class="preview-banner-box">
+              <div class="preview-banner-inner info" id="broadcastPreviewBanner">
+                <span class="preview-icon">📢</span>
+                <span id="broadcastPreviewText">Your announcement message will appear here in real time...</span>
+              </div>
+            </div>
+            <div id="broadcastStatusMsg" class="broadcast-status-msg" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. TRAFFIC & GEO TAB -->
+      <div id="adminTabGeo" class="admin-tab-panel">
+        <div class="tab-panel-toolbar">
+          <div>
+            <h3 class="panel-section-title">Traffic & Geolocation Distribution</h3>
+            <p class="panel-section-subtitle">Real-time breakdown of connected users by origin</p>
+          </div>
+          <button class="btn-refresh-sm" id="refreshGeoBtn" type="button">Refresh Traffic</button>
+        </div>
+
+        <div class="admin-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Country / Location</th>
+                  <th>Connected Users</th>
+                  <th>Share of Traffic</th>
+                </tr>
+              </thead>
+              <tbody id="adminGeoTableBody">
+                <!-- Geo rows inserted here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MANUAL BAN MODAL ═══ -->
+  <div id="adminManualBanModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="manualBanModalTitle">
+    <div class="admin-auth-card">
+      <button id="closeManualBanModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <h3 id="manualBanModalTitle" class="admin-auth-title">Add Manual Device Ban</h3>
+        <p class="admin-auth-subtitle">Restrict a device identifier from connecting or chatting</p>
+      </div>
+
+      <form id="adminManualBanForm" onsubmit="return false;">
+        <div class="admin-field-group">
+          <label for="banDeviceInput" class="admin-label">Device Identifier / Hash / User ID</label>
+          <input type="text" id="banDeviceInput" class="admin-input" placeholder="e.g., dh_abc123 or u_xyz" required />
+        </div>
+        <div class="admin-field-group">
+          <label for="banDurationSelect" class="admin-label">Ban Duration</label>
+          <select id="banDurationSelect" class="admin-select">
+            <option value="15">15 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="1440">24 Hours (1 Day)</option>
+            <option value="10080">7 Days</option>
+            <option value="43200">30 Days</option>
+            <option value="525600">Permanent (1 Year)</option>
+          </select>
+        </div>
+        <div class="admin-field-group">
+          <label for="banReasonInput" class="admin-label">Suspension Reason</label>
+          <input type="text" id="banReasonInput" class="admin-input" placeholder="e.g. Hate speech, solicitation, spamming" value="Manual administrator suspension" required />
+        </div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelManualBanBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitManualBanBtn" class="btn-primary-admin">Apply Ban</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ MODERATION ACTION MODAL (WARN / SILENCE) ═══ -->
+  <div id="adminActionModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="actionModalTitle">
+    <div class="admin-auth-card">
+      <button id="closeActionModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <h3 id="actionModalTitle" class="admin-auth-title">Moderate Target</h3>
+        <p class="admin-auth-subtitle" id="actionModalSubtitle">Issue targeted administrative enforcement</p>
+      </div>
+
+      <form id="adminActionForm" onsubmit="return false;">
+        <input type="hidden" id="actionTargetInput" />
+        <input type="hidden" id="actionTypeInput" value="warn" />
+
+        <div id="actionWarnFields">
+          <div class="admin-field-group">
+            <label for="actionWarnMessageInput" class="admin-label">Warning Notice Message</label>
+            <textarea id="actionWarnMessageInput" class="admin-textarea" rows="3" placeholder="Enter warning message shown directly to user..."></textarea>
+          </div>
+          <div class="broadcast-presets-section" style="margin-bottom: 12px;">
+            <span class="broadcast-presets-title">Presets:</span>
+            <div class="broadcast-presets-grid" style="grid-template-columns: repeat(2, 1fr);">
+              <button type="button" class="preset-pill-btn" data-warn-preset="⚠️ Please keep conversations respectful and follow community rules.">
+                <span>Respectful chat</span>
+              </button>
+              <button type="button" class="preset-pill-btn" data-warn-preset="🚨 Warning: Repeated harassment or vulgar language results in an immediate device ban.">
+                <span>Harassment notice</span>
+              </button>
+              <button type="button" class="preset-pill-btn" data-warn-preset="🚫 Solicitation, advertising, and sharing inappropriate links are strictly forbidden.">
+                <span>No solicitation</span>
+              </button>
+              <button type="button" class="preset-pill-btn" data-warn-preset="⚠️ Final Warning: Continued violations will permanently suspend your device.">
+                <span>Final strike</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="actionSilenceFields" style="display:none;">
+          <div class="admin-field-group">
+            <label for="actionSilenceSelect" class="admin-label">Mute Duration</label>
+            <select id="actionSilenceSelect" class="admin-select">
+              <option value="5">5 Minutes</option>
+              <option value="15" selected>15 Minutes</option>
+              <option value="60">1 Hour</option>
+            </select>
+          </div>
+          <p class="admin-desc-text" style="margin-bottom: 12px;">Target will be prevented from sending messages for the selected duration.</p>
+        </div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelActionModalBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitActionModalBtn" class="btn-primary-admin">Confirm Action</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN ROOM ICEBREAKER / NUDGE MODAL ═══ -->
+  <div id="adminRoomNudgeModal" class="admin-modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="roomNudgeModalTitle">
+    <div class="admin-auth-card">
+      <button id="closeRoomNudgeModalBtn" class="modal-close-btn" type="button" aria-label="Close modal">✕</button>
+      <div class="admin-auth-header">
+        <h3 id="roomNudgeModalTitle" class="admin-auth-title">✨ Send Room Icebreaker / Nudge</h3>
+        <p class="admin-auth-subtitle" id="roomNudgeModalSubtitle">Inject an official prompt into an active conversation</p>
+      </div>
+
+      <form id="adminRoomNudgeForm" onsubmit="return false;">
+        <input type="hidden" id="nudgeRoomIdInput" />
+        
+        <div class="admin-field-group">
+          <label for="nudgeMessageInput" class="admin-label">Host Prompt / Icebreaker Message</label>
+          <textarea id="nudgeMessageInput" class="admin-textarea" rows="3" placeholder="Enter conversation prompt for both users..."></textarea>
+        </div>
+
+        <div class="broadcast-presets-section" style="margin-bottom: 14px;">
+          <span class="broadcast-presets-title">Quick Icebreaker Presets:</span>
+          <div class="broadcast-presets-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <button type="button" class="preset-pill-btn" data-nudge-preset="✨ Host Icebreaker: What is the most exciting adventure or travel story you have?">
+              <span>✈️ Travel story</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-nudge-preset="🎶 Host Icebreaker: What song or artist have you had on repeat all week?">
+              <span>🎵 Music recommendation</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-nudge-preset="🍕 Host Icebreaker: Fun debate: Pineapple on pizza — absolute yes or huge crime?">
+              <span>🍕 Food debate</span>
+            </button>
+            <button type="button" class="preset-pill-btn" data-nudge-preset="🎮 Host Icebreaker: If you could master any skill or game in 1 day, what would it be?">
+              <span>⚡ Dream superpower</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-auth-actions">
+          <button type="button" id="cancelRoomNudgeBtn" class="btn-ghost-admin">Cancel</button>
+          <button type="submit" id="submitRoomNudgeBtn" class="btn-primary-admin">Deliver to Room</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="/firebase-client.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/chart.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="/app.js?v=1.1.4"></script>
+  <script src="/admin.js?v=1.1.4"></script>
+  <script src="/animations.js?v=1.1.4"></script>
+</body>
+
+</html>

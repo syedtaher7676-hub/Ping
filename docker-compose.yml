@@ -1,0 +1,102 @@
+services:
+  # ─────────────────────────────────────────────────────────────
+  # In-Memory Cache, Pub/Sub & Shared State
+  # ─────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: ping-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --save 60 1
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    networks:
+      - ping_network
+
+  # ─────────────────────────────────────────────────────────────
+  # Ping Real-time Node Instance 1
+  # ─────────────────────────────────────────────────────────────
+  ping-node-1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ping-node-1
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MATCHMAKING_INTERVAL_MS=150
+      - START_CHAT_COOLDOWN_MS=600
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ping_network
+
+  # ─────────────────────────────────────────────────────────────
+  # Ping Real-time Node Instance 2
+  # ─────────────────────────────────────────────────────────────
+  ping-node-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ping-node-2
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MATCHMAKING_INTERVAL_MS=150
+      - START_CHAT_COOLDOWN_MS=600
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ping_network
+
+  # ─────────────────────────────────────────────────────────────
+  # NGINX Load Balancer & WebSocket Reverse Proxy
+  # ─────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: ping-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - ping-node-1
+      - ping-node-2
+    networks:
+      - ping_network
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  ping_network:
+    driver: bridge
