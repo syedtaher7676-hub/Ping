@@ -2626,9 +2626,24 @@ io.on("connection", (socket) => {
   });
 });
 
-// SPA fallback - serve index.html for client-side routing
+// Custom 404 & SPA Fallback Route Controller
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "index.html"));
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ success: false, error: "API endpoint not found" });
+  }
+
+  // Handle explicit 404 page requests or missing paths
+  if (req.path === "/404" || req.path === "/404.html") {
+    return res.status(404).sendFile(path.join(__dirname, "..", "public", "404.html"));
+  }
+
+  // Known valid root & client paths serve index.html
+  if (req.path === "/" || req.path === "/index.html" || req.path === "/chat") {
+    return res.sendFile(path.join(__dirname, "..", "public", "index.html"));
+  }
+
+  // Serve custom 404 page for unknown URLs
+  res.status(404).sendFile(path.join(__dirname, "..", "public", "404.html"));
 });
 
 app.use((err, _req, res, _next) => {

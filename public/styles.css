@@ -91,8 +91,18 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   overscroll-behavior: none;
-  position: relative;
   touch-action: manipulation;
+}
+
+/* Standalone Legal & Error Pages Overflow Override */
+html.legal-page,
+body.legal-page {
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: auto !important;
+  position: relative !important;
 }
 
 /* Mesmerizing Hypnotic Background Auras */
@@ -10980,6 +10990,51 @@ html, body {
   .psych-action-buttons-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* ═══ UNBOXED ELEGANT LEGAL FOOTER ═══ */
+.landing-legal-footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  padding: 8px 0;
+}
+
+.legal-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--t-ghost);
+  letter-spacing: 0.02em;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legal-age-tag {
+  color: #ff3388;
+  font-weight: 600;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.legal-sep {
+  opacity: 0.35;
+  color: var(--t-ghost);
+}
+
+.legal-link {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+
+.legal-link:hover {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 

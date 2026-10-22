@@ -291,6 +291,17 @@ Ping enforces Attribute-Based Access Control (ABAC) using zero-trust security ru
 
 ---
 
+## Legal & Regulatory Compliance Strategy
+
+Ping implements strict legal and operational boundaries designed for international compliance:
+
+1. **Strict 18+ Adults-Only Policy (`TERMS.md`)**: Ping is exclusively designed for adults aged 18 and older. Minors are prohibited, and suspected minor sessions are terminated with active device bans.
+2. **Explicit "No Third-Party AI Data Transfer" Clause (`PRIVACY.md`)**: Content safety and toxicity AI analysis executes **100% locally in-process** via ONNX Runtime (`Xenova/toxic-bert`). Raw chat text is **NEVER** transmitted to, processed by, or shared with third-party external AI APIs (e.g. OpenAI, Anthropic, or Google AI) for processing or model training.
+3. **GDPR "Legitimate Interest" Legal Basis (`PRIVACY.md`)**: Under **Article 6(1)(f) of the EU/UK GDPR (Legitimate Interest)**, Ping processes anonymized device hashes (`dev_xxxx`) and temporary IP telemetry strictly for platform safety, abuse prevention, 15-minute ban enforcement, and network security.
+4. **Explicit Text-Only CSAM Scope Boundary (`SAFETY.md`)**: Ping operates strictly as a text-only platform with no image/video streaming uploads. This removes the operational burden and expense of heavy media image-hashing APIs (such as PhotoDNA or Thorn) while maintaining zero tolerance for text-based grooming or exploitation via local neural matchers.
+
+---
+
 ## Production Setup & Deployment
 
 ### Prerequisites

@@ -206,7 +206,11 @@ Ping enforces zero-trust Attribute-Based Access Control (`firestore.rules`):
 - `/bans/{banId}`: Read-only for authenticated roles; write operations restricted to automated server processes and verified admins.
 - `/reports/{reportId}`: Create-only for authenticated users; modification restricted to admin review.
 
-### 5.2 Enterprise PII & Privacy Standards
+### 5.2 Enterprise PII, Legal & Regulatory Compliance Standards
+- **Strict 18+ Adults-Only Operational Posture (`TERMS.md`)**: Ping is exclusively designed and operated as an 18+ adults-only anonymous communication platform. Minors are strictly prohibited, and sessions belonging to suspected minors are terminated immediately with device suspensions.
+- **Explicit "No Third-Party AI Data Transfer" Clause (`PRIVACY.md`)**: All AI content moderation and toxicity classification runs **100% locally in-process** via the embedded ONNX Runtime (`Xenova/toxic-bert`). Raw chat text is **NEVER** transmitted to, processed by, or shared with third-party external AI APIs (such as OpenAI, Anthropic, or Google AI) for processing or model training.
+- **GDPR Article 6(1)(f) Legitimate Interest (`PRIVACY.md`)**: Under Article 6(1)(f) of the EU/UK GDPR (Legitimate Interest), Ping processes anonymized device hashes (`dev_xxxx`) and temporary IP threat telemetry strictly for platform safety, abuse prevention, 15-minute ban enforcement, and network security.
+- **Explicit Text-Only CSAM & Safety Scope Boundary (`SAFETY.md`)**: Ping operates strictly as a text-only platform with zero native image/video upload capabilities. This defines the operational scope, removing the requirement for heavy media image-hashing integrations (such as Microsoft PhotoDNA or Thorn) while maintaining a strict zero-tolerance stance against text-based exploitation or grooming via local neural pattern matchers.
 - **Zero Chat Log Persistence**: Ephemeral chat message text is processed in memory and never written to permanent database storage.
 - **Anonymized Telemetry**: System metrics aggregate numerical counts only, ensuring zero personal identity exposure.
 

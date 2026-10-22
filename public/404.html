@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" class="legal-page">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>404 — Signal Lost | Ping</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="stylesheet" href="/styles.css?v=1.1.4" />
+  <style>
+    html.legal-page,
+    body.legal-page {
+      height: auto !important;
+      min-height: 100% !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      overscroll-behavior: auto !important;
+      position: relative !important;
+      background: #06030e;
+    }
+    body {
+      color: #e2e8f0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 60px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .error-card {
+      background: rgba(15, 10, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 48px 36px;
+      text-align: center;
+      max-width: 520px;
+      width: 100%;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(112, 0, 255, 0.15);
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .error-code-badge {
+      display: inline-block;
+      background: rgba(255, 0, 122, 0.15);
+      border: 1px solid rgba(255, 0, 122, 0.4);
+      color: #FF007A;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+    .error-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00F0FF, #7000FF, #FF007A);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0 0 14px 0;
+      line-height: 1.2;
+    }
+    .error-desc {
+      color: #94a3b8;
+      font-size: 1rem;
+      margin-bottom: 32px;
+    }
+    .return-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #7000FF, #FF007A);
+      color: #ffffff;
+      text-decoration: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 28px;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(112, 0, 255, 0.4);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .return-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255, 0, 122, 0.5);
+      color: #ffffff;
+    }
+    .logo-mark-img {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body class="legal-page">
+  <div class="error-card">
+    <img src="/logo.svg" alt="Ping Logo" class="logo-mark-img" />
+    <div>
+      <span class="error-code-badge">⚡ 404 SIGNAL LOST</span>
+    </div>
+    <h1 class="error-title">Page Not Found</h1>
+    <p class="error-desc">
+      The signal or page you are looking for has faded into the void or does not exist.
+    </p>
+    <a href="/" class="return-btn">
+      <span>Return to Ping</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+</body>
+</html>
