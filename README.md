@@ -1,4 +1,4 @@
-# Ping — Real-Time Anonymous Communication & Moderation Ecosystem
+# Ping
 
 Ping is a production-grade, high-concurrency anonymous messaging platform engineered for ultra-low-latency pairing, on-device local AI moderation, and automated network threat defense. Architected on Node.js, Express, Socket.IO, and Google Cloud Firestore, Ping combines in-memory queue orchestration with multi-vector threat intelligence and automated content governance to deliver a secure, resilient real-time communication ecosystem.
 

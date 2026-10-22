@@ -838,6 +838,207 @@ function triggerSoftAuthBanner() {
   return;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PWA INSTALLATION & STANDALONE DOWNLOAD SYSTEM
+// ═══════════════════════════════════════════════════════════════
+let deferredPwaPrompt = null;
+
+// 1. Capture PWA BeforeInstallPrompt Event
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  console.log('[Ping PWA] Captured beforeinstallprompt event');
+  document.querySelectorAll('#downloadLandingBtn, #headerDownloadBtn, .download-app-btn, .header-download-btn').forEach(btn => {
+    btn.classList.add('pwa-ready');
+  });
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPwaPrompt = null;
+  console.log('[Ping PWA] Ping App successfully installed!');
+  if (typeof showToast === 'function') {
+    showToast('🎉 Ping is installed on your device! Access it anytime from your home screen.', 'success', 5000);
+  }
+});
+
+// 2. Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('[Ping PWA] Service Worker registered:', reg.scope);
+    }).catch((err) => {
+      console.warn('[Ping PWA] Service Worker registration failed:', err);
+    });
+  });
+}
+
+// 3. Modals for Installation & Download Fallbacks
+function showIOSDownloadModal() {
+  document.querySelectorAll('.ping-download-modal-overlay').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'ping-download-modal-overlay glass-modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(5,5,14,0.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  
+  modal.innerHTML = `
+    <div class="glass-modal-card" style="max-width:420px;width:100%;background:#0d091f;border:1px solid rgba(124,58,237,0.45);border-radius:20px;padding:28px 24px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.8),0 0 35px rgba(124,58,237,0.3);">
+      <div style="font-size:36px;margin-bottom:12px;">📱</div>
+      <h3 style="color:#fff;font-size:1.3rem;font-weight:700;margin:0 0 8px 0;font-family:'Space Grotesk',sans-serif;">Install Ping on iOS</h3>
+      <p style="color:#cbd5e1;font-size:0.88rem;line-height:1.5;margin:0 0 20px 0;">Install Ping as a Progressive Web App on iPhone/iPad for zero lag and full-screen instant chat!</p>
+      <div style="display:flex;flex-direction:column;gap:12px;text-align:left;background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="width:28px;height:28px;border-radius:50%;background:rgba(124,58,237,0.3);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">1</span>
+          <span style="color:#e2e8f0;font-size:0.85rem;">Tap the <strong>Share</strong> button <span style="font-size:1.1rem;">⎋</span> in Safari</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="width:28px;height:28px;border-radius:50%;background:rgba(124,58,237,0.3);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">2</span>
+          <span style="color:#e2e8f0;font-size:0.85rem;">Select <strong>Add to Home Screen</strong> ➕</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="width:28px;height:28px;border-radius:50%;background:rgba(124,58,237,0.3);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;">3</span>
+          <span style="color:#e2e8f0;font-size:0.85rem;">Launch Ping instantly from your Home Screen!</span>
+        </div>
+      </div>
+      <button type="button" class="btn-primary" style="width:100%;padding:12px;background:linear-gradient(135deg,#7c3aed 0%,#db2777 100%);border:none;border-radius:12px;color:#fff;font-size:0.95rem;font-weight:700;cursor:pointer;">Got It</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.querySelector('button').onclick = () => modal.remove();
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+function showPWAInstallFallbackModal() {
+  document.querySelectorAll('.ping-download-modal-overlay').forEach(m => m.remove());
+  const modal = document.createElement('div');
+  modal.className = 'ping-download-modal-overlay glass-modal-overlay';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(5,5,14,0.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+
+  modal.innerHTML = `
+    <div class="glass-modal-card" style="max-width:460px;width:100%;background:#0d091f;border:1px solid rgba(124,58,237,0.5);border-radius:22px;padding:30px 24px;text-align:center;box-shadow:0 25px 65px rgba(0,0,0,0.85),0 0 40px rgba(124,58,237,0.35);">
+      <div style="font-size:42px;margin-bottom:10px;">🧩</div>
+      <h3 style="color:#fff;font-size:1.35rem;font-weight:700;margin:0 0 6px 0;font-family:'Space Grotesk',sans-serif;">Ping Web Extension & App</h3>
+      <p style="color:#c4b5fd;font-size:0.88rem;line-height:1.5;margin:0 0 18px 0;font-weight:600;">📥 Extension package downloaded (<code style="color:#38bdf8;">ping-chrome-extension.zip</code>)!</p>
+      
+      <div style="display:flex;flex-direction:column;gap:10px;text-align:left;background:rgba(255,255,255,0.04);padding:16px;border-radius:14px;border:1px solid rgba(124,58,237,0.25);margin-bottom:18px;">
+        <div style="font-size:0.82rem;font-weight:700;color:#a78bfa;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">3-Step Extension Setup (Chrome / Edge / Brave / Opera):</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="width:24px;height:24px;border-radius:50%;background:rgba(124,58,237,0.35);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">1</span>
+          <span style="color:#e2e8f0;font-size:0.84rem;line-height:1.4;">Unzip the downloaded <strong>ping-chrome-extension.zip</strong> file into a folder.</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="width:24px;height:24px;border-radius:50%;background:rgba(124,58,237,0.35);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">2</span>
+          <span style="color:#e2e8f0;font-size:0.84rem;line-height:1.4;">Open your browser and navigate to <code style="color:#38bdf8;background:rgba(0,0,0,0.4);padding:2px 6px;border-radius:4px;">chrome://extensions</code> and turn ON <strong>Developer mode</strong>.</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="width:24px;height:24px;border-radius:50%;background:rgba(124,58,237,0.35);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;">3</span>
+          <span style="color:#e2e8f0;font-size:0.84rem;line-height:1.4;">Click <strong>Load unpacked</strong> and select the unzipped folder. Done! 🎉</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <button id="dlExtAgainBtn" type="button" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;background:linear-gradient(135deg,#7c3aed 0%,#06b6d4 100%);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:0.9rem;cursor:pointer;box-shadow:0 4px 18px rgba(124,58,237,0.4);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Re-download Extension (.zip)
+        </button>
+        
+        <button id="dlLauncherBtn" type="button" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+          Download Web Launcher (.html)
+        </button>
+      </div>
+
+      <button id="closeDlModalBtn" type="button" style="width:100%;padding:10px;background:transparent;border:none;color:#94a3b8;font-size:0.88rem;cursor:pointer;">Close</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const dlExtAgainBtn = modal.querySelector('#dlExtAgainBtn');
+  if (dlExtAgainBtn) {
+    dlExtAgainBtn.onclick = () => {
+      window.location.href = '/api/download/extension';
+      if (typeof showToast === 'function') {
+        showToast('📥 Downloading Extension package...', 'success', 3000);
+      }
+    };
+  }
+
+  const dlLauncherBtn = modal.querySelector('#dlLauncherBtn');
+  if (dlLauncherBtn) {
+    dlLauncherBtn.onclick = () => {
+      window.location.href = '/api/download/launcher';
+      if (typeof showToast === 'function') {
+        showToast('📥 Downloading Web App Launcher...', 'success', 3000);
+      }
+    };
+  }
+
+  const closeBtn = modal.querySelector('#closeDlModalBtn');
+  if (closeBtn) closeBtn.onclick = () => modal.remove();
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+// 4. Global Primary Download Trigger
+window.triggerAppDownload = function triggerAppDownload() {
+  if (navigator.vibrate) navigator.vibrate(20);
+
+  // A. Trigger immediate extension download
+  try {
+    const link = document.createElement('a');
+    link.href = '/api/download/extension';
+    link.download = 'ping-chrome-extension.zip';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    if (typeof showToast === 'function') {
+      showToast('📥 Downloading Ping Extension (ping-chrome-extension.zip)...', 'success', 3500);
+    }
+  } catch (_) {
+    window.location.href = '/api/download/extension';
+  }
+
+  // B. Native PWA Install Prompt if available
+  if (deferredPwaPrompt) {
+    setTimeout(() => {
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            if (typeof showToast === 'function') {
+              showToast('🎉 Ping App is installing to your device!', 'success', 4000);
+            }
+          }
+          deferredPwaPrompt = null;
+        }).catch(() => {
+          deferredPwaPrompt = null;
+        });
+      }
+    }, 400);
+  }
+
+  // C. iOS Device Detection
+  const ua = window.navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if (isIOS) {
+    showIOSDownloadModal();
+    return;
+  }
+
+  // D. Display Extension Setup & PWA Modal
+  showPWAInstallFallbackModal();
+};
+
+// 5. Global Document Click Handler for Download Buttons (Event Delegation)
+document.addEventListener('click', (e) => {
+  const downloadBtn = e.target.closest('#downloadLandingBtn, #headerDownloadBtn, .download-app-btn, .header-download-btn');
+  if (downloadBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    window.triggerAppDownload();
+  }
+});
+
 // Start Firebase client initialization
 initFirebaseClient();
 

@@ -3,6 +3,7 @@ const fs = require("fs");
 const http = require("http");
 const crypto = require("crypto");
 const express = require("express");
+const AdmZip = require("adm-zip");
 const { Server } = require("socket.io");
 const { createAdapter } = require("@socket.io/redis-adapter");
 const Redis = require("ioredis");
@@ -2425,6 +2426,171 @@ app.get("/api/admin/export", verifyAdmin, (_req, res) => {
   res.setHeader("Content-Disposition", `attachment; filename="ping-admin-backup-${Date.now()}.json"`);
   res.setHeader("Content-Type", "application/json");
   res.json(snapshot);
+});
+
+// 18. Download Web Extension Package (.zip for Chrome, Edge, Brave, Opera, Arc)
+app.get("/api/download/extension", (req, res) => {
+  try {
+    const zip = new AdmZip();
+    const hostUrl = `${req.protocol}://${req.get("host") || "localhost:3000"}`;
+
+    // A. Extension Manifest V3
+    const manifestObj = {
+      manifest_version: 3,
+      name: "Ping — Instant Anonymous Chat",
+      short_name: "Ping",
+      version: "1.0.0",
+      description: "Instant 1-on-1 anonymous chat right from your browser toolbar. No login, no data stored.",
+      action: {
+        default_popup: "popup.html",
+        default_title: "Ping Anonymous Chat",
+      },
+      icons: {
+        "16": "icon.png",
+        "48": "icon.png",
+        "128": "icon.png",
+      },
+      permissions: ["activeTab", "storage"],
+    };
+    zip.addFile("manifest.json", Buffer.from(JSON.stringify(manifestObj, null, 2), "utf8"));
+
+    // B. Interactive popup.html
+    const popupHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping Extension</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 420px;
+      height: 600px;
+      background: #080816;
+      color: #fff;
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      padding: 10px 14px;
+      background: rgba(18, 14, 38, 0.95);
+      border-bottom: 1px solid rgba(124, 58, 237, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand img { width: 26px; height: 26px; border-radius: 6px; }
+    .open-btn {
+      background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+      border: none;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 2px 10px rgba(124, 58, 237, 0.4);
+    }
+    iframe {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img src="icon.png" alt="Ping Logo">
+      <span>Ping Extension</span>
+    </div>
+    <a href="${hostUrl}" target="_blank" class="open-btn">Open Full Tab ↗</a>
+  </header>
+  <iframe src="${hostUrl}" allow="clipboard-read; clipboard-write; microphone; autoplay"></iframe>
+</body>
+</html>`;
+    zip.addFile("popup.html", Buffer.from(popupHtml, "utf8"));
+
+    // C. Background.js Service Worker
+    const backgroundJs = `// Ping Web Extension Service Worker
+chrome.action.onClicked.addListener(() => {
+  chrome.tabs.create({ url: "${hostUrl}" });
+});
+`;
+    zip.addFile("background.js", Buffer.from(backgroundJs, "utf8"));
+
+    // D. Step-by-Step Installation README.txt
+    const readmeTxt = `═══════════════════════════════════════════════════════════════
+PING ANONYMOUS CHAT — CHROME / WEB EXTENSION INSTALL GUIDE
+═══════════════════════════════════════════════════════════════
+
+To install Ping directly into Chrome, Edge, Brave, Opera, Arc, or Vivaldi:
+
+1. Unzip this downloaded archive ("ping-chrome-extension.zip") into a folder.
+2. Open your browser and navigate to: chrome://extensions
+   (or edge://extensions for Microsoft Edge)
+3. Turn ON "Developer mode" in the top right corner.
+4. Click "Load unpacked" and select the unzipped extension folder.
+
+Done! The Ping Extension icon is now permanently pinned to your toolbar!
+Click it anytime for instant anonymous 1-on-1 chatting!
+`;
+    zip.addFile("README.txt", Buffer.from(readmeTxt, "utf8"));
+
+    // E. Icon Asset
+    const iconPath = path.join(__dirname, "../public/apple-touch-icon.png");
+    if (fs.existsSync(iconPath)) {
+      zip.addFile("icon.png", fs.readFileSync(iconPath));
+    }
+
+    const zipBuffer = zip.toBuffer();
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", 'attachment; filename="ping-chrome-extension.zip"');
+    res.setHeader("Content-Length", zipBuffer.length);
+    res.send(zipBuffer);
+  } catch (err) {
+    console.error("Extension zip generation error:", err);
+    res.status(500).json({ status: "error", message: "Failed to generate extension ZIP package" });
+  }
+});
+
+// 19. Download Standalone Web App Launcher (.html)
+app.get("/api/download/launcher", (req, res) => {
+  const hostUrl = `${req.protocol}://${req.get("host") || "localhost:3000"}`;
+  const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping — Anonymous Chat Launcher</title>
+  <meta http-equiv="refresh" content="0; url=${hostUrl}">
+  <script>window.location.href = "${hostUrl}";</script>
+</head>
+<body style="background:#080816;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+  <div style="text-align:center;">
+    <h2>Launching Ping...</h2>
+    <p><a href="${hostUrl}" style="color:#a78bfa;">Click here if you are not redirected automatically.</a></p>
+  </div>
+</body>
+</html>`;
+
+  res.setHeader("Content-Type", "text/html");
+  res.setHeader("Content-Disposition", 'attachment; filename="Ping-Anonymous-Chat.html"');
+  res.send(htmlContent);
 });
 
 registerSocketHandlers(io, getCountryFromSocket);

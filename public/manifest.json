@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "Ping — Anonymous Chat",
+  "name": "Ping",
   "short_name": "Ping",
   "description": "Real-time anonymous 1-on-1 chat app. No login, no data stored, instant connection.",
   "start_url": "/",

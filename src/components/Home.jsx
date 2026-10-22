@@ -313,8 +313,71 @@ export function Home({ onStartChat }) {
         {/* Step 2 Optimization: Standalone Decoupled Online Counter */}
         <OnlineCounter count={onlineUserCount} />
 
-        {/* Step 1 & 3 Optimizations: Memoized & GPU-accelerated CTA button */}
-        <StartChatButton onClick={handleStartChat} disabled={isBanned} />
+        {/* Step 1 & 3 Optimizations: Memoized & GPU-accelerated CTA & Download buttons */}
+        <div
+          className="landing-actions-row"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            flexWrap: 'wrap',
+            width: '100%',
+          }}
+        >
+          <StartChatButton onClick={handleStartChat} disabled={isBanned} />
+          
+          <button
+            id="downloadLandingBtn"
+            className="download-app-btn"
+            type="button"
+            title="Download & Install Ping App"
+            onClick={() => {
+              if (typeof window.triggerAppDownload === 'function') {
+                window.triggerAppDownload();
+              } else {
+                window.dispatchEvent(new CustomEvent('ping:open-install-modal'));
+              }
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              minWidth: '180px',
+              padding: 'clamp(12px, 2.5dvh, 18px) clamp(20px, 5vw, 32px)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(124, 58, 237, 0.45)',
+              borderRadius: '9999px',
+              color: '#fff',
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: 'clamp(14px, 3.8vw, 17px)',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+              boxSizing: 'border-box',
+            }}
+          >
+            <span className="download-label">Download App</span>
+            <span
+              className="download-icon-wrap"
+              aria-hidden="true"
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                background: 'rgba(6, 182, 212, 0.18)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg className="download-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+              </svg>
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* iOS PWA Install Guidance Banner */}

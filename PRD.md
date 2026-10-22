@@ -1,6 +1,6 @@
 # Enterprise Product Requirement Document (PRD): Ping
 
-**Product Name:** Ping — Next-Generation Real-Time Anonymous Communications Ecosystem  
+**Product Name:** Ping  
 **Document Version:** v3.0.0-Enterprise  
 **Document Authors:** VP of Product Management, Lead Technical Product Manager (TPM), Principal Product Marketing Manager (PMM), Chief Safety Officer  
 **Document Status:** Production Approved & Executive Signed-Off  
