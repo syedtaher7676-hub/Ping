@@ -65,10 +65,12 @@ const {
   banDevice,
   unbanDevice,
   getAllActiveBans,
+  hydrateBansFromFirestore,
   getInMemoryReports,
   updateInMemoryReportStatus,
 } = require("./state/reports");
 const dbService = require("./services/dbService");
+const vpnDetector = require("./services/vpnDetector");
 
 // Memoization cache for geoip lookups to avoid event-loop blocking under high load
 const geoCache = new Map();
@@ -314,11 +316,39 @@ io.use((socket, next) => {
     socket.data.country = getCountryFromSocket(socket);
     socket.data.authenticatedAt = Date.now();
 
-    // Check if device is temporarily banned
-    const minutesLeft = isDeviceBanned(socket.data.deviceHash);
+    // Check if device or user ID is temporarily banned
+    const minutesLeft = Math.max(
+      isDeviceBanned(socket.data.deviceHash),
+      isDeviceBanned(socket.data.userId)
+    );
     if (minutesLeft > 0) {
       return next(new Error("TEMPORARY_BAN:" + minutesLeft));
     }
+
+    // Run VPN detection and sync user profile to Cloud Firestore
+    const clientTimezone = auth?.timezone;
+    const clientHeaders = socket.handshake.headers;
+    vpnDetector.detectVpn(clientIp, { timezone: clientTimezone, headers: clientHeaders }).then((vpnResult) => {
+      socket.data.isVpn = vpnResult.isVpn;
+      socket.data.vpnDetails = vpnResult;
+
+      // Sync user profile, country, and VPN status to Cloud Firestore
+      dbService.syncUserOnAuth(verifiedUserId, {
+        country: socket.data.country,
+        vpnDetected: vpnResult.isVpn,
+        vpnDetails: vpnResult.isVpn ? { provider: vpnResult.provider, reason: vpnResult.reason } : null,
+        isBanned: minutesLeft > 0,
+        banExpiresAt: minutesLeft > 0 ? Date.now() + minutesLeft * 60000 : 0,
+      });
+
+      // If VPN shield is enabled and VPN is detected, alert socket
+      if (vpnResult.isVpn && vpnDetector.isVpnShieldEnabled()) {
+        socket.emit("vpn_detected", {
+          message: "VPN or Proxy Detected. Ping requires a direct residential connection to prevent abusive multi-accounting. Please turn off your VPN/proxy to connect.",
+          details: vpnResult.details,
+        });
+      }
+    }).catch(() => {});
 
     next();
   } catch (err) {
@@ -968,20 +998,21 @@ const telemetryFlushInterval = setInterval(() => {
 const telemetryHistory = [];
 const MAX_TELEMETRY_SAMPLES = 40;
 
-let messageThroughputWindow = 0;
-let violationsThroughputWindow = 0;
-let lastThroughputSampleTime = Date.now();
+const messageHitTimestamps = [];
+const violationHitTimestamps = [];
 let currentMsgsPerSec = 0;
 let currentViolationsPerSec = 0;
 let lastEventLoopLag = 1;
 
 global.recordMessageSent = () => {
-  messageThroughputWindow++;
+  const now = Date.now();
+  messageHitTimestamps.push(now);
   memoryBuffer.system_summary.total_messages = (memoryBuffer.system_summary.total_messages || 0) + 1;
 };
 
 global.recordViolationIntercepted = () => {
-  violationsThroughputWindow++;
+  const now = Date.now();
+  violationHitTimestamps.push(now);
   memoryBuffer.system_summary.total_violations = (memoryBuffer.system_summary.total_violations || 0) + 1;
 };
 
@@ -992,15 +1023,21 @@ setInterval(() => {
   });
 }, 2000).unref();
 
+// Clean sliding window (5s window) every 1s for silky smooth sparklines
 setInterval(() => {
   const now = Date.now();
-  const elapsedSec = Math.max(1, (now - lastThroughputSampleTime) / 1000);
-  currentMsgsPerSec = Math.round(messageThroughputWindow / elapsedSec);
-  currentViolationsPerSec = Math.round(violationsThroughputWindow / elapsedSec);
-  messageThroughputWindow = 0;
-  violationsThroughputWindow = 0;
-  lastThroughputSampleTime = now;
-}, 3000).unref();
+  const cutoff = now - 5000;
+
+  while (messageHitTimestamps.length > 0 && messageHitTimestamps[0] < cutoff) {
+    messageHitTimestamps.shift();
+  }
+  while (violationHitTimestamps.length > 0 && violationHitTimestamps[0] < cutoff) {
+    violationHitTimestamps.shift();
+  }
+
+  currentMsgsPerSec = Math.round((messageHitTimestamps.length / 5) * 10) / 10;
+  currentViolationsPerSec = Math.round((violationHitTimestamps.length / 5) * 10) / 10;
+}, 1000).unref();
 
 // WebSocket Ticker: Broadcast an aggregated system_metrics event to the admin room once every 2 seconds
 setInterval(() => {
@@ -1501,8 +1538,26 @@ app.post("/api/admin/terminate-room", verifyAdmin, (req, res) => {
 });
 
 // 5. Active bans list
-app.get("/api/admin/bans", verifyAdmin, (_req, res) => {
+app.get("/api/admin/bans", verifyAdmin, async (_req, res) => {
   const activeBans = getAllActiveBans();
+  try {
+    const fsBans = await dbService.getActiveBans();
+    const existing = new Set(activeBans.map(b => b.deviceHash || b.userId));
+    for (const fb of fsBans) {
+      const id = fb.deviceHash || fb.userId || fb.banId;
+      if (!existing.has(id) && Number(fb.expiresAt) > Date.now()) {
+        const remainingMs = Number(fb.expiresAt) - Date.now();
+        activeBans.push({
+          deviceHash: id,
+          userId: fb.userId || id,
+          expiresAt: Number(fb.expiresAt),
+          minutesLeft: Math.max(1, Math.ceil(remainingMs / 60000)),
+          reason: fb.reason || "Suspended by moderation policy",
+          bannedAt: Number(fb.bannedAt) || Date.now(),
+        });
+      }
+    }
+  } catch (_) {}
   res.json({ success: true, bans: activeBans });
 });
 
@@ -1554,9 +1609,9 @@ app.post("/api/admin/bans/remove", verifyAdmin, (req, res) => {
 app.get("/api/admin/reports", verifyAdmin, async (_req, res) => {
   try {
     let reports = [];
-    if (dbService.isFirebaseConfigured()) {
+    try {
       reports = await dbService.getRecentReports(50);
-    }
+    } catch (_) {}
     
     // Also include in-memory reports
     const memReports = getInMemoryReports();
@@ -1569,15 +1624,53 @@ app.get("/api/admin/reports", verifyAdmin, async (_req, res) => {
           reportedUserId: mr.targetHash,
           reason: mr.reason,
           status: mr.status || "pending_review",
-          createdAt: new Date(mr.timestamp).toISOString(),
+          createdAt: new Date(mr.timestamp || Date.now()).toISOString(),
         });
       }
     }
-
     res.json({ success: true, reports });
   } catch (err) {
     res.json({ success: true, reports: getInMemoryReports() });
   }
+});
+
+// 8b. Moderation audit logs
+app.get("/api/admin/moderation-logs", verifyAdmin, async (_req, res) => {
+  try {
+    const logs = await dbService.getRecentModerationLogs(50);
+    res.json({ success: true, logs });
+  } catch (err) {
+    res.json({ success: true, logs: [] });
+  }
+});
+
+// 8c. VPN Shield Settings & Status
+app.get("/api/admin/system/vpn-shield", verifyAdmin, (_req, res) => {
+  res.json({ success: true, enabled: vpnDetector.isVpnShieldEnabled() });
+});
+
+app.post("/api/admin/system/vpn-shield", verifyAdmin, (req, res) => {
+  const { enabled } = req.body || {};
+  const updated = vpnDetector.setVpnShieldEnabled(enabled !== false);
+  dbService.saveSystemSettings("global_rules", { vpnShieldEnabled: updated }).catch(() => {});
+  recordAdminEvent("system", "VPN Shield", `VPN Shield ${updated ? "ENABLED (strict residential requirement)" : "DISABLED"}`, updated ? "alert" : "info");
+  res.json({ success: true, enabled: updated });
+});
+
+// 8d. Public VPN Status check endpoint for clients
+app.get("/api/check-vpn", async (req, res) => {
+  const clientIp = getClientIpFromSocket ? getClientIpFromSocket(req) : (req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "127.0.0.1");
+  const timezone = req.query.tz || req.headers["x-client-timezone"];
+  const result = await vpnDetector.detectVpn(clientIp, { timezone, headers: req.headers });
+  res.json({
+    success: true,
+    ip: clientIp,
+    isVpn: result.isVpn,
+    shieldEnabled: vpnDetector.isVpnShieldEnabled(),
+    provider: result.provider || "Direct",
+    reason: result.reason || "Residential",
+    details: result.details || {},
+  });
 });
 
 // 9. Update report status
@@ -1884,6 +1977,7 @@ app.post("/api/admin/system/strict-mode", verifyAdmin, (req, res) => {
   if (typeof setEmergencyStrictMode === "function") {
     setEmergencyStrictMode(strict);
   }
+  dbService.saveSystemSettings("global_rules", { strictEmergencyMode: strict }).catch(() => {});
   recordAdminEvent("system", "Strict Safety Mode", `Strict safety mode ${strict ? "ENABLED (1-strike ban)" : "DISABLED (standard 3-strikes)"}`, strict ? "alert" : "info");
   res.json({ success: true, strictMode: strict, strictEmergencyMode: strict });
 });
@@ -1914,6 +2008,7 @@ app.post("/api/admin/system/slow-mode", verifyAdmin, (req, res) => {
   const { seconds } = req.body || {};
   const s = Math.max(0, Number(seconds) || 0);
   const updated = typeof setGlobalSlowMode === "function" ? setGlobalSlowMode(s) : s;
+  dbService.saveSystemSettings("global_rules", { slowModeSeconds: updated }).catch(() => {});
   recordAdminEvent("system", "Slow Mode Updated", updated > 0 ? `Global slow mode set to ${updated}s` : "Global slow mode DISABLED", updated > 0 ? "warning" : "info");
   res.json({ success: true, slowModeSeconds: updated });
 });
@@ -1923,6 +2018,7 @@ app.post("/api/admin/system/raid-shield", verifyAdmin, (req, res) => {
   const { enabled } = req.body || {};
   const active = Boolean(enabled);
   const updated = typeof setRaidShield === "function" ? setRaidShield(active) : active;
+  dbService.saveSystemSettings("global_rules", { raidShieldEnabled: updated }).catch(() => {});
   recordAdminEvent("system", "Raid Shield Toggled", updated ? "Surge raid defense ENABLED" : "Raid defense DISABLED", updated ? "alert" : "info");
   res.json({ success: true, raidShield: updated, raidShieldEnabled: updated });
 });
@@ -1932,6 +2028,7 @@ const handleLinkFilter = (req, res) => {
   const { enabled } = req.body || {};
   const active = Boolean(enabled);
   const updated = typeof setBlockExternalLinks === "function" ? setBlockExternalLinks(active) : active;
+  dbService.saveSystemSettings("global_rules", { blockExternalLinks: updated }).catch(() => {});
   recordAdminEvent("system", "Link Shield Toggled", updated ? "External links/invites strictly BLOCKED" : "Standard link policy", "info");
   res.json({ success: true, blockLinks: updated, blockExternalLinks: updated });
 };
@@ -1943,6 +2040,7 @@ app.post("/api/admin/system/queue-cap", verifyAdmin, (req, res) => {
   const { cap, limit: reqLimit } = req.body || {};
   const limit = Math.max(0, Number(cap !== undefined ? cap : reqLimit) || 0);
   const updated = typeof setQueueCap === "function" ? setQueueCap(limit) : limit;
+  dbService.saveSystemSettings("global_rules", { queueCapLimit: updated }).catch(() => {});
   recordAdminEvent("system", "Queue Capacity Set", updated > 0 ? `Max queue cap set to ${updated} users` : "Queue capacity UNLIMITED", "info");
   res.json({ success: true, queueCapLimit: updated, queueCap: updated });
 });
@@ -2411,6 +2509,22 @@ server.listen(PORT, "0.0.0.0", () => {
     env: process.env.NODE_ENV || "development",
     healthUrl: `http://localhost:${PORT}/health`,
   });
+  // Hydrate active bans and system settings from Cloud Firestore on container wake-up / cold boot
+  if (typeof hydrateBansFromFirestore === "function") {
+    hydrateBansFromFirestore().catch(() => {});
+  }
+  if (typeof dbService.getSystemSettings === "function") {
+    dbService.getSystemSettings("global_rules").then((settings) => {
+      if (settings) {
+        if (typeof settings.vpnShieldEnabled === "boolean") vpnDetector.setVpnShieldEnabled(settings.vpnShieldEnabled);
+        if (typeof settings.strictEmergencyMode === "boolean" && typeof setEmergencyStrictMode === "function") setEmergencyStrictMode(settings.strictEmergencyMode);
+        if (typeof settings.slowModeSeconds === "number" && typeof setGlobalSlowMode === "function") setGlobalSlowMode(settings.slowModeSeconds);
+        if (typeof settings.raidShieldEnabled === "boolean" && typeof setRaidShield === "function") setRaidShield(settings.raidShieldEnabled);
+        if (typeof settings.blockExternalLinks === "boolean" && typeof setBlockExternalLinks === "function") setBlockExternalLinks(settings.blockExternalLinks);
+        if (typeof settings.queueCapLimit === "number" && typeof setQueueCap === "function") setQueueCap(settings.queueCapLimit);
+      }
+    }).catch(() => {});
+  }
 }).on("error", (error) => {
   log("server_listen_error", {
     message: error.message,

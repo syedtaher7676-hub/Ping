@@ -35,6 +35,7 @@ const {
 const { log } = require("../utils/logger");
 const { userStore, reportStore, spamStore, slurFilter, securityStore, moderation } = require("../data");
 const dbService = require("../services/dbService");
+const vpnDetector = require("../services/vpnDetector");
 const { validateMessage } = require("../utils/moderation");
 const { recordReport, isDeviceBanned } = require("../state/reports");
 const {
@@ -290,6 +291,8 @@ function isUserBanned(socket, userId) {
     if (now >= exp) exemptPartnerUsers.delete(id);
   }
   if (userId) {
+    const userMinutesLeft = isDeviceBanned(userId);
+    if (userMinutesLeft > 0) return { banned: true, remaining: userMinutesLeft * 60 * 1000 };
     if (temporaryBans.has(userId)) {
       const expiry = temporaryBans.get(userId);
       if (now < expiry) return { banned: true, remaining: expiry - now };
@@ -543,6 +546,16 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
         violationCount,
       });
     }
+    // Persist strike warning to Cloud Firestore
+    dbService.saveModerationLog({
+      userId,
+      type: `slur_strike_${violationCount}`,
+      message: warnMsg,
+      action: `warning_${violationCount}`,
+      violationCount,
+      severity: "warning",
+    }).catch(() => {});
+
     return { blocked: true, action: `warning_${violationCount}` };
   } else {
     // Ban triggered! (Explore limit = 3, Friends limit = 5)
@@ -553,6 +566,10 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
     addTemporaryBan(userId, banDurationMs);
     slurFilter.applyPenalty(userId, "ban_15min", banDurationMs);
 
+    const deviceHash = socket.data?.deviceHash || userId;
+    temporaryBans.set(deviceHash, banExpiry);
+    addTemporaryBan(deviceHash, banDurationMs);
+
     if (ip && ip !== "127.0.0.1" && ip !== "::1" && ip !== "localhost") {
       temporaryBans.set(ip, banExpiry);
       temporaryBans.set(`ip_${ip}`, banExpiry);
@@ -562,6 +579,28 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
     }
 
     const offenderMsg = "⚠️ You have been banned for 15 minutes due to repeated inappropriate language or slurs.";
+
+    // Persist ban and moderation action to Cloud Firestore
+    dbService.saveBan({
+      banId: userId,
+      userId,
+      deviceHash,
+      ip: ip || "",
+      reason: "Repeated inappropriate language or slurs (15-min suspension)",
+      bannedAt: Date.now(),
+      expiresAt: banExpiry,
+      durationMs: banDurationMs,
+    }).catch(() => {});
+
+    dbService.saveModerationLog({
+      userId,
+      type: "slur_ban_15min",
+      message: offenderMsg,
+      action: "ban_15min",
+      violationCount,
+      severity: "critical",
+    }).catch(() => {});
+
     socket.emit("chat_ended_banned", {
       isOffender: true,
       message: offenderMsg,
@@ -1292,6 +1331,17 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             banExpiresAt,
             remainingMs: banCheck.remaining
           });
+          return;
+        }
+
+        // Check VPN / Proxy detection if VPN shield is active
+        if (vpnDetector.isVpnShieldEnabled() && socket.data?.isVpn) {
+          const vpnMsg = "VPN or Proxy Detected. Ping requires a direct residential connection to prevent abusive multi-accounting. Please turn off your VPN/proxy to connect.";
+          socket.emit("vpn_detected", {
+            message: vpnMsg,
+            details: socket.data?.vpnDetails?.details || {},
+          });
+          socket.emit("error_message", { message: vpnMsg });
           return;
         }
 

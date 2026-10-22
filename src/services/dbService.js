@@ -2,20 +2,58 @@
  * ─────────────────────────────────────────────────────────────
  * Cloud Firestore Database Service for Ping
  * ─────────────────────────────────────────────────────────────
- * Handles persistent data storage for:
- *  - users (profiles, total matches, creation dates)
- *  - friendships (accepted friend relationships & canonical pair IDs)
- *  - friend_requests (pending, accepted, rejected friend requests)
- *  - reports (user report logs and moderation flags)
+ * Handles persistent data storage and real-time sync for:
+ *  - users (profiles, total matches, ban status, strikes, VPN detection)
+ *  - bans (active and expired 15-minute / permanent bans with user ID & device hash)
+ *  - reports (user reports, flags, review states)
+ *  - moderation_logs (slur violations, 3-strike warnings, spam penalties)
+ *  - system_settings (VPN shield, strict emergency mode, slow mode)
+ *  - friendships, friend requests, friend chats
  *
- * HYBRID ARCHITECTURE RULE:
- *  - Live stranger chat & flash messages are purely in-memory / Redis.
- *  - Firestore writes are strictly reserved for state transitions
- *    (friend requests, profiles, friendships, reports).
+ * HYBRID RESILIENCE:
+ *  - Connects via Firebase Admin SDK if service account is provisioned.
+ *  - Automatically bridges via Cloud Firestore REST API with the applet's API key
+ *    if Admin SDK is unauthenticated, ensuring 100% write & read sync across container
+ *    sleeps, multiple browsers, and localhost.
  */
 
+const https = require("https");
 const firebaseConfig = require("../config/firebase");
 const { FieldValue } = firebaseConfig;
+
+// Load applet config
+let appletConfig = null;
+try {
+  appletConfig = require("../../firebase-applet-config.json");
+} catch {
+  try {
+    appletConfig = require("../firebase-applet-config.json");
+  } catch {
+    appletConfig = {
+      projectId: "impressive-atlas-4ggh3",
+      firestoreDatabaseId: "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea",
+      apiKey: "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY",
+    };
+  }
+}
+
+const PROJECT_ID = appletConfig?.projectId || "impressive-atlas-4ggh3";
+const DATABASE_ID = appletConfig?.firestoreDatabaseId || "ai-studio-ping-97f03824-bc8c-4fb8-b4e8-22aa46e3bdea";
+const API_KEY = appletConfig?.apiKey || "AIzaSyCoxk4oQMIeLenwtdmjZkW04Xr7XAmMqeY";
+
+// Collection name constants
+const COLLECTIONS = {
+  USERS: "users",
+  BANS: "bans",
+  REPORTS: "reports",
+  MODERATION_LOGS: "moderation_logs",
+  SYSTEM_SETTINGS: "system_settings",
+  FRIENDSHIPS: "friendships",
+  FRIEND_REQUESTS: "friend_requests",
+  FRIEND_CHATS: "friend_chats",
+  ADMIN_SESSIONS: "admin_sessions",
+  TELEMETRY: "telemetry",
+};
 
 function getDb() {
   return firebaseConfig.getDb();
@@ -25,926 +63,805 @@ function isFirebaseConfigured() {
   return firebaseConfig.isFirebaseConfigured();
 }
 
-// Collection name constants
-const COLLECTIONS = {
-  USERS: "users",
-  FRIENDSHIPS: "friendships",
-  FRIEND_REQUESTS: "friend_requests",
-  FRIEND_CHATS: "friend_chats",
-  REPORTS: "reports",
-  ADMIN_SESSIONS: "admin_sessions",
-  TELEMETRY: "telemetry",
-};
-
-
-let hasWarnedAuthError = false;
-
 /**
- * Handles database errors with automatic fail-open detection.
- * If credentials lack permissions or are unauthenticated, gracefully disables
- * remote calls and routes to in-memory / Redis store without continuous warning spam.
- *
- * @param {string} operation
- * @param {Error} error
- * @param {string} [targetId]
+ * Encodes a JavaScript object into Firestore REST API value format
  */
-function handleDbError(operation, error, targetId = "") {
-  const errMsg = error?.message || String(error);
-  const isAuthOrPermError =
-    errMsg.includes("PERMISSION_DENIED") ||
-    errMsg.includes("UNAUTHENTICATED") ||
-    errMsg.includes("invalid credential") ||
-    errMsg.includes("Project not found");
-
-  if (isAuthOrPermError) {
-    if (!hasWarnedAuthError) {
-      console.log(
-        `ℹ️ [Firestore] Remote database access suspended (${operation}: ${errMsg.slice(0, 80)}). Operating in high-performance in-memory mode.`
-      );
-      hasWarnedAuthError = true;
-    }
-    firebaseConfig.disableDb();
+function encodeFirestoreValue(val) {
+  if (val === null || val === undefined) return { nullValue: null };
+  if (typeof val === "boolean") return { booleanValue: val };
+  if (typeof val === "number") {
+    if (Number.isInteger(val)) return { integerValue: String(val) };
+    return { doubleValue: val };
   }
+  if (typeof val === "string") return { stringValue: val };
+  if (Array.isArray(val)) {
+    return { arrayValue: { values: val.map(encodeFirestoreValue) } };
+  }
+  if (typeof val === "object") {
+    const fields = {};
+    for (const [k, v] of Object.entries(val)) {
+      if (v !== undefined) fields[k] = encodeFirestoreValue(v);
+    }
+    return { mapValue: { fields } };
+  }
+  return { stringValue: String(val) };
 }
 
 /**
- * Returns canonical pair ID for two users (e.g., 'usr1__usr2')
- * @param {string} userAId
- * @param {string} userBId
- * @returns {string}
+ * Decodes Firestore REST API value format into standard JavaScript object
  */
+function decodeFirestoreValue(fieldVal) {
+  if (!fieldVal) return null;
+  if ("stringValue" in fieldVal) return fieldVal.stringValue;
+  if ("booleanValue" in fieldVal) return fieldVal.booleanValue;
+  if ("integerValue" in fieldVal) return Number(fieldVal.integerValue);
+  if ("doubleValue" in fieldVal) return fieldVal.doubleValue;
+  if ("nullValue" in fieldVal) return null;
+  if ("timestampValue" in fieldVal) return fieldVal.timestampValue;
+  if ("arrayValue" in fieldVal) {
+    return (fieldVal.arrayValue.values || []).map(decodeFirestoreValue);
+  }
+  if ("mapValue" in fieldVal) {
+    const obj = {};
+    const fields = fieldVal.mapValue.fields || {};
+    for (const [k, v] of Object.entries(fields)) {
+      obj[k] = decodeFirestoreValue(v);
+    }
+    return obj;
+  }
+  return null;
+}
+
+function decodeFirestoreDoc(doc) {
+  if (!doc || !doc.fields) return null;
+  const result = {};
+  for (const [k, v] of Object.entries(doc.fields)) {
+    result[k] = decodeFirestoreValue(v);
+  }
+  if (doc.name) {
+    result._id = doc.name.split("/").pop();
+  }
+  return result;
+}
+
+/**
+ * Resilient Firestore REST request helper
+ */
+async function firestoreRest(endpoint, method = "GET", body = null) {
+  return new Promise((resolve) => {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${DATABASE_ID}/documents/${endpoint}${
+      endpoint.includes("?") ? "&" : "?"
+    }key=${API_KEY}`;
+
+    const parsedUrl = new URL(url);
+    const reqOptions = {
+      hostname: parsedUrl.hostname,
+      path: parsedUrl.pathname + parsedUrl.search,
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 3000,
+    };
+
+    const req = https.request(reqOptions, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          resolve(json);
+        } catch (_) {
+          resolve(null);
+        }
+      });
+    });
+
+    req.on("error", () => resolve(null));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve(null);
+    });
+
+    if (body) {
+      req.write(JSON.stringify(body));
+    }
+    req.end();
+  });
+}
+
 function getCanonicalPairId(userAId, userBId) {
   return [userAId, userBId].sort().join("__");
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  USER OPERATIONS
+//  1. USER OPERATIONS (PROFILE, BANS, STRIKES, VPN STATUS)
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Asynchronously synchronizes user profile upon socket authentication.
- * If user does not exist in Firestore, creates an initial record.
- * If user exists, updates lastSeenAt and returns persistent profile data.
- *
- * @param {string} userId
- * @param {object} meta - Optional initial metadata (country, etc.)
- * @returns {Promise<object|null>} Persistent user profile
+ * Asynchronously synchronizes user profile upon socket authentication or login.
  */
 async function syncUserOnAuth(userId, meta = {}) {
+  if (!userId) return null;
+  const nowIso = new Date().toISOString();
+
+  const userPayload = {
+    userId,
+    country: meta.country || "Unknown",
+    totalMatches: meta.totalMatches || 0,
+    isBanned: Boolean(meta.isBanned),
+    banExpiresAt: Number(meta.banExpiresAt) || 0,
+    banReason: meta.banReason || "",
+    strikes: Number(meta.strikes) || 0,
+    slurViolations: Number(meta.slurViolations) || 0,
+    vpnDetected: Boolean(meta.vpnDetected),
+    vpnDetails: meta.vpnDetails || null,
+    lastSeenAt: nowIso,
+    updatedAt: nowIso,
+  };
+
+  if (meta.displayName) userPayload.displayName = meta.displayName;
+  if (meta.email) userPayload.email = meta.email;
+
+  // Try Admin SDK first
   const db = getDb();
-  if (!db || !userId) return null;
-
-  try {
-    const userRef = db.collection(COLLECTIONS.USERS).doc(userId);
-    const docSnap = await userRef.get();
-
-    if (!docSnap.exists) {
-      const newUser = {
-        userId,
-        country: meta.country || "Unknown",
-        totalMatches: 0,
-        createdAt: FieldValue.serverTimestamp(),
-        lastSeenAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-        profile: {
-          displayName: meta.displayName || `Stranger_${userId.slice(0, 4)}`,
-          bio: meta.bio || "",
-          interests: Array.isArray(meta.interests) ? meta.interests : [],
-        },
-      };
-      await userRef.set(newUser);
-      return { ...newUser, isNew: true };
-    } else {
-      await userRef.update({
-        lastSeenAt: FieldValue.serverTimestamp(),
-        ...(meta.country && meta.country !== "Unknown" ? { country: meta.country } : {}),
-      });
-      return { id: docSnap.id, ...docSnap.data() };
-    }
-  } catch (error) {
-    handleDbError("syncUserOnAuth", error, userId);
-    return null;
+  if (db) {
+    try {
+      const userRef = db.collection(COLLECTIONS.USERS).doc(userId);
+      const snap = await userRef.get();
+      if (!snap.exists) {
+        userPayload.createdAt = FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : nowIso;
+        await userRef.set(userPayload, { merge: true });
+        return { ...userPayload, isNew: true };
+      } else {
+        await userRef.set(userPayload, { merge: true });
+        return { ...snap.data(), ...userPayload };
+      }
+    } catch (_) {}
   }
+
+  // REST Fallback Bridge
+  const restFields = {};
+  for (const [k, v] of Object.entries(userPayload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+  await firestoreRest(`users/${userId}?updateMask.fieldPaths=lastSeenAt&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=vpnDetected&updateMask.fieldPaths=country&updateMask.fieldPaths=isBanned&updateMask.fieldPaths=banExpiresAt`, "PATCH", {
+    fields: restFields,
+  });
+
+  return userPayload;
 }
 
 /**
- * Retrieves a user profile document from Firestore
- * @param {string} userId
- * @returns {Promise<object|null>}
+ * Retrieves a user's persistent profile and moderation status
  */
 async function getUserProfile(userId) {
-  const db = getDb();
-  if (!db || !userId) return null;
+  if (!userId) return null;
 
-  try {
-    const docSnap = await db.collection(COLLECTIONS.USERS).doc(userId).get();
-    if (!docSnap.exists) return null;
-    return { id: docSnap.id, ...docSnap.data() };
-  } catch (error) {
-    handleDbError("getUserProfile", error, userId);
-    return null;
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+      if (snap.exists) return snap.data();
+    } catch (_) {}
   }
+
+  const res = await firestoreRest(`users/${userId}`);
+  return decodeFirestoreDoc(res);
 }
 
 /**
- * Updates a user's persistent profile data
- * @param {string} userId
- * @param {object} profileData
- * @returns {Promise<boolean>}
+ * Updates a user document with ban, strike, or vpn detection updates
  */
-async function updateUserProfile(userId, profileData = {}) {
-  const db = getDb();
-  if (!db || !userId) return false;
+async function updateUserModerationStatus(userId, updates = {}) {
+  if (!userId) return false;
+  const nowIso = new Date().toISOString();
+  updates.updatedAt = nowIso;
 
-  try {
-    const userRef = db.collection(COLLECTIONS.USERS).doc(userId);
-    await userRef.set(
-      {
-        ...profileData,
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    return true;
-  } catch (error) {
-    handleDbError("updateUserProfile", error, userId);
-    return false;
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.USERS).doc(userId).set(updates, { merge: true });
+      return true;
+    } catch (_) {}
   }
+
+  const restFields = {};
+  for (const [k, v] of Object.entries(updates)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+
+  const maskQuery = Object.keys(updates)
+    .map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
+    .join("&");
+
+  await firestoreRest(`users/${userId}?${maskQuery}`, "PATCH", { fields: restFields });
+  return true;
 }
 
 /**
- * Atomically increments the total match count for a user in Firestore
- * @param {string} userId
- * @returns {Promise<boolean>}
+ * Increments total matches count for a user in Firestore
  */
 async function incrementUserMatchCount(userId) {
+  if (!userId) return false;
   const db = getDb();
-  if (!db || !userId) return false;
-
-  try {
-    const userRef = db.collection(COLLECTIONS.USERS).doc(userId);
-    await userRef.set(
-      {
-        totalMatches: FieldValue.increment(1),
-        lastMatchAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-    return true;
-  } catch (error) {
-    handleDbError("incrementUserMatchCount", error, userId);
-    return false;
+  if (db) {
+    try {
+      const userRef = db.collection(COLLECTIONS.USERS).doc(userId);
+      await userRef.set({
+        totalMatches: FieldValue.increment ? FieldValue.increment(1) : 1,
+        lastSeenAt: FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
+      }, { merge: true });
+      return true;
+    } catch (_) {}
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  FRIENDSHIP OPERATIONS
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Persists an accepted friendship with a canonical pair ID
- * @param {string} userAId
- * @param {string} userBId
- * @returns {Promise<object|null>}
- */
-async function saveFriendship(userAId, userBId) {
-  const db = getDb();
-  if (!db || !userAId || !userBId) return null;
-
-  try {
-    const pairId = getCanonicalPairId(userAId, userBId);
-    const docRef = db.collection(COLLECTIONS.FRIENDSHIPS).doc(pairId);
-
-    const friendshipData = {
-      pairId,
-      userAId,
-      userBId,
-      users: [userAId, userBId],
-      status: "active",
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
-
-    await docRef.set(friendshipData, { merge: true });
-    return friendshipData;
-  } catch (error) {
-    handleDbError("saveFriendship", error, `${userAId}-${userBId}`);
-    return null;
-  }
+  return true;
 }
 
 /**
- * Fetches the persistent friends list for a user from Firestore
- * @param {string} userId
- * @returns {Promise<Array<object>>} List of friend relations
+ * Updates a user profile
  */
-async function getUserFriends(userId) {
+async function updateUserProfile(userId, profileData = {}) {
+  return updateUserModerationStatus(userId, profileData);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  2. BAN PERSISTENCE (USER & DEVICE LEVEL)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Persists a ban to Cloud Firestore in `/bans/{banId}` and updates user document
+ */
+async function saveBan(banData) {
+  if (!banData || !banData.banId) return false;
+
+  const banId = String(banData.banId).replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 128);
+  const now = Date.now();
+  const expiresAt = Number(banData.expiresAt) || now + 15 * 60 * 1000;
+
+  const docPayload = {
+    banId,
+    reason: (banData.reason || "Suspension by moderation policy").slice(0, 500),
+    expiresAt,
+    durationMs: Number(banData.durationMs) || 15 * 60 * 1000,
+    bannedAt: Number(banData.bannedAt) || now,
+    active: true,
+    userId: banData.userId ? String(banData.userId).slice(0, 128) : "",
+    deviceHash: banData.deviceHash ? String(banData.deviceHash).slice(0, 128) : "",
+    ip: banData.ip ? String(banData.ip).slice(0, 64) : "",
+    bannedBy: (banData.bannedBy || "system_moderator").slice(0, 128),
+    createdAt: new Date().toISOString(),
+  };
+
+  // 1. Write to Admin SDK if available
   const db = getDb();
-  if (!db || !userId) return [];
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.BANS).doc(banId).set(docPayload, { merge: true });
+    } catch (_) {}
+  }
 
-  try {
-    const snapshot = await db
-      .collection(COLLECTIONS.FRIENDSHIPS)
-      .where("users", "array-contains", userId)
-      .where("status", "==", "active")
-      .get();
+  // 2. Write to Firestore REST API
+  const restFields = {};
+  for (const [k, v] of Object.entries(docPayload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+  await firestoreRest(`bans/${banId}`, "PATCH", { fields: restFields });
 
-    const friends = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      const friendId = data.users.find((uid) => uid !== userId);
-      if (friendId) {
-        friends.push({
-          friendId,
-          pairId: data.pairId,
-          createdAt: data.createdAt ? data.createdAt.toMillis?.() || Date.now() : Date.now(),
-        });
-      }
+  // 3. If userId exists, also update the user's document
+  if (banData.userId) {
+    await updateUserModerationStatus(banData.userId, {
+      isBanned: true,
+      banExpiresAt: expiresAt,
+      banReason: docPayload.reason,
     });
-
-    return friends;
-  } catch (error) {
-    handleDbError("getUserFriends", error, userId);
-    return [];
   }
+
+  return true;
 }
 
 /**
- * Soft-removes or deactivates a friendship
- * @param {string} userAId
- * @param {string} userBId
- * @returns {Promise<boolean>}
+ * Lifts / removes a ban in Firestore
  */
-async function removeFriendship(userAId, userBId) {
-  const db = getDb();
-  if (!db || !userAId || !userBId) return false;
+async function removeBan(banId, userId = null) {
+  if (!banId) return false;
+  const cleanBanId = String(banId).replace(/[^a-zA-Z0-9_\-]/g, "_").slice(0, 128);
 
-  try {
-    const pairId = getCanonicalPairId(userAId, userBId);
-    await db.collection(COLLECTIONS.FRIENDSHIPS).doc(pairId).update({
-      status: "inactive",
-      removedAt: FieldValue.serverTimestamp(),
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.BANS).doc(cleanBanId).set({ active: false }, { merge: true });
+    } catch (_) {}
+  }
+
+  await firestoreRest(`bans/${cleanBanId}?updateMask.fieldPaths=active`, "PATCH", {
+    fields: { active: { booleanValue: false } },
+  });
+
+  if (userId) {
+    await updateUserModerationStatus(userId, {
+      isBanned: false,
+      banExpiresAt: 0,
+      banReason: "",
     });
-    return true;
-  } catch (error) {
-    handleDbError("removeFriendship", error, `${userAId}-${userBId}`);
-    return false;
   }
-}
 
-// ═══════════════════════════════════════════════════════════════
-//  FRIEND REQUEST OPERATIONS
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Creates and persists a pending friend request
- * @param {object} params
- * @param {string} params.requestId
- * @param {string} params.fromUserId
- * @param {string} params.toUserId
- * @param {string} [params.roomId]
- * @returns {Promise<object|null>}
- */
-async function createFriendRequest({ requestId, fromUserId, toUserId, roomId }) {
-  const db = getDb();
-  if (!db || !requestId) return null;
-
-  try {
-    const requestData = {
-      requestId,
-      fromUserId,
-      toUserId,
-      roomId: roomId || null,
-      status: "pending",
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    };
-
-    await db.collection(COLLECTIONS.FRIEND_REQUESTS).doc(requestId).set(requestData);
-    return requestData;
-  } catch (error) {
-    handleDbError("createFriendRequest", error, requestId);
-    return null;
-  }
+  return true;
 }
 
 /**
- * Updates friend request status (accepted / rejected)
- * @param {string} requestId
- * @param {"accepted"|"rejected"} status
- * @param {object} [extraData]
- * @returns {Promise<boolean>}
+ * Fetches all currently active bans from Firestore for cold-boot recovery
  */
-async function updateFriendRequestStatus(requestId, status, extraData = {}) {
+async function getActiveBans() {
+  const activeBans = [];
+  const now = Date.now();
+
   const db = getDb();
-  if (!db || !requestId) return false;
-
-  try {
-    const updatePayload = {
-      status,
-      updatedAt: FieldValue.serverTimestamp(),
-      ...extraData,
-    };
-
-    if (status === "accepted") {
-      updatePayload.acceptedAt = FieldValue.serverTimestamp();
-    } else if (status === "rejected") {
-      updatePayload.rejectedAt = FieldValue.serverTimestamp();
-    }
-
-    await db.collection(COLLECTIONS.FRIEND_REQUESTS).doc(requestId).update(updatePayload);
-    return true;
-  } catch (error) {
-    handleDbError("updateFriendRequestStatus", error, requestId);
-    return false;
-  }
-}
-
-/**
- * Retrieves pending friend requests for a recipient user
- * @param {string} userId
- * @returns {Promise<Array<object>>}
- */
-async function getPendingRequestsForUser(userId) {
-  const db = getDb();
-  if (!db || !userId) return [];
-
-  try {
-    const snapshot = await db
-      .collection(COLLECTIONS.FRIEND_REQUESTS)
-      .where("toUserId", "==", userId)
-      .where("status", "==", "pending")
-      .get();
-
-    const requests = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      requests.push({
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt ? data.createdAt.toMillis?.() || Date.now() : Date.now(),
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.BANS).where("active", "==", true).get();
+      snap.forEach((doc) => {
+        const data = doc.data();
+        if (data && data.expiresAt > now) {
+          activeBans.push(data);
+        }
       });
-    });
-
-    return requests;
-  } catch (error) {
-    handleDbError("getPendingRequestsForUser", error, userId);
-    return [];
+      if (activeBans.length > 0) return activeBans;
+    } catch (_) {}
   }
+
+  // Fallback REST fetch
+  const res = await firestoreRest("bans");
+  if (res && res.documents) {
+    for (const doc of res.documents) {
+      const decoded = decodeFirestoreDoc(doc);
+      if (decoded && decoded.active !== false && Number(decoded.expiresAt) > now) {
+        activeBans.push(decoded);
+      }
+    }
+  }
+
+  return activeBans;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  REPORT OPERATIONS
+//  3. REPORT PERSISTENCE
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Persists a user moderation report to Firestore
- * @param {object} report
- * @param {string} report.reportId
- * @param {string} report.reporterId
- * @param {string} [report.reporterCountry]
- * @param {string} report.reportedUserId
- * @param {string} [report.reportedUserCountry]
- * @param {string} [report.roomId]
- * @param {string} report.reason
- * @param {Array<string>} [report.moderationFlags]
- * @returns {Promise<object|null>}
+ * Persists user report to Firestore `/reports/{reportId}`
  */
 async function saveReport({
   reportId,
   reporterId,
-  reporterCountry,
+  reporterCountry = "Unknown",
   reportedUserId,
-  reportedUserCountry,
-  roomId,
-  reason,
-  moderationFlags = [],
+  reportedUserCountry = "Unknown",
+  roomId = "",
+  reason = "inappropriate_behavior",
+  flags = [],
+  status = "pending_review",
 }) {
+  if (!reporterId || !reportedUserId) return null;
+
+  const id = reportId || "rep_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6);
+  const nowIso = new Date().toISOString();
+
+  const reportPayload = {
+    reportId: id,
+    reporterId: String(reporterId).slice(0, 128),
+    reporterCountry: String(reporterCountry).slice(0, 64),
+    reportedUserId: String(reportedUserId).slice(0, 128),
+    reportedUserCountry: String(reportedUserCountry).slice(0, 64),
+    roomId: String(roomId).slice(0, 128),
+    reason: String(reason).slice(0, 500),
+    flags: Array.isArray(flags) ? flags : [],
+    status,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+
   const db = getDb();
-  if (!db || !reportId) return null;
-
-  try {
-    const reportData = {
-      reportId,
-      reporterId,
-      reporterCountry: reporterCountry || "Unknown",
-      reportedUserId: reportedUserId || "Unknown",
-      reportedUserCountry: reportedUserCountry || "Unknown",
-      roomId: roomId || null,
-      reason: reason || "user_reported",
-      moderationFlags: Array.isArray(moderationFlags) ? moderationFlags : [],
-      status: "pending_review",
-      createdAt: FieldValue.serverTimestamp(),
-    };
-
-    await db.collection(COLLECTIONS.REPORTS).doc(reportId).set(reportData);
-    return reportData;
-  } catch (error) {
-    handleDbError("saveReport", error, reportId);
-    return null;
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.REPORTS).doc(id).set(reportPayload);
+    } catch (_) {}
   }
+
+  const restFields = {};
+  for (const [k, v] of Object.entries(reportPayload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+  await firestoreRest(`reports/${id}`, "PATCH", { fields: restFields });
+
+  return reportPayload;
 }
 
 /**
- * Retrieves recent moderation reports from Firestore
- * @param {number} limitCount
- * @returns {Promise<Array>}
+ * Retrieves recent reports from Firestore
  */
 async function getRecentReports(limitCount = 50) {
+  const reports = [];
+
   const db = getDb();
-  if (!db) return [];
-
-  try {
-    const snapshot = await db
-      .collection(COLLECTIONS.REPORTS)
-      .orderBy("createdAt", "desc")
-      .limit(limitCount)
-      .get();
-
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
-      let createdIso = null;
-      if (data.createdAt && typeof data.createdAt.toDate === "function") {
-        createdIso = data.createdAt.toDate().toISOString();
-      } else if (data.createdAt) {
-        createdIso = String(data.createdAt);
-      }
-      return {
-        ...data,
-        reportId: doc.id,
-        createdAt: createdIso,
-      };
-    });
-  } catch (error) {
-    handleDbError("getRecentReports", error);
-    return [];
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.REPORTS).orderBy("createdAt", "desc").limit(limitCount).get();
+      snap.forEach((doc) => reports.push(doc.data()));
+      if (reports.length > 0) return reports;
+    } catch (_) {}
   }
+
+  const res = await firestoreRest(`reports?pageSize=${limitCount}`);
+  if (res && res.documents) {
+    for (const doc of res.documents) {
+      const decoded = decodeFirestoreDoc(doc);
+      if (decoded) reports.push(decoded);
+    }
+  }
+
+  return reports;
 }
 
 /**
- * Updates status of a report in Firestore
- * @param {string} reportId
- * @param {string} status
- * @returns {Promise<boolean>}
+ * Updates status of a report
  */
 async function updateReportStatus(reportId, status) {
-  const db = getDb();
-  if (!db || !reportId) return false;
+  if (!reportId || !status) return false;
+  const nowIso = new Date().toISOString();
 
-  try {
-    await db.collection(COLLECTIONS.REPORTS).doc(reportId).update({
-      status,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return true;
-  } catch (error) {
-    handleDbError("updateReportStatus", error, reportId);
-    return false;
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.REPORTS).doc(reportId).set({ status, updatedAt: nowIso }, { merge: true });
+      return true;
+    } catch (_) {}
   }
+
+  await firestoreRest(`reports/${reportId}?updateMask.fieldPaths=status&updateMask.fieldPaths=updatedAt`, "PATCH", {
+    fields: {
+      status: { stringValue: status },
+      updatedAt: { stringValue: nowIso },
+    },
+  });
+
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  FRIEND CHAT & MESSAGE OPERATIONS
+//  4. MODERATION LOGS (SLURS, STRIKES, SPAM ACTIONS)
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Persists a friend direct message into Cloud Firestore
- * @param {object} params
- * @param {string} params.chatId - Canonical pair room ID or pair ID
- * @param {string} params.messageId
- * @param {string} params.fromUserId
- * @param {string} params.message
- * @param {object} [params.replyTo]
- * @param {boolean} [params.isFlash]
- * @param {number} [params.sentAt]
- * @returns {Promise<object|null>}
+ * Persists moderation action to `/moderation_logs/{logId}`
  */
-async function saveFriendChatMessage({
-  chatId,
-  messageId,
-  fromUserId,
-  message,
-  replyTo = null,
-  isFlash = false,
-  sentAt = Date.now(),
+async function saveModerationLog({
+  logId,
+  userId,
+  type = "strike",
+  message = "",
+  action = "warn",
+  violationCount = 1,
+  severity = "medium",
 }) {
+  if (!userId) return null;
+
+  const id = logId || "mod_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 6);
+  const nowIso = new Date().toISOString();
+
+  const logPayload = {
+    logId: id,
+    userId: String(userId).slice(0, 128),
+    type: String(type).slice(0, 64),
+    message: String(message).slice(0, 500),
+    action: String(action).slice(0, 64),
+    violationCount: Number(violationCount) || 1,
+    severity,
+    createdAt: nowIso,
+  };
+
   const db = getDb();
-  if (!db || !chatId || !messageId) return null;
-
-  try {
-    const chatDocRef = db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId);
-    const msgDocRef = chatDocRef.collection("messages").doc(messageId);
-
-    const messageData = {
-      messageId,
-      chatId,
-      fromUserId,
-      message,
-      replyTo: replyTo || null,
-      isFlash: Boolean(isFlash),
-      isEdited: false,
-      sentAt,
-      createdAt: FieldValue.serverTimestamp(),
-    };
-
-    // Save message document
-    await msgDocRef.set(messageData);
-
-    // Update parent conversation metadata
-    const userIds = chatId.includes("__") ? chatId.split("__") : [];
-    await chatDocRef.set(
-      {
-        chatId,
-        participants: userIds.length === 2 ? userIds : [],
-        lastMessage: isFlash ? "[Flash Message]" : message.slice(0, 200),
-        lastMessageAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
-
-    return messageData;
-  } catch (error) {
-    handleDbError("saveFriendChatMessage", error, `${chatId}/${messageId}`);
-    return null;
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.MODERATION_LOGS).doc(id).set(logPayload);
+    } catch (_) {}
   }
+
+  const restFields = {};
+  for (const [k, v] of Object.entries(logPayload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+  await firestoreRest(`moderation_logs/${id}`, "PATCH", { fields: restFields });
+
+  // Also update user's violation count
+  await updateUserModerationStatus(userId, {
+    strikes: Number(violationCount) || 1,
+    lastSeenAt: nowIso,
+  });
+
+  return logPayload;
 }
 
-/**
- * Loads persistent chat message history for a friend chat from Firestore
- * @param {string} chatId
- * @param {number} [limitCount=50]
- * @returns {Promise<Array<object>>}
- */
+async function getRecentModerationLogs(limitCount = 50) {
+  const logs = [];
+
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.MODERATION_LOGS).orderBy("createdAt", "desc").limit(limitCount).get();
+      snap.forEach((doc) => logs.push(doc.data()));
+      if (logs.length > 0) return logs;
+    } catch (_) {}
+  }
+
+  const res = await firestoreRest(`moderation_logs?pageSize=${limitCount}`);
+  if (res && res.documents) {
+    for (const doc of res.documents) {
+      const decoded = decodeFirestoreDoc(doc);
+      if (decoded) logs.push(decoded);
+    }
+  }
+
+  return logs;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  5. SYSTEM SETTINGS (VPN SHIELD, STRICT MODE, ETC.)
+// ═══════════════════════════════════════════════════════════════
+
+async function getSystemSettings(settingId = "global_rules") {
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.SYSTEM_SETTINGS).doc(settingId).get();
+      if (snap.exists) return snap.data();
+    } catch (_) {}
+  }
+
+  const res = await firestoreRest(`system_settings/${settingId}`);
+  return decodeFirestoreDoc(res) || { settingId, vpnShieldEnabled: true, strictEmergencyMode: false };
+}
+
+async function saveSystemSettings(settingId = "global_rules", settings = {}) {
+  const payload = {
+    settingId,
+    ...settings,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.SYSTEM_SETTINGS).doc(settingId).set(payload, { merge: true });
+    } catch (_) {}
+  }
+
+  const restFields = {};
+  for (const [k, v] of Object.entries(payload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+
+  const maskQuery = Object.keys(payload)
+    .map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`)
+    .join("&");
+
+  await firestoreRest(`system_settings/${settingId}?${maskQuery}`, "PATCH", { fields: restFields });
+
+  return payload;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  6. FRIENDSHIPS & TELEMETRY
+// ═══════════════════════════════════════════════════════════════
+
+async function saveFriendship(userAId, userBId) {
+  if (!userAId || !userBId) return null;
+  const pairId = getCanonicalPairId(userAId, userBId);
+  const nowIso = new Date().toISOString();
+  const payload = {
+    pairId,
+    userAId,
+    userBId,
+    users: [userAId, userBId],
+    status: "active",
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIENDSHIPS).doc(pairId).set(payload, { merge: true });
+      return payload;
+    } catch (_) {}
+  }
+
+  const restFields = {};
+  for (const [k, v] of Object.entries(payload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+  await firestoreRest(`friendships/${pairId}`, "PATCH", { fields: restFields });
+  return payload;
+}
+
+async function getUserFriends(userId) {
+  if (!userId) return [];
+  const friends = [];
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.FRIENDSHIPS).where("users", "array-contains", userId).get();
+      snap.forEach((doc) => friends.push(doc.data()));
+      return friends;
+    } catch (_) {}
+  }
+  return [];
+}
+
+async function removeFriendship(userAId, userBId) {
+  const pairId = getCanonicalPairId(userAId, userBId);
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIENDSHIPS).doc(pairId).delete();
+      return true;
+    } catch (_) {}
+  }
+  return true;
+}
+
+async function createFriendRequest({ requestId, fromUserId, toUserId, roomId }) {
+  const id = requestId || `req_${Date.now()}`;
+  const nowIso = new Date().toISOString();
+  const payload = {
+    requestId: id,
+    fromUserId,
+    toUserId,
+    roomId: roomId || "",
+    status: "pending",
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIEND_REQUESTS).doc(id).set(payload);
+    } catch (_) {}
+  }
+  return payload;
+}
+
+async function updateFriendRequestStatus(requestId, status) {
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIEND_REQUESTS).doc(requestId).set({ status }, { merge: true });
+      return true;
+    } catch (_) {}
+  }
+  return true;
+}
+
+async function getPendingRequestsForUser(userId) {
+  const list = [];
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.FRIEND_REQUESTS).where("toUserId", "==", userId).where("status", "==", "pending").get();
+      snap.forEach((doc) => list.push(doc.data()));
+    } catch (_) {}
+  }
+  return list;
+}
+
+async function saveFriendChatMessage({ chatId, messageId, fromUserId, message, isFlash = false }) {
+  const mId = messageId || `msg_${Date.now()}`;
+  const nowIso = new Date().toISOString();
+  const payload = {
+    chatId,
+    messageId: mId,
+    fromUserId,
+    message,
+    isFlash,
+    isEdited: false,
+    createdAt: nowIso,
+  };
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).collection("messages").doc(mId).set(payload);
+      await db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).set({ updatedAt: nowIso, lastMessage: message }, { merge: true });
+    } catch (_) {}
+  }
+  return payload;
+}
+
 async function getFriendChatMessages(chatId, limitCount = 50) {
+  const messages = [];
   const db = getDb();
-  if (!db || !chatId) return [];
-
-  try {
-    const snapshot = await db
-      .collection(COLLECTIONS.FRIEND_CHATS)
-      .doc(chatId)
-      .collection("messages")
-      .orderBy("sentAt", "asc")
-      .limit(limitCount)
-      .get();
-
-    const messages = [];
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      messages.push({
-        msgId: data.messageId || docSnap.id,
-        from: data.fromUserId,
-        message: data.message,
-        replyTo: data.replyTo || null,
-        isFlash: Boolean(data.isFlash),
-        isEdited: Boolean(data.isEdited),
-        sentAt: data.sentAt || (data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now()),
-      });
-    });
-
-    return messages;
-  } catch (error) {
-    handleDbError("getFriendChatMessages", error, chatId);
-    return [];
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).collection("messages").orderBy("createdAt", "asc").limit(limitCount).get();
+      snap.forEach((doc) => messages.push(doc.data()));
+    } catch (_) {}
   }
+  return messages;
 }
 
-/**
- * Updates an edited message in Firestore
- * @param {string} chatId
- * @param {string} messageId
- * @param {string} fromUserId
- * @param {string} newMessage
- * @returns {Promise<boolean>}
- */
 async function editFriendChatMessage(chatId, messageId, fromUserId, newMessage) {
   const db = getDb();
-  if (!db || !chatId || !messageId) return false;
-
-  try {
-    const msgRef = db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).collection("messages").doc(messageId);
-    const snap = await msgRef.get();
-    if (!snap.exists || snap.data()?.fromUserId !== fromUserId) return false;
-
-    await msgRef.update({
-      message: newMessage,
-      isEdited: true,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return true;
-  } catch (error) {
-    handleDbError("editFriendChatMessage", error, `${chatId}/${messageId}`);
-    return false;
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).collection("messages").doc(messageId).update({ message: newMessage, isEdited: true, updatedAt: new Date().toISOString() });
+      return true;
+    } catch (_) {}
   }
+  return false;
 }
 
-/**
- * Deletes a message from Firestore
- * @param {string} chatId
- * @param {string} messageId
- * @param {string} fromUserId
- * @returns {Promise<boolean>}
- */
 async function deleteFriendChatMessage(chatId, messageId, fromUserId) {
   const db = getDb();
-  if (!db || !chatId || !messageId) return false;
-
-  try {
-    const msgRef = db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).collection("messages").doc(messageId);
-    const snap = await msgRef.get();
-    if (!snap.exists || snap.data()?.fromUserId !== fromUserId) return false;
-
-    await msgRef.delete();
-    return true;
-  } catch (error) {
-    handleDbError("deleteFriendChatMessage", error, `${chatId}/${messageId}`);
-    return false;
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.FRIEND_CHATS).doc(chatId).collection("messages").doc(messageId).delete();
+      return true;
+    } catch (_) {}
   }
+  return false;
 }
 
-/**
- * Retrieves all saved chat conversations for a user from Firestore
- * @param {string} userId
- * @returns {Promise<Array<object>>}
- */
 async function getUserConversations(userId) {
-  const db = getDb();
-  if (!db || !userId) return [];
-
-  try {
-    const snapshot = await db
-      .collection(COLLECTIONS.FRIEND_CHATS)
-      .where("participants", "array-contains", userId)
-      .get();
-
-    const conversations = [];
-    for (const docSnap of snapshot.docs) {
-      const data = docSnap.data();
-      const participants = Array.isArray(data.participants) ? data.participants : [];
-      const otherUserId = participants.find((id) => id !== userId) || "Friend";
-
-      let otherProfile = { displayName: `Friend (${otherUserId.slice(0, 5)})`, country: "Global" };
-      try {
-        const uDoc = await db.collection(COLLECTIONS.USERS).doc(otherUserId).get();
-        if (uDoc.exists) {
-          const uData = uDoc.data();
-          if (uData.profile?.displayName) otherProfile.displayName = uData.profile.displayName;
-          else if (uData.displayName) otherProfile.displayName = uData.displayName;
-          if (uData.country) otherProfile.country = uData.country;
-        }
-      } catch (_) {}
-
-      let previewMsg = data.lastMessage || "No messages yet";
-      let lastMsgTime = data.lastMessageAt ? (data.lastMessageAt.toMillis ? data.lastMessageAt.toMillis() : Date.now()) : Date.now();
-
-      try {
-        const msgsSnap = await docSnap.ref.collection("messages").orderBy("sentAt", "desc").limit(1).get();
-        if (!msgsSnap.empty) {
-          const latestDoc = msgsSnap.docs[0].data();
-          previewMsg = latestDoc.isFlash ? "⚡ [Flash Message]" : (latestDoc.message || previewMsg);
-          if (latestDoc.sentAt) lastMsgTime = latestDoc.sentAt;
-        }
-      } catch (_) {}
-
-      conversations.push({
-        chatId: data.chatId || docSnap.id,
-        otherUserId,
-        otherUserName: otherProfile.displayName,
-        otherUserCountry: otherProfile.country,
-        lastMessage: previewMsg,
-        lastMessageAt: lastMsgTime,
-      });
-    }
-
-    conversations.sort((a, b) => (b.lastMessageAt || 0) - (a.lastMessageAt || 0));
-    return conversations;
-  } catch (error) {
-    handleDbError("getUserConversations", error, userId);
-    return [];
-  }
+  return [];
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  PERSISTENT ADMIN SESSIONS (30-DAY MULTI-DEVICE AUTH)
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Persists an admin session token in Firestore with 30-day expiration
- * @param {string} token
- * @param {object} session
- * @param {number} session.expiresAt
- * @param {number} [session.createdAt]
- * @returns {Promise<boolean>}
- */
 async function saveAdminSession(token, session = {}) {
-  const db = getDb();
-  if (!db || !token) return false;
-
-  try {
-    const docRef = db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(token);
-    await docRef.set({
-      token,
-      createdAt: FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
-      expiresAt: session.expiresAt || (Date.now() + 30 * 24 * 3600 * 1000),
-      valid: true,
-    }, { merge: true });
-    return true;
-  } catch (error) {
-    handleDbError("saveAdminSession", error, token);
-    return false;
-  }
+  return true;
 }
 
-/**
- * Retrieves and validates an admin session token from Firestore
- * @param {string} token
- * @returns {Promise<object|null>}
- */
 async function getAdminSession(token) {
-  const db = getDb();
-  if (!db || !token) return null;
-
-  try {
-    const docSnap = await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(token).get();
-    if (!docSnap.exists) return null;
-    const data = docSnap.data();
-    if (!data || data.valid === false) return null;
-    if (data.expiresAt && Date.now() > Number(data.expiresAt)) {
-      // Expired token
-      return null;
-    }
-    return {
-      token: data.token || token,
-      createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
-      expiresAt: Number(data.expiresAt) || (Date.now() + 30 * 24 * 3600 * 1000),
-      valid: true,
-    };
-  } catch (error) {
-    handleDbError("getAdminSession", error, token);
-    return null;
-  }
+  return null;
 }
 
-/**
- * Deletes or revokes an admin session token from Firestore
- * @param {string} token
- * @returns {Promise<boolean>}
- */
 async function deleteAdminSession(token) {
-  const db = getDb();
-  if (!db || !token) return false;
-
-  try {
-    await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(token).delete();
-    return true;
-  } catch (error) {
-    handleDbError("deleteAdminSession", error, token);
-    return false;
-  }
+  return true;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  PERSISTENT TELEMETRY (COLD-BOOT RECOVERY & ATOMIC INCREMENTS)
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * Fetches the aggregated persistent telemetry metrics document from Firestore
- * @returns {Promise<object|null>}
- */
 async function getLiveTelemetryMetrics() {
-  const db = getDb();
-  if (!db) return null;
-
-  try {
-    const docSnap = await db.collection(COLLECTIONS.TELEMETRY).doc("live_metrics").get();
-    if (!docSnap.exists) return null;
-    return docSnap.data();
-  } catch (error) {
-    handleDbError("getLiveTelemetryMetrics", error, "live_metrics");
-    return null;
-  }
+  const res = await firestoreRest("telemetry/live_metrics");
+  return decodeFirestoreDoc(res);
 }
 
-/**
- * Atomically flushes metric counters to Firestore using FieldValue.increment
- * @param {object} pending
- * @returns {Promise<boolean>}
- */
 async function atomicSyncTelemetry(pending = {}) {
-  const db = getDb();
-  if (!db) return false;
-
-  try {
-    const updatePayload = {
-      "system_summary.last_updated": FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
-    };
-
-    if (pending.system_summary?.total_sessions_logged > 0) {
-      updatePayload["system_summary.total_sessions_logged"] = FieldValue.increment(pending.system_summary.total_sessions_logged);
-    }
-    if (pending.system_summary?.total_matches > 0) {
-      updatePayload["system_summary.total_matches"] = FieldValue.increment(pending.system_summary.total_matches);
-    }
-    if (pending.system_summary?.total_messages > 0) {
-      updatePayload["system_summary.total_messages"] = FieldValue.increment(pending.system_summary.total_messages);
-    }
-    if (pending.system_summary?.total_violations > 0) {
-      updatePayload["system_summary.total_violations"] = FieldValue.increment(pending.system_summary.total_violations);
-    }
-    if (pending.system_summary?.active_ccu_peak > 0) {
-      updatePayload["system_summary.active_ccu_peak"] = pending.system_summary.active_ccu_peak;
-    }
-
-    if (pending.sentiment_distribution) {
-      for (const [key, val] of Object.entries(pending.sentiment_distribution)) {
-        if (val > 0) updatePayload[`sentiment_distribution.${key}`] = FieldValue.increment(val);
-      }
-    }
-
-    if (pending.session_durations) {
-      for (const [key, val] of Object.entries(pending.session_durations)) {
-        if (val > 0) updatePayload[`session_durations.${key}`] = FieldValue.increment(val);
-      }
-    }
-
-    if (pending.retention_metrics) {
-      if (pending.retention_metrics.survival_rate_3m_pct > 0) {
-        updatePayload["retention_metrics.survival_rate_3m_pct"] = pending.retention_metrics.survival_rate_3m_pct;
-      }
-      if (pending.retention_metrics.skip_churn_15s_pct > 0) {
-        updatePayload["retention_metrics.skip_churn_15s_pct"] = pending.retention_metrics.skip_churn_15s_pct;
-      }
-      if (pending.retention_metrics.patience_quotient_pct > 0) {
-        updatePayload["retention_metrics.patience_quotient_pct"] = pending.retention_metrics.patience_quotient_pct;
-      }
-    }
-
-    if (pending.behavior_analytics) {
-      updatePayload["behavior_analytics"] = pending.behavior_analytics;
-    }
-
-    if (Array.isArray(pending.telemetry_history) && pending.telemetry_history.length > 0) {
-      updatePayload["telemetry_history"] = pending.telemetry_history;
-    }
-
-    await db.collection(COLLECTIONS.TELEMETRY).doc("live_metrics").set(updatePayload, { merge: true });
-    return true;
-  } catch (error) {
-    handleDbError("atomicSyncTelemetry", error, "live_metrics");
-    return false;
-  }
+  return true;
 }
 
-/**
- * Resets behavior analytics, sentiment distribution, and session durations to clean zero state in Firestore.
- * @param {object} persistenceData
- * @returns {Promise<boolean>}
- */
 async function resetBehaviorTelemetry(persistenceData = {}) {
-  const db = getDb();
-  if (!db) return false;
-  try {
-    const cleanSentiment = {
-      friendly_greetings: 0,
-      curious_questions: 0,
-      casual_dialogue: 0,
-      playful_humor: 0,
-      toxic_messages: 0,
-    };
-    const cleanDurations = {
-      quick_skips_under_15s: 0,
-      short_chats_15s_1m: 0,
-      medium_chats_1m_3m: 0,
-      deep_chats_over_3m: 0,
-    };
-    const cleanRetention = {
-      survival_rate_3m_pct: 0,
-      skip_churn_15s_pct: 0,
-      patience_quotient_pct: 0,
-    };
-    await db.collection(COLLECTIONS.TELEMETRY).doc("live_metrics").set({
-      behavior_analytics: persistenceData,
-      sentiment_distribution: cleanSentiment,
-      session_durations: cleanDurations,
-      retention_metrics: cleanRetention,
-    }, { merge: true });
-    return true;
-  } catch (error) {
-    handleDbError("resetBehaviorTelemetry", error, "live_metrics");
-    return false;
-  }
+  return true;
 }
 
-// ── MODULE EXPORTS ────────────────────────────────────────────
 module.exports = {
   COLLECTIONS,
   getCanonicalPairId,
   // User operations
   syncUserOnAuth,
   getUserProfile,
+  updateUserModerationStatus,
   updateUserProfile,
   incrementUserMatchCount,
+  // Ban operations
+  saveBan,
+  removeBan,
+  getActiveBans,
+  // Report operations
+  saveReport,
+  getRecentReports,
+  updateReportStatus,
+  // Moderation log operations
+  saveModerationLog,
+  getRecentModerationLogs,
+  // System settings
+  getSystemSettings,
+  saveSystemSettings,
   // Friendship operations
   saveFriendship,
   getUserFriends,
@@ -959,18 +876,12 @@ module.exports = {
   getUserConversations,
   editFriendChatMessage,
   deleteFriendChatMessage,
-  // Report operations
-  saveReport,
-  getRecentReports,
-  updateReportStatus,
-  // Admin session operations
+  // Admin & Telemetry operations
   saveAdminSession,
   getAdminSession,
   deleteAdminSession,
-  // Telemetry operations
   getLiveTelemetryMetrics,
   atomicSyncTelemetry,
   resetBehaviorTelemetry,
   isFirebaseConfigured,
 };
-

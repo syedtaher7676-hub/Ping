@@ -1255,27 +1255,7 @@
       if (repRes.ok) {
         const repJson = await repRes.json();
         if (repJson.success && Array.isArray(repJson.reports)) {
-          const tbody = $('adminReportsTableBody');
-          const badge = $('adminReportsBadge');
-          if (badge) badge.textContent = repJson.reports.length;
-          if (tbody) {
-            if (repJson.reports.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--t-ghost);">No user reports found. Platform operating cleanly.</td></tr>`;
-            } else {
-              tbody.innerHTML = repJson.reports.map(r => `
-                <tr>
-                  <td>${new Date(r.createdAt || Date.now()).toLocaleTimeString()}</td>
-                  <td><code>${r.reporterId || 'Anonymous'}</code></td>
-                  <td><code>${r.reportedUserId || 'Target'}</code></td>
-                  <td>${escapeHtml(r.reason || 'Reported behavior')}</td>
-                  <td><span class="count-pill ${r.status === 'pending' ? 'amber' : 'green'}">${r.status || 'pending'}</span></td>
-                  <td>
-                    <button class="btn-table-action danger" onclick="window.PingAdmin.resolveReport('${r.reportId}', 'dismissed')">Dismiss</button>
-                  </td>
-                </tr>
-              `).join('');
-            }
-          }
+          renderAdminReports(repJson.reports);
         }
       }
 
@@ -1284,25 +1264,7 @@
       if (banRes.ok) {
         const banJson = await banRes.json();
         if (banJson.success && Array.isArray(banJson.bans)) {
-          const tbody = $('adminBansTableBody');
-          const badge = $('adminBansBadge');
-          const pill = $('activeBansCountPill');
-          if (badge) badge.textContent = banJson.bans.length;
-          if (pill) pill.textContent = `${banJson.bans.length} active`;
-          if (tbody) {
-            if (banJson.bans.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 22px; color: var(--t-ghost);">No active device bans.</td></tr>`;
-            } else {
-              tbody.innerHTML = banJson.bans.map(b => `
-                <tr>
-                  <td><code>${b.deviceHash || b.id || 'Device'}</code></td>
-                  <td>${b.expiresAt ? Math.max(0, Math.ceil((b.expiresAt - Date.now()) / 60000)) + ' mins left' : 'Permanent'}</td>
-                  <td>${escapeHtml(b.reason || 'Suspension')}</td>
-                  <td><button class="btn-table-action danger" onclick="window.PingAdmin.removeBan('${b.deviceHash || b.id}')">Lift Ban</button></td>
-                </tr>
-              `).join('');
-            }
-          }
+          renderAdminBans(banJson.bans);
         }
       }
 
@@ -1404,6 +1366,135 @@
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   }
 
+  function renderAdminReports(reports) {
+    const tbody = $('adminReportsTableBody');
+    const badge = $('adminReportsBadge');
+    if (!Array.isArray(reports)) return;
+    if (badge) badge.textContent = reports.length;
+    if (tbody) {
+      if (reports.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--t-ghost);">No user reports found. Platform operating cleanly.</td></tr>`;
+      } else {
+        tbody.innerHTML = reports.map(r => `
+          <tr>
+            <td>${new Date(r.createdAt || r.timestamp || Date.now()).toLocaleTimeString()}</td>
+            <td><code>${escapeHtml(r.reporterId || 'Anonymous')}</code></td>
+            <td><code>${escapeHtml(r.reportedUserId || 'Target')}</code></td>
+            <td>${escapeHtml(r.reason || 'Reported behavior')}</td>
+            <td><span class="count-pill ${r.status === 'pending' || r.status === 'pending_review' ? 'amber' : 'green'}">${escapeHtml(r.status || 'pending')}</span></td>
+            <td>
+              <button class="btn-table-action danger" onclick="window.PingAdmin.resolveReport('${r.reportId}', 'dismissed')">Dismiss</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  }
+
+  function renderAdminBans(bans) {
+    const tbody = $('adminBansTableBody');
+    const badge = $('adminBansBadge');
+    const pill = $('activeBansCountPill');
+    if (!Array.isArray(bans)) return;
+    if (badge) badge.textContent = bans.length;
+    if (pill) pill.textContent = `${bans.length} active`;
+    if (tbody) {
+      if (bans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 22px; color: var(--t-ghost);">No active device bans.</td></tr>`;
+      } else {
+        tbody.innerHTML = bans.map(b => `
+          <tr>
+            <td><code>${escapeHtml(b.deviceHash || b.userId || b.id || 'Device')}</code></td>
+            <td>${b.expiresAt ? Math.max(0, Math.ceil((b.expiresAt - Date.now()) / 60000)) + ' mins left' : 'Permanent'}</td>
+            <td>${escapeHtml(b.reason || 'Suspension')}</td>
+            <td><button class="btn-table-action danger" onclick="window.PingAdmin.removeBan('${b.deviceHash || b.userId || b.id}')">Lift Ban</button></td>
+          </tr>
+        `).join('');
+      }
+    }
+  }
+
+  function updateVpnShieldUI(enabled) {
+    const btn = $('adminVpnShieldToggle');
+    const txt = $('adminVpnShieldText');
+    if (btn) {
+      if (enabled) {
+        btn.classList.add('active');
+        if (txt) txt.textContent = 'VPN Shield: ON';
+      } else {
+        btn.classList.remove('active');
+        if (txt) txt.textContent = 'VPN Shield: OFF';
+      }
+    }
+  }
+
+  let unsubReports = null;
+  let unsubBans = null;
+  let unsubSettings = null;
+
+  function setupFirestoreAdminListeners() {
+    if (!window.firebase || !window.firebase.firestore) return;
+    const db = window.firebase.firestore();
+
+    // 1. Real-time live sync for Reports collection
+    try {
+      if (unsubReports) unsubReports();
+      unsubReports = db.collection('reports').onSnapshot((snap) => {
+        const reportsList = [];
+        snap.forEach(d => {
+          const data = d.data();
+          if (data) reportsList.push({ ...data, reportId: data.reportId || d.id });
+        });
+        if (reportsList.length > 0 || isAdminDashboardVisible()) {
+          renderAdminReports(reportsList);
+        }
+      }, () => {});
+    } catch (_) {}
+
+    // 2. Real-time live sync for Bans collection
+    try {
+      if (unsubBans) unsubBans();
+      unsubBans = db.collection('bans').onSnapshot((snap) => {
+        const bansList = [];
+        const now = Date.now();
+        snap.forEach(d => {
+          const data = d.data();
+          if (data && data.active !== false && Number(data.expiresAt) > now) {
+            const remMs = Number(data.expiresAt) - now;
+            bansList.push({
+              ...data,
+              deviceHash: data.deviceHash || data.userId || d.id,
+              minutesLeft: Math.max(1, Math.ceil(remMs / 60000))
+            });
+          }
+        });
+        if (bansList.length > 0 || isAdminDashboardVisible()) {
+          renderAdminBans(bansList);
+        }
+      }, () => {});
+    } catch (_) {}
+
+    // 3. Real-time live sync for Global System Settings (VPN Shield, Emergency Strict Mode)
+    try {
+      if (unsubSettings) unsubSettings();
+      unsubSettings = db.collection('system_settings').doc('global_rules').onSnapshot((snap) => {
+        if (snap.exists()) {
+          const s = snap.data();
+          if (s && typeof s.vpnShieldEnabled === 'boolean') {
+            updateVpnShieldUI(s.vpnShieldEnabled);
+          }
+        }
+      }, () => {});
+    } catch (_) {}
+  }
+
+  window.addEventListener('firebase:ready', () => {
+    setupFirestoreAdminListeners();
+  });
+  if (window.firebaseReady) {
+    setupFirestoreAdminListeners();
+  }
+
   // ═════════════════════════════════════════════════════════════
   // 6. BOOTSTRAP ON DOMCONTENTLOADED
   // ═════════════════════════════════════════════════════════════
@@ -1427,6 +1518,18 @@
         exportExcelReport();
       });
     }
+
+    $('adminVpnShieldToggle')?.addEventListener('click', async () => {
+      const btn = $('adminVpnShieldToggle');
+      const isNowActive = btn ? !btn.classList.contains('active') : true;
+      try {
+        await adminFetch('/api/admin/system/vpn-shield', {
+          method: 'POST',
+          body: JSON.stringify({ enabled: isNowActive })
+        });
+        updateVpnShieldUI(isNowActive);
+      } catch (_) {}
+    });
 
     $('adminManualRefreshBtn')?.addEventListener('click', () => {
       hydrateTelemetryFromFirestore();
@@ -1599,6 +1702,15 @@
           body: JSON.stringify({ roomId })
         });
         refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    toggleVpnShield: async (enabled) => {
+      try {
+        await adminFetch('/api/admin/system/vpn-shield', {
+          method: 'POST',
+          body: JSON.stringify({ enabled })
+        });
+        updateVpnShieldUI(enabled);
       } catch (e) {}
     }
   };

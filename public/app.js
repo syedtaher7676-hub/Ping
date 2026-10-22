@@ -34,7 +34,14 @@ const socket = window.__PING_SOCKET__ || io(backendUrl, {
   reconnectionDelay: 1000,
   reconnectionDelayMax: 4000,
   randomizationFactor: 0.3,
-  auth: { userId: persistentUserId, deviceHash: persistentDeviceHash },
+  auth: {
+    userId: persistentUserId,
+    deviceHash: persistentDeviceHash,
+    timezone: (() => {
+      try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch (_) { return ''; }
+    })(),
+    language: navigator.language || navigator.userLanguage || ''
+  },
   autoConnect: true,
 });
 window.__PING_SOCKET__ = socket;
@@ -392,9 +399,62 @@ async function initFirebaseClient() {
         updateSettingsUI();
       }
     });
+
+    // Real-time Firestore live listener for user ban & profile updates
+    subscribeToUserFirestoreState(persistentUserId);
   } catch (err) {
     console.warn("Client-side Firebase failed to initialize:", err);
   }
+}
+
+let unsubUserBan = null;
+let unsubUserDoc = null;
+
+function subscribeToUserFirestoreState(uid) {
+  if (!uid || !window.firebase || !window.firebase.firestore) return;
+  const db = window.firebase.firestore();
+
+  // 1. Real-time active ban listener
+  try {
+    if (unsubUserBan) unsubUserBan();
+    unsubUserBan = db.collection('bans').doc(uid).onSnapshot((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && data.active !== false && Number(data.expiresAt) > Date.now()) {
+          banExpiryTimestamp = Number(data.expiresAt);
+          try { localStorage.setItem('ping_ban_expires_at', banExpiryTimestamp); } catch (_) {}
+          const mins = Math.max(1, Math.ceil((banExpiryTimestamp - Date.now()) / 60000));
+          showToast(`🚫 Account suspended for ${mins} minute(s): ${data.reason || 'Policy violation'}`, 'error', 6000);
+          return;
+        }
+      }
+      // If ban document is inactive or unbanned
+      if (banExpiryTimestamp && Number(banExpiryTimestamp) > Date.now()) {
+        banExpiryTimestamp = null;
+        try { localStorage.removeItem('ping_ban_expires_at'); } catch (_) {}
+        showToast('✅ Account suspension lifted. You may now chat freely!', 'success', 4000);
+      }
+    }, () => {});
+  } catch (_) {}
+
+  // 2. Real-time user document listener
+  try {
+    if (unsubUserDoc) unsubUserDoc();
+    unsubUserDoc = db.collection('users').doc(uid).onSnapshot((snap) => {
+      if (snap.exists()) {
+        const u = snap.data();
+        if (u) {
+          if (u.isBanned && Number(u.banExpiresAt) > Date.now()) {
+            banExpiryTimestamp = Number(u.banExpiresAt);
+            try { localStorage.setItem('ping_ban_expires_at', banExpiryTimestamp); } catch (_) {}
+          } else if (u.isBanned === false && banExpiryTimestamp) {
+            banExpiryTimestamp = null;
+            try { localStorage.removeItem('ping_ban_expires_at'); } catch (_) {}
+          }
+        }
+      }
+    }, () => {});
+  } catch (_) {}
 }
 
 // Auto bootstrap Firebase on startup and on ready event
@@ -4117,6 +4177,46 @@ socket.on('chat_ended_banned', ({ reason, message, isOffender, banExpiresAt, rem
       }, 1200);
     }
   }
+});
+
+// ═══════════════════════════════════════════════
+//  VPN / PROXY SHIELD DETECTION EVENT
+// ═══════════════════════════════════════════════
+socket.off('vpn_detected');
+socket.on('vpn_detected', ({ message, details }) => {
+  stopAutoSearch();
+  stopTimer();
+  endCurrentChat();
+
+  const provider = details?.isp || details?.org || details?.provider || 'Commercial Proxy / Datacenter';
+  const reason = details?.reason || 'Non-residential network detected';
+
+  showConfirm(
+    '🛡️ VPN or Proxy Detected',
+    `<div style="line-height:1.6; margin-top:8px;">
+      <p style="color:var(--t-med); font-size:0.95rem; margin-bottom:10px;">
+        Ping requires a direct residential connection to prevent abusive multi-accounting and protect community safety.
+      </p>
+      <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px; font-size:0.85rem; color:var(--t-ghost); margin-bottom:12px;">
+        <div><strong>Network:</strong> <code>${provider}</code></div>
+        <div style="margin-top:4px;"><strong>Reason:</strong> ${reason}</div>
+      </div>
+      <p style="font-size:0.85rem; color:var(--t-med);">
+        Please turn off your VPN, proxy, or iCloud Private Relay, then click <strong>Retry Connection</strong>.
+      </p>
+    </div>`,
+    () => {
+      if (socket) {
+        socket.disconnect();
+        setTimeout(() => socket.connect(), 400);
+      }
+    },
+    null,
+    'Retry Connection',
+    '',
+    '🛡️'
+  );
+  showToast(message || 'VPN or Proxy detected. Please disable your VPN to chat.', 'error', 6000);
 });
 
 // ═══════════════════════════════════════════════
