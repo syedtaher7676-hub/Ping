@@ -327,59 +327,57 @@
 
     <!-- CONTENT -->
     <div class="landing-content">
-      <div class="logo-lockup" id="landingLogoLockup" title="Ping">
-        <div class="logo-mark" id="landingLogoMark">
-          <img src="/logo.svg" alt="Ping Logo" class="brand-logo-img" width="72" height="72" fetchpriority="high" />
+      <div class="landing-body" style="display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%;">
+        <div class="logo-lockup" id="landingLogoLockup" title="Ping">
+          <div class="logo-mark" id="landingLogoMark">
+            <img src="/logo.svg" alt="Ping Logo" class="brand-logo-img" width="72" height="72" fetchpriority="high" />
+          </div>
+          <h1 class="logo-wordmark">
+            <span class="lw-char" style="--i:0">P</span><span class="lw-char" style="--i:1">i</span><span class="lw-char"
+              style="--i:2">n</span><span class="lw-char" style="--i:3">g</span>
+          </h1>
         </div>
-        <h1 class="logo-wordmark">
-          <span class="lw-char" style="--i:0">P</span><span class="lw-char" style="--i:1">i</span><span class="lw-char"
-            style="--i:2">n</span><span class="lw-char" style="--i:3">g</span>
-        </h1>
-      </div>
 
-      <p class="hero-tagline">Talk to strangers.<br><strong>Stay anonymous.</strong></p>
+        <p class="hero-tagline">Talk to strangers.<br><strong>Stay anonymous.</strong></p>
 
-      <!-- REAL-TIME online count -->
-      <div class="live-count-row">
-        <span class="live-dot"></span>
-        <span class="live-num" id="liveUsers">0</span>
-        <span class="live-label">online now</span>
-      </div>
-
-      <div class="landing-actions-row">
-        <button id="startLandingBtn" class="cta-btn" type="button">
-          <span class="cta-label">Start Chat</span>
-          <span class="cta-icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </span>
-          <span class="cta-glow"></span>
-        </button>
-
-        <button id="downloadLandingBtn" class="download-app-btn" type="button" title="Download & Install Ping from Browser">
-          <span class="download-label">Download App</span>
-          <span class="download-icon-wrap" aria-hidden="true">
-            <svg class="download-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-            </svg>
-          </span>
-        </button>
-      </div>
-
-      <!-- LEGAL & 18+ FOOTER -->
-      <footer class="landing-legal-footer">
-        <div class="legal-nav-row">
-          <span class="legal-age-tag">18+ Adults Only</span>
-          <span class="legal-sep" aria-hidden="true">·</span>
-          <a href="/terms.html" target="_blank" rel="noopener" class="legal-link">Terms</a>
-          <span class="legal-sep" aria-hidden="true">·</span>
-          <a href="/privacy.html" target="_blank" rel="noopener" class="legal-link">Privacy</a>
-          <span class="legal-sep" aria-hidden="true">·</span>
-          <a href="/safety.html" target="_blank" rel="noopener" class="legal-link">Safety</a>
+        <!-- REAL-TIME online count -->
+        <div class="live-count-row">
+          <span class="live-dot"></span>
+          <span class="live-num" id="liveUsers">0</span>
+          <span class="live-label">online now</span>
         </div>
-      </footer>
+
+        <div class="landing-actions-row">
+          <button id="startLandingBtn" class="cta-btn" type="button">
+            <span class="cta-label">Start Chat</span>
+            <span class="cta-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
+            <span class="cta-glow"></span>
+          </button>
+
+          <button id="downloadLandingBtn" class="download-app-btn" type="button" title="Download & Install Ping from Browser">
+            <span class="download-label">Download App</span>
+            <span class="download-icon-wrap" aria-hidden="true">
+              <svg class="download-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </div>
+
     </div>
+
+      <!-- 18+ AGE NOTICE & CLICK-THROUGH LEGAL CONSENT (Anchored Bottom) -->
+      <div class="landing-consent-wrap">
+        <span class="legal-age-tag">18+ Adults Only</span>
+        <p class="landing-terms-consent">
+          By continuing, you agree to our <a href="/terms.html" target="_blank" rel="noopener">Terms</a> &amp; <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.
+        </p>
+      </div>
   </div>
 
 

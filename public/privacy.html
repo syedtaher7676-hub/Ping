@@ -59,20 +59,40 @@
       transition: color 0.2s;
     }
     .back-btn:hover { color: #00F0FF; }
-    table {
+    
+    /* Horizontal scroll wrapper to fix mobile table layout clutter */
+    .table-scroll-wrapper {
       width: 100%;
-      border-collapse: collapse;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       margin: 20px 0;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(10, 10, 26, 0.6);
+    }
+    .table-scroll-wrapper table {
+      width: 100%;
+      min-width: 540px;
+      margin: 0;
+      border-collapse: collapse;
       font-size: 0.95rem;
     }
-    th, td {
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 10px 14px;
+    .table-scroll-wrapper th, 
+    .table-scroll-wrapper td {
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 12px 16px;
       text-align: left;
     }
-    th {
-      background: rgba(112, 0, 255, 0.2);
+    .table-scroll-wrapper th {
+      background: rgba(112, 0, 255, 0.25);
       color: #00F0FF;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+    }
+    .table-scroll-wrapper td:nth-child(2) {
+      white-space: normal;
+      min-width: 200px;
     }
   </style>
 </head>
@@ -92,38 +112,40 @@
     <p>Under <strong>Article 6(1)(f) of the EU/UK GDPR (Legitimate Interest)</strong>, Ping processes anonymized device hashes (`dev_xxxx`) and temporary IP telemetry strictly for platform safety, abuse prevention, 15-minute ban enforcement, and protection against automated botnet swarms.</p>
 
     <h2>4. Summary of Data Handling</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Data Category</th>
-          <th>Purpose</th>
-          <th>Retention</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Raw Chat Text</strong></td>
-          <td>Ephemeral chat stream</td>
-          <td><strong>0 Seconds</strong> (RAM only)</td>
-        </tr>
-        <tr>
-          <td><strong>Anonymized Device Hash</strong></td>
-          <td>Ban enforcement & safety</td>
-          <td>Active ban duration</td>
-        </tr>
-        <tr>
-          <td><strong>IP Telemetry</strong></td>
-          <td>VPN & proxy protection</td>
-          <td>In-memory 24-hour cache</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="table-scroll-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Data Category</th>
+            <th>Purpose</th>
+            <th>Retention</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Raw Chat Text</strong></td>
+            <td>Ephemeral chat stream</td>
+            <td><strong>0 Seconds</strong> (RAM only)</td>
+          </tr>
+          <tr>
+            <td><strong>Anonymized Device Hash</strong></td>
+            <td>Ban enforcement &amp; safety</td>
+            <td>Active ban duration</td>
+          </tr>
+          <tr>
+            <td><strong>IP Telemetry</strong></td>
+            <td>VPN &amp; proxy protection</td>
+            <td>In-memory 24-hour cache</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <h2>5. Strict 18+ Adult Policy</h2>
     <p>Ping is strictly an adults-only service for users aged 18 and older. We do not knowingly collect data from or offer services to minors.</p>
 
     <h2>6. Contact</h2>
-    <p>For Privacy & Data Rights inquiries: <code>privacy@ping.app</code></p>
+    <p>For Privacy &amp; Data Rights inquiries: <code>privacy@ping.app</code></p>
   </div>
 </body>
 </html>
