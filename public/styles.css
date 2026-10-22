@@ -532,6 +532,7 @@ input {
 
 .landing-body {
   gap: 12px;
+  margin-top: -6vh;
 }
 
 .logo-lockup {
