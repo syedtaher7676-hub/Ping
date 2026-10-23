@@ -36,7 +36,13 @@ service cloud.firestore {
         (!('email' in data) || (data.email is string && data.email.size() <= 128)) &&
         (!('streak' in data) || (data.streak is number && data.streak >= 0)) &&
         (!('xp' in data) || (data.xp is number && data.xp >= 0)) &&
-        (!('totalMatches' in data) || (data.totalMatches is number && data.totalMatches >= 0));
+        (!('totalMatches' in data) || (data.totalMatches is number && data.totalMatches >= 0)) &&
+        (!('strikes' in data) || (data.strikes is number && data.strikes >= 0)) &&
+        (!('slurViolations' in data) || (data.slurViolations is number && data.slurViolations >= 0)) &&
+        (!('isBanned' in data) || data.isBanned is bool) &&
+        (!('banExpiresAt' in data) || data.banExpiresAt is number) &&
+        (!('banReason' in data) || (data.banReason is string && data.banReason.size() <= 500)) &&
+        (!('vpnDetected' in data) || data.vpnDetected is bool);
     }
 
     function isValidFriendship(data) {
@@ -70,7 +76,13 @@ service cloud.firestore {
       return data.reportId is string && data.reportId.size() <= 128 &&
         data.reporterId is string && data.reporterId.size() <= 128 &&
         data.reportedUserId is string && data.reportedUserId.size() <= 128 &&
-        data.reason is string && data.reason.size() <= 500;
+        (!('reason' in data) || (data.reason is string && data.reason.size() <= 500));
+    }
+
+    function isValidBan(data) {
+      return data.banId is string && data.banId.size() <= 128 &&
+        (!('reason' in data) || (data.reason is string && data.reason.size() <= 500)) &&
+        (!('expiresAt' in data) || data.expiresAt is number);
     }
 
     // ── USERS COLLECTION ────────────────────────────────────────
@@ -78,7 +90,28 @@ service cloud.firestore {
       allow get: if isValidId(userId);
       allow list: if isSignedIn();
       allow create, update: if isValidId(userId) && isValidUser(incoming());
-      allow delete: if false;
+      allow delete: if isValidId(userId);
+    }
+
+    // ── BANS COLLECTION ─────────────────────────────────────────
+    match /bans/{banId} {
+      allow get, list: if isValidId(banId) || true;
+      allow create, update: if isValidId(banId) && isValidBan(incoming());
+      allow delete: if isValidId(banId);
+    }
+
+    // ── MODERATION LOGS COLLECTION ──────────────────────────────
+    match /moderation_logs/{logId} {
+      allow get, list: if isValidId(logId) || true;
+      allow create, update: if isValidId(logId);
+      allow delete: if isValidId(logId);
+    }
+
+    // ── SYSTEM SETTINGS COLLECTION ──────────────────────────────
+    match /system_settings/{docId} {
+      allow get, list: if isValidId(docId) || true;
+      allow create, update: if isValidId(docId);
+      allow delete: if isValidId(docId);
     }
 
     // ── FRIENDSHIPS COLLECTION ──────────────────────────────────
@@ -86,16 +119,15 @@ service cloud.firestore {
       allow get: if isValidId(pairId);
       allow list: if isSignedIn() && (resource.data.userAId == request.auth.uid || resource.data.userBId == request.auth.uid || resource.data.users.hasAny([request.auth.uid]));
       allow create, update: if isValidId(pairId) && isValidFriendship(incoming());
-      allow delete: if false;
+      allow delete: if isValidId(pairId);
     }
 
     // ── FRIEND REQUESTS COLLECTION ──────────────────────────────
     match /friend_requests/{requestId} {
       allow get: if isValidId(requestId);
       allow list: if isSignedIn() && (resource.data.toUserId == request.auth.uid || resource.data.fromUserId == request.auth.uid);
-      allow create: if isValidId(requestId) && isValidFriendRequest(incoming());
-      allow update: if isValidId(requestId) && isValidFriendRequest(incoming());
-      allow delete: if false;
+      allow create, update: if isValidId(requestId) && isValidFriendRequest(incoming());
+      allow delete: if isValidId(requestId);
     }
 
     // ── FRIEND CHATS & MESSAGES ─────────────────────────────────
@@ -103,23 +135,23 @@ service cloud.firestore {
       allow get: if isValidId(chatId);
       allow list: if isSignedIn() && resource.data.participants.hasAny([request.auth.uid]);
       allow create, update: if isValidId(chatId) && isValidFriendChat(incoming());
-      allow delete: if false;
+      allow delete: if isValidId(chatId);
 
       match /messages/{messageId} {
         allow get: if isValidId(messageId);
         allow list: if isSignedIn();
         allow create: if isValidId(messageId) && isValidChatMessage(incoming());
         allow update: if isValidId(messageId) && isValidChatMessage(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['message', 'isEdited', 'updatedAt']);
-        allow delete: if false;
+        allow delete: if isValidId(messageId);
       }
     }
 
     // ── REPORTS COLLECTION ──────────────────────────────────────
     match /reports/{reportId} {
-      allow get: if false;
-      allow list: if false;
+      allow get, list: if isValidId(reportId) || true;
       allow create: if isValidId(reportId) && isValidReport(incoming());
-      allow update, delete: if false;
+      allow update: if isValidId(reportId);
+      allow delete: if isValidId(reportId);
     }
 
     // ── TELEMETRY COLLECTION ────────────────────────────────────
@@ -132,8 +164,8 @@ service cloud.firestore {
 
     // ── ADMIN SESSIONS COLLECTION (SERVER-MANAGED) ─────────────
     match /admin_sessions/{token} {
-      allow read, write: if false;
+      allow get, list: if isValidId(token) || true;
+      allow create, update, delete: if isValidId(token);
     }
   }
 }
-

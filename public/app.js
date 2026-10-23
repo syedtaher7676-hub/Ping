@@ -700,6 +700,114 @@ function initSettingsTab() {
       }
     });
   });
+
+  // Clear User Data & Reset Session button
+  const clearUserDataBtn = document.getElementById('clearUserDataBtn');
+  if (clearUserDataBtn) {
+    clearUserDataBtn.addEventListener('click', () => {
+      showConfirm(
+        'Clear All User Data?',
+        'This will permanently wipe your cloud profile, friendship records, local preferences, and reset your identity to a fresh guest session. Continue?',
+        async () => {
+          clearUserDataBtn.disabled = true;
+          clearUserDataBtn.textContent = 'Clearing...';
+          try {
+            const currentUid = AppState.user.id || persistentUserId || myId;
+            const currentDevice = deviceHash || localStorage.getItem('ping_device_hash') || ('dev_' + currentUid);
+
+            // 1. Remote wipe via server endpoint (deletes Firestore profile & friendships)
+            try {
+              await fetch('/api/user/clear-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUid, deviceHash: currentDevice })
+              });
+            } catch (netErr) {
+              console.warn('[Ping] Clear data remote error:', netErr);
+            }
+
+            // 2. Sign out of Firebase Auth if active
+            if (authInstance) {
+              try { await authInstance.signOut(); } catch (_) {}
+            }
+
+            // 3. Wipe all user keys from localStorage & sessionStorage
+            const keysToRemove = [
+              'ping_persistent_uid',
+              'ping_user_id',
+              'ping_device_hash',
+              'ping_user_email',
+              'ping_is_auth',
+              'ping_displayName',
+              'ping_custom_username',
+              'ping_pref_sound',
+              'ping_pref_haptic',
+              'ping_pref_autoscroll',
+              'ping_pref_typing',
+              'ping_active_friend_id',
+              'ping_friends_cache',
+              'ping_last_explore_room',
+              'ping_is_in_chat',
+              'ping_explore_timer_end'
+            ];
+            keysToRemove.forEach((k) => {
+              try { localStorage.removeItem(k); } catch (_) {}
+              try { sessionStorage.removeItem(k); } catch (_) {}
+            });
+
+            // 4. Generate clean anonymous guest identity
+            const freshGuestId = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+            persistentUserId = freshGuestId;
+            myId = freshGuestId;
+            try {
+              localStorage.setItem('ping_persistent_uid', freshGuestId);
+              localStorage.setItem('ping_user_id', freshGuestId);
+            } catch (_) {}
+
+            AppState.user.isAuthenticated = false;
+            AppState.user.id = freshGuestId;
+            AppState.user.profile = null;
+
+            // 5. Reset friends state
+            friends = [];
+            currentFriendId = null;
+            renderFriendsList();
+            updateFriendsTabBadge();
+
+            // 6. Reset custom username input
+            const customUsernameInput = document.getElementById('customUsernameInput');
+            if (customUsernameInput) customUsernameInput.value = '';
+
+            // 7. Reset settings UI state
+            updateSettingsUI();
+
+            // 8. Re-authenticate socket with the fresh identity
+            if (socket && socket.connected) {
+              socket.emit('authenticate', {
+                userId: freshGuestId,
+                deviceHash: 'dev_' + freshGuestId,
+                clientType: 'web'
+              });
+            }
+
+            showToast('All user data cleared & session reset! ✨', 'success', 3500);
+          } catch (err) {
+            console.error('Error clearing user data:', err);
+            showToast('Failed to clear data: ' + (err.message || 'Unknown error'), 'error', 3000);
+          } finally {
+            clearUserDataBtn.disabled = false;
+            clearUserDataBtn.innerHTML = `
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Clear User Data</span>
+            `;
+          }
+        }
+      );
+    });
+  }
 }
 
 // Initialize settings handlers & preferences
@@ -1122,85 +1230,54 @@ socket.on('dm_edited', ({ msgId, newMessage }) => {
   }
 });
 
-socket.off('admin_auth_failed');
-socket.on('admin_auth_failed', () => {
-  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+// Silent admin token validity handler (never shows modal on boot/wake unless user opened admin dashboard)
+function checkAdminTokenSilently() {
+  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
   if (!token) return;
-  localStorage.removeItem('ping_admin_token');
-  localStorage.removeItem('admin_token');
-  sessionStorage.removeItem('ping_admin_token');
-  sessionStorage.removeItem('admin_token');
-  const modal = document.getElementById('adminAuthModal');
-  if (modal) {
-    modal.style.display = 'flex';
-    const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
-    if (title) title.textContent = 'Session expired.';
-  }
-});
+  const adminView = document.getElementById('adminDashboardView');
+  const isAdminOpen = adminView && adminView.style.display !== 'none' && adminView.style.display !== '';
 
-socket.on('connect', () => {
-  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
-  if (!token) return;
   fetch('/api/admin/overview', {
     headers: { 'Authorization': `Bearer ${token}` }
   }).then(res => {
     if (res.status === 401) {
-      localStorage.removeItem('ping_admin_token');
-      localStorage.removeItem('admin_token');
-      sessionStorage.removeItem('ping_admin_token');
-      sessionStorage.removeItem('admin_token');
-      const modal = document.getElementById('adminAuthModal');
-      if (modal) {
-        modal.style.display = 'flex';
-        const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
-        if (title) title.textContent = 'Session expired.';
-      }
-    }
-  }).catch(() => {});
-});
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') {
-    const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
-    if (!token) return;
-    fetch('/api/admin/overview', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).then(res => {
-      if (res.status === 401) {
+      try {
         localStorage.removeItem('ping_admin_token');
-        localStorage.removeItem('admin_token');
         sessionStorage.removeItem('ping_admin_token');
-        sessionStorage.removeItem('admin_token');
+      } catch (_) {}
+      if (isAdminOpen) {
+        if (adminView) {
+          adminView.style.display = 'none';
+          document.body.style.overflow = '';
+        }
         const modal = document.getElementById('adminAuthModal');
         if (modal) {
           modal.style.display = 'flex';
           const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
-          if (title) title.textContent = 'Session expired.';
+          if (title) title.textContent = 'Session expired. Please enter admin password.';
         }
-      }
-    }).catch(() => {});
-  }
-});
-
-window.addEventListener('pageshow', () => {
-  const token = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token') || localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
-  if (!token) return;
-  fetch('/api/admin/overview', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  }).then(res => {
-    if (res.status === 401) {
-      localStorage.removeItem('ping_admin_token');
-      localStorage.removeItem('admin_token');
-      sessionStorage.removeItem('ping_admin_token');
-      sessionStorage.removeItem('admin_token');
-      const modal = document.getElementById('adminAuthModal');
-      if (modal) {
-        modal.style.display = 'flex';
-        const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
-        if (title) title.textContent = 'Session expired.';
       }
     }
   }).catch(() => {});
+}
+
+socket.off('admin_auth_failed');
+socket.on('admin_auth_failed', () => {
+  try {
+    localStorage.removeItem('ping_admin_token');
+    sessionStorage.removeItem('ping_admin_token');
+  } catch (_) {}
+  const adminView = document.getElementById('adminDashboardView');
+  if (adminView && adminView.style.display !== 'none' && adminView.style.display !== '') {
+    adminView.style.display = 'none';
+    document.body.style.overflow = '';
+    const modal = document.getElementById('adminAuthModal');
+    if (modal) {
+      modal.style.display = 'flex';
+      const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+      if (title) title.textContent = 'Session expired. Please enter admin password.';
+    }
+  }
 });
 
 // ── INSTAGRAM-STYLE ATTACHED EMOJI REACTIONS ────────────────────────
@@ -3299,9 +3376,9 @@ function handleSuccessfulConnection() {
     }
   });
 
-  // 6. Automatic Socket Re-subscription: Persistent Admin channel re-subscription
+  // 6. Automatic Socket Re-subscription: Persistent Admin channel re-subscription only if dashboard is open
   const savedAdminToken = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
-  if (savedAdminToken) {
+  if (savedAdminToken && adminDashboardView && adminDashboardView.style.display !== 'none' && adminDashboardView.style.display !== '') {
     socket.emit('admin_rejoin', { token: savedAdminToken });
   }
 
@@ -6388,16 +6465,19 @@ function initAdminModule() {
 
   async function checkAuthFailure(res) {
     if (res.status === 401) {
+      const wasDashboardOpen = Boolean(adminDashboardView && adminDashboardView.style.display !== 'none' && adminDashboardView.style.display !== '');
       try {
         sessionStorage.removeItem('ping_admin_token');
         localStorage.removeItem('ping_admin_token');
       } catch (_) {}
       adminToken = null;
-      closeAdminDashboard();
-      openAdminAuthModal();
-      if (adminAuthError) {
-        adminAuthError.textContent = 'Session expired. Please enter admin password.';
-        adminAuthError.style.display = 'block';
+      if (wasDashboardOpen) {
+        closeAdminDashboard();
+        openAdminAuthModal();
+        if (adminAuthError) {
+          adminAuthError.textContent = 'Session expired. Please enter admin password.';
+          adminAuthError.style.display = 'block';
+        }
       }
       return true;
     }
@@ -9156,24 +9236,22 @@ function initAdminModule() {
   // PERSISTENT DEVICE AUTO-AUTH & AUTO-REJOIN LOGIC
   // ═══════════════════════════════════════════════════════════════
 
-  // 1. Boot Auto-Auth: If admin token is stored in localStorage, immediately fetch persistent stats
-  if (adminToken) {
+  // 1. Boot Auto-Auth: Only fetch persistent stats if admin dashboard is actively open
+  if (adminToken && adminDashboardView && adminDashboardView.style.display !== 'none' && adminDashboardView.style.display !== '') {
     fetchOverviewStats();
   }
 
-  // 2. Tab Return Auto-Sync (visibilitychange listener)
+  // 2. Tab Return Auto-Sync (visibilitychange listener): Only if dashboard is actively open
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
       const activeToken = localStorage.getItem('ping_admin_token') || sessionStorage.getItem('ping_admin_token');
-      if (activeToken) {
+      if (activeToken && adminDashboardView && adminDashboardView.style.display !== 'none' && adminDashboardView.style.display !== '') {
         adminToken = activeToken;
         fetchOverviewStats();
         if (socket && socket.connected) {
           socket.emit('admin_rejoin', { token: activeToken });
         }
-        if (adminDashboardView && adminDashboardView.style.display !== 'none') {
-          refreshAllAdminData();
-        }
+        refreshAllAdminData();
       }
     }
   });
@@ -9204,6 +9282,133 @@ function initAdminModule() {
       }
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MODAL & BUTTON ENFORCEMENT HANDLERS
+  // ═══════════════════════════════════════════════════════════════
+
+  // Chat Transcript Viewer Modal
+  const closeTranscriptBtn = $('closeTranscriptBtn');
+  const transcriptCloseFooterBtn = $('transcriptCloseFooterBtn');
+  const transcriptOpenFriendDmBtn = $('transcriptOpenFriendDmBtn');
+  if (closeTranscriptBtn) {
+    closeTranscriptBtn.addEventListener('click', () => {
+      if (chatTranscriptModal) chatTranscriptModal.style.display = 'none';
+    });
+  }
+  if (transcriptCloseFooterBtn) {
+    transcriptCloseFooterBtn.addEventListener('click', () => {
+      if (chatTranscriptModal) chatTranscriptModal.style.display = 'none';
+    });
+  }
+  if (chatTranscriptModal) {
+    chatTranscriptModal.addEventListener('click', (e) => {
+      if (e.target === chatTranscriptModal) chatTranscriptModal.style.display = 'none';
+    });
+  }
+  if (transcriptOpenFriendDmBtn) {
+    transcriptOpenFriendDmBtn.addEventListener('click', () => {
+      if (chatTranscriptModal) chatTranscriptModal.style.display = 'none';
+      const targetFriendId = chatTranscriptModal?.getAttribute('data-friend-id');
+      if (targetFriendId && typeof window.openFriendDM === 'function') {
+        window.openFriendDM(targetFriendId);
+      } else {
+        switchHomeTab('friends');
+      }
+    });
+  }
+
+  // Admin Action Modal (Warn / Mute)
+  const adminActionModal = $('adminActionModal');
+  const closeActionModalBtn = $('closeActionModalBtn');
+  const cancelActionModalBtn = $('cancelActionModalBtn');
+  const submitActionModalBtn = $('submitActionModalBtn');
+  const adminActionForm = $('adminActionForm');
+
+  if (closeActionModalBtn) {
+    closeActionModalBtn.addEventListener('click', () => {
+      if (adminActionModal) adminActionModal.style.display = 'none';
+    });
+  }
+  if (cancelActionModalBtn) {
+    cancelActionModalBtn.addEventListener('click', () => {
+      if (adminActionModal) adminActionModal.style.display = 'none';
+    });
+  }
+  if (adminActionModal) {
+    adminActionModal.addEventListener('click', (e) => {
+      if (e.target === adminActionModal) adminActionModal.style.display = 'none';
+    });
+  }
+  if (submitActionModalBtn && adminActionForm) {
+    submitActionModalBtn.addEventListener('click', () => {
+      adminActionForm.requestSubmit();
+    });
+  }
+
+  // Action Warning Presets
+  document.querySelectorAll('#adminActionModal .preset-pill-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = btn.getAttribute('data-warn-preset');
+      const warnInput = $('actionWarnMessageInput');
+      if (warnInput && preset) {
+        warnInput.value = preset;
+      }
+    });
+  });
+
+  if (adminActionForm) {
+    adminActionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const targetUserId = $('actionTargetInput')?.value?.trim();
+      const actionType = $('actionTypeInput')?.value || 'warn';
+      const warnMsg = $('actionWarnMessageInput')?.value?.trim();
+      const durationMins = Number($('actionSilenceSelect')?.value) || 15;
+
+      if (!targetUserId) return;
+
+      try {
+        if (actionType === 'warn') {
+          const res = await fetch(`${backendUrl}/api/admin/user/warn`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ userId: targetUserId, message: warnMsg || '⚠️ Official Administrator Notice' }),
+          });
+          const data = await res.json();
+          if (data.success && typeof showToast === 'function') {
+            showToast(`Warning sent to ${targetUserId}`);
+          }
+        } else if (actionType === 'silence') {
+          const res = await fetch(`${backendUrl}/api/admin/silence`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({ userId: targetUserId, durationMinutes: durationMins }),
+          });
+          const data = await res.json();
+          if (data.success && typeof showToast === 'function') {
+            showToast(`User ${targetUserId} muted for ${durationMins}m`);
+          }
+        }
+        if (adminActionModal) adminActionModal.style.display = 'none';
+      } catch (err) {
+        if (typeof showToast === 'function') showToast('Action error: ' + err.message, 'error');
+      }
+    });
+  }
+
+  // Explicit Submit Button Triggers for Admin Forms
+  $('submitAdminAuthBtn')?.addEventListener('click', () => $('adminAuthForm')?.requestSubmit());
+  $('addWordSubmitBtn')?.addEventListener('click', () => $('addWordForm')?.requestSubmit());
+  $('adminLookupSubmitBtn')?.addEventListener('click', () => $('adminLookupForm')?.requestSubmit());
+  $('sendBroadcastBtn')?.addEventListener('click', () => $('adminBroadcastForm')?.requestSubmit());
+  $('submitManualBanBtn')?.addEventListener('click', () => $('adminManualBanForm')?.requestSubmit());
+
+  // In-App Browser (IAB) Banner Close Handler
+  document.getElementById('closeIabBannerBtn')?.addEventListener('click', () => {
+    const banner = document.getElementById('iabBanner');
+    if (banner) banner.style.display = 'none';
+    try { sessionStorage.setItem('ping_iab_dismissed', 'true'); } catch (_) {}
+  });
 }
 
 if (document.readyState === 'loading') {

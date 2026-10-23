@@ -2,12 +2,21 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "User profile and statistics in Ping",
+      "description": "User profile, statistics, and moderation state in Ping",
       "type": "object",
       "properties": {
         "userId": { "type": "string", "maxLength": 128 },
         "country": { "type": "string", "maxLength": 64 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
         "totalMatches": { "type": "number" },
+        "strikes": { "type": "number" },
+        "slurViolations": { "type": "number" },
+        "vpnDetected": { "type": "boolean" },
+        "vpnDetails": { "type": "object" },
+        "isBanned": { "type": "boolean" },
+        "banExpiresAt": { "type": "number" },
+        "banReason": { "type": "string", "maxLength": 500 },
         "createdAt": { "type": "string", "format": "date-time" },
         "lastSeenAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
@@ -83,10 +92,57 @@
         "reporterId": { "type": "string", "maxLength": 128 },
         "reportedUserId": { "type": "string", "maxLength": 128 },
         "reason": { "type": "string", "maxLength": 500 },
-        "status": { "type": "string", "enum": ["pending_review", "reviewed", "dismissed"] },
+        "status": { "type": "string", "enum": ["pending", "pending_review", "reviewed", "dismissed"] },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["reportId", "reporterId", "reportedUserId"]
+    },
+    "Ban": {
+      "title": "Ban",
+      "description": "Active and historical hardware device and user suspensions",
+      "type": "object",
+      "properties": {
+        "banId": { "type": "string", "maxLength": 128 },
+        "reason": { "type": "string", "maxLength": 500 },
+        "expiresAt": { "type": "number" },
+        "durationMs": { "type": "number" },
+        "bannedAt": { "type": "number" },
+        "active": { "type": "boolean" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "deviceHash": { "type": "string", "maxLength": 128 },
+        "ip": { "type": "string", "maxLength": 64 },
+        "bannedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["banId", "expiresAt"]
+    },
+    "ModerationLog": {
+      "title": "ModerationLog",
+      "description": "Audit record of safety interventions and violation strikes",
+      "type": "object",
+      "properties": {
+        "logId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "maxLength": 64 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "detail": { "type": "string", "maxLength": 1000 },
+        "timestamp": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["logId", "type"]
+    },
+    "SystemSettings": {
+      "title": "SystemSettings",
+      "description": "Global safety controls, VPN shield, and rate limiters",
+      "type": "object",
+      "properties": {
+        "docId": { "type": "string", "maxLength": 64 },
+        "vpnShieldEnabled": { "type": "boolean" },
+        "strictEmergencyMode": { "type": "boolean" },
+        "slowModeSeconds": { "type": "number" },
+        "raidShieldEnabled": { "type": "boolean" },
+        "blockExternalLinks": { "type": "boolean" },
+        "queueCapLimit": { "type": "number" }
+      }
     },
     "Telemetry": {
       "title": "Telemetry",
@@ -107,7 +163,7 @@
       "type": "object",
       "properties": {
         "token": { "type": "string", "maxLength": 128 },
-        "createdAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "number" },
         "expiresAt": { "type": "number" },
         "valid": { "type": "boolean" }
       },
@@ -117,7 +173,19 @@
   "firestore": {
     "/users/{userId}": {
       "schema": "User",
-      "description": "User profiles and match statistics"
+      "description": "User profiles, match statistics, and moderation state"
+    },
+    "/bans/{banId}": {
+      "schema": "Ban",
+      "description": "Active hardware device and user suspensions"
+    },
+    "/moderation_logs/{logId}": {
+      "schema": "ModerationLog",
+      "description": "Moderation and policy violation logs"
+    },
+    "/system_settings/{docId}": {
+      "schema": "SystemSettings",
+      "description": "Global server configuration and safety shields"
     },
     "/friendships/{pairId}": {
       "schema": "Friendship",
@@ -149,4 +217,3 @@
     }
   }
 }
-

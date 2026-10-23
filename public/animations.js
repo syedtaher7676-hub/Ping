@@ -34,10 +34,8 @@
 
   function revealLanding() {
     if (splash) {
-      splash.style.transition = 'opacity 0.2s cubic-bezier(0, 0, 0.2, 1), transform 0.2s cubic-bezier(0, 0, 0.2, 1), filter 0.2s cubic-bezier(0, 0, 0.2, 1)';
+      splash.style.transition = 'opacity 0.22s cubic-bezier(0, 0, 0.2, 1)';
       splash.style.opacity = '0';
-      splash.style.transform = 'scale(1.01) translateZ(0)';
-      splash.style.filter = 'blur(4px)';
       splash.style.pointerEvents = 'none';
 
       const hasActiveChat = (function() {
@@ -50,9 +48,8 @@
 
       if (landing && !hasActiveChat) {
         landing.style.display = 'flex';
-        landing.style.transition = 'opacity 0.2s cubic-bezier(0, 0, 0.2, 1), transform 0.2s cubic-bezier(0, 0, 0.2, 1)';
+        landing.style.transition = 'opacity 0.22s cubic-bezier(0, 0, 0.2, 1)';
         landing.style.opacity = '1';
-        landing.style.transform = 'scale(1) translateZ(0)';
       }
       if (chatApp && !hasActiveChat) {
         chatApp.style.display = 'none';
@@ -62,7 +59,7 @@
         splash.style.display = 'none';
         const sl = document.getElementById('scanLine');
         if (sl && !rm) setTimeout(() => sl.classList.add('fire'), 60);
-      }, 200);
+      }, 220);
     }
   }
 

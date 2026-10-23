@@ -149,6 +149,9 @@ async function firestoreRest(endpoint, method = "GET", body = null) {
       res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
         try {
+          if (!data || data.trim() === "") {
+            return resolve(res.statusCode >= 200 && res.statusCode < 300 ? { success: true } : null);
+          }
           const json = JSON.parse(data);
           resolve(json);
         } catch (_) {
@@ -220,12 +223,12 @@ async function syncUserOnAuth(userId, meta = {}) {
     } catch (_) {}
   }
 
-  // REST Fallback Bridge
+  // REST Fallback Bridge (upsert document without updateMask so new users are created)
   const restFields = {};
   for (const [k, v] of Object.entries(userPayload)) {
     if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
   }
-  await firestoreRest(`users/${userId}?updateMask.fieldPaths=lastSeenAt&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=vpnDetected&updateMask.fieldPaths=country&updateMask.fieldPaths=isBanned&updateMask.fieldPaths=banExpiresAt`, "PATCH", {
+  await firestoreRest(`users/${userId}`, "PATCH", {
     fields: restFields,
   });
 
@@ -814,15 +817,86 @@ async function getUserConversations(userId) {
   return [];
 }
 
+async function deleteUserData(userId) {
+  if (!userId) return false;
+  const cleanId = String(userId).slice(0, 128);
+
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.USERS).doc(cleanId).delete();
+    } catch (_) {}
+  }
+  await firestoreRest(`users/${cleanId}`, "DELETE");
+
+  try {
+    const friends = await getUserFriends(cleanId);
+    if (Array.isArray(friends)) {
+      for (const f of friends) {
+        if (f.pairId) {
+          await removeFriendship(f.pairId);
+        }
+      }
+    }
+  } catch (_) {}
+
+  return true;
+}
+
 async function saveAdminSession(token, session = {}) {
+  if (!token) return false;
+  const cleanToken = String(token).slice(0, 128);
+  const docPayload = {
+    token: cleanToken,
+    createdAt: Number(session.createdAt) || Date.now(),
+    expiresAt: Number(session.expiresAt) || (Date.now() + 30 * 24 * 3600 * 1000),
+    valid: Boolean(session.valid !== false),
+  };
+
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(cleanToken).set(docPayload, { merge: true });
+      return true;
+    } catch (_) {}
+  }
+
+  const restFields = {};
+  for (const [k, v] of Object.entries(docPayload)) {
+    if (v !== undefined) restFields[k] = encodeFirestoreValue(v);
+  }
+  await firestoreRest(`admin_sessions/${cleanToken}`, "PATCH", { fields: restFields });
   return true;
 }
 
 async function getAdminSession(token) {
-  return null;
+  if (!token) return null;
+  const cleanToken = String(token).slice(0, 128);
+
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(cleanToken).get();
+      if (snap.exists) return snap.data();
+    } catch (_) {}
+  }
+
+  const res = await firestoreRest(`admin_sessions/${cleanToken}`);
+  return decodeFirestoreDoc(res);
 }
 
 async function deleteAdminSession(token) {
+  if (!token) return false;
+  const cleanToken = String(token).slice(0, 128);
+
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection(COLLECTIONS.ADMIN_SESSIONS).doc(cleanToken).delete();
+    } catch (_) {}
+  }
+
+  await firestoreRest(`admin_sessions/${cleanToken}`, "DELETE");
   return true;
 }
 
@@ -848,6 +922,7 @@ module.exports = {
   updateUserModerationStatus,
   updateUserProfile,
   incrementUserMatchCount,
+  deleteUserData,
   // Ban operations
   saveBan,
   removeBan,

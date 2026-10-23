@@ -2410,6 +2410,114 @@ app.get("/api/admin/telemetry-live", ensureTelemetryHydrated, async (_req, res) 
   }
 });
 
+// User Clear Data Endpoint (Settings View Action)
+app.post("/api/user/clear-data", async (req, res) => {
+  try {
+    const { userId, deviceHash } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ success: false, error: "Missing userId" });
+    }
+    // 1. Delete user from Firestore
+    if (typeof dbService.deleteUserData === "function") {
+      await dbService.deleteUserData(userId);
+    }
+    // 2. Clear from server in-memory store
+    users.delete(userId);
+    if (deviceHash) users.delete(deviceHash);
+
+    // 3. If socket is connected, reset its session and assign new IDs
+    for (const socket of io.sockets.sockets.values()) {
+      if (socket.data?.userId === userId || socket.data?.deviceHash === deviceHash) {
+        socket.data.userId = createId("u");
+        socket.data.deviceHash = "dev_" + socket.data.userId;
+        socket.emit("user_data_cleared", { newUserId: socket.data.userId });
+      }
+    }
+    log("user_data_cleared", { userId, deviceHash });
+    res.json({ success: true, message: "User data wiped successfully" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Reset Behavior Intelligence & Telemetry to Zero
+app.post("/api/admin/system/reset-behavior", verifyAdmin, async (_req, res) => {
+  try {
+    // 1. Reset memoryBuffer counters
+    memoryBuffer.system_summary = {
+      total_sessions_logged: 0,
+      total_matches: 0,
+      total_messages: 0,
+      total_violations: 0,
+      active_ccu_peak: 0,
+    };
+    memoryBuffer.sentiment_distribution = {
+      friendly_greetings: 0,
+      curious_questions: 0,
+      casual_dialogue: 0,
+      playful_humor: 0,
+      toxic_messages: 0,
+    };
+    memoryBuffer.session_durations = {
+      quick_skips_under_15s: 0,
+      short_chats_15s_1m: 0,
+      medium_chats_1m_3m: 0,
+      deep_chats_over_3m: 0,
+    };
+    memoryBuffer.retention_metrics = {
+      survival_rate_3m_pct: 0,
+      skip_churn_15s_pct: 0,
+      patience_quotient_pct: 0,
+    };
+
+    // 2. Reset historical cached telemetry
+    cachedHistoricalTelemetry.system_summary = { ...memoryBuffer.system_summary };
+    cachedHistoricalTelemetry.sentiment_distribution = { ...memoryBuffer.sentiment_distribution };
+    cachedHistoricalTelemetry.session_durations = { ...memoryBuffer.session_durations };
+    cachedHistoricalTelemetry.retention_metrics = { ...memoryBuffer.retention_metrics };
+
+    // 3. Reset behaviorAnalytics service
+    if (typeof resetBehaviorAnalytics === "function") {
+      resetBehaviorAnalytics();
+    }
+
+    // 4. Reset in Cloud Firestore telemetry/live_metrics
+    const zeroBehavior = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : {};
+    const zeroPayload = {
+      system_summary: cachedHistoricalTelemetry.system_summary,
+      sentiment_distribution: cachedHistoricalTelemetry.sentiment_distribution,
+      session_durations: cachedHistoricalTelemetry.session_durations,
+      retention_metrics: cachedHistoricalTelemetry.retention_metrics,
+      behavior_analytics: zeroBehavior,
+      telemetry_history: [],
+    };
+
+    try {
+      const db = getDb();
+      if (db && isFirebaseConfigured()) {
+        await db.collection("telemetry").doc("live_metrics").set(zeroPayload);
+      } else {
+        const config = loadAppletConfig();
+        if (config && config.apiKey && config.projectId) {
+          const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
+          await fetch(patchUrl, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields: toFirestoreValue(zeroPayload).mapValue.fields }),
+          });
+        }
+      }
+    } catch (dbErr) {
+      log("reset_behavior_db_error", { message: dbErr?.message });
+    }
+
+    recordAdminEvent("system", "Behavior Intel Reset", "All conversational violation intelligence reset to 0", "warning");
+    res.json({ success: true, message: "Behavior telemetry reset to zero.", data: zeroPayload });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // 17. Export Full System Telemetry Snapshot (JSON Backup)
 app.get("/api/admin/export", verifyAdmin, (_req, res) => {
   const snapshot = {

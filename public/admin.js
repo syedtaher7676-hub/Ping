@@ -1195,20 +1195,21 @@
   }
 
   function handleSessionExpired() {
+    const wasVisible = isAdminDashboardVisible();
     localStorage.removeItem('ping_admin_token');
     sessionStorage.removeItem('ping_admin_token');
-    if (isAdminDashboardVisible()) {
+    if (wasVisible) {
       const adminView = $('adminDashboardView');
       if (adminView) {
         adminView.style.display = 'none';
         document.body.style.overflow = '';
       }
-    }
-    const modal = document.getElementById('adminAuthModal');
-    if (modal) {
-      modal.style.display = 'flex';
-      const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
-      if (title) title.textContent = 'Session expired.';
+      const modal = document.getElementById('adminAuthModal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const title = modal.querySelector('h3') || modal.querySelector('.admin-auth-title');
+        if (title) title.textContent = 'Session expired.';
+      }
     }
   }
 
