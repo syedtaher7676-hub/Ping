@@ -3101,8 +3101,52 @@ function renderFriendsList(friends) {
   updateFriendsTabBadge();
 }
 
-// ── NAVIGATION ───────────────────────────────────────────────
+// ── NAVIGATION & HISTORY API (MOBILE BACK BUTTON SUPPORT) ──
 let isNavigatingView = false;
+
+if (!history.state) {
+  const isLandingVisible = landingPage && landingPage.style.display !== 'none';
+  history.replaceState({ view: isLandingVisible ? 'landing' : 'prechat' }, '', '');
+}
+
+window.addEventListener('popstate', (e) => {
+  const view = e.state?.view || 'landing';
+  if (view === 'landing') {
+    if (chatApp) chatApp.style.display = 'none';
+    if (landingPage) {
+      landingPage.style.display = 'flex';
+      landingPage.style.opacity = '1';
+    }
+  } else if (view === 'prechat' || view === 'chat' || view === 'waiting') {
+    if (landingPage) landingPage.style.display = 'none';
+    if (chatApp) {
+      chatApp.style.display = 'flex';
+      chatApp.style.opacity = '1';
+    }
+    showView(view);
+    activeHomeTab = 'random';
+    if (tabRandom) tabRandom.classList.add('active');
+    if (tabSettings) tabSettings.classList.remove('active');
+    if (tabFriends) tabFriends.classList.remove('active');
+  } else if (view === 'friends') {
+    if (landingPage) landingPage.style.display = 'none';
+    if (chatApp) {
+      chatApp.style.display = 'flex';
+      chatApp.style.opacity = '1';
+    }
+    loadAndShowFriendsView();
+  } else if (view === 'settings') {
+    if (landingPage) landingPage.style.display = 'none';
+    if (chatApp) {
+      chatApp.style.display = 'flex';
+      chatApp.style.opacity = '1';
+    }
+    showView('settings');
+    if (typeof updateSettingsUI === 'function') updateSettingsUI();
+  } else {
+    goToChat(view);
+  }
+});
 
 function goToChat(targetView = null) {
   if (landingPage) {
@@ -3114,6 +3158,10 @@ function goToChat(targetView = null) {
   }
 
   const destination = targetView || (inChat || AppState.explore.inChat ? 'chat' : 'prechat');
+  if (!history.state || history.state.view !== destination) {
+    history.pushState({ view: destination }, '', '');
+  }
+
   showView(destination);
   switchHomeTab('random');
 
@@ -3150,6 +3198,10 @@ function goToLanding() {
 }
 
 function executeGoToLanding() {
+  if (!history.state || history.state.view !== 'landing') {
+    history.pushState({ view: 'landing' }, '', '');
+  }
+
   if (chatApp) chatApp.style.display = 'none';
   if (landingPage) {
     landingPage.style.display = 'flex';
@@ -3186,6 +3238,11 @@ function switchHomeTab(tab) {
   // Update active tab state
   activeHomeTab = tab;
   AppState.activeTab = tab === 'random' ? 'EXPLORE' : (tab === 'settings' ? 'SETTINGS' : 'FRIENDS');
+
+  const targetView = tab === 'random' ? 'prechat' : (tab === 'settings' ? 'settings' : 'friends');
+  if (!history.state || history.state.view !== targetView) {
+    history.pushState({ view: targetView }, '', '');
+  }
 
   // Update tab visual state
   if (tabRandom) tabRandom.classList.toggle('active', tab === 'random');
