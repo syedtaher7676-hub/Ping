@@ -2961,6 +2961,12 @@ function endCurrentChat() {
   AppState.explore.isWaiting = false;
   AppState.explore.roomId = null;
   AppState.explore.timerEndMs = 0;
+
+  try {
+    sessionStorage.removeItem('ping_last_explore_room');
+    sessionStorage.removeItem('ping_is_in_chat');
+    sessionStorage.removeItem('ping_explore_timer_end');
+  } catch (_) {}
   
   stopAutoSearch(); // Always kill the auto-search timer when ending any chat
   stopTimer();
@@ -4751,20 +4757,34 @@ backBtn?.addEventListener('click', () => {
     return;
   }
 
-  // If in friends view, go back to prechat (Random tab)
-  if (friendsView && friendsView.style.display === 'flex') {
-    switchHomeTab('random');
+  // If in friends view or settings view, go back in history
+  if ((friendsView && friendsView.style.display === 'flex') || (settingsView && settingsView.style.display === 'flex')) {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      switchHomeTab('random');
+    }
     return;
   }
 
   if (inChat || isWaiting) {
-    showConfirm('Leave?', "Return home?", () => {
+    showConfirm('Leave Chat?', 'Going back will end your current conversation. Are you sure?', () => {
       if (isWaiting) socket.emit('cancel_search');
       else if (activeRoomId) socket.emit('end_chat', { roomId: activeRoomId });
       endCurrentChat();
-      goToLanding();
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        goToLanding();
+      }
     });
-  } else goToLanding();
+  } else {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      goToLanding();
+    }
+  }
 });
 
 function triggerStartChat() {
