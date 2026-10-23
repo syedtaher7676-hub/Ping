@@ -336,7 +336,9 @@ export function Home({ onStartChat }) {
               if (typeof window.triggerAppDownload === 'function') {
                 window.triggerAppDownload();
               } else {
-                window.dispatchEvent(new CustomEvent('ping:open-install-modal'));
+                if (typeof showToast === 'function') {
+                  showToast('✨ Ping is ready! Tap your browser menu (••• or ⋮) and select "Add to Home Screen".', 'info', 5000);
+                }
               }
             }}
             style={{

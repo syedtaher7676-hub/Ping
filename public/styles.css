@@ -8080,51 +8080,125 @@ html.is-ios .chat-app {
   text-transform: none;
 }
 
-.interest-pill-grid {
+/* ── 2028 FUTURISTIC TAG UI (STRICT 3-COLUMN GRID LAYOUT) ── */
+.interest-grid-section {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 6px;
+  width: 100%;
   max-width: 420px;
+  margin: 4px auto;
+  padding: 4px 0;
+}
+
+.interest-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
   margin: 0 auto;
+  padding: 2px 0;
 }
 
 .interest-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  padding: 7px 10px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--r-full);
-  color: var(--t-med);
-  font-size: 0.82rem;
-  font-weight: 500;
+  color: rgba(241, 245, 249, 0.88);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
   -webkit-user-select: none;
 }
 
-.interest-pill:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+.interest-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
-.interest-pill.active {
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.45) 0%, rgba(219, 39, 119, 0.45) 100%);
-  border-color: #c4b5fd;
+.interest-pill .ip-emoji {
+  font-size: 0.95rem;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.interest-pill .ip-label {
+  position: relative;
+  z-index: 1;
+}
+
+.interest-pill:hover {
   color: #ffffff;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45), 0 0 0 1px rgba(196, 181, 253, 0.6);
-  font-weight: 600;
-  transform: scale(1.04);
+  background: rgba(124, 58, 237, 0.16);
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.35), 0 4px 14px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.interest-pill:hover .ip-emoji {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.interest-pill:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* 2028 Luminous Selected Tag State */
+.interest-pill.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.85) 0%, rgba(219, 39, 119, 0.85) 100%);
+  border-color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.7), 0 0 12px rgba(219, 39, 119, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.interest-pill.active::before {
+  opacity: 1;
 }
 
 .interest-pill.active .ip-emoji {
-  transform: scale(1.15);
-  transition: transform 0.2s var(--spring);
+  transform: scale(1.25) rotate(-6deg);
+}
+
+/* Category Cyber Accents */
+.interest-pill[data-tag="tech"].active,
+.interest-pill[data-tag="gaming"].active {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.85) 0%, rgba(6, 182, 212, 0.85) 100%);
+  box-shadow: 0 0 24px rgba(6, 182, 212, 0.65), 0 0 12px rgba(124, 58, 237, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.interest-pill[data-tag="sports"].active,
+.interest-pill[data-tag="food"].active,
+.interest-pill[data-tag="travel"].active {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.85) 0%, rgba(6, 182, 212, 0.85) 100%);
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.65), 0 0 12px rgba(6, 182, 212, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 /* ── MATCHED INTEREST BANNER (CHAT SCREEN) ── */

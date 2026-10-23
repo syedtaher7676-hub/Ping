@@ -2874,41 +2874,48 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const originalStatus = disconnectedUser.status;
         const originalRoomId = disconnectedUser.roomId;
 
-        // 1. Handle active room grace period or partner notification BEFORE purging state
+        // 1. Immediately terminate matched explore room and notify partner that stranger skipped
         if (originalStatus === "matched" && originalRoomId) {
           const room = rooms.get(originalRoomId);
-          if (room && room.status === "active") {
-            log("user_disconnected_while_matched_explore_grace_period", {
-              userId: disconnectedUser.id, socketId: socket.id,
-              roomId: originalRoomId, reason: "explore_partner_disconnect_grace_period",
-            });
-
-            const partnerId = room.users?.find(id => id !== disconnectedUser.id);
-            const partnerUser = partnerId ? users.get(partnerId) : null;
-
-            // Notify partner that stranger disconnected temporarily, waiting 15s for reconnection
-            if (partnerUser?.socketId) {
-              const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
-              partnerSocket?.emit("partner_disconnected", {
-                roomId: originalRoomId,
-                message: "Stranger left the screen...",
-                gracePeriod: 15000,
-              });
-            }
-
-            // Set disconnect grace period timer (15 seconds) before terminating the room
-            if (room.disconnectTimeoutRef) {
-              clearTimeout(room.disconnectTimeoutRef);
-            }
-            room.disconnectTimeoutRef = setTimeout(() => {
-              handlePartnerDisconnect(io, originalRoomId, disconnectedUser.id);
-            }, 15000);
-
-            // Preserve user's matched status and roomId for 15s so they can seamlessly reconnect
-            disconnectedUser.status = "matched";
-            disconnectedUser.roomId = originalRoomId;
-            return;
+          if (room) {
+            room.status = "terminated";
+            if (room.disconnectTimeoutRef) clearTimeout(room.disconnectTimeoutRef);
+            rooms.delete(originalRoomId);
           }
+
+          const partnerId = room?.users?.find(id => id !== disconnectedUser.id);
+          const partnerUser = partnerId ? users.get(partnerId) : null;
+
+          if (partnerUser) {
+            partnerUser.status = "idle";
+            partnerUser.roomId = null;
+            if (typeof redisSetUser === "function") {
+              redisSetUser(partnerId, partnerUser).catch(() => {});
+            }
+
+            if (partnerUser.socketId) {
+              const partnerSocket = io.sockets.sockets.get(partnerUser.socketId);
+              if (partnerSocket) {
+                partnerSocket.emit("chat_ended", {
+                  roomId: originalRoomId,
+                  reason: "Stranger has skipped the chat ✌️",
+                  rawReason: "next_clicked",
+                  isSkip: true
+                });
+                partnerSocket.emit("partner_disconnected", {
+                  roomId: originalRoomId,
+                  message: "Stranger has skipped the chat"
+                });
+              }
+            }
+          }
+
+          log("user_disconnected_while_matched_explore", {
+            userId: disconnectedUser.id,
+            socketId: socket.id,
+            roomId: originalRoomId,
+            reason: reason || "tab_closed_or_disconnected",
+          });
         }
 
         if (originalStatus === "waiting") {

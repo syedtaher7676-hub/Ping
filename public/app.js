@@ -1090,51 +1090,28 @@ function showPWAInstallFallbackModal() {
 window.triggerAppDownload = function triggerAppDownload() {
   if (navigator.vibrate) navigator.vibrate(20);
 
-  // A. Trigger immediate extension download
-  try {
-    const link = document.createElement('a');
-    link.href = '/api/download/extension';
-    link.download = 'ping-chrome-extension.zip';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    if (typeof showToast === 'function') {
-      showToast('📥 Downloading Ping Extension (ping-chrome-extension.zip)...', 'success', 3500);
-    }
-  } catch (_) {
-    window.location.href = '/api/download/extension';
-  }
-
-  // B. Native PWA Install Prompt if available
-  if (deferredPwaPrompt) {
+  // Native PWA Install Prompt if available
+  const pwaPrompt = deferredPwaPrompt || (typeof deferredPWAInstallPrompt !== 'undefined' ? deferredPWAInstallPrompt : null);
+  if (pwaPrompt) {
     setTimeout(() => {
-      if (deferredPwaPrompt) {
-        deferredPwaPrompt.prompt();
-        deferredPwaPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            if (typeof showToast === 'function') {
-              showToast('🎉 Ping App is installing to your device!', 'success', 4000);
-            }
-          }
+      try {
+        pwaPrompt.prompt();
+        pwaPrompt.userChoice.then((choiceResult) => {
           deferredPwaPrompt = null;
+          if (typeof deferredPWAInstallPrompt !== 'undefined') deferredPWAInstallPrompt = null;
         }).catch(() => {
           deferredPwaPrompt = null;
+          if (typeof deferredPWAInstallPrompt !== 'undefined') deferredPWAInstallPrompt = null;
         });
-      }
-    }, 400);
+      } catch (_) {}
+    }, 200);
   }
 
-  // C. iOS Device Detection
-  const ua = window.navigator.userAgent.toLowerCase();
-  const isIOS = /iphone|ipad|ipod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-  if (isIOS) {
-    showIOSDownloadModal();
-    return;
+  // Ensure no modal overlays exist or pop up when download is clicked
+  document.querySelectorAll('.ping-download-modal-overlay').forEach(m => m.remove());
+  if (typeof hidePWAInstallModal === 'function') {
+    hidePWAInstallModal();
   }
-
-  // D. Display Extension Setup & PWA Modal
-  showPWAInstallFallbackModal();
 };
 
 // 5. Global Document Click Handler for Download Buttons (Event Delegation)
@@ -3142,8 +3119,8 @@ function goToChat(targetView = null) {
 
   const ac = $('appCanvas');
   if (ac) {
-    ac.width = window.innerWidth;
-    ac.height = window.innerHeight;
+    if (ac.width !== window.innerWidth) ac.width = window.innerWidth;
+    if (ac.height !== window.innerHeight) ac.height = window.innerHeight;
   }
   if (typeof window.__pingSetAppMode === 'function') {
     window.__pingSetAppMode(destination);
@@ -3180,8 +3157,8 @@ function executeGoToLanding() {
   }
   const lc = $('particleCanvas');
   if (lc) {
-    lc.width = window.innerWidth;
-    lc.height = window.innerHeight;
+    if (lc.width !== window.innerWidth) lc.width = window.innerWidth;
+    if (lc.height !== window.innerHeight) lc.height = window.innerHeight;
   }
 }
 
@@ -4374,10 +4351,23 @@ socket.on('chat_ended', handleGenericChatEnd);
 socket.off('partner_disconnected');
 socket.on('partner_disconnected', ({ roomId, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  startAutoSearch(15);
-  if (messageInput) {
-    messageInput.disabled = true;
-    messageInput.placeholder = 'Stranger left the screen...';
+  const reasonText = message || 'Stranger has skipped the chat';
+  showToast(reasonText, 'info', 3500);
+  handleSkippedChat(reasonText, 'next_clicked');
+});
+
+// Immediately notify partner when tab is closed or navigated away
+window.addEventListener('beforeunload', () => {
+  const currentRoom = activeRoomId || AppState.explore.roomId;
+  if (socket && socket.connected && currentRoom && (inChat || AppState.explore.inChat)) {
+    socket.emit('end_chat', { roomId: currentRoom, reason: 'Stranger has skipped the chat' });
+  }
+});
+
+window.addEventListener('pagehide', () => {
+  const currentRoom = activeRoomId || AppState.explore.roomId;
+  if (socket && socket.connected && currentRoom && (inChat || AppState.explore.inChat)) {
+    socket.emit('end_chat', { roomId: currentRoom, reason: 'Stranger has skipped the chat' });
   }
 });
 
@@ -5050,11 +5040,18 @@ sendBtn?.addEventListener('click', e => {
   messageInput?.focus({ preventScroll: true });
 });
 
+function isDesktopPhysicalKeyboard() {
+  const isTouchDevice = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
+  const isFinePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  return isFinePointer || (!isTouchDevice && window.innerWidth > 768);
+}
+
 messageInput?.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    // Prevent Enter key from submitting form or sending message
-    // Pressing Enter inserts a newline (\n) in the message input
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && isDesktopPhysicalKeyboard()) {
+    e.preventDefault();
     e.stopPropagation();
+    sendMessage();
+    this.style.height = 'auto';
   }
 });
 
@@ -5119,8 +5116,11 @@ friendSendBtn?.addEventListener('click', e => {
 });
 
 friendMessageInput?.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && isDesktopPhysicalKeyboard()) {
+    e.preventDefault();
     e.stopPropagation();
+    sendFriendMessage();
+    this.style.height = 'auto';
   }
 });
 
@@ -5707,11 +5707,9 @@ async function triggerPWAInstall() {
   const isIOSPlatform = isIOS || document.documentElement.classList.contains('is-ios');
   if (deferredPWAInstallPrompt) {
     deferredPWAInstallPrompt.prompt();
-    const { outcome } = await deferredPWAInstallPrompt.userChoice;
-    console.log('[PWA] Install prompt outcome:', outcome);
-    if (outcome === 'accepted') {
-      showToast('⚡ Installing Ping to your device...', 'info', 3000);
-    }
+    try {
+      await deferredPWAInstallPrompt.userChoice;
+    } catch (_) {}
     deferredPWAInstallPrompt = null;
     hidePWAInstallModal();
   } else if (isIOSPlatform) {
@@ -5722,20 +5720,14 @@ async function triggerPWAInstall() {
 }
 
 // Bind PWA buttons
-$('downloadLandingBtn')?.addEventListener('click', () => {
-  if (deferredPWAInstallPrompt) {
-    triggerPWAInstall();
-  } else {
-    openPWAInstallModal();
-  }
+$('downloadLandingBtn')?.addEventListener('click', (e) => {
+  e?.preventDefault?.();
+  window.triggerAppDownload();
 });
 
-$('headerDownloadBtn')?.addEventListener('click', () => {
-  if (deferredPWAInstallPrompt) {
-    triggerPWAInstall();
-  } else {
-    openPWAInstallModal();
-  }
+$('headerDownloadBtn')?.addEventListener('click', (e) => {
+  e?.preventDefault?.();
+  window.triggerAppDownload();
 });
 
 $('confirmInstallBtn')?.addEventListener('click', () => {

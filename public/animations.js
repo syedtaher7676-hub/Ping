@@ -84,25 +84,46 @@
   let LW = 0, LH = 0;
 
   if (lCv) {
-    const r = () => { LW = lCv.width = innerWidth; LH = lCv.height = innerHeight; };
+    const r = () => {
+      if (lCv.width !== innerWidth) lCv.width = innerWidth;
+      if (lCv.height !== innerHeight) lCv.height = innerHeight;
+      LW = innerWidth; LH = innerHeight;
+    };
     addEventListener('resize', r); r();
   }
 
   class Star {
     constructor() { this.init(true); }
     init(boot = false) {
-      this.x = Math.random() * LW;
-      this.y = boot ? Math.random() * LH : LH + 10;
-      this.r = Math.random() * 2 + .3;
-      this.vx = (Math.random() - .5) * .35;
-      this.vy = -(Math.random() * .5 + .1);
-      this.life = 0; this.max = Math.random() * 200 + 80;
+      const W = LW || window.innerWidth || 1000;
+      const H = LH || window.innerHeight || 800;
+      this.x = Math.random() * W;
+      // Distribute particles across the entire height (top, middle, bottom) so they are present at the top as well
+      this.y = Math.random() * H;
+      this.r = Math.random() * 1.5 + 0.6;
+      this.vx = (Math.random() - 0.5) * 0.35;
+      this.vy = -(Math.random() * 0.5 + 0.2);
+      this.life = Math.random() * 300;
+      this.max = Math.random() * 700 + 350;
       this.col = rc();
       this.tw = Math.random() * Math.PI * 2;
-      this.twS = Math.random() * .04 + .01;
+      this.twS = Math.random() * 0.03 + 0.01;
     }
-    step() { this.x += this.vx; this.y += this.vy; this.life++; this.tw += this.twS; if (this.life > this.max || this.y < -10) this.init(); }
-    draw(c) { const a = Math.sin((this.life/this.max)*Math.PI)*(.6+Math.sin(this.tw)*.2); c.beginPath(); c.arc(this.x,this.y,this.r,0,Math.PI*2); c.fillStyle=this.col+a.toFixed(2)+')'; c.fill(); }
+    step() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.life++;
+      this.tw += this.twS;
+      if (this.life > this.max || this.y < -20) this.init(false);
+    }
+    draw(c) {
+      const a = Math.sin((this.life / this.max) * Math.PI) * (0.65 + Math.sin(this.tw) * 0.25);
+      if (a <= 0) return;
+      c.beginPath();
+      c.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      c.fillStyle = this.col + Math.max(0, a).toFixed(2) + ')';
+      c.fill();
+    }
   }
 
   const isTouchDevice = (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
@@ -112,7 +133,8 @@
   };
   const isLowEndDevice = () => document.documentElement.classList.contains('is-low-end');
 
-  const MAX_L = rm ? 0 : (isLowEndDevice() ? 25 : (isTouchDevice ? 36 : 85));
+  // Increased particle count for rich particle field across the page including top
+  const MAX_L = rm ? 0 : (isLowEndDevice() ? 50 : (isTouchDevice ? 90 : 185));
   const stars  = [];
   if (lCtx) for (let i=0;i<MAX_L;i++) stars.push(new Star());
 
@@ -380,34 +402,48 @@
   }).observe(wv,{attributes:true,attributeFilter:['style']});
 
   // ─────────────────────────────────────────────────────────────
-  //  MASTER RAF LOOP — Optimized
+  //  MASTER RAF LOOP — Single Instance
   // ─────────────────────────────────────────────────────────────
+  let animFrameId = null;
   let lastTs = 0;
+
   function loop(ts) {
-    requestAnimationFrame(loop);
-    if (document.hidden) return;
-    if (ts - lastTs < 16) return; // Smooth 60fps refresh rate
-    lastTs = ts;
-
-    const chatActive    = chatApp && chatApp.style.display !== 'none';
-    const landingActive = landing && landing.style.display !== 'none';
-    const keyboardOpen  = document.documentElement.classList.contains('keyboard-open');
-
-    if (landingActive && lCtx && !rm) {
-      lCtx.clearRect(0,0,LW,LH);
-      stars.forEach(p => { p.step(); p.draw(lCtx); });
-      drawConstellation(lCtx, stars, 100, .12);
+    if (document.hidden) {
+      animFrameId = requestAnimationFrame(loop);
+      return;
     }
 
-    if (chatActive && aCtx && !rm && !keyboardOpen) drawApp();
+    if (ts - lastTs >= 15) {
+      lastTs = ts;
 
-    if (!rm && trail.length && mX > 0) {
-      trail[0].x+=(mX-trail[0].x)*.35; trail[0].y+=(mY-trail[0].y)*.35;
-      for(let i=1;i<TN;i++){trail[i].x+=(trail[i-1].x-trail[i].x)*.3;trail[i].y+=(trail[i-1].y-trail[i].y)*.3;}
-      trail.forEach(d=>{d.el.style.transform=`translate(${d.x-3}px,${d.y-3}px)`;});
+      const chatActive    = chatApp && chatApp.style.display !== 'none';
+      const landingActive = landing && landing.style.display !== 'none';
+      const keyboardOpen  = document.documentElement.classList.contains('keyboard-open');
+
+      if (landingActive && lCtx && !rm) {
+        lCtx.clearRect(0, 0, LW, LH);
+        stars.forEach(p => { p.step(); p.draw(lCtx); });
+        drawConstellation(lCtx, stars, 100, .12);
+      }
+
+      if (chatActive && aCtx && !rm && !keyboardOpen) drawApp();
+
+      if (!rm && trail.length && mX > 0) {
+        trail[0].x += (mX - trail[0].x) * .35;
+        trail[0].y += (mY - trail[0].y) * .35;
+        for (let i = 1; i < TN; i++) {
+          trail[i].x += (trail[i - 1].x - trail[i].x) * .3;
+          trail[i].y += (trail[i - 1].y - trail[i].y) * .3;
+        }
+        trail.forEach(d => { d.el.style.transform = `translate(${d.x - 3}px,${d.y - 3}px)`; });
+      }
     }
+
+    animFrameId = requestAnimationFrame(loop);
   }
-  requestAnimationFrame(loop);
+
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  animFrameId = requestAnimationFrame(loop);
 
   // ── HOOK SOCKET ──
   const checkSocket = setInterval(() => {
