@@ -284,7 +284,8 @@ input {
 /* ================================================================
    LANDING
    ================================================================ */
-.landing {
+.landing,
+#landingPage {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -293,6 +294,29 @@ input {
   padding: 36px 20px 24px;
   position: relative;
   overflow: hidden;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+#landingPage,
+#landingPage *,
+.landing,
+.landing *,
+.landing-content,
+.landing-content *,
+.landing-body,
+.logo-lockup,
+.logo-mark,
+.brand-logo-img,
+.live-count-row,
+.landing-actions-row,
+.cta-btn,
+.download-app-btn,
+.landing-consent-wrap {
+  border: none !important;
+  border-color: transparent !important;
+  outline: none !important;
 }
 
 #particleCanvas {
@@ -1525,7 +1549,7 @@ input {
 
 /* ── HOME TABS ── */
 .home-tabs {
-  display: flex;
+  display: none !important;
   padding: 8px 16px;
   gap: 12px;
   background: rgba(10, 10, 28, 0.4);

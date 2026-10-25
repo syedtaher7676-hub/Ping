@@ -769,19 +769,53 @@
   will-change: transform;
 }
 
-/* ── EMPTY STATE ── */
-@keyframes empty-glow {
+/* ── ZERO-LAG HIGH-SPEED VIEW TRANSITIONS ── */
+.view {
+  will-change: opacity, transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
 
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(124, 58, 237, .3);
-    transform: scale(1)
-  }
+.view-enter {
+  animation: view-fast-enter 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 
-  50% {
-    box-shadow: 0 0 0 18px rgba(124, 58, 237, 0);
-    transform: scale(1.06)
+.view-exit {
+  animation: view-fast-exit 0.12s cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+@keyframes view-fast-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.988) translateY(3px) translateZ(0);
   }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0) translateZ(0);
+  }
+}
+
+@keyframes view-fast-exit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.988) translateZ(0);
+  }
+}
+
+/* Fast-mode / low-end hardware overrides: pure opacity fade for zero lag on budget devices */
+html.fast-mode .view-enter,
+html.is-low-end .view-enter {
+  animation: view-fade-only 0.1s ease-out both !important;
+}
+
+@keyframes view-fade-only {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .msgs-empty-pulse {

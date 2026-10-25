@@ -1,3 +1,10 @@
 {
-  "penalties": {}
+  "penalties": {
+    "test_user_obf": {
+      "type": "ban_15min",
+      "startTime": 1792940438276,
+      "duration": 900000,
+      "expiresAt": 1792941338276
+    }
+  }
 }

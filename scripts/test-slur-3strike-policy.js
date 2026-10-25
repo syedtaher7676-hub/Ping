@@ -1,8 +1,9 @@
-// Comprehensive test for Slur & Inappropriate Communication Filter (3-Strike Policy)
+// Comprehensive test for Slur & Inappropriate Communication Filter (Polite Warning Policy)
 const assert = require('assert');
 const { slurFilter } = require('../src/data');
+const { POLITE_MESSAGES } = require('../src/utils/unifiedModerator');
 
-console.log('🧪 Testing Slur & Inappropriate Communication Filter (3-Strike Policy)...');
+console.log('🧪 Testing Slur & Inappropriate Communication Filter (Polite Warning Policy)...');
 
 async function runTests() {
   const testUserId = 'test_user_strike_' + Date.now();
@@ -20,62 +21,73 @@ async function runTests() {
   assert.strictEqual(cleanResult.hasSlur, false, 'Clean message should not detect slur');
   console.log('✅ Clean message passed without detection');
 
-  // 2. Test 1st Offense
+  // 2. Test 1st Offense: Blocked with nice label, zero ban duration
   const offense1 = slurFilter.moderateSlurMessage(testUserId, 'You are a bitch', testIp);
   assert.strictEqual(offense1.allowed, false, 'Message with slur must be blocked on 1st offense');
-  assert.strictEqual(offense1.action, 'warning_1', 'Action should be warning_1');
+  assert.strictEqual(offense1.action, 'blocked_label', 'Action should be blocked_label');
   assert.strictEqual(offense1.violationCount, 1, 'Violation count should be 1');
-  assert.strictEqual(
-    offense1.message,
-    '⚠️ Warning (1/3): Inappropriate language detected. Message was not sent. Please keep conversations respectful!',
-    'Warning message on 1st offense must match exact specification'
+  assert.ok(
+    offense1.message.includes("Please don't use bad words here"),
+    'Warning message on 1st offense must include nice label'
   );
   assert.strictEqual(offense1.duration, 0, 'Duration on 1st offense should be 0 (no ban/cooldown)');
   console.log('✅ 1st Offense test passed:', offense1.message);
 
-  // 3. Test 2nd Offense
+  // 3. Test 2nd Offense: Blocked with nice label, zero ban duration
   const offense2 = slurFilter.moderateSlurMessage(testUserId, 'Shut up slut', testIp);
   assert.strictEqual(offense2.allowed, false, 'Message with slur must be blocked on 2nd offense');
-  assert.strictEqual(offense2.action, 'warning_2', 'Action should be warning_2');
+  assert.strictEqual(offense2.action, 'blocked_label', 'Action should be blocked_label');
   assert.strictEqual(offense2.violationCount, 2, 'Violation count should be 2');
-  assert.strictEqual(
-    offense2.message,
-    '⚠️ Warning (2/3): Inappropriate language detected again. Message was not sent. One more violation will result in a 15-minute ban!',
-    'Warning message on 2nd offense must match exact specification'
+  assert.ok(
+    offense2.message.includes("Please don't use bad words here"),
+    'Warning message on 2nd offense must include nice label'
   );
-  assert.strictEqual(offense2.duration, 0, 'Duration on 2nd offense should be 0 (chat continues, no text cooldown)');
+  assert.strictEqual(offense2.duration, 0, 'Duration on 2nd offense should be 0');
   console.log('✅ 2nd Offense test passed:', offense2.message);
 
-  // 4. Test 3rd Offense
+  // 4. Test 3rd Offense: NO 15-min ban, still blocked with nice label, session preserved
   const offense3 = slurFilter.moderateSlurMessage(testUserId, 'fuck off gandu', testIp);
   assert.strictEqual(offense3.allowed, false, 'Message with slur must be blocked on 3rd offense');
-  assert.strictEqual(offense3.action, 'ban_15min', 'Action should be ban_15min on 3rd offense');
+  assert.strictEqual(offense3.action, 'blocked_label', 'Action should be blocked_label (no ban_15min)');
   assert.strictEqual(offense3.violationCount, 3, 'Violation count should be 3');
-  assert.strictEqual(offense3.duration, 900000, 'Ban duration must be 15 minutes (900,000 ms)');
-  assert.strictEqual(
-    offense3.message,
-    '⚠️ You have been banned for 15 minutes due to repeated inappropriate language or slurs.',
-    'Ban message must match specification'
+  assert.strictEqual(offense3.duration, 0, 'Ban duration must be 0 (ban removed per user requirement)');
+  assert.ok(
+    offense3.message.includes("Please don't use bad words here"),
+    'Message on 3rd offense must give the offender the nice label'
   );
-  console.log('✅ 3rd Offense test passed (15-min ban triggered):', offense3.message);
+  console.log('✅ 3rd Offense test passed (no 15-min ban, nice label shown):', offense3.message);
 
-  // 5. Test Active Penalty Retrieval for user ID and IP
+  // 5. Test Active Penalty Retrieval: Bans are disabled, so penalty should be null
   const activeUserPenalty = slurFilter.getActivePenalty(testUserId);
-  assert.ok(activeUserPenalty, 'Active penalty should be present for user ID');
-  assert.strictEqual(activeUserPenalty.type, 'ban_15min', 'Penalty type should be ban_15min');
-  assert.strictEqual(activeUserPenalty.duration, 900000, 'Duration should be 900000 ms');
+  assert.strictEqual(activeUserPenalty, null, 'Active penalty should be null because bans are disabled');
 
   const activeIpPenalty = slurFilter.getActivePenalty(testIp);
-  assert.ok(activeIpPenalty, 'Active penalty should be present for IP');
-  assert.strictEqual(activeIpPenalty.type, 'ban_15min', 'IP penalty type should be ban_15min');
-  console.log('✅ Ban enforced across both User ID & IP');
+  assert.strictEqual(activeIpPenalty, null, 'Active IP penalty should be null because bans are disabled');
+  console.log('✅ 15-min ban successfully removed across User ID & IP');
 
-  // 6. Test Obfuscation / Leetspeak detection
-  const leetTest = slurFilter.detectSlurWithContext('b!tch');
-  assert.strictEqual(leetTest.hasSlur, true, 'Leetspeak slur should be detected');
-  const spaceTest = slurFilter.detectSlurWithContext('s.l.u.t');
-  assert.strictEqual(spaceTest.hasSlur, true, 'Stripped spacers slur should be detected');
-  console.log('✅ Obfuscation and leetspeak bypasses correctly blocked');
+  // 6. Test Multi-lingual slurs across all languages
+  const multilingualTests = [
+    { text: "salope", lang: "French" },
+    { text: "hijo de puta", lang: "Spanish" },
+    { text: "arschloch", lang: "German" },
+    { text: "stronzo", lang: "Italian" },
+    { text: "bokachoda", lang: "Bengali" },
+    { text: "gashti", lang: "Punjabi" },
+    { text: "zhavadya", lang: "Marathi" },
+    { text: "sulemaga", lang: "Kannada" },
+    { text: "lanjakodaka", lang: "Telugu" },
+    { text: "thevidiya", lang: "Tamil" },
+    { text: "thaayoli", lang: "Malayalam" },
+    { text: "blyad", lang: "Russian" },
+    { text: "sharmuta", lang: "Arabic" },
+    { text: "putangina", lang: "Tagalog" }
+  ];
+
+  for (const mt of multilingualTests) {
+    const det = slurFilter.detectSlurWithContext(mt.text);
+    assert.strictEqual(det.hasSlur, true, `Slur in ${mt.lang} ("${mt.text}") must be detected`);
+    console.log(`✅ [${mt.lang}] detected: "${mt.text}"`);
+  }
 
   // Cleanup test identifiers
   slurFilter.clearUserSlurViolations(testUserId);
@@ -83,7 +95,7 @@ async function runTests() {
   slurFilter.clearUserSlurViolations(testIp);
   slurFilter.clearPenalty(testIp);
 
-  console.log('🎉 ALL 3-STRIKE FILTER TESTS PASSED SUCCESSFULLY!');
+  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY WITH POLITE MESSAGES & MULTI-LINGUAL SUPPORT!');
 }
 
 runTests().catch(err => {

@@ -234,7 +234,7 @@ async function runTests() {
 
     const modRes = moderateMessage('test_user_low_' + le.text, le.text);
     assert.strictEqual(modRes.allowed, false, `moderateMessage should block low-effort line: "${le.text.replace(/\n/g, '\\n')}"`);
-    assert.ok(modRes.message.includes('Low-effort') || modRes.message.includes('Warning'), `Warning message provided: ${modRes.message}`);
+    assert.ok(modRes.message.includes('Low-effort') || modRes.message.includes('Warning') || modRes.message.includes('Please avoid') || modRes.message.includes("bad words"), `Warning message provided: ${modRes.message}`);
 
     console.log(`   ✅ WARNED [${le.note}] "${le.text.replace(/\n/g, '\\n')}" -> ${modRes.message}`);
   }

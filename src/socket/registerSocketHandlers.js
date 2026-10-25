@@ -42,8 +42,9 @@ const {
   detectPhoneNumber,
   detectAskingForPhoneNumber,
   detectSocialMediaSharing,
-  detectRestrictedSymbols
-} = require("../utils/conversationModerator");
+  detectRestrictedSymbols,
+  POLITE_MESSAGES
+} = require("../utils/unifiedModerator");
 const {
   recordMessageDelivered,
   recordViolationEvent
@@ -520,168 +521,46 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
     severity: violationCount >= maxLimit ? "critical" : violationCount >= 2 ? "high" : "medium",
   });
 
-  if (violationCount < maxLimit) {
-    const isAgain = violationCount > 1;
-    const warnMsg = isDm
-      ? `⚠️ Warning (${violationCount}/${maxLimit}): Inappropriate language detected${isAgain ? ' again' : ''} in friend chat. Message was not sent. ${violationCount >= maxLimit - 1 ? 'One more violation will result in a 15-minute ban!' : 'Please keep conversations respectful!'}`
-      : (violationCount === 2
-        ? "⚠️ Warning (2/3): Inappropriate language detected again. Message was not sent. One more violation will result in a 15-minute ban!"
-        : "⚠️ Warning (1/3): Inappropriate language detected. Message was not sent. Please keep conversations respectful!");
-    socket.emit("warning_message", {
+  // User Requirement: Remove the 3-warning to 15-minute ban.
+  // Just don't send the message, but give the offender a nice label stating: "Please don't use bad words here"
+  const warnMsg = "⚠️ Please don't use bad words here 🙏";
+  const labelText = "Please don't use bad words here";
+
+  socket.emit("warning_message", {
+    message: warnMsg,
+    label: labelText,
+    type: "bad_words_label",
+    violationCount,
+  });
+  socket.emit("message_rejected", {
+    message: warnMsg,
+    label: labelText,
+    reason: "bad_words_blocked",
+    violationCount,
+  });
+
+  if (typeof ack === "function") {
+    ack({
+      ok: false,
+      success: false,
+      reason: "bad_words_blocked",
       message: warnMsg,
-      type: `strike_${violationCount}_warning`,
+      label: labelText,
       violationCount,
     });
-    socket.emit("message_rejected", {
-      message: warnMsg,
-      reason: `strike_${violationCount}_warning`,
-      violationCount,
-    });
-    if (typeof ack === "function") {
-      ack({
-        ok: false,
-        success: false,
-        reason: `strike_${violationCount}_warning`,
-        message: warnMsg,
-        violationCount,
-      });
-    }
-    // Persist strike warning to Cloud Firestore
-    dbService.saveModerationLog({
-      userId,
-      type: `slur_strike_${violationCount}`,
-      message: warnMsg,
-      action: `warning_${violationCount}`,
-      violationCount,
-      severity: "warning",
-    }).catch(() => {});
-
-    return { blocked: true, action: `warning_${violationCount}` };
-  } else {
-    // Ban triggered! (Explore limit = 3, Friends limit = 5)
-    const banDurationMs = 15 * 60 * 1000; // 15 minutes = 900,000 ms
-    const banExpiry = Date.now() + banDurationMs;
-
-    temporaryBans.set(userId, banExpiry);
-    addTemporaryBan(userId, banDurationMs);
-    slurFilter.applyPenalty(userId, "ban_15min", banDurationMs);
-
-    const deviceHash = socket.data?.deviceHash || userId;
-    temporaryBans.set(deviceHash, banExpiry);
-    addTemporaryBan(deviceHash, banDurationMs);
-
-    if (ip && ip !== "127.0.0.1" && ip !== "::1" && ip !== "localhost") {
-      temporaryBans.set(ip, banExpiry);
-      temporaryBans.set(`ip_${ip}`, banExpiry);
-      addTemporaryBan(ip, banDurationMs);
-      addTemporaryBan(`ip_${ip}`, banDurationMs);
-      slurFilter.applyPenalty(ip, "ban_15min", banDurationMs);
-    }
-
-    const offenderMsg = "⚠️ You have been banned for 15 minutes due to repeated inappropriate language or slurs.";
-
-    // Persist ban and moderation action to Cloud Firestore
-    dbService.saveBan({
-      banId: userId,
-      userId,
-      deviceHash,
-      ip: ip || "",
-      reason: "Repeated inappropriate language or slurs (15-min suspension)",
-      bannedAt: Date.now(),
-      expiresAt: banExpiry,
-      durationMs: banDurationMs,
-    }).catch(() => {});
-
-    dbService.saveModerationLog({
-      userId,
-      type: "slur_ban_15min",
-      message: offenderMsg,
-      action: "ban_15min",
-      violationCount,
-      severity: "critical",
-    }).catch(() => {});
-
-    socket.emit("chat_ended_banned", {
-      isOffender: true,
-      message: offenderMsg,
-      banExpiresAt: banExpiry,
-      remainingMs: banDurationMs,
-      violationCount,
-    });
-    socket.emit("error_message", { message: offenderMsg });
-    socket.emit("message_rejected", {
-      message: offenderMsg,
-      reason: "banned_15min",
-      violationCount,
-    });
-
-    if (typeof ack === "function") {
-      ack({
-        ok: false,
-        success: false,
-        reason: "banned_15min",
-        message: offenderMsg,
-        violationCount,
-        banExpiresAt: banExpiry,
-        remainingMs: banDurationMs,
-      });
-    }
-
-    // Session ends and offended person (victim) is notified
-    const victimMsg = "⚠️ The abuser has been banned for 15 mins for using bad behaviour.";
-
-    if (roomId && !isDm) {
-      const room = rooms.get(roomId);
-      if (room && room.users) {
-        const partnerId = room.users.find(id => id !== userId);
-        if (partnerId) {
-          markUserAsExemptPartner(partnerId, 300000);
-
-          const partner = users.get(partnerId);
-          if (partner && partner.socketId) {
-            const partnerSocket = io.sockets.sockets.get(partner.socketId);
-            if (partnerSocket) {
-              partnerSocket.emit("chat_ended_banned", {
-                isOffender: false,
-                message: victimMsg,
-                autoRequeue: true,
-              });
-              partnerSocket.emit("error_message", { message: victimMsg });
-              setTimeout(() => {
-                queueUserForMatch(partnerSocket, io, partnerId);
-              }, 1500);
-            }
-          }
-        }
-      }
-      terminateSession(io, roomId, "banned_violation");
-    } else if (isDm && roomId) {
-      const room = rooms.get(roomId);
-      if (room && room.users) {
-        const partnerId = room.users.find(id => id !== userId);
-        if (partnerId) {
-          const partner = users.get(partnerId);
-          if (partner && partner.socketId) {
-            const partnerSocket = io.sockets.sockets.get(partner.socketId);
-            if (partnerSocket) {
-              partnerSocket.emit("chat_ended_banned", {
-                isOffender: false,
-                message: victimMsg,
-              });
-              partnerSocket.emit("error_message", { message: victimMsg });
-            }
-          }
-        }
-      }
-      terminateSession(io, roomId, "banned_violation");
-    }
-
-    try {
-      socket.disconnect(true);
-    } catch (e) {}
-
-    return { blocked: true, action: "banned" };
   }
+
+  // Persist moderation action to Cloud Firestore without applying a ban
+  dbService.saveModerationLog({
+    userId,
+    type: `bad_words_blocked_${violationCount}`,
+    message: warnMsg,
+    action: "blocked_label",
+    violationCount,
+    severity: "info",
+  }).catch(() => {});
+
+  return { blocked: true, action: "blocked_label", label: labelText, message: warnMsg };
 }
 
 // Shared message validation (slur filter, moderation, spam)
@@ -720,7 +599,7 @@ function validateAndModerateMessage(socket, userId, text) {
 
   // 1. Separate Warning for Phone / Mobile numbers (NO BAN)
   if (detectPhoneNumber(text)) {
-    const msg = "🚫 Warning: Sharing phone numbers or personal contact numbers is restricted to protect your privacy.";
+    const msg = POLITE_MESSAGES.PHONE_NUMBER;
     log("message_blocked_phone", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "phone_number_warning", reason: "phone_number_blocked" });
     socket.emit("error_message", { message: msg });
@@ -739,7 +618,7 @@ function validateAndModerateMessage(socket, userId, text) {
 
   // 1.1 Separate Warning for Asking / Soliciting Phone Numbers or WhatsApp
   if (detectAskingForPhoneNumber(text)) {
-    const msg = "🚫 Warning: Asking for phone numbers or personal WhatsApp contacts is restricted for safety.";
+    const msg = POLITE_MESSAGES.ASKING_PHONE;
     log("message_blocked_asking_phone", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "asking_number_warning", reason: "asking_number_blocked" });
     socket.emit("error_message", { message: msg });
@@ -758,7 +637,7 @@ function validateAndModerateMessage(socket, userId, text) {
 
   // 2. Separate Warning for External Links and URLs (NO BAN)
   if (blockExternalLinksEnabled && hasBlockedLinks(text)) {
-    const msg = "🚫 Warning: Sharing links, websites, or external URLs is not allowed to protect user safety.";
+    const msg = POLITE_MESSAGES.LINKS;
     log("message_blocked_link", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "link_sharing_warning", reason: "link_sharing_blocked" });
     socket.emit("error_message", { message: msg });
@@ -777,7 +656,7 @@ function validateAndModerateMessage(socket, userId, text) {
 
   // 2.1 Separate Warning for Social Media Handles / IDs (NO BAN)
   if (detectSocialMediaSharing(text)) {
-    const msg = "🚫 Warning: Sharing Snapchat, Instagram, or social IDs is not allowed. Please keep conversations within the chat.";
+    const msg = POLITE_MESSAGES.SOCIAL_MEDIA;
     log("message_blocked_social_id", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: "social_id_warning", reason: "social_id_blocked" });
     socket.emit("error_message", { message: msg });
@@ -797,9 +676,7 @@ function validateAndModerateMessage(socket, userId, text) {
   // 3. Separate Warning for Special Symbols & Excessive Punctuation (NO BAN)
   if (detectRestrictedSymbols(text)) {
     const isExcessive = /\.{6,}/.test(text) || /\,{6,}/.test(text);
-    const msg = isExcessive
-      ? "⚠️ Warning: Continuous dots (.) or commas (,) are allowed up to 5 times max."
-      : "⚠️ Warning: Special symbols like /, @, #, $, %, ^, *, _, +, =, ~, |, <, > are restricted. Only letters, numbers, spaces, commas (,), and periods (.) are permitted (up to 5 continuous dots/commas).";
+    const msg = isExcessive ? POLITE_MESSAGES.SYMBOLS_EXCESSIVE : POLITE_MESSAGES.SYMBOLS;
     log("message_blocked_symbols", { userId, text: text.slice(0, 50) });
     socket.emit("warning_message", { message: msg, type: isExcessive ? "excessive_punctuation_warning" : "restricted_symbols_warning", reason: "restricted_symbols_blocked" });
     socket.emit("error_message", { message: msg });
@@ -2737,6 +2614,10 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           if (typeof redisSetUser === "function") {
             redisSetUser(partnerId, partner).catch(() => {});
           }
+        }
+
+        if (partnerSocket) {
+          try { partnerSocket.leave(targetRoomId); } catch (_) {}
         }
 
         // Check if reporter was banned (fake report spam: > 3 reports in 1 min)

@@ -53,7 +53,7 @@ async function runTests() {
   console.log("✅ Friendship and DM management test passed");
 
   // Test 5: Permanent Admin Sessions & RedisStore Class (30-Day TTL)
-  const rootRedisStore = require("../redisStore");
+  const rootRedisStore = require("../src/state/redisStore");
   assert.ok(rootRedisStore.RedisStore, "RedisStore class should be exported");
   assert.ok(typeof rootRedisStore.setAdminSession === "function", "setAdminSession should be a function");
   assert.ok(typeof rootRedisStore.getAdminSession === "function", "getAdminSession should be a function");

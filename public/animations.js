@@ -50,6 +50,7 @@
         landing.style.display = 'flex';
         landing.style.transition = 'opacity 0.22s cubic-bezier(0, 0, 0.2, 1)';
         landing.style.opacity = '1';
+        landing.style.pointerEvents = 'auto';
       }
       if (chatApp && !hasActiveChat) {
         chatApp.style.display = 'none';
@@ -327,17 +328,21 @@
   }
 
   // ─────────────────────────────────────────────────────────────
-  //  ANIMATED COUNTER
+  //  ANIMATED COUNTER (DEBOUNCED & ZERO-FLICKER)
   // ─────────────────────────────────────────────────────────────
-  window.__pingCountUp = (el, target, dur=500) => {
+  window.__pingCountUp = (el, target, dur=350) => {
     if (!el || typeof target !== 'number') return;
+    const formatted = target > 0 ? target.toLocaleString() : '—';
+    if (el._lastTargetVal === target && el.textContent === formatted) return;
+    el._lastTargetVal = target;
+
     if (el._countUpRaf) {
       cancelAnimationFrame(el._countUpRaf);
       el._countUpRaf = null;
     }
     const currentVal = parseInt((el.textContent || '').replace(/[^\d]/g, ''), 10) || 0;
     if (currentVal === target) {
-      el.textContent = target > 0 ? target.toLocaleString() : '—';
+      el.textContent = formatted;
       return;
     }
     const start = currentVal;
@@ -350,6 +355,7 @@
         el._countUpRaf = requestAnimationFrame(step);
       } else {
         el._countUpRaf = null;
+        el.textContent = formatted;
       }
     };
     el._countUpRaf = requestAnimationFrame(step);

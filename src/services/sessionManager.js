@@ -40,6 +40,9 @@ function terminateSession(io, roomId, reason = "session_ended") {
 
   // Guard against double termination
   if (room.status === "terminated") {
+    if (io && typeof io.in === "function") {
+      try { io.in(roomId).socketsLeave(roomId); } catch (_) {}
+    }
     return;
   }
 

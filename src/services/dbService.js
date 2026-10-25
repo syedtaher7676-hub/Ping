@@ -694,7 +694,14 @@ async function getUserFriends(userId) {
   if (db) {
     try {
       const snap = await db.collection(COLLECTIONS.FRIENDSHIPS).where("users", "array-contains", userId).get();
-      snap.forEach((doc) => friends.push(doc.data()));
+      snap.forEach((doc) => {
+        const data = doc.data();
+        const otherUserId = (data.users || []).find(id => id !== userId) || (data.userAId === userId ? data.userBId : data.userAId);
+        friends.push({
+          ...data,
+          friendId: otherUserId,
+        });
+      });
       return friends;
     } catch (_) {}
   }

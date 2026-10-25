@@ -29,10 +29,10 @@ server.listen(0, async () => {
   const socketB = Client(url, { auth: { userId: userBId } });
 
   let partnerReceivedSlur = false;
-  let strike1WarningReceived = false;
-  let strike2WarningReceived = false;
-  let partnerNotifiedAndRequeued = false;
-  let offenderDisconnected = false;
+  let strike1LabelReceived = false;
+  let strike2LabelReceived = false;
+  let strike3LabelReceived = false;
+  let unexpectedDisconnect = false;
 
   socketB.on("new_message", (payload) => {
     if (payload.message.includes("bitch") || payload.message.includes("slut") || payload.message.includes("gandu")) {
@@ -41,25 +41,23 @@ server.listen(0, async () => {
   });
 
   socketA.on("warning_message", (data) => {
-    if (data.message.includes("Warning (1/3)")) {
-      strike1WarningReceived = true;
-      console.log("✅ Socket A received 1st offense warning:", data.message);
-    } else if (data.message.includes("Warning (2/3)")) {
-      strike2WarningReceived = true;
-      console.log("✅ Socket A received 2nd offense warning:", data.message);
+    if (data.message && data.message.includes("Please don't use bad words here")) {
+      if (!strike1LabelReceived) {
+        strike1LabelReceived = true;
+        console.log("✅ Socket A received 1st offense nice label:", data.message);
+      } else if (!strike2LabelReceived) {
+        strike2LabelReceived = true;
+        console.log("✅ Socket A received 2nd offense nice label:", data.message);
+      } else {
+        strike3LabelReceived = true;
+        console.log("✅ Socket A received 3rd offense nice label:", data.message);
+      }
     }
   });
 
   socketA.on("disconnect", (reason) => {
-    offenderDisconnected = true;
-    console.log("✅ Socket A (offender) disconnected upon 3rd strike ban:", reason);
-  });
-
-  socketB.on("chat_ended_banned", (data) => {
-    if (data.isOffender === false && data.autoRequeue === true) {
-      partnerNotifiedAndRequeued = true;
-      console.log("✅ Socket B (partner) notified of stranger ban with autoRequeue:", data.message);
-    }
+    unexpectedDisconnect = true;
+    console.log("⚠️ Socket A unexpectedly disconnected:", reason);
   });
 
   // Wait for connections
@@ -106,11 +104,11 @@ server.listen(0, async () => {
     console.error("❌ Partner received slur! Message was NOT blocked.");
     process.exit(1);
   }
-  if (!strike1WarningReceived) {
-    console.error("❌ Offender did not receive Strike 1 warning!");
+  if (!strike1LabelReceived) {
+    console.error("❌ Offender did not receive Strike 1 nice label!");
     process.exit(1);
   }
-  console.log("✅ 1st Offense: Message blocked, warning received, chat continues.");
+  console.log("✅ 1st Offense: Message blocked, nice label received, chat continues.");
 
   // Test that chat continues by sending a normal message
   let normalMsgReceived = false;
@@ -136,13 +134,13 @@ server.listen(0, async () => {
     console.error("❌ Partner received slur on 2nd offense!");
     process.exit(1);
   }
-  if (!strike2WarningReceived) {
-    console.error("❌ Offender did not receive Strike 2 warning!");
+  if (!strike2LabelReceived) {
+    console.error("❌ Offender did not receive Strike 2 nice label!");
     process.exit(1);
   }
-  console.log("✅ 2nd Offense: Message blocked, warning received, chat continues.");
+  console.log("✅ 2nd Offense: Message blocked, nice label received, chat continues.");
 
-  // Test that chat continues after Strike 2 (no 30s text cooldown)
+  // Test that chat continues after Strike 2
   let normalMsg2Received = false;
   socketB.once("new_message", (p) => {
     if (p.message === "clean conversation continues") normalMsg2Received = true;
@@ -155,7 +153,7 @@ server.listen(0, async () => {
   }
   console.log("✅ Chat continues normally after Strike 2 warning.");
 
-  // 3. Offense 3: Send third slur
+  // 3. Offense 3: Send third slur (User requirement: NO 15-min ban, session stays alive!)
   await new Promise((r) => setTimeout(r, 800));
   socketA.emit("send_message", { message: "fuck off gandu" }, (ack) => {
     console.log("Offense 3 ack:", ack);
@@ -166,16 +164,28 @@ server.listen(0, async () => {
     console.error("❌ Partner received slur on 3rd offense!");
     process.exit(1);
   }
-  if (!partnerNotifiedAndRequeued) {
-    console.error("❌ Partner was not notified and requeued!");
+  if (!strike3LabelReceived) {
+    console.error("❌ Offender did not receive Strike 3 nice label!");
     process.exit(1);
   }
-  if (!offenderDisconnected) {
-    console.error("❌ Offender was not disconnected on 3rd strike!");
+  if (unexpectedDisconnect) {
+    console.error("❌ Offender was unexpectedly disconnected! (15-min ban should be removed)");
     process.exit(1);
   }
 
-  console.log("✅ 3rd Offense: 15-minute ban enforced, offender disconnected, partner notified & requeued.");
+  // Verify chat is still active after 3rd bad word by sending a clean message
+  let normalMsg3Received = false;
+  socketB.once("new_message", (p) => {
+    if (p.message === "clean message after 3rd warning") normalMsg3Received = true;
+  });
+  socketA.emit("send_message", { message: "clean message after 3rd warning" });
+  await new Promise((r) => setTimeout(r, 800));
+  if (!normalMsg3Received) {
+    console.error("❌ Chat did not continue after 3rd bad word!");
+    process.exit(1);
+  }
+
+  console.log("✅ 3rd Offense: Message blocked, nice label given, NO 15-min ban, session stays alive, and subsequent clean messages deliver seamlessly!");
 
   // Cleanup
   socketA.close();

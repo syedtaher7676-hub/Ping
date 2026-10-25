@@ -1074,6 +1074,7 @@ module.exports = {
   // RedisStore Class & Session API
   RedisStore,
   redisStore: defaultRedisStore,
+  default: defaultRedisStore,
   setAdminSession,
   getAdminSession,
   deleteAdminSession,

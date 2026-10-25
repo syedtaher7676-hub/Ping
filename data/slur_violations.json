@@ -1,3 +1,340 @@
 {
-  "violations": {}
+  "violations": {
+    "test_user_obf:explore": [
+      {
+        "timestamp": 1792942314905,
+        "message": "sulemaga",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942314918,
+        "message": "s\nu\nl\ne",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942314969,
+        "message": "t-h-i-k-a",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315039,
+        "message": "tullu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315055,
+        "message": "shata",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315069,
+        "message": "nin amman",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315086,
+        "message": "sulay magane",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315099,
+        "message": "sule magane",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315112,
+        "message": "tikka",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315127,
+        "message": "bolimaga",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315142,
+        "message": "baddimaga",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315156,
+        "message": "bevarsi nan maga",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315168,
+        "message": "thevidiya",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315180,
+        "message": "punda",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315195,
+        "message": "otha",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315208,
+        "message": "pundamavane",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315228,
+        "message": "oombu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315242,
+        "message": "t.h.e.v.i.d.i.y.a",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315301,
+        "message": "p\nu\nn\nd\na",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315351,
+        "message": "lanja",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315364,
+        "message": "lanjakodaka",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315373,
+        "message": "l/a/n/j/a",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315432,
+        "message": "s\nu\nl\nl\ni",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315497,
+        "message": "dengu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315512,
+        "message": "modda gudu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315524,
+        "message": "gudha cheeku",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315539,
+        "message": "myre",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315552,
+        "message": "thaayoli",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315565,
+        "message": "thendi",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315577,
+        "message": "pulayadi",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315593,
+        "message": "kunna",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315606,
+        "message": "kundi",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315619,
+        "message": "pooru",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315633,
+        "message": "poorimone",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315647,
+        "message": "gaandu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315672,
+        "message": "gxxndu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315740,
+        "message": "g*ndu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315793,
+        "message": "bxxch",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315845,
+        "message": "nxxga",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315901,
+        "message": "pxxda",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942315968,
+        "message": "txxlu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316013,
+        "message": "t*llu",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316063,
+        "message": "sxxle",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316119,
+        "message": "sxxle mxgxne",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316174,
+        "message": "nxx ammxx",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316230,
+        "message": "txkka",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316281,
+        "message": "lxxja",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316333,
+        "message": "shxta",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316385,
+        "message": "sh*ta",
+        "isTargeting": false,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942316435,
+        "message": "mxxre",
+        "isTargeting": false,
+        "scope": "explore"
+      }
+    ],
+    "u_8bfd2844-f958-4ae6-9488-26f3b63257b2:explore": [
+      {
+        "timestamp": 1792940455086,
+        "message": "you are a bitch",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792940457425,
+        "message": "shut up slut",
+        "isTargeting": true,
+        "scope": "explore"
+      }
+    ],
+    "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e:explore": [
+      {
+        "timestamp": 1792942413056,
+        "message": "you are a bitch",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942415402,
+        "message": "shut up slut",
+        "isTargeting": true,
+        "scope": "explore"
+      },
+      {
+        "timestamp": 1792942417805,
+        "message": "fuck off gandu",
+        "isTargeting": false,
+        "scope": "explore"
+      }
+    ]
+  }
 }

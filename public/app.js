@@ -331,7 +331,12 @@ async function applyUserSession(userProfile, isCloudFallback = false) {
   updateSettingsUI();
 }
 
+let isFirebaseClientInitialized = false;
+
 async function initFirebaseClient() {
+  if (isFirebaseClientInitialized) return;
+  isFirebaseClientInitialized = true;
+
   if (window.firebaseReadyPromise) {
     try {
       await window.firebaseReadyPromise;
@@ -1537,16 +1542,28 @@ function setScreenIndicator(step) {
   });
 }
 
-// ── REAL-TIME ONLINE COUNT ───────────────────────────────────
+// ── REAL-TIME ONLINE COUNT (ZERO-FLICKER INTERPOLATED) ─────────
+let lastOnlineCountVal = null;
+
 function setOnlineCount(n) {
   const num = Math.max(1, Number(n) || 1);
+  if (num === lastOnlineCountVal) return;
+  lastOnlineCountVal = num;
+
   const display = num.toLocaleString();
-  if (liveUsersEl && window.__pingCountUp) window.__pingCountUp(liveUsersEl, num);
-  else if (liveUsersEl) liveUsersEl.textContent = display;
-  if (headerActiveUsers) headerActiveUsers.textContent = display;
-  if (headerOnlineCount) headerOnlineCount.textContent = display;
-  if (actionBarOnline) actionBarOnline.textContent = display;
-  const ws = $('wsCount'); if (ws) ws.textContent = display;
+  if (window.__pingCountUp) {
+    if (liveUsersEl) window.__pingCountUp(liveUsersEl, num);
+    if (headerActiveUsers) window.__pingCountUp(headerActiveUsers, num);
+    if (headerOnlineCount) window.__pingCountUp(headerOnlineCount, num);
+    if (actionBarOnline) window.__pingCountUp(actionBarOnline, num);
+    const ws = $('wsCount'); if (ws) window.__pingCountUp(ws, num);
+  } else {
+    if (liveUsersEl) liveUsersEl.textContent = display;
+    if (headerActiveUsers) headerActiveUsers.textContent = display;
+    if (headerOnlineCount) headerOnlineCount.textContent = display;
+    if (actionBarOnline) actionBarOnline.textContent = display;
+    const ws = $('wsCount'); if (ws) ws.textContent = display;
+  }
 }
 
 // Fetch initial stats immediately on page load
@@ -2822,17 +2839,53 @@ if (cancelFriendReplyBtn) {
   cancelFriendReplyBtn.addEventListener('click', window.cancelReply);
 }
 
-// ── VIEWS (ZERO-FLICKER HARDWARE ACCELERATED) ─────────────────
-let currentActiveView = 'prechat';
+// ── VIEWS (ZERO-FLICKER HARDWARE ACCELERATED TRANSITIONS) ─────
+let currentActiveView = 'landing';
+let landingHideTimer = null;
+let chatAppHideTimer = null;
 
 function showView(which) {
-  if (which === 'chat' || which === 'waiting' || which === 'friendDM' || (chatApp && chatApp.style.display === 'flex')) {
+  if (landingHideTimer) {
+    clearTimeout(landingHideTimer);
+    landingHideTimer = null;
+  }
+  if (chatAppHideTimer) {
+    clearTimeout(chatAppHideTimer);
+    chatAppHideTimer = null;
+  }
+
+  const isChatAppView = (which === 'prechat' || which === 'chat' || which === 'waiting' || which === 'friendDM' || which === 'friends' || which === 'settings');
+
+  if (isChatAppView) {
     if (landingPage) {
-      landingPage.style.display = 'none';
+      landingPage.style.transition = 'opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)';
+      landingPage.style.opacity = '0';
+      landingPage.style.transform = 'scale(0.98)';
+      landingPage.style.pointerEvents = 'none';
+      landingHideTimer = setTimeout(() => {
+        if (currentActiveView !== 'landing') {
+          landingPage.style.display = 'none';
+        }
+      }, 150);
     }
     if (chatApp) {
       chatApp.style.display = 'flex';
-      chatApp.style.opacity = '1';
+      chatApp.style.transition = 'opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1)';
+      requestAnimationFrame(() => {
+        chatApp.style.opacity = '1';
+      });
+    }
+  } else if (which === 'landing') {
+    if (chatApp) {
+      chatApp.style.display = 'none';
+      chatApp.style.opacity = '0';
+    }
+    if (landingPage) {
+      landingPage.style.display = 'flex';
+      landingPage.style.opacity = '1';
+      landingPage.style.transform = 'scale(1)';
+      landingPage.style.pointerEvents = 'auto';
+      landingPage.style.visibility = 'visible';
     }
   }
 
@@ -2854,19 +2907,18 @@ function showView(which) {
     if (isTarget) {
       el.style.display = 'flex';
       if (viewChanged) {
-        el.classList.remove('view-enter');
-        requestAnimationFrame(() => {
-          el.classList.add('view-enter');
-        });
+        el.classList.remove('view-enter', 'view-exit');
+        void el.offsetWidth;
+        el.classList.add('view-enter');
       }
     } else {
       el.style.display = 'none';
-      el.classList.remove('view-enter');
+      el.classList.remove('view-enter', 'view-exit');
     }
   });
 
-  // Show/hide home tabs — visible on ALL views except waiting
-  const showTabs = (which === 'prechat' || which === 'friends' || which === 'friendDM' || which === 'chat' || which === 'settings');
+  // Show/hide home tabs — visible on prechat, friends, and settings views (hidden during active chat, waiting, and friend DMs)
+  const showTabs = (which === 'prechat' || which === 'friends' || which === 'settings');
   if (homeTabs) homeTabs.style.display = showTabs ? 'flex' : 'none';
 
   // Sync active tab highlight
@@ -2944,8 +2996,13 @@ function applyState(status, roomId = null) {
     if (autoSearchBar) autoSearchBar.style.display = 'none';
     stopAutoSearch();
   }
-  else if (activeHomeTab === 'random' && currentChatType !== 'friend') {
-    showView('prechat');
+  else if (status === 'idle' || !status) {
+    // Keep user on landing page if chatApp is hidden or user hasn't explicitly entered chat
+    if (!chatApp || chatApp.style.display === 'none' || (landingPage && landingPage.style.display !== 'none')) {
+      executeGoToLanding();
+    } else if (activeHomeTab === 'random' && currentChatType !== 'friend') {
+      showView('prechat');
+    }
   }
 }
 
@@ -2982,8 +3039,10 @@ function endCurrentChat() {
   if (typingIndicator) typingIndicator.classList.remove('visible');
   if (isConnected) setConnStatus('connected');
 
-  // Return to home screen (Random tab) if we are on the random tab
-  if (activeHomeTab === 'random') {
+  // Return to home screen if active or on landing page
+  if (landingPage && landingPage.style.display !== 'none') {
+    executeGoToLanding();
+  } else if (activeHomeTab === 'random') {
     showView('prechat');
   }
 }
@@ -3112,35 +3171,16 @@ if (!history.state) {
 window.addEventListener('popstate', (e) => {
   const view = e.state?.view || 'landing';
   if (view === 'landing') {
-    if (chatApp) chatApp.style.display = 'none';
-    if (landingPage) {
-      landingPage.style.display = 'flex';
-      landingPage.style.opacity = '1';
-    }
+    showView('landing');
   } else if (view === 'prechat' || view === 'chat' || view === 'waiting') {
-    if (landingPage) landingPage.style.display = 'none';
-    if (chatApp) {
-      chatApp.style.display = 'flex';
-      chatApp.style.opacity = '1';
-    }
     showView(view);
     activeHomeTab = 'random';
     if (tabRandom) tabRandom.classList.add('active');
     if (tabSettings) tabSettings.classList.remove('active');
     if (tabFriends) tabFriends.classList.remove('active');
   } else if (view === 'friends') {
-    if (landingPage) landingPage.style.display = 'none';
-    if (chatApp) {
-      chatApp.style.display = 'flex';
-      chatApp.style.opacity = '1';
-    }
     loadAndShowFriendsView();
   } else if (view === 'settings') {
-    if (landingPage) landingPage.style.display = 'none';
-    if (chatApp) {
-      chatApp.style.display = 'flex';
-      chatApp.style.opacity = '1';
-    }
     showView('settings');
     if (typeof updateSettingsUI === 'function') updateSettingsUI();
   } else {
@@ -3149,14 +3189,6 @@ window.addEventListener('popstate', (e) => {
 });
 
 function goToChat(targetView = null) {
-  if (landingPage) {
-    landingPage.style.display = 'none';
-  }
-  if (chatApp) {
-    chatApp.style.display = 'flex';
-    chatApp.style.opacity = '1';
-  }
-
   const destination = targetView || (inChat || AppState.explore.inChat ? 'chat' : 'prechat');
   if (!history.state || history.state.view !== destination) {
     history.pushState({ view: destination }, '', '');
@@ -3202,11 +3234,7 @@ function executeGoToLanding() {
     history.pushState({ view: 'landing' }, '', '');
   }
 
-  if (chatApp) chatApp.style.display = 'none';
-  if (landingPage) {
-    landingPage.style.display = 'flex';
-    landingPage.style.opacity = '1';
-  }
+  showView('landing');
   const lc = $('particleCanvas');
   if (lc) {
     if (lc.width !== window.innerWidth) lc.width = window.innerWidth;
@@ -3216,8 +3244,13 @@ function executeGoToLanding() {
 
 // Instant 0ms Tap Handling for Start Chat (prevents 350ms iOS Safari & Chrome tap delay)
 if (startLandingBtn) {
+  startLandingBtn.disabled = false;
+  startLandingBtn.style.pointerEvents = 'auto';
+  startLandingBtn.style.cursor = 'pointer';
+
   let touchHandled = false;
   startLandingBtn.addEventListener('click', (e) => {
+    e.preventDefault();
     if (touchHandled) {
       touchHandled = false;
       return;
@@ -4181,10 +4214,9 @@ function handleTimeExpired() {
 
   const closingRoomId = activeRoomId || AppState.explore.roomId;
   if (closingRoomId) {
-    socket.emit('end_chat', { roomId: closingRoomId });
+    socket.emit('end_chat', { roomId: closingRoomId, reason: 'Session time ended' });
   }
 
-  // Close the room and reset UI immediately, returning to prechat (do not auto connect)
   inChat = false;
   activeRoomId = null;
   AppState.explore.inChat = false;
@@ -4199,9 +4231,8 @@ function handleTimeExpired() {
   clearChat();
   if (partnerNameEl) partnerNameEl.textContent = 'Stranger';
 
-  appendMsg("⏳ Time's up! Room closed. Click Start Chat to chat again.", { isSystem: true, variant: 'warn' });
+  appendMsg("Session time ended", { isSystem: true, variant: 'warn' });
 
-  // Return to prechat view and let the user click Start Chat to chat again
   showView('prechat');
 
   setTimeout(() => {
@@ -4209,6 +4240,7 @@ function handleTimeExpired() {
   }, 1200);
 }
 
+let lastSkipToastTime = 0;
 function handleSkippedChat(reason, rawReason) {
   if (isReconnecting) return;
   stopTimer();
@@ -4225,19 +4257,24 @@ function handleSkippedChat(reason, rawReason) {
 
   syncButtons();
 
-  // If local user skipped/left, go to prechat immediately
   if (userInitiatedLeave || userInitiatedSkip) {
     userInitiatedLeave = false;
     userInitiatedSkip = false;
     stopAutoSearch();
     closeModal();
     clearChat();
+    appendMsg("Stranger skipped", { isSystem: true, variant: 'warn' });
     showView('prechat');
     return;
   }
 
-  // When stranger skips, notify opponent with a single toast that stranger skipped
-  showToast("Stranger has skipped the chat.", "info", 3500);
+  const now = Date.now();
+  if (now - lastSkipToastTime > 4000) {
+    lastSkipToastTime = now;
+    showToast("Stranger skipped", "info", 3000);
+  }
+  appendMsg("Stranger skipped", { isSystem: true, variant: 'warn' });
+
   stopAutoSearch();
   closeModal();
   clearChat();
@@ -4406,10 +4443,15 @@ socket.on('chat_end', handleGenericChatEnd);
 socket.on('chat_ended', handleGenericChatEnd);
 
 socket.off('partner_disconnected');
+let lastPartnerDisconnectTime = 0;
 socket.on('partner_disconnected', ({ roomId, message }) => {
   if (AppState.activeTab !== 'EXPLORE') return;
-  const reasonText = message || 'Stranger has skipped the chat';
-  showToast(reasonText, 'info', 3500);
+  const now = Date.now();
+  if (now - lastPartnerDisconnectTime < 2500) return;
+  lastPartnerDisconnectTime = now;
+
+  const reasonText = message || 'Stranger left';
+  showToast(reasonText, 'info', 3000);
   handleSkippedChat(reasonText, 'next_clicked');
 });
 
@@ -4417,14 +4459,14 @@ socket.on('partner_disconnected', ({ roomId, message }) => {
 window.addEventListener('beforeunload', () => {
   const currentRoom = activeRoomId || AppState.explore.roomId;
   if (socket && socket.connected && currentRoom && (inChat || AppState.explore.inChat)) {
-    socket.emit('end_chat', { roomId: currentRoom, reason: 'Stranger has skipped the chat' });
+    socket.emit('end_chat', { roomId: currentRoom, reason: 'Stranger left' });
   }
 });
 
 window.addEventListener('pagehide', () => {
   const currentRoom = activeRoomId || AppState.explore.roomId;
   if (socket && socket.connected && currentRoom && (inChat || AppState.explore.inChat)) {
-    socket.emit('end_chat', { roomId: currentRoom, reason: 'Stranger has skipped the chat' });
+    socket.emit('end_chat', { roomId: currentRoom, reason: 'Stranger left' });
   }
 });
 
@@ -4442,21 +4484,31 @@ socket.on('partner_reconnected', () => {
   appendMsg('⚡ Partner reconnected! Keep chatting ✨', { isSystem: true, variant: 'success' });
 });
 
-socket.off('warning_message');
-socket.on('warning_message', ({ message }) => {
-  if (!message) return;
-  // Backend already formats the message with emoji prefix — display as-is
-  appendMsg(message, { isSystem: true, variant: 'warn' });
+let lastWarningTime = 0;
+function handleModerationWarning(msg) {
+  const now = Date.now();
+  if (now - lastWarningTime < 3500) return;
+  lastWarningTime = now;
+  const displayMsg = msg || "⚠️ Please don't use bad words here 🙏";
+  appendMsg(displayMsg, { isSystem: true, variant: 'warn' });
   if (currentChatType === 'friend') {
-    appendFriendMsg(message, { isSystem: true, variant: 'warn' });
+    appendFriendMsg(displayMsg, { isSystem: true, variant: 'warn' });
   }
+}
+
+socket.off('warning_message');
+socket.on('warning_message', ({ message, label }) => {
+  handleModerationWarning(label || message);
 });
 
 socket.off('error_message');
 socket.on('error_message', ({ message, action, duration }) => {
   if (!message) return;
-
-  // Backend already formats the message with emoji prefix — display as-is
+  const isBadWords = message.includes("bad words") || message.includes("Please don't use") || message.includes("slur");
+  if (isBadWords) {
+    handleModerationWarning(message);
+    return;
+  }
   appendMsg(message, { isSystem: true, variant: 'error' });
   if (currentChatType === 'friend') {
     appendFriendMsg(message, { isSystem: true, variant: 'error' });
@@ -4464,12 +4516,13 @@ socket.on('error_message', ({ message, action, duration }) => {
 });
 
 socket.off('message_rejected');
-socket.on('message_rejected', ({ message, reason }) => {
-  if (!message) return;
-  if (reason && (reason.startsWith('strike_') || reason === 'banned_15min')) {
-    return; // Already rendered by warning_message or chat_ended_banned
+socket.on('message_rejected', ({ message, reason, label }) => {
+  if (!message && !label) return;
+  if (reason && (reason.startsWith('strike_') || reason === 'banned_15min' || reason === 'bad_words_blocked')) {
+    handleModerationWarning(message || label);
+    return;
   }
-  appendMsg(message, { isSystem: true, variant: 'error' });
+  handleModerationWarning(message || label);
 });
 
 let banExpiryTimestamp = localStorage.getItem('ping_ban_expires_at') || null;
@@ -4507,11 +4560,18 @@ socket.on('chat_ended_banned', ({ reason, message, isOffender, banExpiresAt, rem
 // ═══════════════════════════════════════════════
 //  VPN / PROXY SHIELD DETECTION EVENT
 // ═══════════════════════════════════════════════
+let lastVpnAlertTime = 0;
 socket.off('vpn_detected');
 socket.on('vpn_detected', ({ message, details }) => {
+  const now = Date.now();
+  if (now - lastVpnAlertTime < 5000) return;
+  lastVpnAlertTime = now;
+
   stopAutoSearch();
   stopTimer();
   endCurrentChat();
+
+  document.querySelectorAll('.glass-modal-overlay').forEach(m => m.remove());
 
   const provider = details?.isp || details?.org || details?.provider || 'Commercial Proxy / Datacenter';
   const reason = details?.reason || 'Non-residential network detected';
@@ -4541,7 +4601,7 @@ socket.on('vpn_detected', ({ message, details }) => {
     '',
     '🛡️'
   );
-  showToast(message || 'VPN or Proxy detected. Please disable your VPN to chat.', 'error', 6000);
+  showToast(message || 'VPN or Proxy detected. Please disable your VPN to chat.', 'error', 4000);
 });
 
 // ═══════════════════════════════════════════════
@@ -4651,7 +4711,6 @@ socket.on('friend_dm_opened', ({ roomId, friendId, friendCountry, friendOnline, 
   } catch (e) {}
 
   goToChat();
-  if (homeTabs) homeTabs.style.display = 'flex';
   if (tabFriends) tabFriends.classList.add('active');
   if (tabRandom) tabRandom.classList.remove('active');
   activeHomeTab = 'friends';
@@ -5270,8 +5329,13 @@ exploreAuthBtn?.addEventListener('click', () => {
 
 endChatBtn?.addEventListener('click', () => {
   showConfirm('End Chat?', "Are you sure?", () => {
-    socket.emit('end_chat', { roomId: activeRoomId });
+    const rId = activeRoomId || AppState.explore.roomId;
+    if (rId && socket && socket.connected) {
+      socket.emit('end_chat', { roomId: rId, reason: 'Stranger skipped' });
+    }
+    appendMsg("Stranger skipped", { isSystem: true, variant: 'warn' });
     endCurrentChat();
+    showView('prechat');
   });
 });
 

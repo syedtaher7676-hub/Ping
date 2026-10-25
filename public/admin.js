@@ -670,15 +670,14 @@
         retentionCurveSeries.push(retMetrics.survivalRate);
         churnCurveSeries.push(retMetrics.skipChurn);
         solicitousCurveSeries.push(retMetrics.solicitousRate);
-        behaviorAskedSeries.push(pt.askedNumbers || behOv.askedNumbers || 0);
-        behaviorSlursSeries.push(pt.slurs || behOv.slursBlocked || 0);
-        behaviorSocialsSeries.push(pt.socials || behOv.socialHandles || 0);
+        behaviorAskedSeries.push(typeof pt.askedNumbers === 'number' ? pt.askedNumbers : 0);
+        behaviorSlursSeries.push(typeof pt.slurs === 'number' ? pt.slurs : 0);
+        behaviorSocialsSeries.push(typeof pt.socials === 'number' ? pt.socials : 0);
       });
       updateAllChartsNoAnim();
     } else if (timeLabels.length === 0) {
       // Seed initial points so canvas is never empty
       const now = Date.now();
-      const behOv = (telemetryState.behavior_analytics && telemetryState.behavior_analytics.overview) || {};
       for (let i = 12; i >= 0; i--) {
         const t = new Date(now - i * 2000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         timeLabels.push(t);
@@ -690,9 +689,9 @@
         retentionCurveSeries.push(retMetrics.survivalRate);
         churnCurveSeries.push(retMetrics.skipChurn);
         solicitousCurveSeries.push(retMetrics.solicitousRate);
-        behaviorAskedSeries.push(behOv.askedNumbers || 0);
-        behaviorSlursSeries.push(behOv.slursBlocked || 0);
-        behaviorSocialsSeries.push(behOv.socialHandles || 0);
+        behaviorAskedSeries.push(0);
+        behaviorSlursSeries.push(0);
+        behaviorSocialsSeries.push(0);
       }
       updateAllChartsNoAnim();
     }
@@ -805,10 +804,17 @@
       churnCurveSeries.push(liveRet.skipChurn);
       solicitousCurveSeries.push(liveRet.solicitousRate);
 
-      const behOv = (data.behaviorStats && data.behaviorStats.overview) || (telemetryState.behavior_analytics && telemetryState.behavior_analytics.overview) || {};
-      behaviorAskedSeries.push(behOv.askedNumbers || 0);
-      behaviorSlursSeries.push(behOv.slursBlocked || 0);
-      behaviorSocialsSeries.push(behOv.socialHandles || 0);
+      const behStats = (data.behaviorStats) || (telemetryState.behavior_analytics) || {};
+      const ts = behStats.timeSeries || [];
+      const curBucket = ts.length > 0 ? ts[ts.length - 1] : null;
+
+      const recentAsked = typeof curBucket?.askedNumbers === 'number' ? curBucket.askedNumbers : (typeof data.askedNumbers === 'number' ? data.askedNumbers : 0);
+      const recentSlurs = typeof curBucket?.slurs === 'number' ? curBucket.slurs : (typeof data.slurs === 'number' ? data.slurs : 0);
+      const recentSocials = typeof curBucket?.socials === 'number' ? curBucket.socials : (typeof data.socials === 'number' ? data.socials : 0);
+
+      behaviorAskedSeries.push(recentAsked);
+      behaviorSlursSeries.push(recentSlurs);
+      behaviorSocialsSeries.push(recentSocials);
 
       if (data.behaviorStats && Array.isArray(data.behaviorStats.topOffenders)) {
         renderRepeatOffendersTable(data.behaviorStats.topOffenders);
@@ -1248,6 +1254,9 @@
           if ($('statMemoryUsage') && ov.memory) {
             $('statMemoryUsage').textContent = `${ov.memory.heapUsedMb || 0} MB`;
           }
+          if (typeof ov.vpnShieldEnabled === 'boolean') {
+            updateVpnShieldUI(ov.vpnShieldEnabled);
+          }
         }
       }
 
@@ -1357,6 +1366,42 @@
           }
         }
       }
+
+      // 7. Prohibited Words
+      const wordsRes = await adminFetch('/api/admin/words');
+      if (wordsRes.ok) {
+        const wordsJson = await wordsRes.json();
+        if (wordsJson.success) {
+          renderCustomWords(wordsJson);
+        }
+      }
+
+      // 8. Active Shadowbans
+      const shadowRes = await adminFetch('/api/admin/shadowbans');
+      if (shadowRes.ok) {
+        const shadowJson = await shadowRes.json();
+        if (shadowJson.success && Array.isArray(shadowJson.shadowbans)) {
+          renderShadowbans(shadowJson.shadowbans);
+        }
+      }
+
+      // 9. Geo-Fence Rules
+      const geoRulesRes = await adminFetch('/api/admin/geo-rules');
+      if (geoRulesRes.ok) {
+        const geoRulesJson = await geoRulesRes.json();
+        if (geoRulesJson.success) {
+          renderGeoRules(geoRulesJson.geoRules, geoRulesJson.quarantined);
+        }
+      }
+
+      // 10. Audit Events Feed
+      const eventsRes = await adminFetch('/api/admin/events');
+      if (eventsRes.ok) {
+        const eventsJson = await eventsRes.json();
+        if (eventsJson.success && Array.isArray(eventsJson.events)) {
+          renderEventsFeed(eventsJson.events);
+        }
+      }
     } catch (err) {
       console.warn("Error refreshing admin past data:", err);
     }
@@ -1365,6 +1410,104 @@
   function escapeHtml(str) {
     if (typeof str !== 'string') return String(str || '');
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  function renderCustomWords(data) {
+    const chipsContainer = $('customWordsChipsContainer');
+    const pill = $('customWordsCountPill');
+    const statCustom = $('statCustomWordsCount');
+    const statTotal = $('statTotalBlockedWords');
+    if (!data) return;
+    const customList = Array.isArray(data.customWords) ? data.customWords : [];
+    if (pill) pill.textContent = `${customList.length} custom`;
+    if (statCustom) statCustom.textContent = formatNum(customList.length);
+    if (statTotal && typeof data.totalBlocked === 'number') statTotal.textContent = formatNum(data.totalBlocked);
+
+    if (chipsContainer) {
+      if (customList.length === 0) {
+        chipsContainer.innerHTML = `<span style="color:var(--t-ghost); font-size:0.85rem;">No custom prohibited words added.</span>`;
+      } else {
+        chipsContainer.innerHTML = customList.map(w => `
+          <div class="custom-word-chip" style="display:inline-flex; align-items:center; gap:6px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; padding:4px 10px; border-radius:999px; font-size:0.8rem; margin:3px;">
+            <span>${escapeHtml(w)}</span>
+            <button type="button" class="btn-chip-remove" onclick="window.PingAdmin.removeCustomWord('${escapeHtml(w)}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:0.9rem; padding:0 2px;" title="Remove term">✕</button>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  function renderShadowbans(bansList) {
+    const tbody = $('shadowbansTableBody');
+    const pill = $('shadowbansCountPill');
+    const list = Array.isArray(bansList) ? bansList : [];
+    if (pill) pill.textContent = `${list.length} active`;
+    if (tbody) {
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--t-ghost);">No users are currently shadowbanned.</td></tr>`;
+      } else {
+        tbody.innerHTML = list.map(b => `
+          <tr>
+            <td><code>${escapeHtml(b.target || 'Target')}</code></td>
+            <td>${b.minutesLeft ? b.minutesLeft + ' mins left' : 'Active'}</td>
+            <td>${escapeHtml(b.reason || 'Ghost quarantine')}</td>
+            <td><button class="btn-table-action danger" onclick="window.PingAdmin.removeShadowban('${escapeHtml(b.target)}')">Lift Shadowban</button></td>
+          </tr>
+        `).join('');
+      }
+    }
+  }
+
+  function renderGeoRules(geoRules, quarantinedList) {
+    const tbody = $('geoRulesTableBody');
+    const badge = $('geoRulesActiveCount');
+    const rules = Array.isArray(geoRules) ? geoRules : [];
+    const quarList = Array.isArray(quarantinedList) ? quarantinedList : [];
+    if (badge) badge.textContent = `${quarList.length} Quarantined`;
+    if (tbody) {
+      if (rules.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 16px; color: var(--t-ghost);">No regional traffic logged yet.</td></tr>`;
+      } else {
+        tbody.innerHTML = rules.map(g => `
+          <tr>
+            <td><strong>${escapeHtml(g.country)}</strong></td>
+            <td>${formatNum(g.count)}</td>
+            <td><span class="count-pill ${g.isQuarantined ? 'red' : 'green'}">${g.isQuarantined ? 'Quarantined' : 'Allowed'}</span></td>
+            <td>
+              <button class="btn-table-action ${g.isQuarantined ? 'info' : 'danger'}" onclick="window.PingAdmin.toggleGeoQuarantine('${escapeHtml(g.country)}', ${!g.isQuarantined})">
+                ${g.isQuarantined ? 'Lift Fence' : 'Quarantine'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+  }
+
+  function renderEventsFeed(eventsList) {
+    const container = $('adminEventsContainer');
+    const list = Array.isArray(eventsList) ? eventsList : [];
+    if (!container) return;
+    if (list.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:30px; color:var(--t-ghost);">No audit log events recorded yet.</div>`;
+    } else {
+      container.innerHTML = list.map(e => {
+        const timeStr = new Date(e.timestamp || Date.now()).toLocaleTimeString();
+        const levelClass = e.level === 'alert' ? 'red' : (e.level === 'warning' ? 'amber' : (e.level === 'success' ? 'green' : 'cyan'));
+        return `
+          <div class="admin-event-card" style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-brd); border-radius:10px; padding:12px 16px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span class="count-pill ${levelClass}">${escapeHtml(e.type || 'system').toUpperCase()}</span>
+                <strong>${escapeHtml(e.title || 'Event')}</strong>
+                <span style="font-size:0.75rem; color:var(--t-ghost);">${timeStr}</span>
+              </div>
+              <p style="font-size:0.82rem; color:var(--t-med); margin:0;">${escapeHtml(e.detail || '')}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
   }
 
   function renderAdminReports(reports) {
@@ -1537,6 +1680,198 @@
       refreshAdminDashboardData();
     });
 
+    // Bind form submit and action handlers for words, shadowbans, bulk, and system controls
+    $('addWordForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = $('newWordInput');
+      const word = input?.value?.trim();
+      if (!word) return;
+      await window.PingAdmin.addCustomWord(word);
+      if (input) input.value = '';
+    });
+
+    $('testWordBtn')?.addEventListener('click', async () => {
+      const input = $('wordTestInput');
+      const text = input?.value?.trim();
+      const verdict = $('testWordVerdict');
+      const details = $('testWordDetails');
+      if (!text) return;
+      if (verdict) { verdict.style.display = 'inline-block'; verdict.textContent = 'Testing...'; }
+      try {
+        const res = await adminFetch('/api/admin/words/test', {
+          method: 'POST',
+          body: JSON.stringify({ text })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (verdict) {
+            verdict.textContent = json.hasSlur ? '⚠️ PROHIBITED' : '✅ SAFE';
+            verdict.className = `badge-tag ${json.hasSlur ? 'rejected' : 'green'}`;
+          }
+          if (details) {
+            details.style.display = 'block';
+            details.innerHTML = `Category: <strong>${escapeHtml(json.category || 'safe')}</strong> | Matched: <code>${(json.matchedWords || []).join(', ') || 'None'}</code> | Targeting: ${json.isTargeting ? 'Yes' : 'No'}`;
+          }
+        }
+      } catch (_) {}
+    });
+
+    $('addShadowbanForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const target = $('shadowbanTargetInput')?.value?.trim();
+      const durationMinutes = $('shadowbanDurationSelect')?.value;
+      const reason = $('shadowbanReasonInput')?.value?.trim();
+      if (!target) return;
+      try {
+        await adminFetch('/api/admin/shadowbans/add', {
+          method: 'POST',
+          body: JSON.stringify({ target, durationMinutes, reason })
+        });
+        if ($('shadowbanTargetInput')) $('shadowbanTargetInput').value = '';
+        refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('executeBulkBanBtn')?.addEventListener('click', async () => {
+      const targets = $('bulkTargetsInput')?.value;
+      const durationMinutes = $('bulkDurationSelect')?.value;
+      const reason = $('bulkReasonInput')?.value;
+      if (!targets) return;
+      try {
+        const res = await adminFetch('/api/admin/bulk-ban', {
+          method: 'POST',
+          body: JSON.stringify({ targets, durationMinutes, reason })
+        });
+        if (res.ok) refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('executeBulkShadowbanBtn')?.addEventListener('click', async () => {
+      const targets = $('bulkTargetsInput')?.value;
+      const durationMinutes = $('bulkDurationSelect')?.value;
+      const reason = $('bulkReasonInput')?.value;
+      if (!targets) return;
+      try {
+        const res = await adminFetch('/api/admin/bulk-shadowban', {
+          method: 'POST',
+          body: JSON.stringify({ targets, durationMinutes, reason })
+        });
+        if (res.ok) refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('executeBulkKickBtn')?.addEventListener('click', async () => {
+      const targets = $('bulkTargetsInput')?.value;
+      if (!targets) return;
+      try {
+        const res = await adminFetch('/api/admin/bulk-kick', {
+          method: 'POST',
+          body: JSON.stringify({ targets })
+        });
+        if (res.ok) refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('purgeIdleSocketsBtn')?.addEventListener('click', async () => {
+      try {
+        await adminFetch('/api/admin/flush-sockets', { method: 'POST' });
+        refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('purgeCountryBtn')?.addEventListener('click', async () => {
+      const country = $('purgeCountryInput')?.value?.trim();
+      if (!country) return;
+      try {
+        await adminFetch('/api/admin/mass/purge-country', {
+          method: 'POST',
+          body: JSON.stringify({ country })
+        });
+        if ($('purgeCountryInput')) $('purgeCountryInput').value = '';
+        refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('drainQueueBtn')?.addEventListener('click', async () => {
+      try {
+        await adminFetch('/api/admin/matchmaking/drain', { method: 'POST' });
+        refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('clearEventsBtn')?.addEventListener('click', async () => {
+      try {
+        await adminFetch('/api/admin/events/clear', { method: 'POST' });
+        refreshAdminDashboardData();
+      } catch (_) {}
+    });
+
+    $('adminBroadcastForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = $('broadcastMessageInput')?.value?.trim();
+      const levelEl = document.querySelector('input[name="broadcastLevel"]:checked');
+      const level = levelEl ? levelEl.value : 'info';
+      if (!message) return;
+      try {
+        const res = await adminFetch('/api/admin/broadcast', {
+          method: 'POST',
+          body: JSON.stringify({ message, level })
+        });
+        if (res.ok) {
+          if ($('broadcastMessageInput')) $('broadcastMessageInput').value = '';
+          const statusMsg = $('broadcastStatusMsg');
+          if (statusMsg) {
+            statusMsg.style.display = 'block';
+            statusMsg.textContent = 'Broadcast sent successfully to all active users!';
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 4000);
+          }
+          refreshAdminDashboardData();
+        }
+      } catch (_) {}
+    });
+
+    $('adminLookupForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const query = $('lookupQueryInput')?.value?.trim();
+      if (!query) return;
+      const card = $('lookupResultCard');
+      try {
+        const res = await adminFetch(`/api/admin/lookup?query=${encodeURIComponent(query)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (card) {
+            card.style.display = 'block';
+            card.innerHTML = `
+              <div class="card-header-bar">
+                <h4 class="card-bar-title">Inspection Results: <code>${escapeHtml(query)}</code></h4>
+                <span class="count-pill ${json.isConnected ? 'green' : 'amber'}">${json.isConnected ? 'Connected' : 'Offline'}</span>
+              </div>
+              <div class="admin-grid-2col" style="gap:16px; margin-top:12px;">
+                <div>
+                  <p><strong>Socket ID:</strong> <code>${escapeHtml(json.socketId || 'N/A')}</code></p>
+                  <p><strong>User ID:</strong> <code>${escapeHtml(json.userId || 'N/A')}</code></p>
+                  <p><strong>Device Hash:</strong> <code>${escapeHtml(json.deviceHash || 'N/A')}</code></p>
+                  <p><strong>Origin / IP:</strong> ${escapeHtml(json.country || 'Unknown')} (${escapeHtml(json.ip || 'Masked')})</p>
+                </div>
+                <div>
+                  <p><strong>Active Room:</strong> ${json.roomId ? `<code>${escapeHtml(json.roomId)}</code> (${json.roomElapsedSeconds}s)` : 'None'}</p>
+                  <p><strong>Risk Score:</strong> <span class="badge-tag ${json.riskTier === 'Critical' ? 'rejected' : (json.riskTier === 'Guarded' ? 'pending' : 'info')}">${json.riskScore}/100 (${escapeHtml(json.riskTier)})</span></p>
+                  <p><strong>Suspension Status:</strong> ${json.isBanned ? `Banned (${json.banMinutesLeft}m left - ${escapeHtml(json.banReason)})` : 'Clean'}</p>
+                  <p><strong>Ghost Mode:</strong> ${json.isShadowbanned ? 'Shadowbanned' : 'Normal'}</p>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+                <button class="btn-primary-admin warning" onclick="window.PingAdmin.warnUser('${escapeHtml(json.userId || query)}')">⚠️ Warn User</button>
+                <button class="btn-primary-admin danger" onclick="window.PingAdmin.kickUser('${escapeHtml(json.userId || query)}')">🚪 Disconnect</button>
+                <button class="btn-ghost-admin" onclick="window.PingAdmin.addShadowban('${escapeHtml(json.userId || query)}', 1440, 'Inspector action')">👻 Shadowban</button>
+                ${json.roomId ? `<button class="btn-primary-admin danger" onclick="window.PingAdmin.terminateRoom('${escapeHtml(json.roomId)}')">Terminate Room</button>` : ''}
+              </div>
+            `;
+          }
+        }
+      } catch (_) {}
+    });
+
     // Attach to existing or incoming socket
     if (window.pingSocket) {
       bindWebSocketTelemetry(window.pingSocket);
@@ -1678,6 +2013,69 @@
     updateBehaviorChart: updateBehaviorChartFromData,
     computeRetentionMetrics,
     getTelemetryState: () => ({ ...telemetryState }),
+    addCustomWord: async (word) => {
+      try {
+        await adminFetch('/api/admin/words/add', {
+          method: 'POST',
+          body: JSON.stringify({ word })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    removeCustomWord: async (word) => {
+      try {
+        await adminFetch('/api/admin/words/remove', {
+          method: 'POST',
+          body: JSON.stringify({ word })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    addShadowban: async (target, durationMinutes = 1440, reason = 'Admin action') => {
+      try {
+        await adminFetch('/api/admin/shadowbans/add', {
+          method: 'POST',
+          body: JSON.stringify({ target, durationMinutes, reason })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    removeShadowban: async (target) => {
+      try {
+        await adminFetch('/api/admin/shadowbans/remove', {
+          method: 'POST',
+          body: JSON.stringify({ target })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    toggleGeoQuarantine: async (country, quarantine) => {
+      try {
+        await adminFetch('/api/admin/geo-rules/toggle', {
+          method: 'POST',
+          body: JSON.stringify({ country, quarantine })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    warnUser: async (userId, message) => {
+      try {
+        await adminFetch('/api/admin/user/warn', {
+          method: 'POST',
+          body: JSON.stringify({ userId, message })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
+    kickUser: async (target) => {
+      try {
+        await adminFetch('/api/admin/kick', {
+          method: 'POST',
+          body: JSON.stringify({ target })
+        });
+        refreshAdminDashboardData();
+      } catch (e) {}
+    },
     resolveReport: async (reportId, status) => {
       try {
         await adminFetch('/api/admin/reports/update-status', {

@@ -1690,5 +1690,125 @@
     "ip": "127.0.0.1",
     "severity": "high",
     "createdAt": 1792672256093
+  },
+  {
+    "id": "sec_1792940455097_mcyju7",
+    "type": "slur_blocked",
+    "userId": "u_8bfd2844-f958-4ae6-9488-26f3b63257b2",
+    "message": "you are a bitch",
+    "action": "warning_1",
+    "isTargeting": true,
+    "matchedWords": [
+      "bitch"
+    ],
+    "severity": "medium",
+    "createdAt": 1792940455097
+  },
+  {
+    "id": "sec_1792940455107_d1zy65",
+    "type": "bad_language_violation",
+    "userId": "u_8bfd2844-f958-4ae6-9488-26f3b63257b2",
+    "message": "you are a bitch",
+    "violationCount": 1,
+    "reason": "slur_blocked",
+    "ip": "127.0.0.1",
+    "severity": "medium",
+    "createdAt": 1792940455107
+  },
+  {
+    "id": "sec_1792940457434_pg3jqw",
+    "type": "slur_blocked",
+    "userId": "u_8bfd2844-f958-4ae6-9488-26f3b63257b2",
+    "message": "shut up slut",
+    "action": "warning_2",
+    "isTargeting": true,
+    "matchedWords": [
+      "slut"
+    ],
+    "severity": "medium",
+    "createdAt": 1792940457434
+  },
+  {
+    "id": "sec_1792940457443_retdx8",
+    "type": "bad_language_violation",
+    "userId": "u_8bfd2844-f958-4ae6-9488-26f3b63257b2",
+    "message": "shut up slut",
+    "violationCount": 2,
+    "reason": "slur_blocked",
+    "ip": "127.0.0.1",
+    "severity": "high",
+    "createdAt": 1792940457443
+  },
+  {
+    "id": "sec_1792942413069_4qkvwa",
+    "type": "slur_blocked",
+    "userId": "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e",
+    "message": "you are a bitch",
+    "action": "blocked_label",
+    "isTargeting": true,
+    "matchedWords": [
+      "bitch"
+    ],
+    "severity": "medium",
+    "createdAt": 1792942413069
+  },
+  {
+    "id": "sec_1792942413081_jsusb3",
+    "type": "bad_language_violation",
+    "userId": "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e",
+    "message": "you are a bitch",
+    "violationCount": 1,
+    "reason": "slur_blocked",
+    "ip": "127.0.0.1",
+    "severity": "medium",
+    "createdAt": 1792942413081
+  },
+  {
+    "id": "sec_1792942415411_fqxjxz",
+    "type": "slur_blocked",
+    "userId": "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e",
+    "message": "shut up slut",
+    "action": "blocked_label",
+    "isTargeting": true,
+    "matchedWords": [
+      "slut"
+    ],
+    "severity": "medium",
+    "createdAt": 1792942415411
+  },
+  {
+    "id": "sec_1792942415421_4nsym8",
+    "type": "bad_language_violation",
+    "userId": "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e",
+    "message": "shut up slut",
+    "violationCount": 2,
+    "reason": "slur_blocked",
+    "ip": "127.0.0.1",
+    "severity": "high",
+    "createdAt": 1792942415421
+  },
+  {
+    "id": "sec_1792942417814_29l3f1",
+    "type": "slur_blocked",
+    "userId": "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e",
+    "message": "fuck off gandu",
+    "action": "blocked_label",
+    "isTargeting": false,
+    "matchedWords": [
+      "gandu"
+    ],
+    "severity": "medium",
+    "createdAt": 1792942417814
+  },
+  {
+    "id": "sec_1792942417823_nqx0fs",
+    "type": "bad_language_violation",
+    "userId": "u_4a741fea-6e3e-4d44-8a8f-d18a4ab0a42e",
+    "message": "fuck off gandu",
+    "violationCount": 3,
+    "reason": "slur_blocked",
+    "ip": "127.0.0.1",
+    "severity": "critical",
+    "createdAt": 1792942417823
   }
 ]

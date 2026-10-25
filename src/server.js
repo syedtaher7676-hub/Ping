@@ -1047,6 +1047,10 @@ setInterval(() => {
     memoryBuffer.system_summary.active_ccu_peak = currentCCU;
   }
   const mem = process.memoryUsage();
+  const snapForSample = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : null;
+  const tsForSample = snapForSample?.timeSeries || [];
+  const curBucketForSample = tsForSample.length > 0 ? tsForSample[tsForSample.length - 1] : null;
+
   const sample = {
     t: Date.now(),
     timestamp: Date.now(),
@@ -1055,6 +1059,9 @@ setInterval(() => {
     waiting: waitingSet ? waitingSet.size : 0,
     msgsPerSec: currentMsgsPerSec,
     violationsPerSec: currentViolationsPerSec,
+    askedNumbers: curBucketForSample?.askedNumbers ?? 0,
+    slurs: curBucketForSample?.slurs ?? 0,
+    socials: curBucketForSample?.socials ?? 0,
     heapMb: Math.round(mem.heapUsed / 1024 / 1024),
     rssMb: Math.round(mem.rss / 1024 / 1024),
     eventLoopLagMs: lastEventLoopLag,
@@ -1342,6 +1349,8 @@ app.get("/api/admin/overview", verifyAdmin, ensureTelemetryHydrated, async (_req
     firestoreStatus: dbService.isFirebaseConfigured() ? "connected" : "ready_in_memory",
     bansCount: bans.size,
     shadowbansCount: typeof getAllShadowbans === "function" ? getAllShadowbans().length : 0,
+    vpnShieldEnabled: vpnDetector.isVpnShieldEnabled(),
+    customWordsCount: typeof getCustomWords === "function" ? getCustomWords().length : 0,
     slowModeSeconds: typeof getGlobalSlowMode === "function" ? getGlobalSlowMode() : 0,
     raidShield: typeof isRaidShield === "function" ? isRaidShield() : false,
     raidShieldEnabled: typeof isRaidShield === "function" ? isRaidShield() : false,
@@ -1764,11 +1773,13 @@ app.post("/api/admin/words/add", verifyAdmin, (req, res) => {
   if (addCustomWord) {
     addCustomWord(cleanWord);
   }
+  const currentCustom = getCustomWords ? getCustomWords() : [];
+  dbService.saveSystemSettings("global_rules", { customWords: currentCustom }).catch(() => {});
   recordAdminEvent("moderation", "Word Filter Added", `Prohibited term added: "${cleanWord}"`, "warning");
   res.json({
     success: true,
     message: `Word "${cleanWord}" added to blocklist`,
-    customWords: getCustomWords ? getCustomWords() : [],
+    customWords: currentCustom,
   });
 });
 
@@ -1782,11 +1793,13 @@ app.post("/api/admin/words/remove", verifyAdmin, (req, res) => {
   if (removeCustomWord) {
     removeCustomWord(cleanWord);
   }
+  const currentCustom = getCustomWords ? getCustomWords() : [];
+  dbService.saveSystemSettings("global_rules", { customWords: currentCustom }).catch(() => {});
   recordAdminEvent("moderation", "Word Filter Removed", `Prohibited term removed: "${cleanWord}"`, "info");
   res.json({
     success: true,
     message: `Word "${cleanWord}" removed from custom blocklist`,
-    customWords: getCustomWords ? getCustomWords() : [],
+    customWords: currentCustom,
   });
 });
 
@@ -2065,6 +2078,7 @@ app.post("/api/admin/shadowbans/add", verifyAdmin, (req, res) => {
   if (typeof addShadowban === "function") {
     addShadowban(cleanTarget, durationMs, shadowReason);
   }
+  dbService.saveSystemSettings("global_rules", { shadowbans: typeof getAllShadowbans === "function" ? getAllShadowbans() : [] }).catch(() => {});
   recordAdminEvent("moderation", "Ghost Shadowban Added", `Silently isolated target: ${cleanTarget} (${mins}m)`, "warning");
   res.json({ success: true, message: `Target ${cleanTarget} added to ghost shadowban mode for ${mins}m.` });
 });
@@ -2078,6 +2092,7 @@ app.post("/api/admin/shadowbans/remove", verifyAdmin, (req, res) => {
   if (typeof removeShadowban === "function") {
     removeShadowban(cleanTarget);
   }
+  dbService.saveSystemSettings("global_rules", { shadowbans: typeof getAllShadowbans === "function" ? getAllShadowbans() : [] }).catch(() => {});
   recordAdminEvent("moderation", "Ghost Shadowban Lifted", `Lifted shadowban for: ${cleanTarget}`, "info");
   res.json({ success: true, message: `Shadowban lifted for ${cleanTarget}.` });
 });
@@ -2342,6 +2357,7 @@ app.post("/api/admin/geo-rules/toggle", verifyAdmin, (req, res) => {
   }
 
   const updated = typeof toggleCountryQuarantine === "function" ? toggleCountryQuarantine(country, Boolean(quarantine)) : Boolean(quarantine);
+  dbService.saveSystemSettings("global_rules", { quarantinedCountries: typeof getQuarantinedCountries === "function" ? getQuarantinedCountries() : [] }).catch(() => {});
   recordAdminEvent("system", "Geo-Fence Toggled", `Country "${country}" quarantine: ${updated ? "ACTIVE" : "REMOVED"}`, updated ? "warning" : "info");
   res.json({ success: true, country, isQuarantined: updated });
 });
@@ -2811,6 +2827,21 @@ server.listen(PORT, "0.0.0.0", () => {
         if (typeof settings.raidShieldEnabled === "boolean" && typeof setRaidShield === "function") setRaidShield(settings.raidShieldEnabled);
         if (typeof settings.blockExternalLinks === "boolean" && typeof setBlockExternalLinks === "function") setBlockExternalLinks(settings.blockExternalLinks);
         if (typeof settings.queueCapLimit === "number" && typeof setQueueCap === "function") setQueueCap(settings.queueCapLimit);
+        if (typeof settings.isMatchmakingPaused === "boolean" && typeof setMatchmakingPaused === "function") setMatchmakingPaused(settings.isMatchmakingPaused);
+        if (typeof settings.geoPreferenceEnabled === "boolean" && typeof setGeoPreference === "function") setGeoPreference(settings.geoPreferenceEnabled);
+        if (Array.isArray(settings.customWords)) {
+          settings.customWords.forEach(w => { if (typeof addCustomWord === "function") addCustomWord(w); });
+        }
+        if (Array.isArray(settings.quarantinedCountries)) {
+          settings.quarantinedCountries.forEach(c => { if (typeof toggleCountryQuarantine === "function") toggleCountryQuarantine(c, true); });
+        }
+        if (Array.isArray(settings.shadowbans)) {
+          settings.shadowbans.forEach(s => {
+            if (s && s.target && s.expiresAt > Date.now() && typeof addShadowban === "function") {
+              addShadowban(s.target, s.expiresAt - Date.now(), s.reason);
+            }
+          });
+        }
       }
     }).catch(() => {});
   }

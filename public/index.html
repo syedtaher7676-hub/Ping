@@ -256,20 +256,9 @@
       opacity: 0 !important;
     }
 
-    /* ═══ LEAN MVP LAUNCH: FOCUS 100% ON ANONYMOUS CHAT ═══ */
-    .home-tabs,
-    #homeTabs,
-    #tabFriends,
-    #tabSettings,
-    #friendsView,
-    #friendDMView,
-    #settingsView,
-    #friendBtn,
-    #exploreAuthBtn,
-    #chatTranscriptModal {
+    /* Zero-flicker view management */
+    .view-hidden {
       display: none !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
     }
   </style>
 </head>
@@ -306,7 +295,7 @@
   </div>
 
   <!-- ═══════════════════ LANDING PAGE ═══════════════════ -->
-  <div id="landingPage" class="landing" style="opacity:1;">
+  <div id="landingPage" class="landing" style="opacity:1; pointer-events:auto; display:flex;">
     <!-- BACKGROUND STACK -->
     <canvas id="particleCanvas" aria-hidden="true"></canvas>
     <div class="vortex-wheel" aria-hidden="true"></div>

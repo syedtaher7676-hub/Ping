@@ -1,16 +1,18 @@
 #!/usr/bin/env node
 /**
  * ─────────────────────────────────────────────────────────────
- * ACTIVE LEARNING TRAINER & DATASET SYNCHRONIZER
+ * ACTIVE LEARNING TRAINER & DATASET SYNCHRONIZER (2028-30)
  * ─────────────────────────────────────────────────────────────
  * Reads collected user reports, security logs, slur violations,
  * and seed dataset.
  *
- * Generates comprehensive multi-format augmentations:
+ * Generates comprehensive multi-format & multi-lingual augmentations:
+ * - Multi-lingual slurs across all world languages
  * - Multi-line vertical variations ("d\ni\nd\nd\ny", "k\ny\ns")
  * - Dotted & spacer variations ("di...dd...y", "d-i-d-d-y")
  * - Leetspeak & slang variations ("dixxy", "d1xxy", "f@gg0t")
  * - Safe colloquial expressions ("I'm gonna kill this exam!", "killed it")
+ * - Phone numbers, social media handles, subtle threats
  *
  * Exports datasets (JSON/CSV) and trains/updates the local custom moderation model.
  */
@@ -22,6 +24,7 @@ const {
   generateSampleAugmentations,
   normalizeMultiFormat
 } = require('../src/services/modelTrainer');
+const { GLOBAL_SLURS_VOCABULARY } = require('../src/utils/unifiedModerator');
 
 const SEED_DATASET_PATH = path.join(__dirname, '../data/moderation_dataset.json');
 const REPORTS_PATH = path.join(__dirname, '../data/reports.json');
@@ -41,7 +44,7 @@ function loadJson(filePath) {
 
 function runDatasetAndModelTraining() {
   console.log('='.repeat(65));
-  console.log('🚀 ACTIVE LEARNING: Ingesting Chat Data & Retraining Moderation Model');
+  console.log('🚀 ACTIVE LEARNING: Ingesting Multi-Lingual Chat Data & Retraining Model (2028-30)');
   console.log('='.repeat(65));
 
   const combined = [];
@@ -73,7 +76,12 @@ function runDatasetAndModelTraining() {
   const seed = loadJson(SEED_DATASET_PATH);
   seed.forEach(item => addSample(item.text, item.label, item.category));
 
-  // Add edge cases explicitly into training dataset
+  // 2. Global multi-lingual slurs
+  GLOBAL_SLURS_VOCABULARY.forEach(slur => {
+    addSample(slur, 1, 'global_multilingual_slurs');
+  });
+
+  // 3. Add edge cases explicitly into training dataset
   const edgeCases = [
     // Multi-format obfuscations
     { text: "dixxy", label: 1, category: "predatory_slang_diddy" },
@@ -92,6 +100,27 @@ function runDatasetAndModelTraining() {
     { text: "n\ni\ng\ng\ne\nr", label: 1, category: "hate_speech_vertical" },
     { text: "f.a.g.g.o.t", label: 1, category: "hate_speech_obfuscated" },
     { text: "b.h.e.n.c.h.o.d", label: 1, category: "hate_speech_obfuscated" },
+
+    // Phone numbers & Solicitations
+    { text: "9563693257", label: 1, category: "phone_number" },
+    { text: "9 5 6 3 6 9 3 2 5 7", label: 1, category: "phone_number_spaced" },
+    { text: "nine five six three six nine three two five seven", label: 1, category: "phone_number_words" },
+    { text: "give me your number", label: 1, category: "phone_solicitation" },
+    { text: "apna number do", label: 1, category: "phone_solicitation" },
+    { text: "whats your whatsapp number", label: 1, category: "phone_solicitation" },
+
+    // Social media
+    { text: "add my snap: user123", label: 1, category: "social_media_leak" },
+    { text: "follow my insta @cool_dude", label: 1, category: "social_media_leak" },
+    { text: "my telegram is @speedy", label: 1, category: "social_media_leak" },
+    { text: "discord.gg/invite", label: 1, category: "social_media_link" },
+
+    // Subtle threats & Harassment
+    { text: "i know where you live and i will kill you", label: 1, category: "threat_violence" },
+    { text: "i will find you and hurt you", label: 1, category: "threat_violence" },
+    { text: "someone is outside your house right now", label: 1, category: "stalking" },
+    { text: "send money or i leak your chats", label: 1, category: "extortion" },
+    { text: "go die nobody loves you", label: 1, category: "cyberbullying" },
 
     // Low effort probes
     { text: "m", label: 1, category: "low_effort_probe" },
@@ -114,19 +143,22 @@ function runDatasetAndModelTraining() {
     { text: "my feet are killing me after running", label: 0, category: "safe_idiom_fatigue" },
     { text: "can you pass the butter please?", label: 0, category: "safe_conversation" },
     { text: "where are you from? i am from canada", label: 0, category: "safe_conversation" },
-    { text: "good luck with your finals and exams!", label: 0, category: "safe_conversation" }
+    { text: "good luck with your finals and exams!", label: 0, category: "safe_conversation" },
+    { text: "charles dickens is a classic author", label: 0, category: "safe_conversation" },
+    { text: "niger is a country in west africa", label: 0, category: "safe_conversation" },
+    { text: "the assistant helped me with my code", label: 0, category: "safe_conversation" }
   ];
 
   edgeCases.forEach(ec => addSample(ec.text, ec.label, ec.category));
 
-  // 2. Load live reports from chat app
+  // 4. Load live reports from chat app
   const reports = loadJson(REPORTS_PATH);
   reports.forEach(r => {
     const text = r.message || r.text;
     if (text) addSample(text, 1, 'reported_chat_data');
   });
 
-  // 3. Load security logs
+  // 5. Load security logs
   const secLogs = loadJson(SECURITY_PATH);
   secLogs.forEach(entry => {
     const text = entry.data?.message || entry.message || entry.data?.originalMessage;

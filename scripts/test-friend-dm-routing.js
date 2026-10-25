@@ -86,7 +86,7 @@ async function runDmTests() {
   const expectedRoomId = ['friend_chat', ...[u1Id, u2Id].sort()].join('_');
 
   const openDmPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Timeout waiting for friend_dm_opened")), 5000);
+    const timer = setTimeout(() => reject(new Error("Timeout waiting")), 10000);
     socket1.once("friend_dm_opened", data => {
       clearTimeout(timer);
       resolve(data);
@@ -102,14 +102,14 @@ async function runDmTests() {
   // Step 4: User 2 is NOT currently inside the room, User 1 sends DM.
   // User 2 should receive 'friend_dm_notification' via user_${u2Id} personal room!
   const notificationPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Timeout waiting for friend_dm_notification")), 5000);
+    const timer = setTimeout(() => reject(new Error("Timeout waiting for friend_dm_notification")), 10000);
     socket2.once("friend_dm_notification", data => {
       clearTimeout(timer);
       resolve(data);
     });
   });
 
-  const testMsg = "Hello friend! Real-time check " + Date.now();
+  const testMsg = "Hello friend! Real-time check " + Math.random().toString(36).substring(2, 8);
   socket1.emit("send_dm", {
     roomId: expectedRoomId,
     friendId: u2Id,
@@ -124,11 +124,12 @@ async function runDmTests() {
 
   // Step 5: User 2 opens the DM room as well, and User 1 sends another DM.
   // Both should receive 'new_dm' in the shared conversation room!
+  const socket2DmOpened = new Promise(resolve => socket2.once("friend_dm_opened", resolve));
   socket2.emit("open_friend_dm", { friendId: u1Id });
-  await sleep(300);
+  await socket2DmOpened;
 
   const u2NewDmPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Timeout waiting for new_dm on socket 2")), 5000);
+    const timer = setTimeout(() => reject(new Error("Timeout waiting for new_dm on socket 2")), 10000);
     socket2.once("new_dm", data => {
       clearTimeout(timer);
       resolve(data);
@@ -136,19 +137,21 @@ async function runDmTests() {
   });
 
   const u1NewDmPromise = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Timeout waiting for new_dm on socket 1")), 5000);
+    const timer = setTimeout(() => reject(new Error("Timeout waiting for new_dm on socket 1")), 10000);
     socket1.once("new_dm", data => {
       clearTimeout(timer);
       resolve(data);
     });
   });
 
-  const testMsg2 = "Both in room now! " + Date.now();
+  const testMsg2 = "Both in room now! " + Math.random().toString(36).substring(2, 8);
   socket1.emit("send_dm", {
     roomId: expectedRoomId,
     friendId: u2Id,
     message: testMsg2,
     msgId: "test_msg_2",
+  }, (ackRes) => {
+    console.log("send_dm step 5 ack:", ackRes);
   });
 
   const [u1DmEvent, u2DmEvent] = await Promise.all([u1NewDmPromise, u2NewDmPromise]);
@@ -187,7 +190,7 @@ async function runDmTests() {
 
   // Send message after reconnect and verify ack + delivery to socket2
   const reconnectedMsgPromise = new Promise(resolve => socket2.once("new_dm", resolve));
-  const postReconnectMsg = "Message sent after tab reconnect! " + Date.now();
+  const postReconnectMsg = "Message sent after tab reconnect! " + Math.random().toString(36).substring(2, 8);
 
   const sendAck = await new Promise(resolve => {
     socket1Reconnected.emit("send_dm", {

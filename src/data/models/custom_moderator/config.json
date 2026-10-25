@@ -1,6 +1,7 @@
 {
   "architectures": [
-    "DistilBertForSequenceClassification"
+    "DistilBertForSequenceClassification",
+    "PingUnifiedModerationClassifier"
   ],
   "id2label": {
     "0": "SAFE",
@@ -11,5 +12,7 @@
     "VIOLATION": 1
   },
   "model_type": "distilbert",
-  "problem_type": "single_label_classification"
+  "problem_type": "single_label_classification",
+  "version": "3.0.0",
+  "generation": "2028-30"
 }
