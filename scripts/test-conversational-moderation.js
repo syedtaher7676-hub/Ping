@@ -277,7 +277,94 @@ async function runTests() {
     console.log(`   ✅ ALLOWED "${sc}"`);
   }
 
-  console.log('\n--- 5. Testing Active Learning & Live Data Model Training ---');
+  console.log('\n--- 4.1 Testing 2028-30 Fuzzy Vulgarities, Dismissals & Body Parts (fuck off, boobs, etc.) ---');
+  const { evaluateFuzzyBadWords } = require('../src/utils/fuzzyModerator');
+  const { evaluateConversationTrajectory } = require('../src/utils/conversationTrajectory');
+  const { ingestIncomingChatMessage, ingestReportedConversation } = require('../src/services/modelTrainer');
+
+  const fuzzyBadWordsCases = [
+    { text: "fuck off", note: "Direct hostile dismissal" },
+    { text: "fck off", note: "Leetspeak omission dismissal" },
+    { text: "fk off", note: "Consonant abbreviation dismissal" },
+    { text: "fuk off", note: "Phonetic misspelling dismissal" },
+    { text: "fuck", note: "Direct vulgar root" },
+    { text: "fck", note: "Consonant root" },
+    { text: "fuk", note: "Phonetic variant" },
+    { text: "boobs", note: "Direct sexual request keyword" },
+    { text: "bobs", note: "Slang/phonetic variant of boobs" },
+    { text: "b00bs", note: "Leetspeak zeros variant of boobs" },
+    { text: "b.o.o.b.s", note: "Dotted variant of boobs" },
+    { text: "tits", note: "Explicit body part" },
+    { text: "pussy", note: "Vulgar body part" },
+    { text: "bitch", note: "Gendered slur" },
+    { text: "b1tch", note: "Leetspeak bitch" }
+  ];
+
+  for (const fbc of fuzzyBadWordsCases) {
+    const slurResult = detectSlurWithContext(fbc.text);
+    const safety = await checkMessageSafety(fbc.text);
+    const isBlocked = slurResult.hasSlur || !safety.valid;
+
+    assert.strictEqual(isBlocked, true, `Should detect and block fuzzy bad word: "${fbc.text}" (${fbc.note})`);
+    console.log(`   ✅ BLOCKED [${fbc.note}] "${fbc.text}" -> Reason: ${slurResult.hasSlur ? 'slur_detected' : safety.reason}`);
+  }
+
+  console.log('\n--- 4.2 Testing Safe Words & Exceptions (book, boots, focus, cocktail, etc.) ---');
+  const safeExceptionWords = [
+    "I just finished reading a good book",
+    "put on your winter boots before leaving",
+    "try to maintain your focus on this problem",
+    "we ordered a fruit cocktail at the bar",
+    "can you pass the documents to me?",
+    "a duck was swimming in the pond",
+    "my assistant will follow up tomorrow",
+    "let's count the votes carefully",
+    "we enjoyed a quiet day at the beach"
+  ];
+
+  for (const sew of safeExceptionWords) {
+    const slurResult = detectSlurWithContext(sew);
+    const safety = await checkMessageSafety(sew);
+    assert.strictEqual(slurResult.hasSlur, false, `Safe sentence must not trigger slur filter: "${sew}"`);
+    assert.strictEqual(safety.valid, true, `Safe sentence must pass safety checks: "${sew}"`);
+    console.log(`   ✅ ALLOWED SAFE WORD EXCEPTION: "${sew}"`);
+  }
+
+  console.log('\n--- 4.3 Testing Conversational Trajectory & Recipient Comfort Engine ---');
+  const testRoomId = 'room_traj_test_' + Date.now();
+  const userA = 'user_sender_' + Date.now();
+  const userB = 'user_partner_' + Date.now();
+
+  // Test 1: Friendly starter -> should be allowed and increase health
+  const startRes = evaluateConversationTrajectory(testRoomId, userA, "hey how are you doing today?", userB);
+  assert.strictEqual(startRes.allowed, true, "Friendly conversational starter must be allowed");
+  console.log(`   ✅ ALLOWED Healthy opening message -> Health: ${startRes.healthScore}`);
+
+  // Test 2: Hostile derailing message -> must be blocked pre-send
+  const hostileRes = evaluateConversationTrajectory(testRoomId, userA, "you are so boring stfu", userB);
+  assert.strictEqual(hostileRes.allowed, false, "Hostile conversational line must be blocked pre-send");
+  assert.strictEqual(hostileRes.category, 'conversation_health');
+  console.log(`   ✅ BLOCKED Hostile derailing message -> Category: ${hostileRes.category}`);
+
+  // Test 3: Unanswered pestering spam -> 4 unanswered messages with nagging trigger anti-spam block
+  const spamRoomId = 'room_spam_test_' + Date.now();
+  evaluateConversationTrajectory(spamRoomId, userA, "hello?", userB);
+  evaluateConversationTrajectory(spamRoomId, userA, "reply?", userB);
+  evaluateConversationTrajectory(spamRoomId, userA, "u there?", userB);
+  const pesterRes = evaluateConversationTrajectory(spamRoomId, userA, "answer me fast", userB);
+  assert.strictEqual(pesterRes.allowed, false, "4th unanswered nagging message must be blocked to protect recipient");
+  assert.strictEqual(pesterRes.category, 'anti_spam_protection');
+  console.log(`   ✅ BLOCKED Unanswered pestering spam -> Category: ${pesterRes.category}`);
+
+  // Test 4: Boundary violation after partner deflection -> partner says "stop" then sender pressures
+  const boundaryRoomId = 'room_boundary_test_' + Date.now();
+  evaluateConversationTrajectory(boundaryRoomId, userB, "please stop i am not interested", userA);
+  const pressuringRes = evaluateConversationTrajectory(boundaryRoomId, userA, "come on send pic just one", userB);
+  assert.strictEqual(pressuringRes.allowed, false, "Pressuring after partner deflection must be blocked");
+  assert.strictEqual(pressuringRes.category, 'harassment_boundary_protection');
+  console.log(`   ✅ BLOCKED Boundary violation / pressuring -> Category: ${pressuringRes.category}`);
+
+  console.log('\n--- 5. Testing Active Learning & Continuous Data Model Training ---');
   // Ingest sample from chat app and verify model training updates
   const testSample = "test_violation_sample_" + Date.now();
   recordChatSampleForTraining(testSample, 1, 'active_learning_test');
@@ -286,7 +373,14 @@ async function runTests() {
   assert.strictEqual(retestSafety.valid, false, `Model should immediately recognize ingested training sample: "${testSample}"`);
   console.log(`   ✅ Retrained model actively learned and blocked: "${testSample}"`);
 
-  console.log('\n🎉 ALL MULTI-FORMAT OBFUSCATION, ACTIVE LEARNING & MODERATION TESTS PASSED 100%!');
+  // Test reported conversation ingestion
+  ingestReportedConversation(userB, userA, [
+    { senderId: userA, text: "hey creepy evasion " + Date.now(), timestamp: Date.now() }
+  ]);
+  console.log(`   ✅ Ingested reported conversation for active self-training.`);
+
+  console.log('\n🎉 ALL MULTI-FORMAT OBFUSCATION, FUZZY BAD WORDS, TRAJECTORY & ACTIVE LEARNING TESTS PASSED 100%!');
+  process.exit(0);
 }
 
 runTests().catch(err => {

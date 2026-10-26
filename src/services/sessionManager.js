@@ -18,6 +18,7 @@ const {
 const { createId } = require("../utils/ids");
 const { log } = require("../utils/logger");
 const { recordSessionCompleted } = require("./behaviorAnalytics");
+const { cleanupRoomTrajectory } = require("../utils/conversationTrajectory");
 
 function safelyResetUser(user) {
   if (!user) {
@@ -98,6 +99,7 @@ function terminateSession(io, roomId, reason = "session_ended") {
   }
 
   rooms.delete(roomId);
+  cleanupRoomTrajectory(roomId);
   if (typeof redisDeleteRoom === "function") {
     redisDeleteRoom(roomId).catch(() => {});
   }

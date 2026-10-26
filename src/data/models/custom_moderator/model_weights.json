@@ -2,14 +2,14 @@
   "model_name": "PingUnifiedModerationModel",
   "target_era": "2028-2030",
   "version": "3.0.0",
-  "trainedAt": "2026-10-25T15:31:59.063Z",
-  "sampleCount": 8232,
-  "violationCount": 7330,
+  "trainedAt": "2026-10-26T10:37:38.656Z",
+  "sampleCount": 8343,
+  "violationCount": 7441,
   "safeCount": 115,
   "topViolationTokens": [
     [
       "you",
-      34
+      36
     ],
     [
       "y0u",
@@ -24,11 +24,19 @@
       21
     ],
     [
+      "off",
+      14
+    ],
+    [
       "my",
       14
     ],
     [
       "blud",
+      14
+    ],
+    [
+      "fuck",
       14
     ],
     [
@@ -148,6 +156,10 @@
       8
     ],
     [
+      "get",
+      7
+    ],
+    [
       "and",
       7
     ],
@@ -169,6 +181,10 @@
     ],
     [
       "m3",
+      7
+    ],
+    [
+      "send",
       7
     ],
     [
@@ -221,6 +237,10 @@
     ],
     [
       "d13",
+      6
+    ],
+    [
+      "fck",
       6
     ],
     [
@@ -288,10 +308,6 @@
       6
     ],
     [
-      "get",
-      5
-    ],
-    [
       "g3t",
       5
     ],
@@ -328,11 +344,11 @@
       5
     ],
     [
-      "send",
+      "$3nd",
       5
     ],
     [
-      "$3nd",
+      "show",
       5
     ],
     [
@@ -380,7 +396,35 @@
       5
     ],
     [
+      "test",
+      5
+    ],
+    [
+      "violation",
+      5
+    ],
+    [
+      "sample",
+      5
+    ],
+    [
+      "t3$t",
+      5
+    ],
+    [
+      "v10l@t10n",
+      5
+    ],
+    [
+      "$@mpl3",
+      5
+    ],
+    [
       "dumb",
+      4
+    ],
+    [
+      "gtfo",
       4
     ],
     [
@@ -389,6 +433,10 @@
     ],
     [
       "h3r3",
+      4
+    ],
+    [
+      "fucking",
       4
     ],
     [
@@ -564,6 +612,26 @@
       4
     ],
     [
+      "fucked",
+      4
+    ],
+    [
+      "fuk",
+      4
+    ],
+    [
+      "fk",
+      4
+    ],
+    [
+      "boobs",
+      4
+    ],
+    [
+      "tits",
+      4
+    ],
+    [
       "shut",
       3
     ],
@@ -668,6 +736,10 @@
       3
     ],
     [
+      "stfu",
+      3
+    ],
+    [
       "idiot",
       3
     ],
@@ -705,6 +777,18 @@
     ],
     [
       "g1rl",
+      3
+    ],
+    [
+      "horny",
+      3
+    ],
+    [
+      "nudes",
+      3
+    ],
+    [
+      "boobies",
       3
     ],
     [
@@ -922,90 +1006,6 @@
     [
       "tunne",
       3
-    ],
-    [
-      "tunn3",
-      3
-    ],
-    [
-      "thunne",
-      3
-    ],
-    [
-      "thunn3",
-      3
-    ],
-    [
-      "cheepu",
-      3
-    ],
-    [
-      "ch33pu",
-      3
-    ],
-    [
-      "shatta",
-      3
-    ],
-    [
-      "$h@tt@",
-      3
-    ],
-    [
-      "mon",
-      3
-    ],
-    [
-      "m0n",
-      3
-    ],
-    [
-      "kunna",
-      3
-    ],
-    [
-      "kunn@",
-      3
-    ],
-    [
-      "thayoli",
-      3
-    ],
-    [
-      "th@y0l1",
-      3
-    ],
-    [
-      "ta",
-      3
-    ],
-    [
-      "t@",
-      3
-    ],
-    [
-      "faggot",
-      2
-    ],
-    [
-      "nigger",
-      2
-    ],
-    [
-      "gtfo",
-      2
-    ],
-    [
-      "gtf0",
-      2
-    ],
-    [
-      "retard",
-      2
-    ],
-    [
-      "r3tard",
-      2
     ]
   ],
   "topSafeTokens": [
@@ -31331,6 +31331,450 @@
       {
         "text": "t3$t_v10l@t10n_$@mpl3_1792942318994",
         "category": "active_learning_test_leet"
+      },
+      {
+        "text": "test_violation_sample_1793009697622",
+        "category": "active_learning_test"
+      },
+      {
+        "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.0.0.9.6.9.7.6.2.2",
+        "category": "active_learning_test_dotted"
+      },
+      {
+        "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...0...0...9...6...9...7...6...2...2",
+        "category": "active_learning_test_multidot"
+      },
+      {
+        "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-0-0-9-6-9-7-6-2-2",
+        "category": "active_learning_test_hyphenated"
+      },
+      {
+        "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*0*0*9*6*9*7*6*2*2",
+        "category": "active_learning_test_starred"
+      },
+      {
+        "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 0 0 9 6 9 7 6 2 2",
+        "category": "active_learning_test_spaced"
+      },
+      {
+        "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n3\n0\n0\n9\n6\n9\n7\n6\n2\n2",
+        "category": "active_learning_test_vertical"
+      },
+      {
+        "text": "t3$t_v10l@t10n_$@mpl3_1793009697622",
+        "category": "active_learning_test_leet"
+      },
+      {
+        "text": "test_violation_sample_1793010954414",
+        "category": "active_learning_test"
+      },
+      {
+        "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.0.1.0.9.5.4.4.1.4",
+        "category": "active_learning_test_dotted"
+      },
+      {
+        "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...0...1...0...9...5...4...4...1...4",
+        "category": "active_learning_test_multidot"
+      },
+      {
+        "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-0-1-0-9-5-4-4-1-4",
+        "category": "active_learning_test_hyphenated"
+      },
+      {
+        "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*0*1*0*9*5*4*4*1*4",
+        "category": "active_learning_test_starred"
+      },
+      {
+        "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 0 1 0 9 5 4 4 1 4",
+        "category": "active_learning_test_spaced"
+      },
+      {
+        "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n3\n0\n1\n0\n9\n5\n4\n4\n1\n4",
+        "category": "active_learning_test_vertical"
+      },
+      {
+        "text": "t3$t_v10l@t10n_$@mpl3_1793010954414",
+        "category": "active_learning_test_leet"
+      },
+      {
+        "text": "hey creepy evasion 1793010954530",
+        "category": "reported_user_dialogue"
+      },
+      {
+        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.0.1.0.9.5.4.5.3.0",
+        "category": "reported_user_dialogue_dotted"
+      },
+      {
+        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...0...1...0...9...5...4...5...3...0",
+        "category": "reported_user_dialogue_multidot"
+      },
+      {
+        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-0-1-0-9-5-4-5-3-0",
+        "category": "reported_user_dialogue_hyphenated"
+      },
+      {
+        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*0*1*0*9*5*4*5*3*0",
+        "category": "reported_user_dialogue_starred"
+      },
+      {
+        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 0 1 0 9 5 4 5 3 0",
+        "category": "reported_user_dialogue_spaced"
+      },
+      {
+        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n0\n1\n0\n9\n5\n4\n5\n3\n0",
+        "category": "reported_user_dialogue_vertical"
+      },
+      {
+        "text": "h3y cr33py 3v@$10n 1793010954530",
+        "category": "reported_user_dialogue_leet"
+      },
+      {
+        "text": "test_violation_sample_1793011021100",
+        "category": "active_learning_test"
+      },
+      {
+        "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.0.1.1.0.2.1.1.0.0",
+        "category": "active_learning_test_dotted"
+      },
+      {
+        "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...0...1...1...0...2...1...1...0...0",
+        "category": "active_learning_test_multidot"
+      },
+      {
+        "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-0-1-1-0-2-1-1-0-0",
+        "category": "active_learning_test_hyphenated"
+      },
+      {
+        "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*0*1*1*0*2*1*1*0*0",
+        "category": "active_learning_test_starred"
+      },
+      {
+        "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 0 1 1 0 2 1 1 0 0",
+        "category": "active_learning_test_spaced"
+      },
+      {
+        "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n3\n0\n1\n1\n0\n2\n1\n1\n0\n0",
+        "category": "active_learning_test_vertical"
+      },
+      {
+        "text": "t3$t_v10l@t10n_$@mpl3_1793011021100",
+        "category": "active_learning_test_leet"
+      },
+      {
+        "text": "hey creepy evasion 1793011021225",
+        "category": "reported_user_dialogue"
+      },
+      {
+        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.0.1.1.0.2.1.2.2.5",
+        "category": "reported_user_dialogue_dotted"
+      },
+      {
+        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...0...1...1...0...2...1...2...2...5",
+        "category": "reported_user_dialogue_multidot"
+      },
+      {
+        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-0-1-1-0-2-1-2-2-5",
+        "category": "reported_user_dialogue_hyphenated"
+      },
+      {
+        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*0*1*1*0*2*1*2*2*5",
+        "category": "reported_user_dialogue_starred"
+      },
+      {
+        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 0 1 1 0 2 1 2 2 5",
+        "category": "reported_user_dialogue_spaced"
+      },
+      {
+        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n0\n1\n1\n0\n2\n1\n2\n2\n5",
+        "category": "reported_user_dialogue_vertical"
+      },
+      {
+        "text": "h3y cr33py 3v@$10n 1793011021225",
+        "category": "reported_user_dialogue_leet"
+      },
+      {
+        "text": "test_violation_sample_1793011058425",
+        "category": "active_learning_test"
+      },
+      {
+        "text": "t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.0.1.1.0.5.8.4.2.5",
+        "category": "active_learning_test_dotted"
+      },
+      {
+        "text": "t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...0...1...1...0...5...8...4...2...5",
+        "category": "active_learning_test_multidot"
+      },
+      {
+        "text": "t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-0-1-1-0-5-8-4-2-5",
+        "category": "active_learning_test_hyphenated"
+      },
+      {
+        "text": "t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*0*1*1*0*5*8*4*2*5",
+        "category": "active_learning_test_starred"
+      },
+      {
+        "text": "t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 0 1 1 0 5 8 4 2 5",
+        "category": "active_learning_test_spaced"
+      },
+      {
+        "text": "t\ne\ns\nt\n_\nv\ni\no\nl\na\nt\ni\no\nn\n_\ns\na\nm\np\nl\ne\n_\n1\n7\n9\n3\n0\n1\n1\n0\n5\n8\n4\n2\n5",
+        "category": "active_learning_test_vertical"
+      },
+      {
+        "text": "t3$t_v10l@t10n_$@mpl3_1793011058425",
+        "category": "active_learning_test_leet"
+      },
+      {
+        "text": "hey creepy evasion 1793011058554",
+        "category": "reported_user_dialogue"
+      },
+      {
+        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.0.1.1.0.5.8.5.5.4",
+        "category": "reported_user_dialogue_dotted"
+      },
+      {
+        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...0...1...1...0...5...8...5...5...4",
+        "category": "reported_user_dialogue_multidot"
+      },
+      {
+        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-0-1-1-0-5-8-5-5-4",
+        "category": "reported_user_dialogue_hyphenated"
+      },
+      {
+        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*0*1*1*0*5*8*5*5*4",
+        "category": "reported_user_dialogue_starred"
+      },
+      {
+        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 0 1 1 0 5 8 5 5 4",
+        "category": "reported_user_dialogue_spaced"
+      },
+      {
+        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n0\n1\n1\n0\n5\n8\n5\n5\n4",
+        "category": "reported_user_dialogue_vertical"
+      },
+      {
+        "text": "h3y cr33py 3v@$10n 1793011058554",
+        "category": "reported_user_dialogue_leet"
+      },
+      {
+        "text": "fuck",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fucks",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fucking",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fucked",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fucker",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuckers",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuck off",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuck u",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuck you",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fck",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuk",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fukk",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fk",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fk off",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuk off",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fck off",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "fuckouttahere",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "get fucked",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "boob",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "boobs",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "boobie",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "boobies",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "bobs",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "b00bs",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "bewbs",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "boobz",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "b00bz",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "tits",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "tities",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "titties",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "titty",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "pussy",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "dick",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "cock",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "penis",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "vagina",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "clit",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "cum",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "cumming",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "blowjob",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "handjob",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "deepthroat",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "anal",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "jerk off",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "jack off",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "horny",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "sexy pics",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "send nudes",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "show tits",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "show boobs",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "wanna fuck",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "let's fuck",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "dtf",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "stfu",
+        "category": "global_slur_lexicon"
+      },
+      {
+        "text": "gtfo",
+        "category": "global_slur_lexicon"
       }
     ],
     "safe": [

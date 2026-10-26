@@ -49,6 +49,15 @@ const {
   recordMessageDelivered,
   recordViolationEvent
 } = require("../services/behaviorAnalytics");
+const {
+  evaluateConversationTrajectory,
+  getRoomRecentMessages,
+  cleanupRoomTrajectory
+} = require("../utils/conversationTrajectory");
+const {
+  ingestIncomingChatMessage,
+  ingestReportedConversation
+} = require("../services/modelTrainer");
 
 // ═══════════════════════════════════════════════════════════════
 // MULTI-TIER REAL-TIME MODERATION & FLOOD STATE STORES
@@ -563,9 +572,15 @@ function handleInappropriateViolation(socket, io, userId, reason, text, roomId, 
   return { blocked: true, action: "blocked_label", label: labelText, message: warnMsg };
 }
 
-// Shared message validation (slur filter, moderation, spam)
-function validateAndModerateMessage(socket, userId, text) {
+// Shared message validation (slur filter, moderation, spam, trajectory, self-training)
+function validateAndModerateMessage(socket, userId, text, roomId = null, partnerId = null) {
   const now = Date.now();
+  if (!roomId) {
+    roomId = users.get(userId)?.roomId || null;
+  }
+  if (!partnerId && roomId) {
+    partnerId = rooms.get(roomId)?.users?.find(id => id !== userId) || null;
+  }
 
   // 0. High-Scale Slow Mode Check
   if (globalSlowModeCooldownMs > 0) {
@@ -587,6 +602,30 @@ function validateAndModerateMessage(socket, userId, text) {
       socket.emit("error_message", { message: msg });
       if (global.recordViolationIntercepted) global.recordViolationIntercepted();
       return { blocked: true, reason: "raid_shield_duplicate", action: "block", message: msg };
+    }
+  }
+
+  // 0.2 Advanced 2028-30 Conversation Trajectory & Recipient Comfort Engine
+  if (roomId) {
+    const trajectoryResult = evaluateConversationTrajectory(roomId, userId, text, partnerId);
+    if (!trajectoryResult.allowed) {
+      const msg = trajectoryResult.message || "⚠️ Please keep the conversation friendly and respectful 🙏";
+      const labelText = trajectoryResult.label || "Please don't use bad words here";
+      log("message_blocked_trajectory", { userId, roomId, reason: trajectoryResult.reason, category: trajectoryResult.category });
+      socket.emit("warning_message", { message: msg, label: labelText, type: trajectoryResult.category || "trajectory_warning" });
+      socket.emit("message_rejected", { message: msg, label: labelText, reason: trajectoryResult.reason, action: "block" });
+      if (global.recordViolationIntercepted) global.recordViolationIntercepted();
+      recordViolationEvent({
+        type: trajectoryResult.reason,
+        userId,
+        deviceHash: socket.data?.deviceHash,
+        country: socket.data?.country,
+        snippet: text,
+        action: "Blocked / Trajectory",
+        severity: "warning",
+      });
+      ingestIncomingChatMessage(userId, text, roomId, true, trajectoryResult.category || "trajectory_violation");
+      return { blocked: true, reason: trajectoryResult.reason, action: "block", message: msg, label: labelText };
     }
   }
 
@@ -724,6 +763,7 @@ function validateAndModerateMessage(socket, userId, text) {
     socket.emit("error_message", {
       message: slurResult.message, action: slurResult.action, duration: slurResult.duration || 0,
     });
+    ingestIncomingChatMessage(userId, text, roomId, true, "slur_or_bad_words_blocked");
     return { blocked: true, reason: "slur_blocked", action: slurResult.action, slurResult };
   }
 
@@ -745,6 +785,7 @@ function validateAndModerateMessage(socket, userId, text) {
     socket.emit("warning_message", { message: moderationResult.message, type: "low_effort_warning", violationCount: moderationResult.violationCount });
     socket.emit("message_rejected", { message: moderationResult.message, reason: "low_effort_warning", violationCount: moderationResult.violationCount });
     socket.emit("error_message", { message: moderationResult.message, action: moderationResult.action, duration: moderationResult.duration });
+    ingestIncomingChatMessage(userId, text, roomId, true, "low_effort_blocked");
     return { blocked: true, reason: "low_effort_warning", action: moderationResult.action, message: moderationResult.message };
   }
 
@@ -754,6 +795,9 @@ function validateAndModerateMessage(socket, userId, text) {
     securityStore.addSecurityLog("moderation_replaced", { userId, originalMessage: text.slice(0, 50), replacement: finalMessage, violationCount: moderationResult.violationCount, severity: "low" });
     log("message_replaced", { userId, original: text.slice(0, 30), replacement: finalMessage, violationCount: moderationResult.violationCount });
   }
+
+  // Self-training continuous learning on approved healthy message
+  ingestIncomingChatMessage(userId, finalMessage, roomId, false, "safe_conversation");
 
   return { blocked: false, finalMessage };
 }
@@ -1346,14 +1390,16 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           return;
         }
 
-        // 2. Validate and moderate message (handles phone, social, symbols, slurs, low effort)
-        const modResult = validateAndModerateMessage(socket, userId, text);
+        // 2. Validate and moderate message (handles phone, social, symbols, slurs, trajectory, low effort)
+        const activeRoom = rooms.get(currentUser.roomId);
+        const partnerId = activeRoom?.users?.find(id => id !== userId);
+        const modResult = validateAndModerateMessage(socket, userId, text, currentUser.roomId, partnerId);
         if (modResult.blocked) {
           if (modResult.reason === "slur_blocked") {
             handleInappropriateViolation(socket, io, userId, "slur_blocked", text, currentUser.roomId, false, ack);
             return;
           }
-          if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action, message: modResult.message });
+          if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action, message: modResult.message, label: modResult.label || "Please don't use bad words here" });
           return;
         }
 
@@ -2599,6 +2645,12 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           roomId: targetRoomId,
           reportResult,
         });
+
+        // Self-training model ingestion for reported conversations
+        const roomMessages = getRoomRecentMessages(targetRoomId);
+        if (partnerId && roomMessages.length > 0) {
+          ingestReportedConversation(userId, partnerId, roomMessages);
+        }
 
         // End the chat session immediately
         terminateSession(io, targetRoomId, "user_reported");

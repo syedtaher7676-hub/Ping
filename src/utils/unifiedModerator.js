@@ -29,6 +29,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { evaluateFuzzyBadWords } = require('./fuzzyModerator');
 
 // ── 1. COLLOQUIAL INNOCENCE SHIELD (Guaranteed 0 False Positives) ─────────────
 const SAFE_COLLOQUIAL_PATTERNS = [
@@ -83,7 +84,11 @@ const SAFE_EXCEPTIONS = new Set([
   "presentation", "workout", "session", "guitar", "practice", "studying",
   // Gen Z safe vocabulary
   "slay", "rizz", "cap", "nocap", "bet", "bussin", "fire", "valid", "goated",
-  "based", "wholesome", "sigma", "skibidi", "blud", "cook", "cooking", "vibe"
+  "based", "wholesome", "sigma", "skibidi", "blud", "cook", "cooking", "vibe",
+  // Academic & technological terms
+  "computer", "computers", "computing", "computation", "science", "college",
+  "university", "study", "studying", "book", "books", "reading", "read",
+  "dispute", "disputes"
 ]);
 
 // ── 2. MULTI-LINGUAL NUMBER WORDS FOR PHONE DETECTION ────────────────────────
@@ -159,9 +164,15 @@ const GLOBAL_SLURS_VOCABULARY = [
   // Ableist insults & clinical slurs
   "retard", "retarded", "tard", "mongoloid", "r3tard",
 
-  // Severe misogynistic abuse & sexual insults
+  // Severe profanity, vulgarity, dismissals & explicit sexual parts
+  "fuck", "fucks", "fucking", "fucked", "fucker", "fuckers", "fuck off", "fuck u", "fuck you",
+  "fck", "fuk", "fukk", "fk", "fk off", "fuk off", "fck off", "fuckouttahere", "get fucked", "motherfucker",
+  "boob", "boobs", "boobie", "boobies", "bobs", "b00bs", "bewbs", "boobz", "b00bz",
+  "tits", "tities", "titties", "titty", "pussy", "dick", "cock", "penis", "vagina",
+  "clit", "cum", "cumming", "blowjob", "handjob", "deepthroat", "anal", "jerk off", "jack off",
+  "horny", "sexy pics", "send nudes", "show tits", "show boobs", "wanna fuck", "let's fuck", "dtf",
   "whore", "whores", "slut", "sluts", "bitch", "bitches", "cunt", "cunts",
-  "dickhead", "asshole", "twat", "motherfucker", "bastard",
+  "dickhead", "asshole", "twat", "bastard", "stfu", "gtfo",
 
   // Hindi / Urdu / South Asian slurs & profanity
   "bhenchod", "behenchod", "madarchod", "madarchodh", "mc", "bc", "chutiya",
@@ -944,6 +955,22 @@ function evaluateMessage(text, options = {}) {
     verticalPhonetic
   ];
 
+  // ── LAYER 3.5: ADVANCED 2028-30 FUZZY, PHONETIC & CONSONANT SKELETON ENGINE ──
+  const fuzzyCheck = evaluateFuzzyBadWords(cleaned, candidateRepresentations);
+  if (fuzzyCheck.hasBadWord) {
+    return {
+      valid: false,
+      safe: false,
+      action: 'block',
+      category: fuzzyCheck.category || 'profanity_vulgarity',
+      reason: 'bad_word_detected',
+      warningMessage: POLITE_MESSAGES.BAD_WORDS_LABEL,
+      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      matchedWords: fuzzyCheck.matchedWords,
+      layer: 'fuzzy_phonetic_engine'
+    };
+  }
+
   // ── LAYER 4: THREATS, EXTORTION, STALKING, HARASSMENT, CYBERBULLYING ──
   for (const cand of candidateRepresentations) {
     for (const pattern of THREAT_INTENT_PATTERNS) {
@@ -1068,18 +1095,37 @@ function evaluateMessage(text, options = {}) {
       }
     }
 
-    // Stripped spacers check (e.g. "b.h.e.n.c.h.o.d", "u.n.a.l.i.v.e", "d-i-d-d-y")
-    if (
-      pureSymbols.includes(slur) ||
-      pureLeet.includes(slur) ||
-      pureDeduped.includes(slur) ||
-      pureDedupedLeet.includes(slur) ||
-      vowelCollapsedPure.includes(slur) ||
-      strippedPhonetic.includes(slur)
-    ) {
-      const isBenignSubword = Array.from(SAFE_EXCEPTIONS).some(safe => pureSymbols.includes(safe));
-      if (!isBenignSubword) {
-        matchedSlurs.add(slur);
+    // Stripped spacers check (e.g. "b.h.e.n.c.h.o.d", "u.n.a.l.i.v.e", "d-i-d-d-y", or spaced letters "d i d d y")
+    const words = cleaned.trim().split(/\s+/).filter(Boolean);
+    const isSpacedLetterSpam = words.length >= 3 && words.every(w => w.length <= 2);
+
+    if (isSpacedLetterSpam || words.length <= 2) {
+      if (
+        pureSymbols.includes(slur) ||
+        pureLeet.includes(slur) ||
+        pureDeduped.includes(slur) ||
+        pureDedupedLeet.includes(slur) ||
+        vowelCollapsedPure.includes(slur) ||
+        strippedPhonetic.includes(slur)
+      ) {
+        const isBenignSubword = Array.from(SAFE_EXCEPTIONS).some(safe => pureSymbols.includes(safe));
+        if (!isBenignSubword) {
+          matchedSlurs.add(slur);
+        }
+      }
+    } else {
+      // For standard multi-word sentences, check stripped spacers per token to prevent accidental cross-word collisions
+      for (const w of words) {
+        const cleanWord = stripAllSymbols(w).toLowerCase();
+        if (cleanWord.length >= 3) {
+          const leetWord = normalizeLeetspeak(cleanWord);
+          const dedupedWord = collapseRepeatedChars(cleanWord);
+          if (cleanWord === slur || leetWord === slur || dedupedWord === slur) {
+            if (!SAFE_EXCEPTIONS.has(cleanWord)) {
+              matchedSlurs.add(slur);
+            }
+          }
+        }
       }
     }
   }
@@ -1197,8 +1243,8 @@ function evaluateMessage(text, options = {}) {
     matchedWords: []
   };
 }
-
 module.exports = {
+  evaluateFuzzyBadWords,
   evaluateMessage,
   detectPhoneNumber,
   detectAskingForPhoneNumber,

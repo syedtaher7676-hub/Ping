@@ -248,9 +248,72 @@ function trainAndUpdateLocalModel(dataset = null) {
   }
 }
 
+// Debounced live retraining timer
+let liveRetrainTimeout = null;
+function scheduleLiveRetrain() {
+  if (liveRetrainTimeout) return;
+  liveRetrainTimeout = setTimeout(() => {
+    liveRetrainTimeout = null;
+    trainAndUpdateLocalModel();
+  }, 2000);
+  if (typeof liveRetrainTimeout.unref === 'function') {
+    liveRetrainTimeout.unref();
+  }
+}
+
+/**
+ * Continuous Self-Training hook called on every incoming chat message.
+ * Ingests bad words, evasions, and positive conversations directly from users.
+ */
+function ingestIncomingChatMessage(userId, text, roomId, isBlocked, category = 'live_chat', metadata = {}) {
+  try {
+    if (!text || typeof text !== 'string') return;
+    const clean = text.trim();
+    if (clean.length < 2 || clean.length > 500) return;
+
+    if (isBlocked) {
+      // High-priority learning: Record bad conversation attempt with all augmentations
+      recordChatSampleForTraining(clean, 1, category, { userId, roomId, ...metadata });
+      scheduleLiveRetrain();
+    } else {
+      // Positive reinforcement learning: Record healthy conversation patterns (sampled 1 in 10 to balance dataset)
+      if (Math.random() < 0.1 && clean.length >= 6 && clean.includes(' ')) {
+        recordChatSampleForTraining(clean, 0, 'healthy_user_dialogue', { userId, roomId });
+      }
+    }
+  } catch (err) {
+    console.warn('[ModelTrainer] Ingestion error:', err?.message);
+  }
+}
+
+/**
+ * Ingests all recent chat lines when a user reports a room, training the model
+ * on nuanced bad conversation flows.
+ */
+function ingestReportedConversation(reporterId, reportedUserId, messages = []) {
+  try {
+    if (!Array.isArray(messages) || messages.length === 0) return;
+
+    for (const msg of messages) {
+      if (msg.senderId === reportedUserId && msg.text) {
+        recordChatSampleForTraining(msg.text, 1, 'reported_user_dialogue', {
+          reporterId,
+          reportedUserId,
+          timestamp: msg.timestamp
+        });
+      }
+    }
+    scheduleLiveRetrain();
+  } catch (err) {
+    console.warn('[ModelTrainer] Reported conversation ingestion error:', err?.message);
+  }
+}
+
 module.exports = {
   recordChatSampleForTraining,
   trainAndUpdateLocalModel,
+  ingestIncomingChatMessage,
+  ingestReportedConversation,
   normalizeHomoglyphs,
   collapseVerticalText,
   collapseSpacedLetters,
