@@ -2696,7 +2696,7 @@ function _executeSyncButtons() {
   if (reportBtn) reportBtn.disabled = !inChat;
   if (endChatBtn) endChatBtn.disabled = !inChat;
   if (extendTimeBtn) extendTimeBtn.disabled = !inChat;
-  if (friendBtn) friendBtn.disabled = !inChat;
+  if (friendBtn) { friendBtn.disabled = true; friendBtn.style.display = 'none'; }
 
   document.querySelectorAll('.eq-btn').forEach(btn => btn.disabled = !inChat);
 
@@ -4485,27 +4485,40 @@ socket.on('partner_reconnected', () => {
 });
 
 let lastWarningTime = 0;
-function handleModerationWarning(msg) {
+let lastWarningText = '';
+function handleModerationWarning(msg, label) {
+  const cleanMsg = (label || msg || "Please don't use bad words here").trim();
   const now = Date.now();
-  if (now - lastWarningTime < 3500) return;
+
+  // Instantly remove any sending/pending optimistic message bubble from sender's chat screen so rejected text never stays!
+  if (chatBox) {
+    chatBox.querySelectorAll('.msg-self.msg-status--sending, .msg-self[data-status="sending"], .msg-self[data-msg-status="sending"]').forEach(el => el.remove());
+  }
+  if (friendChatBox) {
+    friendChatBox.querySelectorAll('.msg-self.msg-status--sending, .msg-self[data-status="sending"], .msg-self[data-msg-status="sending"]').forEach(el => el.remove());
+  }
+
+  if (cleanMsg === lastWarningText && (now - lastWarningTime < 2500)) return;
   lastWarningTime = now;
-  const displayMsg = msg || "⚠️ Please don't use bad words here 🙏";
-  appendMsg(displayMsg, { isSystem: true, variant: 'warn' });
+  lastWarningText = cleanMsg;
+
+  // Render purely as clean, sender-only inline message pill with zero popups or toasts!
+  appendMsg(cleanMsg, { isSystem: true, variant: 'moderation-label', extraClass: 'msg-moderation-pill' });
   if (currentChatType === 'friend') {
-    appendFriendMsg(displayMsg, { isSystem: true, variant: 'warn' });
+    appendFriendMsg(cleanMsg, { isSystem: true, variant: 'moderation-label', extraClass: 'msg-moderation-pill' });
   }
 }
 
 socket.off('warning_message');
 socket.on('warning_message', ({ message, label }) => {
-  handleModerationWarning(label || message);
+  handleModerationWarning(message, label);
 });
 
 socket.off('error_message');
 socket.on('error_message', ({ message, action, duration }) => {
   if (!message) return;
-  const isBadWords = message.includes("bad words") || message.includes("Please don't use") || message.includes("slur");
-  if (isBadWords) {
+  const isModeration = message.includes("bad words") || message.includes("Please don't") || message.includes("slur") || message.includes("share your number") || message.includes("social media") || message.includes("external link") || message.includes("symbols") || message.includes("friendly and respectful");
+  if (isModeration) {
     handleModerationWarning(message);
     return;
   }
@@ -4518,11 +4531,7 @@ socket.on('error_message', ({ message, action, duration }) => {
 socket.off('message_rejected');
 socket.on('message_rejected', ({ message, reason, label }) => {
   if (!message && !label) return;
-  if (reason && (reason.startsWith('strike_') || reason === 'banned_15min' || reason === 'bad_words_blocked')) {
-    handleModerationWarning(message || label);
-    return;
-  }
-  handleModerationWarning(message || label);
+  handleModerationWarning(message, label);
 });
 
 let banExpiryTimestamp = localStorage.getItem('ping_ban_expires_at') || null;
@@ -4573,34 +4582,7 @@ socket.on('vpn_detected', ({ message, details }) => {
 
   document.querySelectorAll('.glass-modal-overlay').forEach(m => m.remove());
 
-  const provider = details?.isp || details?.org || details?.provider || 'Commercial Proxy / Datacenter';
-  const reason = details?.reason || 'Non-residential network detected';
-
-  showConfirm(
-    '🛡️ VPN or Proxy Detected',
-    `<div style="line-height:1.6; margin-top:8px;">
-      <p style="color:var(--t-med); font-size:0.95rem; margin-bottom:10px;">
-        Ping requires a direct residential connection to prevent abusive multi-accounting and protect community safety.
-      </p>
-      <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px; font-size:0.85rem; color:var(--t-ghost); margin-bottom:12px;">
-        <div><strong>Network:</strong> <code>${provider}</code></div>
-        <div style="margin-top:4px;"><strong>Reason:</strong> ${reason}</div>
-      </div>
-      <p style="font-size:0.85rem; color:var(--t-med);">
-        Please turn off your VPN, proxy, or iCloud Private Relay, then click <strong>Retry Connection</strong>.
-      </p>
-    </div>`,
-    () => {
-      if (socket) {
-        socket.disconnect();
-        setTimeout(() => socket.connect(), 400);
-      }
-    },
-    null,
-    'Retry Connection',
-    '',
-    '🛡️'
-  );
+  // Show a single clean toast or inline notice, NO popup modal per user requirement
   showToast(message || 'VPN or Proxy detected. Please disable your VPN to chat.', 'error', 4000);
 });
 
@@ -5001,22 +4983,15 @@ function sendMessage(overrideText = null) {
       if (ack && (ack.ok || ack.success)) {
         updateMsgStatus(msgId, 'sent');
       } else {
-        const isModBlock = ack?.reason && (
-          ack.reason.startsWith('strike_') ||
-          ack.reason.includes('warning') ||
-          ack.reason.includes('blocked') ||
-          ack.reason === 'banned_15min' ||
-          ack.reason === 'low_effort_warning' ||
-          ack.reason === 'slur_blocked' ||
-          ack.reason === 'moderation_blocked'
-        );
-        if (isModBlock) {
-          const el = (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
-                     (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`));
-          if (el) el.remove();
-        } else {
+        // Remove the optimistic message bubble from DOM immediately so blocked text never stays on sender screen
+        const el = (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
+                   (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`));
+        if (el) el.remove();
+
+        const reason = ack?.reason || '';
+        const isModBlock = reason.includes('blocked') || reason.includes('warning') || reason.includes('slur') || reason.includes('words') || reason.startsWith('strike_') || reason === 'banned_15min';
+        if (!isModBlock && reason) {
           updateMsgStatus(msgId, 'failed');
-          if (ack?.reason) showToast(ack.reason, 'error', 3000);
         }
       }
       if (sendBtn) syncButtons();
@@ -5080,22 +5055,15 @@ function sendFriendMessage(overrideText = null) {
       if (ack && (ack.ok || ack.success)) {
         updateMsgStatus(msgId, 'sent');
       } else {
-        const isModBlock = ack?.reason && (
-          ack.reason.startsWith('strike_') ||
-          ack.reason.includes('warning') ||
-          ack.reason.includes('blocked') ||
-          ack.reason === 'banned_15min' ||
-          ack.reason === 'low_effort_warning' ||
-          ack.reason === 'slur_blocked' ||
-          ack.reason === 'moderation_blocked'
-        );
-        if (isModBlock) {
-          const el = (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
-                     (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`));
-          if (el) el.remove();
-        } else {
+        // Remove the optimistic message bubble from DOM immediately so blocked text never stays on sender screen
+        const el = (friendChatBox && friendChatBox.querySelector(`[data-msg-id="${msgId}"]`)) || 
+                   (chatBox && chatBox.querySelector(`[data-msg-id="${msgId}"]`));
+        if (el) el.remove();
+
+        const reason = ack?.reason || '';
+        const isModBlock = reason.includes('blocked') || reason.includes('warning') || reason.includes('slur') || reason.includes('words') || reason.startsWith('strike_') || reason === 'banned_15min';
+        if (!isModBlock && reason) {
           updateMsgStatus(msgId, 'failed');
-          if (ack?.reason) showToast(ack.reason, 'error', 3000);
         }
       }
     });

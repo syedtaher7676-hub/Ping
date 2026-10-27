@@ -1767,19 +1767,6 @@ input {
   -webkit-backdrop-filter: none !important;
 }
 
-.prechat-anon-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 16px;
-  background: rgba(34, 197, 94, .09);
-  border: 1px solid rgba(34, 197, 94, .25);
-  border-radius: var(--r-full);
-  font-size: .70rem;
-  font-weight: 600;
-  color: var(--green);
-}
-
 /* Animated orb */
 .prechat-orb-wrap {
   position: relative;
@@ -1866,7 +1853,7 @@ input {
 .prechat-online {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   font-size: .95rem;
   color: var(--t-low);
 }
@@ -1891,7 +1878,7 @@ input {
 .prechat-trust {
   font-size: .78rem;
   color: var(--t-ghost);
-  padding-top: 4px;
+  padding-top: 12px;
 }
 
 
@@ -11182,6 +11169,65 @@ html, body {
   color: var(--cyan);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* ── 2030 POLITE IN-CHAT MODERATION LABELS (NO REDUNDANT POPUPS) ── */
+.msg.system.moderation-label,
+.msg.system.msg-moderation-pill,
+.msg.moderation-label {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  max-width: 88%;
+  margin: 8px auto;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  animation: moderationLabelFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+  user-select: none;
+}
+
+.msg.system.moderation-label .msg-content,
+.msg.system.msg-moderation-pill .msg-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  text-align: center;
+}
+
+.msg.system.moderation-label .msg-text,
+.msg.system.msg-moderation-pill .msg-text {
+  color: #cbd5e1;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.msg.system.moderation-label .msg-footer,
+.msg.system.msg-moderation-pill .msg-footer {
+  display: none !important;
+}
+
+@keyframes moderationLabelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 

@@ -88,7 +88,7 @@ const SAFE_EXCEPTIONS = new Set([
   // Academic & technological terms
   "computer", "computers", "computing", "computation", "science", "college",
   "university", "study", "studying", "book", "books", "reading", "read",
-  "dispute", "disputes"
+  "dispute", "disputes", "pic", "pics", "picture", "pictures"
 ]);
 
 // ── 2. MULTI-LINGUAL NUMBER WORDS FOR PHONE DETECTION ────────────────────────
@@ -310,7 +310,7 @@ const GLOBAL_SLURS_VOCABULARY = [
   "qus ummak", "kos omak", "sharmuta", "kahba", "maniyuk", "ayre fik",
 
   // Turkish slurs & profanity
-  "pic", "orospu", "siktir", "amina koyim", "yavsak", "gotveren", "kahpe", "yarrak",
+  "piç", "orospu", "siktir", "amina koyim", "yavsak", "gotveren", "kahpe", "yarrak",
 
   // Tagalog / Filipino slurs
   "putang ina", "putangina", "gago", "tarantado", "tangina", "ulol",
@@ -381,6 +381,27 @@ const SEXUAL_HARASSMENT_PATTERNS = [
   /\b(diddy|dixxy|diddi|diddie|diddler|diddling|diddled|chomo|noncer|groomer|jailbait|paedo|pedophile|pedo|edp|edp445)\b/i
 ];
 
+const COERCION_GROOMING_PATTERNS = [
+  // Secret conversations, isolation & off-platform hiding
+  /\b(don't|do\s*not|never)\s*(tell|let)\s*(anyone|your\s*parents?|your\s*mom|your\s*dad|your\s*friends?)\b/i,
+  /\b(keep\s*this|it's|let's\s*keep\s*this)\s*(a|our)\s*secret\b/i,
+  /\b(delete\s*this\s*chat|clear\s*(this|the)\s*chat|don't\s*save\s*this)\s*(after\s*reading|right\s*now|now)?\b/i,
+  /\b(switch\s*to\s*(a\s*)?secret\s*chat|talk\s*in\s*secret|talk\s*where\s*no\s*one\s*sees)\b/i,
+  /\b(sneak\s*out\s*(and|to)\s*(meet|see)\s*me)\b/i,
+  /\b(are\s*your\s*parents?\s*(home|around|awake|in\s*the\s*room))\b/i,
+  /\b(are\s*you\s*alone\s*(in\s*your\s*room|at\s*home))\b/i,
+  /\b(be\s*a\s*good\s*(girl|boy)\s*for\s*me|good\s*(girl|boy)\s*listens?\s*to\s*me)\b/i,
+  /\b(be\s*obedient|do\s*as\s*you're\s*told|obey\s*me)\b/i,
+
+  // Coercive pressure, manipulation & forced compliance
+  /\bif\s*you\s*don't\s*.*(you'll|you\s*will)\s*regret\b/i,
+  /\b(prove\s*(that\s*)?(you\s*like|you\s*love|you\s*trust)\s*me(\s*(by|to))?)\b/i,
+  /\b(do\s*(this|it)\s*if\s*you\s*(really\s*)?trust\s*me)\b/i,
+  /\b(send\s*(it|pics?|photo)\s*or\s*(i('ll|\s*will)\s*tell|(i('m|'ll|\s*am|\s*will)?\s*)?(leaving|leave|disconnecting|disconnect|skipping|skip)))\b/i,
+  /\b(turn\s*on\s*cam\s*or\s*(i('m|'ll|\s*am|\s*will)?\s*)?(leaving|leave|skip|disconnect|disconnecting))\b/i,
+  /\b(you\s*owe\s*me\s*(a\s*pic|a\s*photo|nudes?|to\s*do\s*this))\b/i
+];
+
 const CYBERBULLYING_PATTERNS = [
   /\b(kys|kill\s*yourself|go\s*die|end\s*your\s*life|commit\s*suicide)\b/i,
   /\b(unalive\s*(yourself|urself)|commit\s*unalive|toaster\s*bath|rope\s*(yourself|urself)|neck\s*(yourself|urself)|take\s*the\s*rope|take\s*permanent\s*sleep)\b/i,
@@ -420,32 +441,33 @@ const LOW_EFFORT_PATTERNS = [
   /^\s*idk\s*$/i
 ];
 
-// ── 5. NICE, RESPECTFUL NOTICES (NO 15-MIN BAN, JUST DON'T SEND & GIVE LABEL) ─
+// ── 5. CLEAN IN-CHAT LABELS (NO REDUNDANT POPUPS, DISCREET SENDER GUIDANCE) ─
 const POLITE_MESSAGES = {
-  // Primary friendly label per exact user instruction: "please don't use bad words here"
-  BAD_WORDS_LABEL: "⚠️ Please don't use bad words here 🙏",
+  // Clean chat labels
+  BAD_WORDS_LABEL: "Please don't use bad words here",
   BAD_WORDS_PLAIN: "Please don't use bad words here",
 
   // Polite general reminders
-  WARNING_STRIKE_1: "⚠️ Please don't use bad words here 🙏",
-  WARNING_STRIKE_2: "⚠️ Please don't use bad words here 🙏",
-  BAN_MESSAGE: "⚠️ Please don't use bad words here 🙏",
+  WARNING_STRIKE_1: "Please don't use bad words here",
+  WARNING_STRIKE_2: "Please don't use bad words here",
+  BAN_MESSAGE: "Please don't use bad words here",
 
   // Friend chat warnings
-  FRIEND_STRIKE_1: "⚠️ Please don't use bad words here 🙏",
-  FRIEND_STRIKE_REMINDER: () => "⚠️ Please don't use bad words here 🙏",
+  FRIEND_STRIKE_1: "Please don't use bad words here",
+  FRIEND_STRIKE_REMINDER: () => "Please don't use bad words here",
 
   // Partner notifications
-  PARTNER_NOTIFIED: "🛡️ A message containing inappropriate language was prevented from being sent.",
+  PARTNER_NOTIFIED: "🛡️ A message was prevented from being sent.",
 
-  // Specialized friendly reminders
-  PHONE_NUMBER: "🚫 Please avoid sharing personal phone numbers or contact details to protect your privacy.",
-  ASKING_PHONE: "🚫 Please avoid asking for personal phone numbers or WhatsApp contacts to keep chats safe.",
-  SOCIAL_MEDIA: "🚫 Please avoid sharing Snapchat, Instagram, or external social IDs. Let's keep our conversation here!",
-  LINKS: "🚫 Please avoid sharing external links or websites for user security and safety.",
-  SYMBOLS: "⚠️ Please use standard text. Special symbols are restricted to keep conversations clean and readable.",
-  SYMBOLS_EXCESSIVE: "⚠️ Please avoid repeating dots or commas more than 5 times.",
-  LOW_EFFORT: "⚠️ Please avoid low-effort messages. Try sharing a real thought or asking a fun question to start a great chat!"
+  // Clean chat labels per category
+  PHONE_NUMBER: "Please don't share your number here",
+  ASKING_PHONE: "Please don't ask for phone numbers or WhatsApp here",
+  SOCIAL_MEDIA: "Please don't share social media IDs here",
+  LINKS: "Please don't share external links here",
+  COERCION_GROOMING: "Please keep the conversation friendly and respectful",
+  SYMBOLS: "Please use standard text without excessive symbols",
+  SYMBOLS_EXCESSIVE: "Please use standard text without excessive symbols",
+  LOW_EFFORT: "Please keep the conversation friendly and engaging"
 };
 
 // ── 6. TEXT NORMALIZATION UTILITIES ──────────────────────────────────────────
@@ -709,6 +731,21 @@ function detectSocialMediaSharing(text) {
   return false;
 }
 
+function detectExternalLinks(text) {
+  if (!text || typeof text !== 'string') return false;
+  if (isInnocentColloquialism(text)) return false;
+  const raw = text.trim();
+  const linkPatterns = [
+    /\b(?:https?:\/\/|ftp:\/\/|file:\/\/)[^\s<>{}\[\]\(\)]+/i,
+    /\b(?:www\.)[a-zA-Z0-9\-_]{2,256}\.[a-zA-Z]{2,10}[^\s<>{}\[\]\(\)]*/i,
+    /\b[a-zA-Z0-9\-_]{2,63}\.(?:com|org|net|io|xyz|app|site|online|me|co|link|gg|top|club|live|info|ly|gl|tv|cc|ru|cn|in|us|uk|de|to)\b/i
+  ];
+  for (const p of linkPatterns) {
+    if (p.test(raw)) return true;
+  }
+  return false;
+}
+
 // ── 9. RESTRICTED SYMBOLS & SPAM FLOOD DETECTION ─────────────────────────────
 function detectRestrictedSymbols(text) {
   if (!text || typeof text !== 'string') return false;
@@ -872,7 +909,7 @@ function evaluateMessage(text, options = {}) {
       category: 'privacy_phone_sharing',
       reason: 'phone_number_detected',
       warningMessage: POLITE_MESSAGES.PHONE_NUMBER,
-      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      label: POLITE_MESSAGES.PHONE_NUMBER,
       matchedWords: ['phone_number'],
       layer: 'phone_detector'
     };
@@ -886,7 +923,7 @@ function evaluateMessage(text, options = {}) {
       category: 'privacy_phone_solicitation',
       reason: 'asking_number_detected',
       warningMessage: POLITE_MESSAGES.ASKING_PHONE,
-      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      label: POLITE_MESSAGES.ASKING_PHONE,
       matchedWords: ['asking_phone'],
       layer: 'phone_detector'
     };
@@ -901,23 +938,39 @@ function evaluateMessage(text, options = {}) {
       category: 'social_handle_leak',
       reason: 'social_media_detected',
       warningMessage: POLITE_MESSAGES.SOCIAL_MEDIA,
-      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      label: POLITE_MESSAGES.SOCIAL_MEDIA,
       matchedWords: ['social_media_id'],
       layer: 'social_detector'
+    };
+  }
+
+  // ── LAYER 2.5: EXTERNAL LINKS & UNVERIFIED URLS ──
+  if (detectExternalLinks(cleaned)) {
+    return {
+      valid: false,
+      safe: false,
+      action: 'block',
+      category: 'external_link_leak',
+      reason: 'external_link_detected',
+      warningMessage: POLITE_MESSAGES.LINKS,
+      label: POLITE_MESSAGES.LINKS,
+      matchedWords: ['external_link'],
+      layer: 'link_filter'
     };
   }
 
   // ── LAYER 3: RESTRICTED SYMBOLS (MAX 5 CONTINUOUS DOTS/COMMAS) ──
   if (detectRestrictedSymbols(cleaned)) {
     const isExcessivePunct = /\.{6,}/.test(cleaned) || /\,{6,}/.test(cleaned);
+    const cleanSymLabel = isExcessivePunct ? POLITE_MESSAGES.SYMBOLS_EXCESSIVE : POLITE_MESSAGES.SYMBOLS;
     return {
       valid: false,
       safe: false,
       action: 'block',
       category: 'restricted_symbols',
       reason: isExcessivePunct ? 'excessive_punctuation_detected' : 'restricted_symbols_detected',
-      warningMessage: isExcessivePunct ? POLITE_MESSAGES.SYMBOLS_EXCESSIVE : POLITE_MESSAGES.SYMBOLS,
-      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      warningMessage: cleanSymLabel,
+      label: cleanSymLabel,
       matchedWords: ['restricted_symbols'],
       layer: 'symbol_filter'
     };
@@ -971,8 +1024,25 @@ function evaluateMessage(text, options = {}) {
     };
   }
 
-  // ── LAYER 4: THREATS, EXTORTION, STALKING, HARASSMENT, CYBERBULLYING ──
+  // ── LAYER 4: THREATS, EXTORTION, STALKING, HARASSMENT, CYBERBULLYING & COERCION ──
   for (const cand of candidateRepresentations) {
+    for (const pattern of COERCION_GROOMING_PATTERNS) {
+      if (pattern.test(cand)) {
+        return {
+          valid: false,
+          safe: false,
+          action: 'block',
+          isThreat: false,
+          category: 'coercion_grooming',
+          reason: 'coercion_grooming_detected',
+          warningMessage: POLITE_MESSAGES.COERCION_GROOMING,
+          label: POLITE_MESSAGES.COERCION_GROOMING,
+          matchedWords: ['coercion_grooming'],
+          layer: 'conversational_threat_analyzer'
+        };
+      }
+    }
+
     for (const pattern of THREAT_INTENT_PATTERNS) {
       if (pattern.test(cand)) {
         return {
@@ -1145,46 +1215,7 @@ function evaluateMessage(text, options = {}) {
     };
   }
 
-  // ── LAYER 6: LEARNED MODEL WEIGHTS KNOWLEDGE BASE ──
-  const weights = loadModelWeights();
-  if (weights?.phrases?.violations) {
-    for (const vItem of weights.phrases.violations) {
-      if (!vItem.text) continue;
-      const vText = vItem.text.toLowerCase().trim();
-      if (rawLower === vText || vertical.toLowerCase() === vText || strippedPhonetic === vText.replace(/\s+/g, '')) {
-        return {
-          valid: false,
-          safe: false,
-          action: 'block',
-          category: 'learned_violation',
-          reason: 'custom_model_violation',
-          warningMessage: POLITE_MESSAGES.BAD_WORDS_LABEL,
-          label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
-          matchedWords: [vText],
-          layer: 'learned_model_knowledge'
-        };
-      }
-      if (vText.length >= 3 && /^[a-zA-Z0-9_\s]+$/.test(vText)) {
-        const escaped = vText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-        if (regex.test(rawLower) || regex.test(vertical) || regex.test(phonetic)) {
-          return {
-            valid: false,
-            safe: false,
-            action: 'block',
-            category: 'learned_violation',
-            reason: 'custom_model_violation',
-            warningMessage: POLITE_MESSAGES.BAD_WORDS_LABEL,
-            label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
-            matchedWords: [vText],
-            layer: 'learned_model_knowledge'
-          };
-        }
-      }
-    }
-  }
-
-  // ── LAYER 7: LOW-EFFORT PROBES, KEYBOARD MASH & VERTICAL SPAM ──
+  // ── LAYER 5.5: LOW-EFFORT PROBES, KEYBOARD MASH & VERTICAL SPAM ──
   for (const pattern of LOW_EFFORT_PATTERNS) {
     if (pattern.test(cleaned)) {
       return {
@@ -1195,7 +1226,7 @@ function evaluateMessage(text, options = {}) {
         category: 'low_effort',
         reason: 'low_effort_detected',
         warningMessage: POLITE_MESSAGES.LOW_EFFORT,
-        label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+        label: POLITE_MESSAGES.LOW_EFFORT,
         matchedWords: ['low_effort_probe'],
         layer: 'low_effort_detector'
       };
@@ -1211,7 +1242,7 @@ function evaluateMessage(text, options = {}) {
       category: 'low_effort_vertical_spam',
       reason: 'low_effort_vertical_spam',
       warningMessage: POLITE_MESSAGES.LOW_EFFORT,
-      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      label: POLITE_MESSAGES.LOW_EFFORT,
       matchedWords: ['vertical_spam'],
       layer: 'low_effort_detector'
     };
@@ -1226,10 +1257,54 @@ function evaluateMessage(text, options = {}) {
       category: 'low_effort_gibberish',
       reason: 'low_effort_gibberish',
       warningMessage: POLITE_MESSAGES.LOW_EFFORT,
-      label: POLITE_MESSAGES.BAD_WORDS_PLAIN,
+      label: POLITE_MESSAGES.LOW_EFFORT,
       matchedWords: ['keyboard_mash'],
       layer: 'low_effort_detector'
     };
+  }
+
+  // ── LAYER 6: LEARNED MODEL WEIGHTS KNOWLEDGE BASE ──
+  const weights = loadModelWeights();
+  if (weights?.phrases?.violations) {
+    for (const vItem of weights.phrases.violations) {
+      if (!vItem.text) continue;
+      const vText = vItem.text.toLowerCase().trim();
+      if (SAFE_EXCEPTIONS.has(vText)) continue;
+      const isLowEffortCat = vItem.category && (vItem.category.includes('low_effort') || vItem.category.includes('probe'));
+      const learnedLabel = isLowEffortCat ? POLITE_MESSAGES.LOW_EFFORT : POLITE_MESSAGES.BAD_WORDS_PLAIN;
+      const learnedCat = isLowEffortCat ? 'low_effort' : 'learned_violation';
+
+      if (rawLower === vText || vertical.toLowerCase() === vText || strippedPhonetic === vText.replace(/\s+/g, '')) {
+        return {
+          valid: false,
+          safe: false,
+          action: 'block',
+          category: learnedCat,
+          reason: 'custom_model_violation',
+          warningMessage: learnedLabel,
+          label: learnedLabel,
+          matchedWords: [vText],
+          layer: 'learned_model_knowledge'
+        };
+      }
+      if (vText.length >= 3 && /^[a-zA-Z0-9_\s]+$/.test(vText)) {
+        const escaped = vText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+        if (regex.test(rawLower) || regex.test(vertical) || regex.test(phonetic)) {
+          return {
+            valid: false,
+            safe: false,
+            action: 'block',
+            category: learnedCat,
+            reason: 'custom_model_violation',
+            warningMessage: learnedLabel,
+            label: learnedLabel,
+            matchedWords: [vText],
+            layer: 'learned_model_knowledge'
+          };
+        }
+      }
+    }
   }
 
   // Safe pass-through
@@ -1249,6 +1324,7 @@ module.exports = {
   detectPhoneNumber,
   detectAskingForPhoneNumber,
   detectSocialMediaSharing,
+  detectExternalLinks,
   detectRestrictedSymbols,
   isKeyboardMashOrCharacterFlood,
   isVerticalLetterSpam,
@@ -1266,5 +1342,6 @@ module.exports = {
   POLITE_MESSAGES,
   GLOBAL_SLURS_VOCABULARY,
   SAFE_COLLOQUIAL_PATTERNS,
-  SAFE_EXCEPTIONS
+  SAFE_EXCEPTIONS,
+  COERCION_GROOMING_PATTERNS
 };

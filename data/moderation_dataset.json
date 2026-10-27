@@ -1,232 +1,1122 @@
 [
-  {"text": "hey! how is your day going?", "label": 0, "category": "safe"},
-  {"text": "what kind of music do you listen to?", "label": 0, "category": "safe"},
-  {"text": "just studying for my exam tomorrow", "label": 0, "category": "safe"},
-  {"text": "that movie was incredible, 10/10 recommend", "label": 0, "category": "safe"},
-  {"text": "lol that is hilarious", "label": 0, "category": "safe"},
-  {"text": "nice to meet you! where are you from?", "label": 0, "category": "safe"},
-  {"text": "have a wonderful evening ahead!", "label": 0, "category": "safe"},
-  {"text": "i love coding in javascript and python", "label": 0, "category": "safe"},
-  {"text": "no worries, take your time", "label": 0, "category": "safe"},
-  {"text": "gg good game", "label": 0, "category": "safe"},
-  {"text": "i'm going to kill this workout session today", "label": 0, "category": "safe"},
-  {"text": "i feel so tired today", "label": 0, "category": "safe"},
-  {"text": "which university do you attend?", "label": 0, "category": "safe"},
-  {"text": "that was a killer guitar solo!", "label": 0, "category": "safe"},
-  {"text": "what are your hobbies?", "label": 0, "category": "safe"},
-  {"text": "see you later, peace out", "label": 0, "category": "safe"},
-  {"text": "thanks for the conversation!", "label": 0, "category": "safe"},
-  {"text": "what books have you been reading lately?", "label": 0, "category": "safe"},
-  {"text": "i really like playing chess and soccer", "label": 0, "category": "safe"},
-  {"text": "hope you have a great week!", "label": 0, "category": "safe"},
-  {"text": "the weather is super nice today", "label": 0, "category": "safe"},
-  {"text": "what is your favorite food to cook?", "label": 0, "category": "safe"},
-  {"text": "i am learning how to play the piano", "label": 0, "category": "safe"},
-  {"text": "do you watch anime or read manga?", "label": 0, "category": "safe"},
-  {"text": "can you recommend a good sci-fi movie?", "label": 0, "category": "safe"},
-  {"text": "that was such a classic moment", "label": 0, "category": "safe"},
-  {"text": "i need to pass this mathematics test", "label": 0, "category": "safe"},
-  {"text": "the assistant helped me with my code", "label": 0, "category": "safe"},
-  {"text": "i love walking on the green grass", "label": 0, "category": "safe"},
-  {"text": "the bass guitar sounded amazing in that song", "label": 0, "category": "safe"},
-  {"text": "can you pass the butter please?", "label": 0, "category": "safe"},
-  {"text": "i am traveling to another country next month", "label": 0, "category": "safe"},
-  {"text": "this Indian curry is deliciously spicy", "label": 0, "category": "safe"},
-  {"text": "we need to assemble the furniture together", "label": 0, "category": "safe"},
-  {"text": "the data analytics showed great results", "label": 0, "category": "safe"},
-  {"text": "charles dickens wrote wonderful novels", "label": 0, "category": "safe"},
-  {"text": "niger is a country in west africa", "label": 0, "category": "safe"},
-  {"text": "the river flows smoothly through the valley", "label": 0, "category": "safe"},
-  {"text": "i ordered a non-alcoholic cocktail at the cafe", "label": 0, "category": "safe"},
-  {"text": "i am wearing a black shirt and blue jeans", "label": 0, "category": "safe"},
-  {"text": "welcome to Ping! having fun chatting?", "label": 0, "category": "safe"},
-  {"text": "let's share some fun riddles", "label": 0, "category": "safe"},
-  {"text": "do you play any video games like valorant or minecraft?", "label": 0, "category": "safe"},
-  {"text": "happy birthday! hope you have an awesome day", "label": 0, "category": "safe"},
-  {"text": "i had a cucumber sandwich for lunch", "label": 0, "category": "safe"},
-  {"text": "we visited the grand canal in venice", "label": 0, "category": "safe"},
-  {"text": "the document was saved successfully", "label": 0, "category": "safe"},
-  {"text": "i love drinking hot chocolate in winter", "label": 0, "category": "safe"},
-  {"text": "good luck on your interview tomorrow!", "label": 0, "category": "safe"},
-  {"text": "let's stay positive and keep trying", "label": 0, "category": "safe"},
-
-  {"text": "shut up you faggot", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "you dumb nigger", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "f@ggot gtfo", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "f.a.g.g.o.t get out of here", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "stupid retard", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "you are an absolute r3tard", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "fucking retards everywhere", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "you fucking cunt", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "f.u.c.k you bitch", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "you ugly bitch", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "dumb wh0re go away", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "she is a dirty slut", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "dirty kike go home", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "k1k3 trash", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "stupid chink", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "ch1nk go back to your country", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "you filthy gook", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "spic get out of here", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "wetback loser", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "n!gg3r leave now", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "n1gger piece of shit", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "you are a f.a.g", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "stupid dyke nobody asked you", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "trans tranny freak", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "ugly shemale go die", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "dirty raghead terrorist", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "towelhead loser", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "stupid paki get lost", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "terrible beaner", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "fck you bhenchod", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "madarchod teri maa ki", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "chutiya saale bhag yaha se", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "tu ek number ka gandu hai", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "bhosadike nikal yaha se", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "bhosdike chup kar", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "randi ki aulad", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "haramkhor kutte", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "kamine suar ki tarah", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "bhadwe chup reh", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "laude apna muh band kar", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "jhantu aadmi", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "eres un maricon de mierda", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "hijo de puta vete al diablo", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "pinche pendejo culero", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "tu eres una puta", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "b!tch stfu", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "c*nt gtfo", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "wh0r3 die already", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "n-i-g-g-a get out", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "f a g g o t", "label": 1, "category": "hate_speech_slurs"},
-
-  {"text": "kys loser nobody wants you here", "label": 1, "category": "harassment_threats"},
-  {"text": "kill yourself you worthless idiot", "label": 1, "category": "harassment_threats"},
-  {"text": "you are ugly and stupid go die", "label": 1, "category": "harassment_threats"},
-  {"text": "i hope you get cancer and die", "label": 1, "category": "harassment_threats"},
-  {"text": "nobody loves you, end it all", "label": 1, "category": "harassment_threats"},
-  {"text": "k.y.s trash", "label": 1, "category": "harassment_threats"},
-  {"text": "i will find where you live and beat you up", "label": 1, "category": "harassment_threats"},
-  {"text": "commit suicide idiot", "label": 1, "category": "harassment_threats"},
-  {"text": "go jump off a bridge", "label": 1, "category": "harassment_threats"},
-  {"text": "i'm going to dox you and leak your address", "label": 1, "category": "harassment_threats"},
-
-  {"text": "m 18 looking for girl snapchat me", "label": 1, "category": "solicitation"},
-  {"text": "any female here? m19 horny", "label": 1, "category": "solicitation"},
-  {"text": "m16 looking for f", "label": 1, "category": "solicitation"},
-  {"text": "send nudes or snap me", "label": 1, "category": "solicitation"},
-  {"text": "show boobies", "label": 1, "category": "solicitation"},
-  {"text": "looking for dirty chat add my snap", "label": 1, "category": "solicitation"},
-  {"text": "f15 looking for older guy", "label": 1, "category": "solicitation"},
-  {"text": "are you a boy or girl? send pic", "label": 1, "category": "solicitation"},
-  {"text": "how old are you? are you a girl?", "label": 1, "category": "solicitation"},
-  {"text": "m4f looking for naughty chat", "label": 1, "category": "solicitation"},
-
-  {"text": "add my snap: coolguy_99", "label": 1, "category": "contact_exchange"},
-  {"text": "follow my insta @john_doe23", "label": 1, "category": "contact_exchange"},
-  {"text": "hit me up on telegram @fastbucks", "label": 1, "category": "contact_exchange"},
-  {"text": "whatsapp me at +14155552671", "label": 1, "category": "contact_exchange"},
-  {"text": "join my discord server discord.gg/abc1234", "label": 1, "category": "contact_exchange"},
-  {"text": "insta in bio message me there", "label": 1, "category": "contact_exchange"},
-  {"text": "add me on kik: user123", "label": 1, "category": "contact_exchange"},
-
-  {"text": "go unalive yourself", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "you should unalive", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "unalive blud", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "commit unalive right now", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "take a toaster bath", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "toaster bath is waiting for you", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "rope yourself", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "take the rope already", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "neck yourself loser", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "take permanent sleep", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "drink bleach kid", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "is he acoustic or restarted", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "bro is genuinely regarded", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "what a regarded idiot", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "bro is so restarted", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "acoustic blud shut up", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "dirty yt people", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "subhuman currycel", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "worthless ricecel", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "foids deserve nothing", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "he is a pdf file", "label": 1, "category": "genz_predatory_slang"},
-  {"text": "bro is a p3do", "label": 1, "category": "genz_predatory_slang"},
-  {"text": "edp445 looking guy", "label": 1, "category": "genz_predatory_slang"},
-  {"text": "minor lover", "label": 1, "category": "genz_predatory_slang"},
-  {"text": "send seggs video", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "cornhub link", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "p*rn link", "label": 1, "category": "genz_toxic_evasion"},
-  {"text": "bout to crashout on you", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "we sliding for our mans on your block", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "packwatch rip bozo", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "smoking your pack tonight", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "swatting your crib kid", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "swat your house right now", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "pulling your dox and leaking face", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "doxxed your ip address", "label": 1, "category": "genz_cyberbullying"},
-  {"text": "chapri lodu", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "nibba chup kar", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "weon ql conchetumare", "label": 1, "category": "hate_speech_slurs"},
-  {"text": "dixxy party", "label": 1, "category": "genz_predatory_slang"},
-  {"text": "diddy freakoff", "label": 1, "category": "genz_predatory_slang"},
-  {"text": "drop your snap or i leak your photos", "label": 1, "category": "harassment_threats"},
-  {"text": "14f looking for daddy", "label": 1, "category": "solicitation"},
-  {"text": "15m hmu older girls", "label": 1, "category": "solicitation"},
-
-  {"text": "slay queen you look amazing", "label": 0, "category": "genz_safe_slang"},
-  {"text": "you ate and left no crumbs", "label": 0, "category": "genz_safe_slang"},
-  {"text": "no cap this is the best song ever", "label": 0, "category": "genz_safe_slang"},
-  {"text": "fr fr that was crazy", "label": 0, "category": "genz_safe_slang"},
-  {"text": "that is so valid honestly", "label": 0, "category": "genz_safe_slang"},
-  {"text": "bro has unspoken rizz", "label": 0, "category": "genz_safe_slang"},
-  {"text": "w rizz moment", "label": 0, "category": "genz_safe_slang"},
-  {"text": "she is genuinely the goat", "label": 0, "category": "genz_safe_slang"},
-  {"text": "massive W for the team", "label": 0, "category": "genz_safe_slang"},
-  {"text": "let him cook right now", "label": 0, "category": "genz_safe_slang"},
-  {"text": "he is cooking something special", "label": 0, "category": "genz_safe_slang"},
-  {"text": "this pizza is absolutely bussin", "label": 0, "category": "genz_safe_slang"},
-  {"text": "such a good vibe tonight", "label": 0, "category": "genz_safe_slang"},
-  {"text": "based take my friend", "label": 0, "category": "genz_safe_slang"},
-  {"text": "straight facts no printer", "label": 0, "category": "genz_safe_slang"},
-  {"text": "real ones understand this", "label": 0, "category": "genz_safe_slang"},
-  {"text": "blud is making me laugh so hard", "label": 0, "category": "genz_safe_slang"},
-  {"text": "that is so wholesome", "label": 0, "category": "genz_safe_slang"},
-  {"text": "i am dead lol that was too funny", "label": 0, "category": "genz_safe_slang"},
-  {"text": "that joke literally killed me fr", "label": 0, "category": "genz_safe_slang"},
-  {"text": "i am gonna kill this exam tomorrow", "label": 0, "category": "genz_safe_slang"},
-  {"text": "she cooked that presentation today", "label": 0, "category": "genz_safe_slang"},
-  {"text": "bet see you after class", "label": 0, "category": "genz_safe_slang"},
-  {"text": "he is giving main character energy", "label": 0, "category": "genz_safe_slang"},
-  {"text": "chat is this real or what", "label": 0, "category": "genz_safe_slang"},
-  {"text": "time to lock in for finals", "label": 0, "category": "genz_safe_slang"},
-  {"text": "locked in and studying all night", "label": 0, "category": "genz_safe_slang"},
-  {"text": "touch grass and enjoy the sunny weather", "label": 0, "category": "genz_safe_slang"},
-  {"text": "sigma grindset study session", "label": 0, "category": "genz_safe_slang"},
-  {"text": "skibidi meme is everywhere right now", "label": 0, "category": "genz_safe_slang"},
-  {"text": "giving me npc vibes lol", "label": 0, "category": "genz_safe_slang"},
-  {"text": "fanum tax on my lunch fries", "label": 0, "category": "genz_safe_slang"},
-  {"text": "it is giving high fashion", "label": 0, "category": "genz_safe_slang"},
-  {"text": "periodt keep shining", "label": 0, "category": "genz_safe_slang"},
-  {"text": "we ball regardless", "label": 0, "category": "genz_safe_slang"},
-  {"text": "living rent free in my head", "label": 0, "category": "genz_safe_slang"},
-  {"text": "common W from you", "label": 0, "category": "genz_safe_slang"},
-  {"text": "delulu is the solulu sometimes", "label": 0, "category": "genz_safe_slang"},
-  {"text": "living my best life tbh", "label": 0, "category": "genz_safe_slang"},
-  {"text": "hits different at 2am", "label": 0, "category": "genz_safe_slang"},
-  {"text": "she understood the assignment", "label": 0, "category": "genz_safe_slang"},
-  {"text": "big brain energy right here", "label": 0, "category": "genz_safe_slang"},
-  {"text": "not me crying over this movie", "label": 0, "category": "genz_safe_slang"},
-  {"text": "i am weak that was hysterical", "label": 0, "category": "genz_safe_slang"},
-  {"text": "pure cinema experience", "label": 0, "category": "genz_safe_slang"},
-  {"text": "aura points plus ten thousand", "label": 0, "category": "genz_safe_slang"},
-  {"text": "infinite aura right there", "label": 0, "category": "genz_safe_slang"},
-  {"text": "stand on business always", "label": 0, "category": "genz_safe_slang"},
-  {"text": "glow up is real", "label": 0, "category": "genz_safe_slang"},
-  {"text": "he is him no doubt", "label": 0, "category": "genz_safe_slang"},
-  {"text": "she is her fr", "label": 0, "category": "genz_safe_slang"},
-  {"text": "caught in 4k being wholesome", "label": 0, "category": "genz_safe_slang"},
-  {"text": "pop off you earned this", "label": 0, "category": "genz_safe_slang"},
-  {"text": "we are so back", "label": 0, "category": "genz_safe_slang"}
+  {
+    "text": "hey! how is your day going?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what kind of music do you listen to?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "just studying for my exam tomorrow",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that movie was incredible, 10/10 recommend",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "lol that is hilarious",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "nice to meet you! where are you from?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "have a wonderful evening ahead!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love coding in javascript and python",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "no worries, take your time",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "gg good game",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i'm going to kill this workout session today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i feel so tired today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "which university do you attend?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that was a killer guitar solo!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what are your hobbies?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "see you later, peace out",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "thanks for the conversation!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what books have you been reading lately?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i really like playing chess and soccer",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "hope you have a great week!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the weather is super nice today",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "what is your favorite food to cook?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am learning how to play the piano",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "do you watch anime or read manga?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "can you recommend a good sci-fi movie?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "that was such a classic moment",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i need to pass this mathematics test",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the assistant helped me with my code",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love walking on the green grass",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the bass guitar sounded amazing in that song",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "can you pass the butter please?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am traveling to another country next month",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "this Indian curry is deliciously spicy",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "we need to assemble the furniture together",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the data analytics showed great results",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "charles dickens wrote wonderful novels",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "niger is a country in west africa",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the river flows smoothly through the valley",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i ordered a non-alcoholic cocktail at the cafe",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i am wearing a black shirt and blue jeans",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "welcome to Ping! having fun chatting?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "let's share some fun riddles",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "do you play any video games like valorant or minecraft?",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "happy birthday! hope you have an awesome day",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i had a cucumber sandwich for lunch",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "we visited the grand canal in venice",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "the document was saved successfully",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "i love drinking hot chocolate in winter",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "good luck on your interview tomorrow!",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "let's stay positive and keep trying",
+    "label": 0,
+    "category": "safe"
+  },
+  {
+    "text": "shut up you faggot",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "you dumb nigger",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f@ggot gtfo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.a.g.g.o.t get out of here",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "stupid retard",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "you are an absolute r3tard",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "fucking retards everywhere",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "you fucking cunt",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f.u.c.k you bitch",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "you ugly bitch",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "dumb wh0re go away",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "she is a dirty slut",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "dirty kike go home",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "k1k3 trash",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "stupid chink",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "ch1nk go back to your country",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "you filthy gook",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "spic get out of here",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "wetback loser",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n!gg3r leave now",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n1gger piece of shit",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "you are a f.a.g",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "stupid dyke nobody asked you",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "trans tranny freak",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "ugly shemale go die",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "dirty raghead terrorist",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "towelhead loser",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "stupid paki get lost",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "terrible beaner",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "fck you bhenchod",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "madarchod teri maa ki",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "chutiya saale bhag yaha se",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tu ek number ka gandu hai",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bhosadike nikal yaha se",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bhosdike chup kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "randi ki aulad",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "haramkhor kutte",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "kamine suar ki tarah",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "bhadwe chup reh",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "laude apna muh band kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "jhantu aadmi",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "eres un maricon de mierda",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "hijo de puta vete al diablo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "pinche pendejo culero",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "tu eres una puta",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "b!tch stfu",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "c*nt gtfo",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "wh0r3 die already",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "n-i-g-g-a get out",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "f a g g o t",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "kys loser nobody wants you here",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "kill yourself you worthless idiot",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "you are ugly and stupid go die",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "i hope you get cancer and die",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "nobody loves you, end it all",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "k.y.s trash",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "i will find where you live and beat you up",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "commit suicide idiot",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "go jump off a bridge",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "i'm going to dox you and leak your address",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "m 18 looking for girl snapchat me",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "any female here? m19 horny",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m16 looking for f",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "send nudes or snap me",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "show boobies",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "looking for dirty chat add my snap",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "f15 looking for older guy",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "are you a boy or girl? send pic",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "how old are you? are you a girl?",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "m4f looking for naughty chat",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "add my snap: coolguy_99",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "follow my insta @john_doe23",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "hit me up on telegram @fastbucks",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "whatsapp me at +14155552671",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "join my discord server discord.gg/abc1234",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "insta in bio message me there",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "add me on kik: user123",
+    "label": 1,
+    "category": "contact_exchange"
+  },
+  {
+    "text": "go unalive yourself",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "you should unalive",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "unalive blud",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "commit unalive right now",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "take a toaster bath",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "toaster bath is waiting for you",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "rope yourself",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "take the rope already",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "neck yourself loser",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "take permanent sleep",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "drink bleach kid",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "is he acoustic or restarted",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "bro is genuinely regarded",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "what a regarded idiot",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "bro is so restarted",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "acoustic blud shut up",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "dirty yt people",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "subhuman currycel",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "worthless ricecel",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "foids deserve nothing",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "he is a pdf file",
+    "label": 1,
+    "category": "genz_predatory_slang"
+  },
+  {
+    "text": "bro is a p3do",
+    "label": 1,
+    "category": "genz_predatory_slang"
+  },
+  {
+    "text": "edp445 looking guy",
+    "label": 1,
+    "category": "genz_predatory_slang"
+  },
+  {
+    "text": "minor lover",
+    "label": 1,
+    "category": "genz_predatory_slang"
+  },
+  {
+    "text": "send seggs video",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "cornhub link",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "p*rn link",
+    "label": 1,
+    "category": "genz_toxic_evasion"
+  },
+  {
+    "text": "bout to crashout on you",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "we sliding for our mans on your block",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "packwatch rip bozo",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "smoking your pack tonight",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "swatting your crib kid",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "swat your house right now",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "pulling your dox and leaking face",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "doxxed your ip address",
+    "label": 1,
+    "category": "genz_cyberbullying"
+  },
+  {
+    "text": "chapri lodu",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "nibba chup kar",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "weon ql conchetumare",
+    "label": 1,
+    "category": "hate_speech_slurs"
+  },
+  {
+    "text": "dixxy party",
+    "label": 1,
+    "category": "genz_predatory_slang"
+  },
+  {
+    "text": "diddy freakoff",
+    "label": 1,
+    "category": "genz_predatory_slang"
+  },
+  {
+    "text": "drop your snap or i leak your photos",
+    "label": 1,
+    "category": "harassment_threats"
+  },
+  {
+    "text": "14f looking for daddy",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "15m hmu older girls",
+    "label": 1,
+    "category": "solicitation"
+  },
+  {
+    "text": "slay queen you look amazing",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "you ate and left no crumbs",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "no cap this is the best song ever",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "fr fr that was crazy",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "that is so valid honestly",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "bro has unspoken rizz",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "w rizz moment",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "she is genuinely the goat",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "massive W for the team",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "let him cook right now",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "he is cooking something special",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "this pizza is absolutely bussin",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "such a good vibe tonight",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "based take my friend",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "straight facts no printer",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "real ones understand this",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "blud is making me laugh so hard",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "that is so wholesome",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "i am dead lol that was too funny",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "that joke literally killed me fr",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "i am gonna kill this exam tomorrow",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "she cooked that presentation today",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "bet see you after class",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "he is giving main character energy",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "chat is this real or what",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "time to lock in for finals",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "locked in and studying all night",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "touch grass and enjoy the sunny weather",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "sigma grindset study session",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "skibidi meme is everywhere right now",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "giving me npc vibes lol",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "fanum tax on my lunch fries",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "it is giving high fashion",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "periodt keep shining",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "we ball regardless",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "living rent free in my head",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "common W from you",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "delulu is the solulu sometimes",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "living my best life tbh",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "hits different at 2am",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "she understood the assignment",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "big brain energy right here",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "not me crying over this movie",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "i am weak that was hysterical",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "pure cinema experience",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "aura points plus ten thousand",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "infinite aura right there",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "stand on business always",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "glow up is real",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "he is him no doubt",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "she is her fr",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "caught in 4k being wholesome",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "pop off you earned this",
+    "label": 0,
+    "category": "genz_safe_slang"
+  },
+  {
+    "text": "we are so back",
+    "label": 0,
+    "category": "genz_safe_slang"
+  }
 ]

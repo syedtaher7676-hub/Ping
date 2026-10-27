@@ -13157,7 +13157,7 @@ f
 i
 k",1,"global_multilingual_slurs_vertical"
 "@yr3 f1k",1,"global_multilingual_slurs_leet"
-"pic",1,"global_multilingual_slurs"
+"piç",1,"global_multilingual_slurs"
 "p.i.c",1,"global_multilingual_slurs_dotted"
 "p...i...c",1,"global_multilingual_slurs_multidot"
 "p-i-c",1,"global_multilingual_slurs_hyphenated"
@@ -15040,3 +15040,648 @@ n
 5
 4",1,"reported_user_dialogue_vertical"
 "h3y cr33py 3v@$10n 1793011058554",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118197655",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.1.9.7.6.5.5",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...1...9...7...6...5...5",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-1-9-7-6-5-5",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*1*9*7*6*5*5",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 1 9 7 6 5 5",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+1
+9
+7
+6
+5
+5",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118197655",1,"active_learning_test_leet"
+"hey creepy evasion 1793118197770",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.1.9.7.7.7.0",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...1...9...7...7...7...0",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-1-9-7-7-7-0",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*1*9*7*7*7*0",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 1 9 7 7 7 0",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+1
+9
+7
+7
+7
+0",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118197770",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118236890",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.2.3.6.8.9.0",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...2...3...6...8...9...0",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-2-3-6-8-9-0",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*2*3*6*8*9*0",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 2 3 6 8 9 0",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+2
+3
+6
+8
+9
+0",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118236890",1,"active_learning_test_leet"
+"hey creepy evasion 1793118237025",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.2.3.7.0.2.5",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...2...3...7...0...2...5",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-2-3-7-0-2-5",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*2*3*7*0*2*5",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 2 3 7 0 2 5",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+2
+3
+7
+0
+2
+5",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118237025",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118365774",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.3.6.5.7.7.4",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...3...6...5...7...7...4",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-3-6-5-7-7-4",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*3*6*5*7*7*4",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 3 6 5 7 7 4",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+3
+6
+5
+7
+7
+4",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118365774",1,"active_learning_test_leet"
+"hey creepy evasion 1793118365915",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.3.6.5.9.1.5",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...3...6...5...9...1...5",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-3-6-5-9-1-5",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*3*6*5*9*1*5",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 3 6 5 9 1 5",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+3
+6
+5
+9
+1
+5",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118365915",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118402207",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.4.0.2.2.0.7",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...4...0...2...2...0...7",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-4-0-2-2-0-7",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*4*0*2*2*0*7",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 4 0 2 2 0 7",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+4
+0
+2
+2
+0
+7",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118402207",1,"active_learning_test_leet"
+"hey creepy evasion 1793118402327",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.4.0.2.3.2.7",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...4...0...2...3...2...7",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-4-0-2-3-2-7",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*4*0*2*3*2*7",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 4 0 2 3 2 7",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+4
+0
+2
+3
+2
+7",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118402327",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118507418",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.5.0.7.4.1.8",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...5...0...7...4...1...8",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-5-0-7-4-1-8",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*5*0*7*4*1*8",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 5 0 7 4 1 8",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+5
+0
+7
+4
+1
+8",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118507418",1,"active_learning_test_leet"
+"hey creepy evasion 1793118507535",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.5.0.7.5.3.5",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...5...0...7...5...3...5",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-5-0-7-5-3-5",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*5*0*7*5*3*5",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 5 0 7 5 3 5",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+5
+0
+7
+5
+3
+5",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118507535",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118562203",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.5.6.2.2.0.3",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...5...6...2...2...0...3",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-5-6-2-2-0-3",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*5*6*2*2*0*3",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 5 6 2 2 0 3",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+5
+6
+2
+2
+0
+3",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118562203",1,"active_learning_test_leet"
+"hey creepy evasion 1793118562319",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.5.6.2.3.1.9",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...5...6...2...3...1...9",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-5-6-2-3-1-9",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*5*6*2*3*1*9",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 5 6 2 3 1 9",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+5
+6
+2
+3
+1
+9",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118562319",1,"reported_user_dialogue_leet"
+"test_violation_sample_1793118615757",1,"active_learning_test"
+"t.e.s.t._.v.i.o.l.a.t.i.o.n._.s.a.m.p.l.e._.1.7.9.3.1.1.8.6.1.5.7.5.7",1,"active_learning_test_dotted"
+"t...e...s...t..._...v...i...o...l...a...t...i...o...n..._...s...a...m...p...l...e..._...1...7...9...3...1...1...8...6...1...5...7...5...7",1,"active_learning_test_multidot"
+"t-e-s-t-_-v-i-o-l-a-t-i-o-n-_-s-a-m-p-l-e-_-1-7-9-3-1-1-8-6-1-5-7-5-7",1,"active_learning_test_hyphenated"
+"t*e*s*t*_*v*i*o*l*a*t*i*o*n*_*s*a*m*p*l*e*_*1*7*9*3*1*1*8*6*1*5*7*5*7",1,"active_learning_test_starred"
+"t e s t _ v i o l a t i o n _ s a m p l e _ 1 7 9 3 1 1 8 6 1 5 7 5 7",1,"active_learning_test_spaced"
+"t
+e
+s
+t
+_
+v
+i
+o
+l
+a
+t
+i
+o
+n
+_
+s
+a
+m
+p
+l
+e
+_
+1
+7
+9
+3
+1
+1
+8
+6
+1
+5
+7
+5
+7",1,"active_learning_test_vertical"
+"t3$t_v10l@t10n_$@mpl3_1793118615757",1,"active_learning_test_leet"
+"hey creepy evasion 1793118615878",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.6.1.5.8.7.8",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...6...1...5...8...7...8",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-6-1-5-8-7-8",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*6*1*5*8*7*8",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 6 1 5 8 7 8",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+6
+1
+5
+8
+7
+8",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118615878",1,"reported_user_dialogue_leet"
+"hey creepy evasion 1793118666761",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.1.8.6.6.6.7.6.1",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...1...8...6...6...6...7...6...1",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-1-8-6-6-6-7-6-1",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*1*8*6*6*6*7*6*1",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 1 8 6 6 6 7 6 1",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+1
+8
+6
+6
+6
+7
+6
+1",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793118666761",1,"reported_user_dialogue_leet"
+"hey creepy evasion 1793120207297",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.2.0.2.0.7.2.9.7",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...2...0...2...0...7...2...9...7",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-2-0-2-0-7-2-9-7",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*2*0*2*0*7*2*9*7",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 1 2 0 2 0 7 2 9 7",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+1
+2
+0
+2
+0
+7
+2
+9
+7",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793120207297",1,"reported_user_dialogue_leet"

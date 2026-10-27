@@ -43,6 +43,7 @@ const {
   detectAskingForPhoneNumber,
   detectSocialMediaSharing,
   detectRestrictedSymbols,
+  evaluateMessage,
   POLITE_MESSAGES
 } = require("../utils/unifiedModerator");
 const {
@@ -609,11 +610,16 @@ function validateAndModerateMessage(socket, userId, text, roomId = null, partner
   if (roomId) {
     const trajectoryResult = evaluateConversationTrajectory(roomId, userId, text, partnerId);
     if (!trajectoryResult.allowed) {
-      const msg = trajectoryResult.message || "⚠️ Please keep the conversation friendly and respectful 🙏";
-      const labelText = trajectoryResult.label || "Please don't use bad words here";
+      const labelText = trajectoryResult.label || POLITE_MESSAGES.COERCION_GROOMING;
       log("message_blocked_trajectory", { userId, roomId, reason: trajectoryResult.reason, category: trajectoryResult.category });
-      socket.emit("warning_message", { message: msg, label: labelText, type: trajectoryResult.category || "trajectory_warning" });
-      socket.emit("message_rejected", { message: msg, label: labelText, reason: trajectoryResult.reason, action: "block" });
+      // Emit single message_rejected event with clean label (no duplicate toasts or alert popups)
+      socket.emit("message_rejected", {
+        message: labelText,
+        label: labelText,
+        reason: trajectoryResult.reason,
+        category: trajectoryResult.category || "trajectory_violation",
+        action: "block"
+      });
       if (global.recordViolationIntercepted) global.recordViolationIntercepted();
       recordViolationEvent({
         type: trajectoryResult.reason,
@@ -625,7 +631,7 @@ function validateAndModerateMessage(socket, userId, text, roomId = null, partner
         severity: "warning",
       });
       ingestIncomingChatMessage(userId, text, roomId, true, trajectoryResult.category || "trajectory_violation");
-      return { blocked: true, reason: trajectoryResult.reason, action: "block", message: msg, label: labelText };
+      return { blocked: true, reason: trajectoryResult.reason, action: "block", message: labelText, label: labelText, category: trajectoryResult.category };
     }
   }
 
@@ -636,170 +642,37 @@ function validateAndModerateMessage(socket, userId, text, roomId = null, partner
     socket.data.lastMessageText = text;
   }
 
-  // 1. Separate Warning for Phone / Mobile numbers (NO BAN)
-  if (detectPhoneNumber(text)) {
-    const msg = POLITE_MESSAGES.PHONE_NUMBER;
-    log("message_blocked_phone", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "phone_number_warning", reason: "phone_number_blocked" });
-    socket.emit("error_message", { message: msg });
+  // 1. Unified 2030 Moderation Evaluation (Phone, Social, Links, Symbols, Slurs, Coercion, Low-effort)
+  const evalResult = evaluateMessage(text);
+  if (!evalResult.valid) {
+    const labelText = evalResult.label || POLITE_MESSAGES.BAD_WORDS_PLAIN;
+    log("message_blocked_unified", { userId, category: evalResult.category, reason: evalResult.reason });
+    // Emit single message_rejected event with clean label (suppressing duplicate toasts or alerts)
+    socket.emit("message_rejected", {
+      message: labelText,
+      label: labelText,
+      reason: evalResult.reason,
+      category: evalResult.category,
+      action: "block"
+    });
     if (global.recordViolationIntercepted) global.recordViolationIntercepted();
     recordViolationEvent({
-      type: "phone_shared",
+      type: evalResult.category || "content_moderated",
       userId,
       deviceHash: socket.data?.deviceHash,
       country: socket.data?.country,
       snippet: text,
-      action: "Blocked / Warning",
-      severity: "warning",
-    });
-    return { blocked: true, reason: "phone_number_blocked", action: "block", message: msg };
-  }
-
-  // 1.1 Separate Warning for Asking / Soliciting Phone Numbers or WhatsApp
-  if (detectAskingForPhoneNumber(text)) {
-    const msg = POLITE_MESSAGES.ASKING_PHONE;
-    log("message_blocked_asking_phone", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "asking_number_warning", reason: "asking_number_blocked" });
-    socket.emit("error_message", { message: msg });
-    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
-    recordViolationEvent({
-      type: "phone_asked",
-      userId,
-      deviceHash: socket.data?.deviceHash,
-      country: socket.data?.country,
-      snippet: text,
-      action: "Blocked / Warning",
-      severity: "warning",
-    });
-    return { blocked: true, reason: "asking_number_blocked", action: "block", message: msg };
-  }
-
-  // 2. Separate Warning for External Links and URLs (NO BAN)
-  if (blockExternalLinksEnabled && hasBlockedLinks(text)) {
-    const msg = POLITE_MESSAGES.LINKS;
-    log("message_blocked_link", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "link_sharing_warning", reason: "link_sharing_blocked" });
-    socket.emit("error_message", { message: msg });
-    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
-    recordViolationEvent({
-      type: "link_blocked",
-      userId,
-      deviceHash: socket.data?.deviceHash,
-      country: socket.data?.country,
-      snippet: text,
-      action: "Blocked / Warning",
-      severity: "warning",
-    });
-    return { blocked: true, reason: "link_sharing_blocked", action: "block", message: msg };
-  }
-
-  // 2.1 Separate Warning for Social Media Handles / IDs (NO BAN)
-  if (detectSocialMediaSharing(text)) {
-    const msg = POLITE_MESSAGES.SOCIAL_MEDIA;
-    log("message_blocked_social_id", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: "social_id_warning", reason: "social_id_blocked" });
-    socket.emit("error_message", { message: msg });
-    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
-    recordViolationEvent({
-      type: "social_handle",
-      userId,
-      deviceHash: socket.data?.deviceHash,
-      country: socket.data?.country,
-      snippet: text,
-      action: "Blocked / Warning",
-      severity: "warning",
-    });
-    return { blocked: true, reason: "social_id_blocked", action: "block", message: msg };
-  }
-
-  // 3. Separate Warning for Special Symbols & Excessive Punctuation (NO BAN)
-  if (detectRestrictedSymbols(text)) {
-    const isExcessive = /\.{6,}/.test(text) || /\,{6,}/.test(text);
-    const msg = isExcessive ? POLITE_MESSAGES.SYMBOLS_EXCESSIVE : POLITE_MESSAGES.SYMBOLS;
-    log("message_blocked_symbols", { userId, text: text.slice(0, 50) });
-    socket.emit("warning_message", { message: msg, type: isExcessive ? "excessive_punctuation_warning" : "restricted_symbols_warning", reason: "restricted_symbols_blocked" });
-    socket.emit("error_message", { message: msg });
-    recordViolationEvent({
-      type: "symbols_blocked",
-      userId,
-      deviceHash: socket.data?.deviceHash,
-      country: socket.data?.country,
-      snippet: text,
-      action: "Blocked / Warning",
+      action: "Blocked / In-Chat Label",
       severity: "info",
     });
-    return { blocked: true, reason: "restricted_symbols_blocked", action: "block", message: msg };
-  }
-
-  // 4. Slur filter - NEVER terminates session immediately
-  const slurResult = slurFilter.moderateSlurMessage(userId, text);
-
-  if (!slurResult.allowed) {
-    if (global.recordViolationIntercepted) global.recordViolationIntercepted();
-    recordViolationEvent({
-      type: "slur_detected",
-      userId,
-      deviceHash: socket.data?.deviceHash,
-      country: socket.data?.country,
-      snippet: text,
-      matchedWords: slurResult.matchedWords || [],
-      action: slurResult.action || "Warning",
-      severity: slurResult.action === "ban_15min" ? "critical" : "warning",
-    });
-    spamStore.addSpamViolation({
-      userId, type: "slur_blocked", message: text.slice(0, 50),
-      action: slurResult.action, isTargeting: slurResult.isTargeting,
-      matchedWords: slurResult.matchedWords, violationCount: slurResult.violationCount,
-    });
-    securityStore.addSecurityLog("slur_blocked", {
-      userId, message: text.slice(0, 100), action: slurResult.action,
-      isTargeting: slurResult.isTargeting, matchedWords: slurResult.matchedWords,
-      severity: slurResult.action === "ban_15min" ? "critical" : slurResult.action === "cooldown" ? "high" : "medium",
-    });
-    log("message_rejected", {
-      userId, reason: "slur_blocked", action: slurResult.action,
-      isTargeting: slurResult.isTargeting, matchedWords: slurResult.matchedWords,
-    });
-    socket.emit("error_message", {
-      message: slurResult.message, action: slurResult.action, duration: slurResult.duration || 0,
-    });
-    ingestIncomingChatMessage(userId, text, roomId, true, "slur_or_bad_words_blocked");
-    return { blocked: true, reason: "slur_blocked", action: slurResult.action, slurResult };
-  }
-
-  // Flagged but allowed
-  if (slurResult.hasSlur && slurResult.action === "flagged") {
-    securityStore.addSecurityLog("slur_flagged", { userId, message: text.slice(0, 100), matchedWords: slurResult.matchedWords, severity: "low" });
-    log("message_flagged", { userId, reason: "slur_flagged", matchedWords: slurResult.matchedWords });
-    socket.emit("warning_message", { message: "⚠️ please keep it appropriate 🙏", type: "slur_flag" });
-  }
-
-  // Moderation (gender/age questions / low effort) - NEVER terminates session
-  const moderationResult = moderation.moderateMessage(userId, text);
-
-  if (!moderationResult.allowed) {
-    spamStore.addSpamViolation({ userId, type: "moderation_blocked", message: text.slice(0, 50), action: moderationResult.action, violationCount: moderationResult.violationCount });
-    securityStore.addSecurityLog("moderation_blocked", { userId, message: text.slice(0, 100), action: moderationResult.action, violationCount: moderationResult.violationCount, severity: moderationResult.action === "mute" ? "high" : "medium" });
-    log("message_moderated", { userId, action: moderationResult.action, violationCount: moderationResult.violationCount, reason: "low_effort" });
-    slurFilter.applyPenalty(userId, moderationResult.action, moderationResult.duration);
-    socket.emit("warning_message", { message: moderationResult.message, type: "low_effort_warning", violationCount: moderationResult.violationCount });
-    socket.emit("message_rejected", { message: moderationResult.message, reason: "low_effort_warning", violationCount: moderationResult.violationCount });
-    socket.emit("error_message", { message: moderationResult.message, action: moderationResult.action, duration: moderationResult.duration });
-    ingestIncomingChatMessage(userId, text, roomId, true, "low_effort_blocked");
-    return { blocked: true, reason: "low_effort_warning", action: moderationResult.action, message: moderationResult.message };
-  }
-
-  let finalMessage = text;
-  if (moderationResult.action === "replaced") {
-    finalMessage = moderationResult.replacement;
-    securityStore.addSecurityLog("moderation_replaced", { userId, originalMessage: text.slice(0, 50), replacement: finalMessage, violationCount: moderationResult.violationCount, severity: "low" });
-    log("message_replaced", { userId, original: text.slice(0, 30), replacement: finalMessage, violationCount: moderationResult.violationCount });
+    ingestIncomingChatMessage(userId, text, roomId, true, evalResult.category || "moderation_blocked");
+    return { blocked: true, reason: evalResult.reason, action: "block", message: labelText, label: labelText, category: evalResult.category };
   }
 
   // Self-training continuous learning on approved healthy message
-  ingestIncomingChatMessage(userId, finalMessage, roomId, false, "safe_conversation");
+  ingestIncomingChatMessage(userId, text, roomId, false, "safe_conversation");
 
-  return { blocked: false, finalMessage };
+  return { blocked: false, finalMessage: text };
 }
 
 function notifyFriendsOfStatusChange(io, userId, online) {
@@ -1395,10 +1268,6 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         const partnerId = activeRoom?.users?.find(id => id !== userId);
         const modResult = validateAndModerateMessage(socket, userId, text, currentUser.roomId, partnerId);
         if (modResult.blocked) {
-          if (modResult.reason === "slur_blocked") {
-            handleInappropriateViolation(socket, io, userId, "slur_blocked", text, currentUser.roomId, false, ack);
-            return;
-          }
           if (typeof ack === "function") ack({ ok: false, success: false, reason: modResult.reason, action: modResult.action, message: modResult.message, label: modResult.label || "Please don't use bad words here" });
           return;
         }
