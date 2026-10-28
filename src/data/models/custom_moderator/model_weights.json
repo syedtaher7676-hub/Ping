@@ -1,16 +1,15 @@
 {
   "model_name": "PingUnifiedModerationModel",
   "target_era": "2028-2030",
-  "version": "4.0.0-Enterprise",
-  "trainedAt": "2026-10-28T17:51:01.127Z",
-  "sampleCount": 8705,
-  "violationCount": 7801,
+  "version": "3.0.0",
+  "trainedAt": "2026-10-27T16:31:06.863Z",
+  "sampleCount": 8463,
+  "violationCount": 7561,
   "safeCount": 115,
-  "vocabSize": 2482,
   "topViolationTokens": [
     [
       "you",
-      38
+      36
     ],
     [
       "y0u",
@@ -18,55 +17,11 @@
     ],
     [
       "your",
-      27
-    ],
-    [
-      "ki",
-      27
+      21
     ],
     [
       "y0ur",
       21
-    ],
-    [
-      "suwar",
-      18
-    ],
-    [
-      "ke",
-      17
-    ],
-    [
-      "de",
-      16
-    ],
-    [
-      "ka",
-      15
-    ],
-    [
-      "hey",
-      15
-    ],
-    [
-      "creepy",
-      15
-    ],
-    [
-      "evasion",
-      15
-    ],
-    [
-      "h3y",
-      15
-    ],
-    [
-      "cr33py",
-      15
-    ],
-    [
-      "3v@$10n",
-      15
     ],
     [
       "off",
@@ -87,10 +42,6 @@
     [
       "puku",
       13
-    ],
-    [
-      "die",
-      12
     ],
     [
       "muchu",
@@ -121,14 +72,6 @@
       12
     ],
     [
-      "jhaat",
-      12
-    ],
-    [
-      "bache",
-      12
-    ],
-    [
       "is",
       11
     ],
@@ -137,11 +80,27 @@
       11
     ],
     [
-      "aulad",
+      "hey",
       11
     ],
     [
-      "and",
+      "creepy",
+      11
+    ],
+    [
+      "evasion",
+      11
+    ],
+    [
+      "h3y",
+      11
+    ],
+    [
+      "cr33py",
+      11
+    ],
+    [
+      "3v@$10n",
       11
     ],
     [
@@ -157,31 +116,11 @@
       10
     ],
     [
-      "baal",
-      10
-    ],
-    [
-      "bachay",
-      10
-    ],
-    [
-      "dog",
-      10
-    ],
-    [
-      "get",
-      9
-    ],
-    [
       "are",
       9
     ],
     [
       "@r3",
-      9
-    ],
-    [
-      "trash",
       9
     ],
     [
@@ -221,15 +160,7 @@
       8
     ],
     [
-      "suar",
-      8
-    ],
-    [
       "yt",
-      8
-    ],
-    [
-      "bhen",
       8
     ],
     [
@@ -273,15 +204,11 @@
       8
     ],
     [
-      "choot",
-      8
+      "get",
+      7
     ],
     [
-      "lixo",
-      8
-    ],
-    [
-      "yourself",
+      "and",
       7
     ],
     [
@@ -325,14 +252,6 @@
       7
     ],
     [
-      "sale",
-      7
-    ],
-    [
-      "harami",
-      7
-    ],
-    [
       "gudha",
       7
     ],
@@ -357,15 +276,11 @@
       7
     ],
     [
-      "gashti",
-      7
-    ],
-    [
-      "anjing",
-      7
-    ],
-    [
       "ugly",
+      6
+    ],
+    [
+      "die",
       6
     ],
     [
@@ -381,7 +296,7 @@
       6
     ],
     [
-      "randi",
+      "de",
       6
     ],
     [
@@ -413,14 +328,6 @@
       6
     ],
     [
-      "subhuman",
-      6
-    ],
-    [
-      "chod",
-      6
-    ],
-    [
       "oombu",
       6
     ],
@@ -446,38 +353,6 @@
     ],
     [
       "tullu",
-      6
-    ],
-    [
-      "ma",
-      6
-    ],
-    [
-      "jhaant",
-      6
-    ],
-    [
-      "loda",
-      6
-    ],
-    [
-      "behen",
-      6
-    ],
-    [
-      "کے",
-      6
-    ],
-    [
-      "ape",
-      6
-    ],
-    [
-      "monkey",
-      6
-    ],
-    [
-      "bobo",
       6
     ],
     [
@@ -509,27 +384,11 @@
       5
     ],
     [
-      "teri",
-      5
-    ],
-    [
-      "maa",
-      5
-    ],
-    [
-      "se",
-      5
-    ],
-    [
-      "mierda",
+      "yourself",
       5
     ],
     [
       "y0ur$3lf",
-      5
-    ],
-    [
-      "cancer",
       5
     ],
     [
@@ -550,22 +409,6 @@
     ],
     [
       "pdf",
-      5
-    ],
-    [
-      "swat",
-      5
-    ],
-    [
-      "house",
-      5
-    ],
-    [
-      "gand",
-      5
-    ],
-    [
-      "merde",
       5
     ],
     [
@@ -598,18 +441,6 @@
     ],
     [
       "$h@t@",
-      5
-    ],
-    [
-      "caralho",
-      5
-    ],
-    [
-      "gago",
-      5
-    ],
-    [
-      "do",
       5
     ],
     [
@@ -669,27 +500,11 @@
       4
     ],
     [
-      "madarchod",
-      4
-    ],
-    [
       "number",
       4
     ],
     [
       "numb3r",
-      4
-    ],
-    [
-      "hijo",
-      4
-    ],
-    [
-      "kys",
-      4
-    ],
-    [
-      "kill",
       4
     ],
     [
@@ -702,10 +517,6 @@
     ],
     [
       "guy",
-      4
-    ],
-    [
-      "pic",
       4
     ],
     [
@@ -745,19 +556,7 @@
       4
     ],
     [
-      "swatting",
-      4
-    ],
-    [
-      "crib",
-      4
-    ],
-    [
       "ql",
-      4
-    ],
-    [
-      "madar",
       4
     ],
     [
@@ -837,10 +636,6 @@
       4
     ],
     [
-      "merda",
-      4
-    ],
-    [
       "fucked",
       4
     ],
@@ -858,74 +653,6 @@
     ],
     [
       "tits",
-      4
-    ],
-    [
-      "jhat",
-      4
-    ],
-    [
-      "bacha",
-      4
-    ],
-    [
-      "mara",
-      4
-    ],
-    [
-      "ullu",
-      4
-    ],
-    [
-      "جھانٹ",
-      4
-    ],
-    [
-      "سور",
-      4
-    ],
-    [
-      "چود",
-      4
-    ],
-    [
-      "حرامی",
-      4
-    ],
-    [
-      "بچے",
-      4
-    ],
-    [
-      "dogshit",
-      4
-    ],
-    [
-      "boosted",
-      4
-    ],
-    [
-      "noob",
-      4
-    ],
-    [
-      "manco",
-      4
-    ],
-    [
-      "mo",
-      4
-    ],
-    [
-      "lu",
-      4
-    ],
-    [
-      "kau",
-      4
-    ],
-    [
-      "ya",
       4
     ],
     [
@@ -977,6 +704,10 @@
       3
     ],
     [
+      "trash",
+      3
+    ],
+    [
       "tr@$h",
       3
     ],
@@ -989,11 +720,15 @@
       3
     ],
     [
-      "shit",
+      "ki",
       3
     ],
     [
       "k1",
+      3
+    ],
+    [
+      "se",
       3
     ],
     [
@@ -1034,10 +769,6 @@
     ],
     [
       "1d10t",
-      3
-    ],
-    [
-      "hope",
       3
     ],
     [
@@ -1090,10 +821,6 @@
     ],
     [
       "p1c",
-      3
-    ],
-    [
-      "in",
       3
     ],
     [
@@ -1173,15 +900,19 @@
       3
     ],
     [
+      "swat",
+      3
+    ],
+    [
+      "house",
+      3
+    ],
+    [
       "$w@t",
       3
     ],
     [
       "h0u$3",
-      3
-    ],
-    [
-      "ip",
       3
     ],
     [
@@ -1197,15 +928,83 @@
       3
     ],
     [
-      "touch",
-      3
-    ],
-    [
-      "doxxing",
-      3
-    ],
-    [
       "pute",
+      3
+    ],
+    [
+      "put3",
+      3
+    ],
+    [
+      "sale",
+      3
+    ],
+    [
+      "$@l3",
+      3
+    ],
+    [
+      "poolu",
+      3
+    ],
+    [
+      "p00lu",
+      3
+    ],
+    [
+      "sunni",
+      3
+    ],
+    [
+      "$unn1",
+      3
+    ],
+    [
+      "dengu",
+      3
+    ],
+    [
+      "d3ngu",
+      3
+    ],
+    [
+      "erri",
+      3
+    ],
+    [
+      "3rr1",
+      3
+    ],
+    [
+      "nakku",
+      3
+    ],
+    [
+      "n@kku",
+      3
+    ],
+    [
+      "magane",
+      3
+    ],
+    [
+      "m@g@n3",
+      3
+    ],
+    [
+      "sulay",
+      3
+    ],
+    [
+      "$ul@y",
+      3
+    ],
+    [
+      "hadaragi",
+      3
+    ],
+    [
+      "h@d@r@g1",
       3
     ]
   ],
@@ -2208,206 +2007,6 @@
     ],
     [
       "straight",
-      1
-    ],
-    [
-      "facts",
-      1
-    ],
-    [
-      "printer",
-      1
-    ],
-    [
-      "ones",
-      1
-    ],
-    [
-      "understand",
-      1
-    ],
-    [
-      "blud",
-      1
-    ],
-    [
-      "making",
-      1
-    ],
-    [
-      "laugh",
-      1
-    ],
-    [
-      "hard",
-      1
-    ],
-    [
-      "dead",
-      1
-    ],
-    [
-      "too",
-      1
-    ],
-    [
-      "funny",
-      1
-    ],
-    [
-      "literally",
-      1
-    ],
-    [
-      "cooked",
-      1
-    ],
-    [
-      "presentation",
-      1
-    ],
-    [
-      "bet",
-      1
-    ],
-    [
-      "class",
-      1
-    ],
-    [
-      "main",
-      1
-    ],
-    [
-      "character",
-      1
-    ],
-    [
-      "chat",
-      1
-    ],
-    [
-      "lock",
-      1
-    ],
-    [
-      "locked",
-      1
-    ],
-    [
-      "all",
-      1
-    ],
-    [
-      "night",
-      1
-    ],
-    [
-      "touch",
-      1
-    ],
-    [
-      "enjoy",
-      1
-    ],
-    [
-      "sunny",
-      1
-    ],
-    [
-      "sigma",
-      1
-    ],
-    [
-      "grindset",
-      1
-    ],
-    [
-      "study",
-      1
-    ],
-    [
-      "skibidi",
-      1
-    ],
-    [
-      "meme",
-      1
-    ],
-    [
-      "everywhere",
-      1
-    ],
-    [
-      "npc",
-      1
-    ],
-    [
-      "vibes",
-      1
-    ],
-    [
-      "fanum",
-      1
-    ],
-    [
-      "tax",
-      1
-    ],
-    [
-      "fries",
-      1
-    ],
-    [
-      "it",
-      1
-    ],
-    [
-      "high",
-      1
-    ],
-    [
-      "fashion",
-      1
-    ],
-    [
-      "periodt",
-      1
-    ],
-    [
-      "shining",
-      1
-    ],
-    [
-      "ball",
-      1
-    ],
-    [
-      "regardless",
-      1
-    ],
-    [
-      "rent",
-      1
-    ],
-    [
-      "free",
-      1
-    ],
-    [
-      "head",
-      1
-    ],
-    [
-      "common",
-      1
-    ],
-    [
-      "delulu",
-      1
-    ],
-    [
-      "solulu",
       1
     ]
   ],
@@ -32438,134 +32037,6 @@
         "category": "reported_user_dialogue_leet"
       },
       {
-        "text": "hey creepy evasion 1793120207297",
-        "category": "reported_user_dialogue"
-      },
-      {
-        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.1.2.0.2.0.7.2.9.7",
-        "category": "reported_user_dialogue_dotted"
-      },
-      {
-        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...1...2...0...2...0...7...2...9...7",
-        "category": "reported_user_dialogue_multidot"
-      },
-      {
-        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-1-2-0-2-0-7-2-9-7",
-        "category": "reported_user_dialogue_hyphenated"
-      },
-      {
-        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*1*2*0*2*0*7*2*9*7",
-        "category": "reported_user_dialogue_starred"
-      },
-      {
-        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 1 2 0 2 0 7 2 9 7",
-        "category": "reported_user_dialogue_spaced"
-      },
-      {
-        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n1\n2\n0\n2\n0\n7\n2\n9\n7",
-        "category": "reported_user_dialogue_vertical"
-      },
-      {
-        "text": "h3y cr33py 3v@$10n 1793120207297",
-        "category": "reported_user_dialogue_leet"
-      },
-      {
-        "text": "hey creepy evasion 1793208916776",
-        "category": "reported_user_dialogue"
-      },
-      {
-        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.2.0.8.9.1.6.7.7.6",
-        "category": "reported_user_dialogue_dotted"
-      },
-      {
-        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...2...0...8...9...1...6...7...7...6",
-        "category": "reported_user_dialogue_multidot"
-      },
-      {
-        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-2-0-8-9-1-6-7-7-6",
-        "category": "reported_user_dialogue_hyphenated"
-      },
-      {
-        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*2*0*8*9*1*6*7*7*6",
-        "category": "reported_user_dialogue_starred"
-      },
-      {
-        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 2 0 8 9 1 6 7 7 6",
-        "category": "reported_user_dialogue_spaced"
-      },
-      {
-        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n2\n0\n8\n9\n1\n6\n7\n7\n6",
-        "category": "reported_user_dialogue_vertical"
-      },
-      {
-        "text": "h3y cr33py 3v@$10n 1793208916776",
-        "category": "reported_user_dialogue_leet"
-      },
-      {
-        "text": "hey creepy evasion 1793209316255",
-        "category": "reported_user_dialogue"
-      },
-      {
-        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.2.0.9.3.1.6.2.5.5",
-        "category": "reported_user_dialogue_dotted"
-      },
-      {
-        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...2...0...9...3...1...6...2...5...5",
-        "category": "reported_user_dialogue_multidot"
-      },
-      {
-        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-2-0-9-3-1-6-2-5-5",
-        "category": "reported_user_dialogue_hyphenated"
-      },
-      {
-        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*2*0*9*3*1*6*2*5*5",
-        "category": "reported_user_dialogue_starred"
-      },
-      {
-        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 2 0 9 3 1 6 2 5 5",
-        "category": "reported_user_dialogue_spaced"
-      },
-      {
-        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n2\n0\n9\n3\n1\n6\n2\n5\n5",
-        "category": "reported_user_dialogue_vertical"
-      },
-      {
-        "text": "h3y cr33py 3v@$10n 1793209316255",
-        "category": "reported_user_dialogue_leet"
-      },
-      {
-        "text": "hey creepy evasion 1793209860989",
-        "category": "reported_user_dialogue"
-      },
-      {
-        "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.2.0.9.8.6.0.9.8.9",
-        "category": "reported_user_dialogue_dotted"
-      },
-      {
-        "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...2...0...9...8...6...0...9...8...9",
-        "category": "reported_user_dialogue_multidot"
-      },
-      {
-        "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-2-0-9-8-6-0-9-8-9",
-        "category": "reported_user_dialogue_hyphenated"
-      },
-      {
-        "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*2*0*9*8*6*0*9*8*9",
-        "category": "reported_user_dialogue_starred"
-      },
-      {
-        "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 2 0 9 8 6 0 9 8 9",
-        "category": "reported_user_dialogue_spaced"
-      },
-      {
-        "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n2\n0\n9\n8\n6\n0\n9\n8\n9",
-        "category": "reported_user_dialogue_vertical"
-      },
-      {
-        "text": "h3y cr33py 3v@$10n 1793209860989",
-        "category": "reported_user_dialogue_leet"
-      },
-      {
         "text": "fuck",
         "category": "global_slur_lexicon"
       },
@@ -32783,838 +32254,6 @@
       },
       {
         "text": "gtfo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaant",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhant",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaatu",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaantu",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhatu",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaat ke baal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaat k baal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaant ke baal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaant k baal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaat ka pilla",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaat ka baal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaat ka keeda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhat ke bal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhaantoo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "jhantoo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwwar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suaar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "soowar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar ke bache",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar ke bachay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar k bache",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar k bachay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar ka bacha",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar ki nasal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar ki aulad",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suwar ke bacho",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suar k bache",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suar ke bachay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suar ki aulad",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kameena",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kameeni",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kameenay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kamini",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "haraami",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "haramzade",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "harami k bache",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "harami k bachay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "harami ki aulad",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gasti",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gashti k bache",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gashti ki aulad",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gashti k bachay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kanjro",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kanjaro",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chinnal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "raand",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "randi rona",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "randi ka bacha",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "dalla",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhadwon",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chootia",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chootiye",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chudam",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chudwana",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "loda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "lodue",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "lodey",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "lund k bache",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gand",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gaandfat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gandfat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gaand mara",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gand mara",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhosada",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhosadaa",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhosadchod",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhosdiwale",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhosadiwale",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhen chod",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "behen chod",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "maderchod",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "madar jaat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "madarjaat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "madarchod ki aulad",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "teri maa ki",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "teri ma ki",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "maa ki choot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ma ki choot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhen ki choot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "behen ki choot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhen ka loda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "behen ka loda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "beghairat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "be-ghairat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "zaleel",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ullu ke pathe",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ullu k pathay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "charsi",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bhangar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "muthal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "muth mar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kuttay",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "جھانٹ",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "جھاٹ",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "سور",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "سوّر",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "کنجر",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "کنجری",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "گشتی",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "رنڈی",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "بھڑوا",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "دلا",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "دلے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "بہن چود",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "مادر چود",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "چوتیا",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "چوتیے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "حرامی",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "کتے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "کتیا",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "لنڈ",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "لوڑا",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "لوڑے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "گانڈ",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "چوت",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "جھانٹو",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "سالے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "بے غیرت",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ذلیل",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "خنزیر",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "تتے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "چدکڑ",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "پھدی",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "حرامی کے بچے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "سور کے بچے",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "جھانٹ کے بال",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "uninstall life",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kys dog",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "touch grass and die",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "slit ur wrists",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "swatting your house",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "swat your crib",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "doxxing your ip",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ggez dogshit",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "dogwater ape",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "subhuman bot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "boosted trash",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "deranked monkey",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kill yourself noob",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "hope you die in a fire",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "trash animal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "cancer dog",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "get cancer and die",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ape monkey",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "inbred subhuman",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "braindead dog",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "dogshit",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "dog shit",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "trash dog",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "boosted ape",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "griefing noob",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "hardstuck monkey",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "manco de mierda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "hijo de perra",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ptm",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "lptm",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "conchetumadre",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "anda a chuparla",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "puto manco",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "basura de mierda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "mono subnormal",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "mange tes morts",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bouffon de merde",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "creve sale sous merde",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "sale singe",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "lixo do caralho",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "arrombado do caralho",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "vai se foder lixo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "macaco de merda",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chupa rola lixo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "verme imundo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "morre lixo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "suka blyat",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "idi nakhuy",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "nahui sobaka",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ebat debil",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "chmo ebannoe",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "pidoras ebanıy",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "poshol nahuy",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "sdokhni tvar",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "orospu cocugu",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ananin ami",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "sikik kopek",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "amk veledi",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "geber pic",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "gotveren piç",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "tangina mo bobo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bobo gago",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ulol salot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kantot ina mo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "tarantado gago",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "leche kang bobo",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "anjing lu",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "babi lu",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kontol anjing",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "memek busuk",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "pukimak kau",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "pantek kau",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "bocah anjing",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "sharmouta",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "ibn el kalb",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kahba ya maniyuk",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "teezak",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "rooh mot",
-        "category": "global_slur_lexicon"
-      },
-      {
-        "text": "kes ekhtak ya khara",
         "category": "global_slur_lexicon"
       }
     ],

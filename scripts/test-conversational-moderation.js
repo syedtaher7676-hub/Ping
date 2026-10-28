@@ -449,77 +449,7 @@ async function runTests() {
   assert.strictEqual(legitAnomaly.isAnomalous, false, "Legitimate violation sample must pass anomaly verification");
   console.log(`   ✅ ACCEPTED Legitimate sample for self-training -> Anomaly Score: ${legitAnomaly.score.toFixed(2)} (Below threshold)`);
 
-  console.log('\n--- 9. Testing Urdu / Roman Urdu / South Asian Slurs (jhaat, jhaant, suwar & gaming toxicity) ---');
-  const urduAndGamingCases = [
-    { text: "jhaat", note: "Urdu jhaat" },
-    { text: "jhaant", note: "Urdu jhaant" },
-    { text: "suwar", note: "Urdu suwar" },
-    { text: "suwar ke bache", note: "Urdu suwar compound" },
-    { text: "jhaat ke baal", note: "Urdu jhaat compound" },
-    { text: "jhaant ke baal", note: "Urdu jhaant compound" },
-    { text: "tu suwar hai", note: "Directed Urdu animal slur" },
-    { text: "j.h.a.a.t", note: "Dotted evasion jhaat" },
-    { text: "s.u.w.a.r", note: "Dotted evasion suwar" },
-    { text: "jh**t", note: "Asterisk masked jhaat" },
-    { text: "s*war", note: "Masked suwar" },
-    { text: "جھانٹ", note: "Urdu Nastaliq script jhaant" },
-    { text: "سور", note: "Urdu Nastaliq script suwar" },
-    { text: "uninstall life dog", note: "Gaming harassment / death wish" },
-    { text: "kys dog", note: "Gaming kys dog" },
-    { text: "manco de mierda", note: "Spanish gaming insult" },
-    { text: "suka blyat idi nakhuy", note: "Russian gaming toxicity" }
-  ];
-
-  for (const ug of urduAndGamingCases) {
-    const res = evaluateMessage(ug.text);
-    assert.strictEqual(res.valid, false, `Must detect and block Urdu / gaming slur: "${ug.text}" (${ug.note})`);
-    assert.strictEqual(res.decision, "BLOCK", `Decision must be BLOCK for: "${ug.text}"`);
-    assert.ok(res.toxicityScore >= 0.7, `Toxicity score must be >= 0.7 for: "${ug.text}" (was ${res.toxicityScore})`);
-    console.log(`   ✅ BLOCKED URDU / GAMING [${ug.note}]: "${ug.text}" -> Toxicity: ${res.toxicityScore}, Categories: ${res.categories.join(', ')}`);
-  }
-
-  console.log('\n--- 10. Testing Real Human Behavior & Gaming Banter (Guaranteed 0 False Positives) ---');
-  const humanBanterCases = [
-    { text: "can you kill the boss for me?", note: "Gaming boss objective callout" },
-    { text: "kill the carry first guys", note: "Tactical ADC/carry focus" },
-    { text: "destroy their nexus now", note: "Nexus objective callout" },
-    { text: "we destroyed them in that game!", note: "Hype match victory celebration" },
-    { text: "I played like shit today lol", note: "Self-deprecating gaming banter" },
-    { text: "my aim is trash today haha", note: "Self-directed aim comment" },
-    { text: "I choked that clutch round", note: "Self-deprecating clutch comment" },
-    { text: "holy shit that play was insane!", note: "Exclamatory hype reaction" },
-    { text: "damn bro that shot was sick", note: "Friendly gaming compliment" },
-    { text: "gg wp well played everyone", note: "Good sportsmanship" },
-    { text: "bhai zabardast khel gaya!", note: "Urdu/Hindi friendly match hype" },
-    { text: "bhai maar daala tune!", note: "Urdu/Hindi excitement idiom" },
-    { text: "yaar kamaal kar diya tune", note: "Urdu/Hindi praise" }
-  ];
-
-  for (const hb of humanBanterCases) {
-    const res = evaluateMessage(hb.text);
-    assert.strictEqual(res.valid, true, `Real human banter must be ALLOWED: "${hb.text}" (${hb.note})`);
-    assert.strictEqual(res.decision, "ALLOW", `Decision must be ALLOWED for: "${hb.text}"`);
-    assert.ok(res.toxicityScore <= 0.2, `Toxicity score must be low for human banter: "${hb.text}" (was ${res.toxicityScore})`);
-    console.log(`   ✅ ALLOWED HUMAN BANTER [${hb.note}]: "${hb.text}" -> Score: ${res.toxicityScore}, Callout: ${res.isGamingCallout}`);
-  }
-
-  console.log('\n--- 11. Testing Enterprise B2B AIML Scoring & Telemetry ---');
-  const { evaluateBayesianToxicity, getModelTrainingMetrics } = require('../src/services/modelTrainer');
-  
-  const b2bTox = evaluateBayesianToxicity("fuck off bitch");
-  assert.ok(b2bTox.toxicityScore >= 0.7, "Bayesian scorer must identify toxic text with high score");
-  console.log(`   ✅ Bayesian Scorer on Toxic Text: Score ${b2bTox.toxicityScore.toFixed(3)}, Confidence ${b2bTox.confidence}`);
-
-  const b2bClean = evaluateBayesianToxicity("kill the boss team");
-  assert.ok(b2bClean.toxicityScore <= 0.4, "Bayesian scorer must discount in-game callouts");
-  console.log(`   ✅ Bayesian Scorer on Gaming Callout: Score ${b2bClean.toxicityScore.toFixed(3)}, Callout: ${b2bClean.isGamingCallout}`);
-
-  const modelMetrics = getModelTrainingMetrics();
-  assert.strictEqual(modelMetrics.version, "4.0.0-Enterprise", "Model version must be 4.0.0-Enterprise");
-  assert.ok(modelMetrics.datasetCount > 0, "Dataset count must be > 0");
-  console.log(`   ✅ Model Training Metrics: Version: ${modelMetrics.version}, Dataset: ${modelMetrics.datasetCount} items, Last Trained: ${modelMetrics.lastTrainedAt}`);
-
-  console.log('\n🎉 ALL 2030 MODERATION, URDU SLURS, GAMING BANTER & ENTERPRISE B2B TESTS PASSED 100%!');
+  console.log('\n🎉 ALL 2030 MODERATION, COERCION, LABELS, EMBEDDINGS & ANOMALY TESTS PASSED 100%!');
   process.exit(0);
 }
 

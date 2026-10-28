@@ -212,13 +212,6 @@ function getRoomRecentMessages(roomId) {
  */
 function cleanupRoomTrajectory(roomId) {
   if (roomId) {
-    const state = roomTrajectories.get(roomId);
-    if (state && state.messages && state.messages.length >= 4 && state.healthScore >= 0.85) {
-      try {
-        const { ingestHealthyTurnTakingConversation } = require('../services/modelTrainer');
-        ingestHealthyTurnTakingConversation(state.messages);
-      } catch (_) {}
-    }
     roomTrajectories.delete(roomId);
   }
 }

@@ -163,30 +163,6 @@ const CANONICAL_BAD_WORDS = {
       /\bd+[i1\*_.\-!]+[dx]{2,}[yie]+\b/i
     ],
     exceptions: new Set(['daddy', 'did', 'duty', 'daily'])
-  },
-
-  // Urdu / South Asian slurs & profanity
-  jhaat: {
-    roots: ['jhaat', 'jhaant', 'jhat', 'jhant', 'jhaatu', 'jhantu', 'jhaantu', 'jhatu'],
-    skeleton: 'jht',
-    shortSkeleton: 'jht',
-    patterns: [
-      /\bj+h+[a\*_.\-@4]+[n]*t+[szu]?\b/i,
-      /\bj+h+[a\*_.\-@4]{2,}t+[szu]?\b/i,
-      /\bj[\s.\-_*]+h[\s.\-_*]+a[\s.\-_*]+a?[\s.\-_*]*n?[\s.\-_*]*t\b/i
-    ],
-    exceptions: new Set()
-  },
-
-  suwar: {
-    roots: ['suwar', 'suar', 'suwwar', 'soowar', 'suaar'],
-    skeleton: 'swr',
-    shortSkeleton: 'swr',
-    patterns: [
-      /\bs+[u\*_.\-@#0ov]+[w]*[a\*_.\-@4]+r+[sz]?\b/i,
-      /\bs[\s.\-_*]+u[\s.\-_*]+[w]*[\s.\-_*]*a[\s.\-_*]+r\b/i
-    ],
-    exceptions: new Set(['sour', 'shower', 'swear', 'sweet', 'sweater', 'sugar', 'super', 'sure', 'software', 'sword', 'swerve'])
   }
 };
 

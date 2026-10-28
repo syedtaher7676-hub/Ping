@@ -1,8 +1,7 @@
 {
   "architectures": [
     "DistilBertForSequenceClassification",
-    "PingUnifiedModerationClassifier",
-    "PingBayesianTrajectoryEngine"
+    "PingUnifiedModerationClassifier"
   ],
   "id2label": {
     "0": "SAFE",
@@ -14,12 +13,6 @@
   },
   "model_type": "distilbert",
   "problem_type": "single_label_classification",
-  "version": "4.0.0-Enterprise",
-  "generation": "2028-30",
-  "capabilities": [
-    "multilingual_gaming_moderation",
-    "human_behavior_banter_shield",
-    "active_learning_ping_pipeline",
-    "b2b_enterprise_api_ready"
-  ]
+  "version": "3.0.0",
+  "generation": "2028-30"
 }
