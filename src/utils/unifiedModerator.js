@@ -58,6 +58,32 @@ const SAFE_COLLOQUIAL_PATTERNS = [
   // Benign Gen Z Positive Slang (Must NEVER be blocked)
   /\b(slay|rizz|cap|no\s*cap|bet|bussin|fire|valid|goated|based|wholesome|we\s*ball|ate\s*that|left\s*no\s*crumbs|huge\s*w|let\s*him\s*cook|let\s*them\s*cook)\b/i,
 
+  // ── GAMING CALLOUTS & TACTICAL OBJECTIVES (Real Gamer Behavior - 100% Allowed) ──
+  /\b(kill|drop|shoot|destroy|eliminate|take\s*down|gank|focus|target)\s*(the|that|this|their|an?|him|her)?\s*(boss|carry|adc|jungler|tank|mid|support|sniper|target|nexus|tower|turret|dragon|baron|titan|minion|creeps?|monster|zombie|bot|guy|player|champion|hero|enemy|squad|team)\b/i,
+  /\b(kill|shoot|take\s*out|gank)\s*(him|her|them|that\s*one)\s*(first|now|fast|quick|pls|please)?\b/i,
+  /\b(trade\s*kills?|die\s*for\s*(the\s*)?(team|objective|point)|bait\s*(them|him))\b/i,
+  /\b(we|they|our\s*team|their\s*team)\s*(wiped|destroyed|crushed|aced|demolished)\s*(them|the\s*enemy|their\s*squad|the\s*team)\b/i,
+  /\b(headshot|one\s*shot|triple\s*kill|quadra\s*kill|penta\s*kill|rampage|unstoppable|godlike|first\s*blood)\b/i,
+
+  // ── SELF-DEPRECATION & FRIENDLY GAMEPLAY REACTIONS (0 False Positives) ──
+  /\b(i|my)\s*(played|aim|shot|throw|threw|missed)\s*(like\s*)?(shit|trash|bad|terrible|awful)\s*(today|lol|lmao|haha)?\b/i,
+  /\b(i('m| am)\s*(so\s*)?(bad|terrible|trash|garbage)\s*(at\s*(this|the)\s*game)?)\b/i,
+  /\b(i\s*choked\s*(that|the)\s*(shot|clutch|play|game))\b/i,
+  /\b(my\s*bad|our\s*bad|unlucky\s*(round|game|play)|nt\s*bro|nice\s*try\s*(team|bro|guys?)|gg\s*wp|good\s*game|well\s*played)\b/i,
+
+  // ── EXCLAMATORY HYPE & NON-TARGETED EXCITEMENT ──
+  /\b(holy\s*(shit|crap|hell|cow)|what\s*the\s*fuck|no\s*fucking\s*way)\b(?!\s+(you|u|ur|him|her)\b)/i,
+  /\b(shit\s*man|damn\s*man|damn\s*bro|holy\s*shit)\s*(that\s*was|nice|insane|crazy|good)\b/i,
+  /\b(that\s*(shot|clutch|play|save|game|move|combo|round)\s*was\s*(insane|crazy|sick|filthy|nasty|fire|clean|badass|godlike))\b/i,
+  /\b(kick\s*ass|badass|clutch\s*god|carried\s*(this|the)\s*game|you\s*carried\s*(us|this|the\s*game))\b/i,
+
+  // ── URDU / HINDI / SOUTH ASIAN FRIENDLY HYPE & REAL CONVERSATIONAL BANTER ──
+  /\b(yaar|bhai|yaar\s*tune|bhai\s*tune)\s*(kamaal|zabardast|phaad|maar)\s*(kar\s*diya|di|daala|diya)\b/i,
+  /\b(kya\s*(baat\s*hai|scene\s*hai|mast\s*(shot|play|game)\s*tha|khel\s*gaya|bawaal\s*hai))\b/i,
+  /\b(arrey\s*yaar|shukar\s*hai|shabaash|wah\s*bhai\s*wah|chha\s*gaya|chha\s*gaye|khel\s*gaya\s*ladka)\b/i,
+  /\b(jaan\s*nikal\s*gayi\s*thi|meri\s*ghalti\s*thi|koi\s*baat\s*nahi\s*agla\s*round)\b/i,
+  /\b(bhai\s*zabardast|killer\s*play\s*bhai|bhai\s*maar\s*daala\s*tune|bhai\s*phaad\s*di)\b/i,
+
   // Communication & Sports
   /\bshoot\s+(me\s+a\s+)?(message|dm|text|reply|link|email)\b/i,
   /\bshooting\s+(hoops|stars|breeze|photos?|video)\b/i,
@@ -174,14 +200,55 @@ const GLOBAL_SLURS_VOCABULARY = [
   "whore", "whores", "slut", "sluts", "bitch", "bitches", "cunt", "cunts",
   "dickhead", "asshole", "twat", "bastard", "stfu", "gtfo",
 
-  // Hindi / Urdu / South Asian slurs & profanity
-  "bhenchod", "behenchod", "madarchod", "madarchodh", "mc", "bc", "chutiya",
-  "chutiye", "chutya", "gandu", "gaandu", "bhosadike", "bhosdike", "bhosadi",
-  "bhosdi", "randi", "haramkhor", "harami", "kamina", "kamine", "suar",
-  "kutte", "kutiya", "saale", "saala", "bhadwe", "bhadwa", "chudakkad",
-  "chod", "chodo", "jhantu", "laude", "lauda", "lavde", "lund", "chinal",
-  "randwa", "kanjar", "kanjri", "chut", "gaand", "tatton", "tatte", "dallay",
-  "dalle", "bhen k lode", "madar k lode",
+  // ── URDU / HINDI / SOUTH ASIAN SLURS & PROFANITY (Latin & Native Script) ──
+  // Requested words: jhaat, jhaant, suwar & comprehensive variations
+  "jhaat", "jhaant", "jhat", "jhant", "jhaatu", "jhantu", "jhaantu", "jhatu",
+  "jhaat ke baal", "jhaat k baal", "jhaant ke baal", "jhaant k baal", "jhaat ka pilla",
+  "jhaat ka baal", "jhaat ka keeda", "jhat ke bal", "jhaantoo", "jhantoo",
+  "suwar", "suwwar", "suar", "suaar", "soowar", "suwar ke bache", "suwar ke bachay",
+  "suwar k bache", "suwar k bachay", "suwar ka bacha", "suwar ki nasal", "suwar ki aulad",
+  "suwar ke bacho", "suar k bache", "suar ke bachay", "suar ki aulad",
+  "kameena", "kameeni", "kameenay", "kamina", "kamine", "kamini",
+  "harami", "haraami", "haramzada", "haramzade", "haramkhor", "harami k bache",
+  "harami k bachay", "harami ki aulad", "gashti", "gasti", "gashti k bache",
+  "gashti ki aulad", "gashti k bachay", "kanjar", "kanjri", "kanjro", "kanjaro",
+  "chinal", "chinnal", "raand", "randwa", "randi", "randi rona", "randi ka bacha",
+  "dalla", "dallay", "dalle", "bhadwe", "bhadwa", "bhadwon", "chootia", "chootiye",
+  "chutya", "chutiya", "chutiye", "chudakkad", "chudam", "chudwana",
+  "lund", "loda", "lauda", "lavde", "lodue", "lodu", "lodey", "lund k bache",
+  "gaand", "gand", "gandu", "gaandu", "gaandfat", "gandfat", "gaand mara", "gand mara",
+  "bhosadike", "bhosdike", "bhosadi", "bhosdi", "bhosada", "bhosadaa", "bhosadchod",
+  "bhosdiwale", "bhosadiwale", "bhenchod", "behenchod", "bhen chod", "behen chod",
+  "madarchod", "madarchodh", "maderchod", "madar jaat", "madarjaat", "madar k lode",
+  "bhen k lode", "madarchod ki aulad", "teri maa ki", "teri ma ki", "maa ki choot",
+  "ma ki choot", "bhen ki choot", "behen ki choot", "bhen ka loda", "behen ka loda",
+  "beghairat", "be-ghairat", "zaleel", "ullu ke pathe", "ullu k pathay", "charsi",
+  "bhangar", "tatte", "tatton", "muthal", "muth mar", "kutte", "kuttay", "kutiya",
+  "saale", "saala", "chod", "chodo",
+  // Urdu Nastaliq & Shahmukhi Script
+  "جھانٹ", "جھاٹ", "سور", "سوّر", "کنجر", "کنجری", "گشتی", "رنڈی", "بھڑوا", "دلا",
+  "دلے", "بہن چود", "مادر چود", "چوتیا", "چوتیے", "حرامی", "کتے", "کتیا", "لنڈ",
+  "لوڑا", "لوڑے", "گانڈ", "چوت", "جھانٹو", "سالے", "بے غیرت", "ذلیل", "خنزیر",
+  "تتے", "چدکڑ", "پھدی", "حرامی کے بچے", "سور کے بچے", "جھانٹ کے بال",
+
+  // ── 2030 TOP GAMING APPLICATIONS TOXICITY & ABUSE REPOSITORY ──
+  "uninstall life", "kys dog", "touch grass and die", "slit ur wrists", "swatting your house",
+  "swat your crib", "doxxing your ip", "ggez dogshit", "dogwater ape", "subhuman bot",
+  "boosted trash", "deranked monkey", "kill yourself noob", "hope you die in a fire",
+  "trash animal", "cancer dog", "get cancer and die", "ape monkey", "inbred subhuman",
+  "braindead dog", "dogshit", "dog shit", "trash dog", "boosted ape", "griefing noob",
+  "hardstuck monkey", "manco de mierda", "hijo de perra", "ptm", "lptm",
+  "conchetumadre", "chupala meco", "anda a chuparla", "puto manco", "basura de mierda",
+  "mono subnormal", "fils de pute fr", "ftg sale merde", "mange tes morts",
+  "bouffon de merde", "creve sale sous merde", "sale singe", "lixo do caralho",
+  "arrombado do caralho", "vai se foder lixo", "macaco de merda", "chupa rola lixo",
+  "verme imundo", "morre lixo", "suka blyat", "idi nakhuy", "nahui sobaka",
+  "ebat debil", "chmo ebannoe", "pidoras ebanıy", "poshol nahuy", "sdokhni tvar",
+  "orospu cocugu", "ananin ami", "sikik kopek", "amk veledi", "geber pic",
+  "gotveren piç", "tangina mo bobo", "bobo gago", "ulol salot", "kantot ina mo",
+  "tarantado gago", "leche kang bobo", "anjing lu", "babi lu", "kontol anjing",
+  "memek busuk", "pukimak kau", "pantek kau", "bocah anjing", "sharmouta",
+  "ibn el kalb", "kahba ya maniyuk", "teezak", "rooh mot", "kes ekhtak ya khara",
 
   // Tamil slurs & profanity (Latin & Script)
   "thevidiya", "thevidya", "thevdiya", "thevadiya", "thevidia", "thevadiye",
@@ -829,11 +896,50 @@ function loadModelWeights() {
 
 // ── 11. SINGLE UNIFIED EVALUATION ENGINE (Core of 2028-30 System) ─────────────
 
+const TARGET_PRONOUNS_PATTERN = /\b(you|ur|your|u|yours|yourself|tu|tera|teri|tere|tujhe|tujhko|tum|tumhara|tumhari|aap|aapka|aapki|toi|te|vous|du|dich|dir|dein|deine|você|voce|ti|te|teu|tua|nin|un|nee|ni|ka|mo|ikaw|sen|senin|anta|anti|enti)\b/i;
+const GAMING_CALLOUT_PATTERN = /\b(boss|carry|adc|jungler|tank|mid|support|sniper|target|nexus|tower|turret|dragon|baron|titan|minion|creeps?|monster|zombie|bot|champion|hero|headshot|first\s*blood|gank|trade\s*kill)\b/i;
+
+function formatEvaluationResult(res, rawText) {
+  const clean = String(rawText || '').trim();
+  const hasTargetPronoun = TARGET_PRONOUNS_PATTERN.test(clean);
+  const isGaming = GAMING_CALLOUT_PATTERN.test(clean);
+
+  const isSafe = Boolean(res.valid && res.safe);
+  const decision = isSafe ? 'ALLOW' : 'BLOCK';
+  const category = res.category || (isSafe ? 'clean_conversation' : 'violation');
+  const categories = res.categories || [category];
+
+  let toxicityScore = res.toxicityScore !== undefined ? res.toxicityScore : (isSafe ? 0.02 : (hasTargetPronoun ? 0.96 : 0.85));
+  if (isSafe) {
+    if (category === 'safe_idiom' || isGaming) toxicityScore = 0.0;
+  }
+  let sentiment = res.sentiment;
+  if (!sentiment) {
+    if (isSafe) {
+      sentiment = (category === 'safe_idiom' || isGaming) ? 'positive' : 'neutral';
+    } else {
+      sentiment = 'toxic';
+    }
+  }
+
+  return {
+    ...res,
+    decision,
+    toxicityScore,
+    categories,
+    directedTarget: isSafe ? false : hasTargetPronoun,
+    sentiment,
+    isGamingCallout: isGaming,
+    confidence: res.confidence !== undefined ? res.confidence : 0.98,
+    timestamp: Date.now()
+  };
+}
+
 /**
  * Unified evaluation for ANY chat message.
  * Returns decision with nice label: "Please don't use bad words here"
  */
-function evaluateMessage(text, options = {}) {
+function _evaluateMessageRaw(text, options = {}) {
   if (!text || typeof text !== 'string') {
     return {
       valid: false,
@@ -1317,6 +1423,11 @@ function evaluateMessage(text, options = {}) {
     layer: 'pass_through',
     matchedWords: []
   };
+}
+
+function evaluateMessage(text, options = {}) {
+  const raw = _evaluateMessageRaw(text, options);
+  return formatEvaluationResult(raw, text);
 }
 module.exports = {
   evaluateFuzzyBadWords,

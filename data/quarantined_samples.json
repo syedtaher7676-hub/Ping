@@ -23,5 +23,80 @@
     ],
     "quarantinedAt": "2026-10-27T16:31:06.761Z",
     "metadata": {}
+  },
+  {
+    "text": "send pic",
+    "claimedLabel": 1,
+    "category": "low_effort_conversation",
+    "anomalyScore": 0.85,
+    "reasons": [
+      "adversarial_safe_idiom_poisoning"
+    ],
+    "quarantinedAt": "2026-10-28T17:35:15.661Z",
+    "metadata": {
+      "userId": "test_user_low_send pic",
+      "pattern": "low_effort_detected"
+    }
+  },
+  {
+    "text": "test_violation_sample_1793208916775",
+    "claimedLabel": 1,
+    "category": "active_learning_test",
+    "anomalyScore": 0.75,
+    "reasons": [
+      "clean_safe_vocabulary_falsely_labeled_toxic"
+    ],
+    "quarantinedAt": "2026-10-28T17:35:16.776Z",
+    "metadata": {}
+  },
+  {
+    "text": "send pic",
+    "claimedLabel": 1,
+    "category": "low_effort_conversation",
+    "anomalyScore": 0.85,
+    "reasons": [
+      "adversarial_safe_idiom_poisoning"
+    ],
+    "quarantinedAt": "2026-10-28T17:41:55.088Z",
+    "metadata": {
+      "userId": "test_user_low_send pic",
+      "pattern": "low_effort_detected"
+    }
+  },
+  {
+    "text": "test_violation_sample_1793209316255",
+    "claimedLabel": 1,
+    "category": "active_learning_test",
+    "anomalyScore": 0.75,
+    "reasons": [
+      "clean_safe_vocabulary_falsely_labeled_toxic"
+    ],
+    "quarantinedAt": "2026-10-28T17:41:56.255Z",
+    "metadata": {}
+  },
+  {
+    "text": "send pic",
+    "claimedLabel": 1,
+    "category": "low_effort_conversation",
+    "anomalyScore": 0.85,
+    "reasons": [
+      "adversarial_safe_idiom_poisoning"
+    ],
+    "quarantinedAt": "2026-10-28T17:50:59.783Z",
+    "metadata": {
+      "userId": "test_user_low_send pic",
+      "pattern": "low_effort_detected"
+    }
+  },
+  {
+    "text": "test_violation_sample_1793209860987",
+    "claimedLabel": 1,
+    "category": "active_learning_test",
+    "anomalyScore": 0.75,
+    "reasons": [
+      "clean_safe_vocabulary_falsely_labeled_toxic"
+    ],
+    "quarantinedAt": "2026-10-28T17:51:00.988Z",
+    "metadata": {}
   }
 ]

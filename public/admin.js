@@ -397,6 +397,16 @@
       mergeTelemetryData(remoteData);
       renderAllHydratedMetrics();
     }
+
+    // 4. Cold-boot recovery for B2B Gaming AIML suite
+    try {
+      if (typeof refreshB2BTelemetry === 'function') {
+        refreshB2BTelemetry();
+      }
+      if (typeof loadB2BKeys === 'function') {
+        loadB2BKeys();
+      }
+    } catch (_) {}
   }
 
   function parseFirestoreFields(fields) {
@@ -743,6 +753,12 @@
 
     socket.on('admin_auth_failed', () => {
       handleSessionExpired();
+    });
+
+    socket.on('b2b_telemetry_tick', (payload) => {
+      if (typeof applyB2BTelemetryData === 'function') {
+        applyB2BTelemetryData(payload);
+      }
     });
 
     socket.on('system_metrics', (data) => {
@@ -2111,6 +2127,6 @@
         });
         updateVpnShieldUI(enabled);
       } catch (e) {}
-    }
+    },
   };
 })();

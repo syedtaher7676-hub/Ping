@@ -72,6 +72,14 @@ const {
 } = require("./state/reports");
 const dbService = require("./services/dbService");
 const vpnDetector = require("./services/vpnDetector");
+const { evaluateMessage, stripAllSymbols } = require("./utils/unifiedModerator");
+const {
+  evaluateBayesianToxicity,
+  getModelTrainingMetrics,
+  recordChatSampleForTraining,
+  trainAndUpdateLocalModel,
+} = require("./services/modelTrainer");
+const { evaluateConversationTrajectory } = require("./utils/conversationTrajectory");
 
 // Memoization cache for geoip lookups to avoid event-loop blocking under high load
 const geoCache = new Map();
@@ -2716,6 +2724,21 @@ app.get("/api/download/launcher", (req, res) => {
   res.setHeader("Content-Disposition", 'attachment; filename="Ping-Anonymous-Chat.html"');
   res.send(htmlContent);
 });
+
+// Function for redacting offensive substrings with asterisks
+function redactBadWords(text, matchedEntities = []) {
+  if (!text || typeof text !== "string") return "";
+  let redacted = text;
+  for (const ent of matchedEntities) {
+    if (typeof ent === "string" && ent.length >= 2) {
+      try {
+        const regex = new RegExp(`\\b${ent.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi");
+        redacted = redacted.replace(regex, (m) => "*".repeat(m.length));
+      } catch (_) {}
+    }
+  }
+  return redacted;
+}
 
 registerSocketHandlers(io, getCountryFromSocket);
 const matchmakingInterval = setInterval(() => attemptMatchmaking(io), MATCHMAKING_INTERVAL_MS);
