@@ -504,6 +504,17 @@
               </div>
             </div>
 
+            <!-- VPN / Proxy Warning Banner -->
+            <div id="vpnWarningBanner" class="vpn-warning-banner" style="display:none;">
+              <div class="vpn-warning-content">
+                <span class="vpn-warning-icon">⚠️</span>
+                <div class="vpn-warning-text-wrap">
+                  <strong class="vpn-warning-title">VPN / Proxy Detected</strong>
+                  <p class="vpn-warning-desc">Ping requires a direct residential connection to prevent abusive multi-accounting. Please turn off your VPN or Proxy to start chatting.</p>
+                </div>
+              </div>
+            </div>
+
             <button id="startBtn" class="ws-cancel-btn prechat-start-btn" type="button" aria-label="Start Chat">
               <span>Start Chat</span>
               <svg class="start-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2008,10 +2019,11 @@
                   <th>Rank</th>
                   <th>User / Session ID</th>
                   <th>Origin</th>
-                  <th>Total Violations</th>
+                  <th>Total Strikes</th>
                   <th>Slurs Blocked</th>
-                  <th>Numbers / Socials</th>
-                  <th>Last Detected Snippet</th>
+                  <th>Phone Numbers</th>
+                  <th>Social Handles</th>
+                  <th>Last Snippet</th>
                   <th>Quick Action</th>
                 </tr>
               </thead>
@@ -2688,6 +2700,8 @@
             </table>
           </div>
         </div>
+      </div>
+
       </div>
     </div>
   </div>

@@ -37,7 +37,7 @@ const { userStore, reportStore, spamStore, slurFilter, securityStore, moderation
 const dbService = require("../services/dbService");
 const vpnDetector = require("../services/vpnDetector");
 const { validateMessage } = require("../utils/moderation");
-const { recordReport, isDeviceBanned } = require("../state/reports");
+const { recordReport, isDeviceBanned, banDevice, linkDeviceAndIp } = require("../state/reports");
 const {
   detectPhoneNumber,
   detectAskingForPhoneNumber,
@@ -657,13 +657,15 @@ function validateAndModerateMessage(socket, userId, text, roomId = null, partner
     });
     if (global.recordViolationIntercepted) global.recordViolationIntercepted();
     recordViolationEvent({
-      type: evalResult.category || "content_moderated",
+      type: evalResult.category || evalResult.reason || "content_moderated",
+      category: evalResult.category,
       userId,
       deviceHash: socket.data?.deviceHash,
       country: socket.data?.country,
       snippet: text,
       action: "Blocked / In-Chat Label",
       severity: "info",
+      matchedWords: evalResult.matchedWords || [],
     });
     ingestIncomingChatMessage(userId, text, roomId, true, evalResult.category || "moderation_blocked");
     return { blocked: true, reason: evalResult.reason, action: "block", message: labelText, label: labelText, category: evalResult.category };
@@ -2165,9 +2167,24 @@ function registerSocketHandlers(io, getCountryFromSocket) {
       try {
         const payload = safeObject(rawPayload);
         const roomId = safeId(payload.roomId) || user?.roomId;
-        if (!roomId) return;
+        const cb = typeof ack === "function" ? ack : (typeof payload.callback === "function" ? payload.callback : null);
+
+        if (!roomId) {
+          cb?.({ success: false, ok: false, reason: "no_room" });
+          socket.emit("chat_ended", { reason: "stranger_disconnected", rawReason: "room_closed", message: "Chat ended" });
+          return;
+        }
+
         const room = rooms.get(roomId);
-        if (!room || room.status !== "active") return;
+        if (!room || room.status !== "active") {
+          cb?.({ success: false, ok: false, reason: "room_not_active" });
+          socket.emit("chat_ended", { reason: "stranger_disconnected", rawReason: "room_closed", message: "Chat ended" });
+          if (user) {
+            user.status = "idle";
+            user.roomId = null;
+          }
+          return;
+        }
 
         if (user) {
           user.status = "matched";
@@ -2198,7 +2215,6 @@ function registerSocketHandlers(io, getCountryFromSocket) {
           remainingMs,
         });
 
-        const cb = typeof ack === "function" ? ack : (typeof payload.callback === "function" ? payload.callback : null);
         cb?.({ success: true, ok: true, endAt: room.endAt, remainingMs });
       } catch (err) {
         log("returned_to_screen_error", { userId, error: err?.message });
@@ -2466,18 +2482,19 @@ function registerSocketHandlers(io, getCountryFromSocket) {
 
         const reporterDeviceHash = socket.data?.deviceHash || userId;
         const partnerDeviceHash = partnerSocket?.data?.deviceHash || partner?.deviceHash || partnerId;
+        const reporterIp = socket.data?.clientIp || null;
+        const partnerIp = partnerSocket?.data?.clientIp || partner?.clientIp || null;
 
-        const now = Date.now();
-        const chatDurationMs = room?.createdAt ? Math.max(0, now - room.createdAt) : 0;
-
-        // Block the report if the chat room has been active for less than 5 seconds
-        if (chatDurationMs < 5000) {
-          socket.emit("error_message", { message: "Reports are blocked during the first 5 seconds of chat." });
-          return;
+        // Register both users in the in-memory IP + device pool
+        if (typeof linkDeviceAndIp === "function") {
+          if (reporterDeviceHash && reporterIp) linkDeviceAndIp(reporterDeviceHash, reporterIp, userId);
+          if (partnerDeviceHash && partnerIp) linkDeviceAndIp(partnerDeviceHash, partnerIp, partnerId);
         }
 
-        // Run recordReport on reporter and target device hashes
-        const reportResult = recordReport(reporterDeviceHash, partnerDeviceHash);
+        const now = Date.now();
+
+        // Run recordReport on reporter and target device hashes and IPs
+        const reportResult = recordReport(reporterDeviceHash, partnerDeviceHash, reporterIp, partnerIp);
 
         // Record to audit reportStore & dbService
         const reason = safeString(payload.reason, 120) || "user_reported";
@@ -2540,11 +2557,14 @@ function registerSocketHandlers(io, getCountryFromSocket) {
         if (partnerSocket) {
           try { partnerSocket.leave(targetRoomId); } catch (_) {}
         }
+        try { socket.leave(targetRoomId); } catch (_) {}
 
         // Check if reporter was banned (fake report spam: > 3 reports in 1 min)
         if (reportResult.reporterBanned) {
           const minutesLeft = reportResult.minutesLeft || 15;
           const banMsg = `Suspended for ${minutesLeft} minutes due to report spam.`;
+          banDevice(reporterDeviceHash, minutesLeft * 60 * 1000, "Report spam (>3 in 1m)", reporterIp, userId);
+
           socket.emit("chat_ended_banned", {
             isOffender: true,
             message: banMsg,
@@ -2559,48 +2579,71 @@ function registerSocketHandlers(io, getCountryFromSocket) {
             partnerSocket.emit("chat_ended", {
               reason: "partner_left",
               friendlyReason: "Chat ended. Your partner was disconnected.",
-              message: "Chat ended."
+              message: "Chat ended.",
+              roomId: targetRoomId,
             });
             emitState(partnerSocket, partner);
+          }
+          if (partnerId) {
+            io.to(`user_${partnerId}`).emit("chat_ended", {
+              reason: "partner_left",
+              friendlyReason: "Chat ended. Your partner was disconnected.",
+              message: "Chat ended.",
+              roomId: targetRoomId,
+            });
           }
           return;
         }
 
-        // Disconnect the target user if they hit the ban threshold (3 reports)
+        // Disconnect and ban target user if they hit the ban threshold (3 reports)
         if (reportResult.targetBanned) {
           const minutesLeft = reportResult.minutesLeft || 15;
           const banMsg = `Suspended for ${minutesLeft} minutes due to community reports`;
+          banDevice(partnerDeviceHash, minutesLeft * 60 * 1000, "Community reports ban (threshold exceeded)", partnerIp, partnerId);
+
+          const banPayload = {
+            isOffender: true,
+            message: banMsg,
+            banExpiresAt: now + minutesLeft * 60 * 1000,
+            remainingMs: minutesLeft * 60 * 1000,
+          };
+
           if (partnerSocket) {
-            partnerSocket.emit("chat_ended_banned", {
-              isOffender: true,
-              message: banMsg,
-              banExpiresAt: now + minutesLeft * 60 * 1000,
-              remainingMs: minutesLeft * 60 * 1000,
-            });
+            partnerSocket.emit("chat_ended_banned", banPayload);
             partnerSocket.emit("error_message", { message: banMsg });
             emitState(partnerSocket, partner);
             try { partnerSocket.disconnect(true); } catch (_) {}
           }
+          if (partnerId) {
+            io.to(`user_${partnerId}`).emit("chat_ended_banned", banPayload);
+          }
         } else {
-          // Warning sent to target user when under threshold
+          // Warning sent to target user when reported once or twice (under threshold)
+          // Guarantees the room closes on the reported person's side with a clear inline notice
+          const warningMsg = "⚠️ Warning: You were reported by your chat partner for inappropriate behavior.";
+          const warnPayload = {
+            reason: "user_reported_warning",
+            rawReason: "user_reported_warning",
+            message: warningMsg,
+            friendlyReason: warningMsg,
+            roomId: targetRoomId,
+          };
           if (partnerSocket) {
-            const warningMsg = "⚠️ Warning: You were reported by your chat partner for inappropriate behavior.";
-            partnerSocket.emit("chat_ended", {
-              reason: "user_reported_warning",
-              rawReason: "user_reported_warning",
-              message: warningMsg,
-              friendlyReason: warningMsg,
-            });
+            partnerSocket.emit("chat_ended", warnPayload);
             emitState(partnerSocket, partner);
+          }
+          if (partnerId) {
+            io.to(`user_${partnerId}`).emit("chat_ended", warnPayload);
           }
         }
 
-        // Return reporter to home screen
+        // Return reporter to home screen cleanly
         socket.emit("chat_ended", {
           reason: "report_submitted",
           rawReason: "report_submitted",
           message: "User reported. You have been returned to the home screen.",
           friendlyReason: "User reported. You have been returned to the home screen.",
+          roomId: targetRoomId,
         });
         emitState(socket, currentUser);
       } catch (err) {

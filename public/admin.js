@@ -477,7 +477,7 @@
     if (!tbody) return;
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 22px; color: var(--t-ghost);">No repeat offenders detected. Platform safety healthy.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 22px; color: var(--t-ghost);">No repeat offenders detected. Platform safety healthy.</td></tr>`;
       return;
     }
 
@@ -485,14 +485,18 @@
       const totalV = off.violationCount || 0;
       const badgeClass = totalV >= 5 ? 'rejected' : (totalV >= 2 ? 'pending' : 'info');
       const safeUid = escapeHtml(off.userId || off.deviceHash || 'Unknown');
+      const slurs = off.slursCount || 0;
+      const phoneCount = (off.askedNumbersCount || 0) + (off.sharedNumbersCount || 0);
+      const socialCount = off.socialsCount || 0;
       return `
         <tr>
           <td class="tabular-nums" style="font-weight:700; color:var(--t-ghost);">#${idx + 1}</td>
           <td><code class="clickable-user-id" data-inspect-user="${safeUid}" title="Click to inspect" style="cursor:pointer; color:var(--pink-l);">${safeUid}</code></td>
           <td><span class="country-tag" style="font-size:0.75rem;">🌐 ${escapeHtml(off.country || 'Global')}</span></td>
           <td><span class="badge-tag ${badgeClass} tabular-nums">${totalV} strikes</span></td>
-          <td class="tabular-nums font-bold" style="color:var(--red-l);">${off.slursCount || 0}</td>
-          <td class="tabular-nums font-bold" style="color:var(--amber-l);">${(off.askedNumbersCount || 0) + (off.sharedNumbersCount || 0) + (off.socialsCount || 0)}</td>
+          <td class="tabular-nums font-bold" style="color:var(--red-l);">${slurs}</td>
+          <td class="tabular-nums font-bold" style="color:var(--amber-l);">${phoneCount}</td>
+          <td class="tabular-nums font-bold" style="color:var(--purple-l);">${socialCount}</td>
           <td style="font-size:0.75rem; color:var(--t-secondary); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
             ${escapeHtml(off.lastSnippet || 'None')}
           </td>
@@ -593,50 +597,93 @@
     if ($('hudRetPatience')) $('hudRetPatience').textContent = `${retMetrics.patienceQ.toFixed(1)}%`;
 
     // 4. Behavioral Intelligence Hydration (Guarantees charts and numbers persist across sleep)
-    const beh = telemetryState.behavior_analytics || (data && data.behavior_analytics);
+    const beh = (data && (data.behavior_analytics || data.behaviorStats)) || telemetryState.behavior_analytics || (data && data.overview ? data : null);
     if (beh) {
       const bo = beh.overview || {};
       const ce = beh.contactExtraction || {};
       const sd = beh.slurDistribution || {};
 
-      if ($('statBehaviorAskedNumbers')) $('statBehaviorAskedNumbers').textContent = formatNum(bo.askedNumbers ?? bo.phoneNumbersAskedCount ?? 0);
-      if ($('statBehaviorSharedNumbers')) $('statBehaviorSharedNumbers').textContent = formatNum(bo.sharedNumbers ?? bo.phoneNumbersSharedCount ?? 0);
-      if ($('statBehaviorSlursBlocked')) $('statBehaviorSlursBlocked').textContent = formatNum(bo.slursBlocked ?? bo.slursInterceptedCount ?? 0);
-      if ($('statBehaviorSocialHandles')) $('statBehaviorSocialHandles').textContent = formatNum(bo.socialHandles ?? bo.socialHandlesCount ?? 0);
-      if ($('statBehaviorCleanRate')) $('statBehaviorCleanRate').textContent = `${bo.cleanRatePct ?? bo.cleanPassRate ?? 100}%`;
-      if ($('statBehaviorAvgDuration')) $('statBehaviorAvgDuration').textContent = `${bo.avgDurationSec ?? bo.avgChatDurationSeconds ?? 0}s`;
-      if ($('statBehaviorAvgMsgLength')) $('statBehaviorAvgMsgLength').textContent = `${bo.avgMsgLengthChars ?? bo.avgMsgLength ?? 0} chars`;
-      if ($('statBehaviorOffPlatformRate')) $('statBehaviorOffPlatformRate').textContent = `${bo.offPlatformRatePct ?? bo.offPlatformAttemptRate ?? 0}%`;
+      if ($('statBehaviorAskedNumbers')) $('statBehaviorAskedNumbers').textContent = formatNum(bo.askedNumbers || bo.phoneNumbersAskedCount || 0);
+      if ($('statBehaviorSharedNumbers')) $('statBehaviorSharedNumbers').textContent = formatNum(bo.sharedNumbers || bo.phoneNumbersSharedCount || 0);
+      if ($('statBehaviorSlursBlocked')) $('statBehaviorSlursBlocked').textContent = formatNum(bo.slursBlocked || bo.slursInterceptedCount || 0);
+      if ($('statBehaviorSocialHandles')) $('statBehaviorSocialHandles').textContent = formatNum(bo.socialHandles || bo.socialHandlesCount || 0);
+      if ($('statBehaviorCleanRate')) $('statBehaviorCleanRate').textContent = `${bo.cleanRatePct || bo.cleanPassRate || 100}%`;
+      if ($('statBehaviorAvgDuration')) $('statBehaviorAvgDuration').textContent = `${bo.avgDurationSec || bo.avgChatDurationSeconds || 0}s`;
+      if ($('statBehaviorAvgMsgLength')) $('statBehaviorAvgMsgLength').textContent = `${bo.avgMsgLengthChars || bo.avgMsgLength || 0} chars`;
+      if ($('statBehaviorOffPlatformRate')) $('statBehaviorOffPlatformRate').textContent = `${bo.offPlatformRatePct || bo.offPlatformAttemptRate || 0}%`;
 
-      if ($('statOverviewAskedNumbers')) $('statOverviewAskedNumbers').textContent = formatNum(bo.askedNumbers ?? bo.phoneNumbersAskedCount ?? 0);
-      if ($('statOverviewSharedNumbers')) $('statOverviewSharedNumbers').textContent = formatNum(bo.sharedNumbers ?? bo.phoneNumbersSharedCount ?? 0);
-      if ($('statOverviewSlursBlocked')) $('statOverviewSlursBlocked').textContent = formatNum(bo.slursBlocked ?? bo.slursInterceptedCount ?? 0);
-      if ($('statOverviewCleanRate')) $('statOverviewCleanRate').textContent = `${bo.cleanRatePct ?? bo.cleanPassRate ?? 100}%`;
+      if ($('statOverviewAskedNumbers')) $('statOverviewAskedNumbers').textContent = formatNum(bo.askedNumbers || bo.phoneNumbersAskedCount || 0);
+      if ($('statOverviewSharedNumbers')) $('statOverviewSharedNumbers').textContent = formatNum(bo.sharedNumbers || bo.phoneNumbersSharedCount || 0);
+      if ($('statOverviewSlursBlocked')) $('statOverviewSlursBlocked').textContent = formatNum(bo.slursBlocked || bo.slursInterceptedCount || 0);
+      if ($('statOverviewCleanRate')) $('statOverviewCleanRate').textContent = `${bo.cleanRatePct || bo.cleanPassRate || 100}%`;
 
       // Contact extraction counters
-      if ($('countExtractAsked')) $('countExtractAsked').textContent = formatNum(ce.numbersAsked ?? 0);
-      if ($('countExtractShared')) $('countExtractShared').textContent = formatNum(ce.numbersShared ?? 0);
-      if ($('countExtractInstagram')) $('countExtractInstagram').textContent = formatNum(ce.instagramHandles ?? 0);
-      if ($('countExtractSnapchat')) $('countExtractSnapchat').textContent = formatNum(ce.snapchatHandles ?? 0);
-      if ($('countExtractTelegram')) $('countExtractTelegram').textContent = formatNum(ce.telegramDiscord ?? 0);
+      if ($('countExtractAsked')) $('countExtractAsked').textContent = formatNum(ce.numbersAsked || bo.askedNumbers || bo.phoneNumbersAskedCount || 0);
+      if ($('countExtractShared')) $('countExtractShared').textContent = formatNum(ce.numbersShared || bo.sharedNumbers || bo.phoneNumbersSharedCount || 0);
+      if ($('countExtractInstagram')) $('countExtractInstagram').textContent = formatNum(ce.instagramHandles || 0);
+      if ($('countExtractSnapchat')) $('countExtractSnapchat').textContent = formatNum(ce.snapchatHandles || 0);
+      if ($('countExtractTelegram')) $('countExtractTelegram').textContent = formatNum(ce.telegramDiscord || 0);
 
       // Slur distribution counters
-      if ($('catRacialCount')) $('catRacialCount').textContent = formatNum(sd.racialAndEthnic ?? 0);
-      if ($('catPredatoryCount')) $('catPredatoryCount').textContent = formatNum(sd.predatoryAndGrooming ?? 0);
-      if ($('catHomophobicCount')) $('catHomophobicCount').textContent = formatNum(sd.homophobicTransphobic ?? 0);
-      if ($('catMisogynisticCount')) $('catMisogynisticCount').textContent = formatNum(sd.misogynisticAbuse ?? 0);
-      if ($('catCyberbullyingCount')) $('catCyberbullyingCount').textContent = formatNum(sd.cyberbullyingAndSelfHarm ?? 0);
-      if ($('catRegionalCount')) $('catRegionalCount').textContent = formatNum(sd.regionalHinglish ?? 0);
+      if ($('catRacialCount')) $('catRacialCount').textContent = formatNum(sd.racialAndEthnic || 0);
+      if ($('catPredatoryCount')) $('catPredatoryCount').textContent = formatNum(sd.predatoryAndGrooming || 0);
+      if ($('catHomophobicCount')) $('catHomophobicCount').textContent = formatNum(sd.homophobicTransphobic || 0);
+      if ($('catMisogynisticCount')) $('catMisogynisticCount').textContent = formatNum(sd.misogynisticAbuse || 0);
+      if ($('catCyberbullyingCount')) $('catCyberbullyingCount').textContent = formatNum(sd.cyberbullyingAndSelfHarm || 0);
+      if ($('catRegionalCount')) $('catRegionalCount').textContent = formatNum(sd.regionalHinglish || 0);
+
+      // Category Ratio Bar & Legend
+      const asked = Number(bo.askedNumbers || bo.phoneNumbersAskedCount || ce.numbersAsked || 0);
+      const shared = Number(bo.sharedNumbers || bo.phoneNumbersSharedCount || ce.numbersShared || 0);
+      const slurs = Number(bo.slursBlocked || bo.slursInterceptedCount || 0);
+      const social = Number(bo.socialHandles || bo.socialHandlesCount || 0);
+      const links = Number(bo.linksBlockedCount || 0);
+      const totalViolations = asked + shared + slurs + social + links;
+
+      if ($('ratioBarAsked')) $('ratioBarAsked').style.width = totalViolations > 0 ? `${((asked / totalViolations) * 100).toFixed(1)}%` : '0%';
+      if ($('ratioBarShared')) $('ratioBarShared').style.width = totalViolations > 0 ? `${((shared / totalViolations) * 100).toFixed(1)}%` : '0%';
+      if ($('ratioBarSlurs')) $('ratioBarSlurs').style.width = totalViolations > 0 ? `${((slurs / totalViolations) * 100).toFixed(1)}%` : '0%';
+      if ($('ratioBarSocial')) $('ratioBarSocial').style.width = totalViolations > 0 ? `${((social / totalViolations) * 100).toFixed(1)}%` : '0%';
+      if ($('ratioBarLinks')) $('ratioBarLinks').style.width = totalViolations > 0 ? `${((links / totalViolations) * 100).toFixed(1)}%` : '0%';
+
+      if ($('behaviorLegendList')) {
+        const legendItems = [
+          { label: 'Asking For Numbers / WhatsApp', color: '#f59e0b', count: asked },
+          { label: 'Direct Phone Numbers Shared', color: '#ef4444', count: shared },
+          { label: 'Hate Speech & Slurs', color: '#dc2626', count: slurs },
+          { label: 'Social Media Handles (IG/Snap)', color: '#a855f7', count: social },
+          { label: 'External Links & Bot Invites', color: '#3b82f6', count: links },
+        ];
+        $('behaviorLegendList').innerHTML = legendItems.map(it => {
+          const pct = totalViolations > 0 ? ((it.count / totalViolations) * 100).toFixed(1) : '0.0';
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:10px; height:10px; border-radius:3px; background:${it.color}; display:inline-block;"></span>
+                <span>${it.label}</span>
+              </div>
+              <div>
+                <strong class="tabular-nums" style="margin-right:8px;">${it.count.toLocaleString()}</strong>
+                <span class="tabular-nums" style="color:var(--t-ghost); font-size:0.75rem;">(${pct}%)</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
 
       // Behavior HUDs
-      if ($('hudBehaviorAsked')) $('hudBehaviorAsked').textContent = `${bo.askedNumbers ?? bo.phoneNumbersAskedCount ?? 0}/min`;
-      if ($('hudBehaviorSlurs')) $('hudBehaviorSlurs').textContent = `${bo.slursBlocked ?? bo.slursInterceptedCount ?? 0}/min`;
-      if ($('hudBehaviorSocials')) $('hudBehaviorSocials').textContent = `${bo.socialHandles ?? bo.socialHandlesCount ?? 0}/min`;
-      if ($('hudBehaviorClean')) $('hudBehaviorClean').textContent = `${bo.cleanRatePct ?? bo.cleanPassRate ?? 100}%`;
+      if ($('hudBehaviorAsked')) $('hudBehaviorAsked').textContent = `${asked}/min`;
+      if ($('hudBehaviorSlurs')) $('hudBehaviorSlurs').textContent = `${slurs}/min`;
+      if ($('hudBehaviorSocials')) $('hudBehaviorSocials').textContent = `${social}/min`;
+      if ($('hudBehaviorClean')) $('hudBehaviorClean').textContent = `${bo.cleanRatePct || bo.cleanPassRate || 100}%`;
 
       // Repeat offenders table hydration (ensures data is retained and rendered after container sleep)
       const offenders = beh.topOffenders || (Array.isArray(beh.repeatOffenders) ? beh.repeatOffenders.map(x => Array.isArray(x) ? x[1] : x) : []);
       renderRepeatOffendersTable(offenders);
+
+      if (Array.isArray(beh.timeSeries) && beh.timeSeries.length > 0) {
+        updateBehaviorChartFromData(beh.timeSeries);
+      }
     } else {
       if ($('statOverviewSlursBlocked')) $('statOverviewSlursBlocked').textContent = '0';
       if ($('statBehaviorSlursBlocked')) $('statBehaviorSlursBlocked').textContent = '0';
@@ -816,8 +863,12 @@
       behaviorSlursSeries.push(recentSlurs);
       behaviorSocialsSeries.push(recentSocials);
 
-      if (data.behaviorStats && Array.isArray(data.behaviorStats.topOffenders)) {
-        renderRepeatOffendersTable(data.behaviorStats.topOffenders);
+      if (data.behaviorStats) {
+        telemetryState.behavior_analytics = data.behaviorStats;
+        renderAllHydratedMetrics(data);
+        if (Array.isArray(data.behaviorStats.topOffenders)) {
+          renderRepeatOffendersTable(data.behaviorStats.topOffenders);
+        }
       }
 
       if (timeLabels.length > MAX_POINTS) {
@@ -1331,39 +1382,7 @@
         const beh = await behRes.json();
         if (beh.success) {
           telemetryState.behavior_analytics = beh;
-          if ($('statBehaviorAskedNumbers')) $('statBehaviorAskedNumbers').textContent = formatNum(beh.overview?.askedNumbers || 0);
-          if ($('statBehaviorSharedNumbers')) $('statBehaviorSharedNumbers').textContent = formatNum(beh.overview?.sharedNumbers || 0);
-          if ($('statBehaviorSlursBlocked')) $('statBehaviorSlursBlocked').textContent = formatNum(beh.overview?.slursBlocked || 0);
-          if ($('statBehaviorSocialHandles')) $('statBehaviorSocialHandles').textContent = formatNum(beh.overview?.socialHandles || 0);
-          if ($('statBehaviorCleanRate')) $('statBehaviorCleanRate').textContent = `${beh.overview?.cleanRatePct || 100}%`;
-          if ($('statBehaviorAvgDuration')) $('statBehaviorAvgDuration').textContent = `${beh.overview?.avgDurationSec || 0}s`;
-          if ($('statBehaviorAvgMsgLength')) $('statBehaviorAvgMsgLength').textContent = `${beh.overview?.avgMsgLength || 0} chars`;
-          if ($('statBehaviorOffPlatformRate')) $('statBehaviorOffPlatformRate').textContent = `${beh.overview?.offPlatformRatePct || 0}%`;
-
-          // Slur taxonomy counts
-          const sd = beh.slurDistribution || {};
-          if ($('catRacialCount')) $('catRacialCount').textContent = formatNum(sd.racialAndEthnic ?? 0);
-          if ($('catPredatoryCount')) $('catPredatoryCount').textContent = formatNum(sd.predatoryAndGrooming ?? 0);
-          if ($('catHomophobicCount')) $('catHomophobicCount').textContent = formatNum(sd.homophobicTransphobic ?? 0);
-          if ($('catMisogynisticCount')) $('catMisogynisticCount').textContent = formatNum(sd.misogynisticAbuse ?? 0);
-          if ($('catCyberbullyingCount')) $('catCyberbullyingCount').textContent = formatNum(sd.cyberbullyingAndSelfHarm ?? 0);
-          if ($('catRegionalCount')) $('catRegionalCount').textContent = formatNum(sd.regionalHinglish ?? 0);
-
-          // Contact extraction counters
-          const ce = beh.contactExtraction || {};
-          if ($('countExtractAsked')) $('countExtractAsked').textContent = formatNum(ce.numbersAsked ?? 0);
-          if ($('countExtractShared')) $('countExtractShared').textContent = formatNum(ce.numbersShared ?? 0);
-          if ($('countExtractInstagram')) $('countExtractInstagram').textContent = formatNum(ce.instagramHandles ?? 0);
-          if ($('countExtractSnapchat')) $('countExtractSnapchat').textContent = formatNum(ce.snapchatHandles ?? 0);
-          if ($('countExtractTelegram')) $('countExtractTelegram').textContent = formatNum(ce.telegramDiscord ?? 0);
-
-          // Top repeat policy & slur offenders
-          const offenders = beh.topOffenders || (Array.isArray(beh.repeatOffenders) ? beh.repeatOffenders.map(x => Array.isArray(x) ? x[1] : x) : []);
-          renderRepeatOffendersTable(offenders);
-
-          if (Array.isArray(beh.timeSeries) && beh.timeSeries.length > 0) {
-            updateBehaviorChartFromData(beh.timeSeries);
-          }
+          renderAllHydratedMetrics(beh);
         }
       }
 
@@ -1680,6 +1699,22 @@
       refreshAdminDashboardData();
     });
 
+    $('resetBehaviorDataBtn')?.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to reset all user behavior and intelligence metrics to 0 in memory and Firestore?')) return;
+      try {
+        const res = await adminFetch('/api/admin/behavior-analytics/reset', { method: 'POST' });
+        if (res.ok) {
+          resetAdminBehaviorState();
+          refreshAdminDashboardData();
+        }
+      } catch (_) {}
+    });
+
+    $('refreshBehaviorBtn')?.addEventListener('click', () => {
+      hydrateTelemetryFromFirestore();
+      refreshAdminDashboardData();
+    });
+
     // Bind form submit and action handlers for words, shadowbans, bulk, and system controls
     $('addWordForm')?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1928,10 +1963,23 @@
   function updateBehaviorChartFromData(timeSeries) {
     if (!activeCharts.behavior) return;
     if (Array.isArray(timeSeries) && timeSeries.length > 0) {
-      activeCharts.behavior.data.labels = timeSeries.map(pt => pt.timeLabel || '');
-      activeCharts.behavior.data.datasets[0].data = timeSeries.map(pt => pt.askedNumbers || 0);
-      activeCharts.behavior.data.datasets[1].data = timeSeries.map(pt => pt.slurs || 0);
-      activeCharts.behavior.data.datasets[2].data = timeSeries.map(pt => pt.socials || 0);
+      const behLabels = [];
+      const behAsked = [];
+      const behSlurs = [];
+      const behSocials = [];
+
+      timeSeries.forEach(pt => {
+        const lbl = pt.timeLabel || new Date(pt.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        behLabels.push(lbl);
+        behAsked.push(Number(pt.askedNumbers) || 0);
+        behSlurs.push(Number(pt.slurs) || 0);
+        behSocials.push(Number(pt.socials) || 0);
+      });
+
+      activeCharts.behavior.data.labels = behLabels;
+      activeCharts.behavior.data.datasets[0].data = behAsked;
+      activeCharts.behavior.data.datasets[1].data = behSlurs;
+      activeCharts.behavior.data.datasets[2].data = behSocials;
       activeCharts.behavior.update('none');
     }
   }

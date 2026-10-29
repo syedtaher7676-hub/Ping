@@ -62,6 +62,8 @@ const { createId } = require("./utils/ids");
 const { log } = require("./utils/logger");
 const {
   bans,
+  bannedIps,
+  linkDeviceAndIp,
   isDeviceBanned,
   banDevice,
   unbanDevice,
@@ -317,11 +319,13 @@ io.use((socket, next) => {
     socket.data.country = getCountryFromSocket(socket);
     socket.data.authenticatedAt = Date.now();
 
-    // Check if device or user ID is temporarily banned
-    const minutesLeft = Math.max(
-      isDeviceBanned(socket.data.deviceHash),
-      isDeviceBanned(socket.data.userId)
-    );
+    // Link deviceHash, clientIp, and userId into the bidirectional in-memory pool
+    if (typeof linkDeviceAndIp === "function") {
+      linkDeviceAndIp(verifiedDeviceHash, clientIp, verifiedUserId);
+    }
+
+    // Check if device, IP, or user ID is temporarily banned across the pool
+    const minutesLeft = isDeviceBanned(verifiedDeviceHash, clientIp, verifiedUserId);
     if (minutesLeft > 0) {
       return next(new Error("TEMPORARY_BAN:" + minutesLeft));
     }
@@ -512,7 +516,7 @@ recordAdminEvent("system", "Gateway Initialized", "Ping real-time server ready",
 // ═══════════════════════════════════════════════════════════════
 // IN-MEMORY RAM BUFFER & 30-SECOND FIRESTORE BATCH FLUSH
 // ═══════════════════════════════════════════════════════════════
-const { getDb, isFirebaseConfigured, FieldValue } = require("./config/firebase");
+const { getDb, isFirebaseConfigured, disableDb, FieldValue } = require("./config/firebase");
 
 function loadAppletConfig() {
   try {
@@ -910,46 +914,55 @@ async function flushTelemetryToFirestore() {
     pending.system_summary.active_ccu_peak > 0;
 
   try {
+    let writeSuccess = false;
     const db = getDb();
     if (db && isFirebaseConfigured()) {
-      const updatePayload = {
-        "system_summary.last_updated": FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
-        behavior_analytics: behaviorData,
-        telemetry_history: historyData,
-      };
-      if (pending.system_summary.total_sessions_logged > 0) {
-        updatePayload["system_summary.total_sessions_logged"] = FieldValue.increment(pending.system_summary.total_sessions_logged);
-      }
-      if (pending.system_summary.total_matches > 0) {
-        updatePayload["system_summary.total_matches"] = FieldValue.increment(pending.system_summary.total_matches);
-      }
-      if (pending.system_summary.total_messages > 0) {
-        updatePayload["system_summary.total_messages"] = FieldValue.increment(pending.system_summary.total_messages);
-      }
-      if (pending.system_summary.total_violations > 0) {
-        updatePayload["system_summary.total_violations"] = FieldValue.increment(pending.system_summary.total_violations);
-      }
-      if (pending.system_summary.active_ccu_peak > 0) {
-        updatePayload["system_summary.active_ccu_peak"] = pending.system_summary.active_ccu_peak;
-      }
-      for (const [key, val] of Object.entries(pending.sentiment_distribution)) {
-        if (val > 0) updatePayload[`sentiment_distribution.${key}`] = FieldValue.increment(val);
-      }
-      for (const [key, val] of Object.entries(pending.session_durations)) {
-        if (val > 0) updatePayload[`session_durations.${key}`] = FieldValue.increment(val);
-      }
-      if (pending.retention_metrics.survival_rate_3m_pct > 0) {
-        updatePayload["retention_metrics.survival_rate_3m_pct"] = pending.retention_metrics.survival_rate_3m_pct;
-      }
-      if (pending.retention_metrics.skip_churn_15s_pct > 0) {
-        updatePayload["retention_metrics.skip_churn_15s_pct"] = pending.retention_metrics.skip_churn_15s_pct;
-      }
-      if (pending.retention_metrics.patience_quotient_pct > 0) {
-        updatePayload["retention_metrics.patience_quotient_pct"] = pending.retention_metrics.patience_quotient_pct;
-      }
+      try {
+        const updatePayload = {
+          "system_summary.last_updated": FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString(),
+          behavior_analytics: behaviorData,
+          telemetry_history: historyData,
+        };
+        if (pending.system_summary.total_sessions_logged > 0) {
+          updatePayload["system_summary.total_sessions_logged"] = FieldValue.increment(pending.system_summary.total_sessions_logged);
+        }
+        if (pending.system_summary.total_matches > 0) {
+          updatePayload["system_summary.total_matches"] = FieldValue.increment(pending.system_summary.total_matches);
+        }
+        if (pending.system_summary.total_messages > 0) {
+          updatePayload["system_summary.total_messages"] = FieldValue.increment(pending.system_summary.total_messages);
+        }
+        if (pending.system_summary.total_violations > 0) {
+          updatePayload["system_summary.total_violations"] = FieldValue.increment(pending.system_summary.total_violations);
+        }
+        if (pending.system_summary.active_ccu_peak > 0) {
+          updatePayload["system_summary.active_ccu_peak"] = pending.system_summary.active_ccu_peak;
+        }
+        for (const [key, val] of Object.entries(pending.sentiment_distribution)) {
+          if (val > 0) updatePayload[`sentiment_distribution.${key}`] = FieldValue.increment(val);
+        }
+        for (const [key, val] of Object.entries(pending.session_durations)) {
+          if (val > 0) updatePayload[`session_durations.${key}`] = FieldValue.increment(val);
+        }
+        if (pending.retention_metrics.survival_rate_3m_pct > 0) {
+          updatePayload["retention_metrics.survival_rate_3m_pct"] = pending.retention_metrics.survival_rate_3m_pct;
+        }
+        if (pending.retention_metrics.skip_churn_15s_pct > 0) {
+          updatePayload["retention_metrics.skip_churn_15s_pct"] = pending.retention_metrics.skip_churn_15s_pct;
+        }
+        if (pending.retention_metrics.patience_quotient_pct > 0) {
+          updatePayload["retention_metrics.patience_quotient_pct"] = pending.retention_metrics.patience_quotient_pct;
+        }
 
-      await db.doc("telemetry/live_metrics").set(updatePayload, { merge: true });
-    } else {
+        await db.doc("telemetry/live_metrics").set(updatePayload, { merge: true });
+        writeSuccess = true;
+      } catch (adminErr) {
+        log("admin_telemetry_flush_warn", { message: adminErr?.message });
+        if (typeof disableDb === "function") disableDb();
+      }
+    }
+
+    if (!writeSuccess) {
       await flushViaRestApi(pending, behaviorData, historyData);
     }
 
@@ -1100,17 +1113,17 @@ setInterval(() => {
       rssMb: sample.rssMb,
       eventLoopLagMs: sample.eventLoopLagMs,
       sentiment: {
-        friendly_greetings: (snap?.engagement?.vibes?.friendlyGreetings ?? cachedHistoricalTelemetry.sentiment_distribution.friendly_greetings ?? 0),
-        curious_questions: (snap?.engagement?.vibes?.curiousQuestions ?? cachedHistoricalTelemetry.sentiment_distribution.curious_questions ?? 0),
-        casual_dialogue: (snap?.engagement?.vibes?.casualChat ?? cachedHistoricalTelemetry.sentiment_distribution.casual_dialogue ?? 0),
-        playful_humor: (snap?.engagement?.vibes?.playfulHumor ?? cachedHistoricalTelemetry.sentiment_distribution.playful_humor ?? 0),
-        toxic_messages: (snap?.engagement?.vibes?.hostileAbuse ?? cachedHistoricalTelemetry.sentiment_distribution.toxic_messages ?? 0),
+        friendly_greetings: (snap?.engagement?.vibes?.friendlyGreetings || 0) || (cachedHistoricalTelemetry.sentiment_distribution.friendly_greetings || 0),
+        curious_questions: (snap?.engagement?.vibes?.curiousQuestions || 0) || (cachedHistoricalTelemetry.sentiment_distribution.curious_questions || 0),
+        casual_dialogue: (snap?.engagement?.vibes?.casualChat || 0) || (cachedHistoricalTelemetry.sentiment_distribution.casual_dialogue || 0),
+        playful_humor: (snap?.engagement?.vibes?.playfulHumor || 0) || (cachedHistoricalTelemetry.sentiment_distribution.playful_humor || 0),
+        toxic_messages: (snap?.engagement?.vibes?.hostileAbuse || 0) || (cachedHistoricalTelemetry.sentiment_distribution.toxic_messages || 0),
       },
       durations: {
-        quick_skips_under_15s: (snap?.engagement?.durationBuckets?.quickSkips ?? cachedHistoricalTelemetry.session_durations.quick_skips_under_15s ?? 0),
-        short_chats_15s_1m: (snap?.engagement?.durationBuckets?.shortChats ?? cachedHistoricalTelemetry.session_durations.short_chats_15s_1m ?? 0),
-        medium_chats_1m_3m: (snap?.engagement?.durationBuckets?.mediumChats ?? cachedHistoricalTelemetry.session_durations.medium_chats_1m_3m ?? 0),
-        deep_chats_over_3m: (snap?.engagement?.durationBuckets?.deepConversations ?? cachedHistoricalTelemetry.session_durations.deep_chats_over_3m ?? 0),
+        quick_skips_under_15s: (snap?.engagement?.durationBuckets?.quickSkips || 0) || (cachedHistoricalTelemetry.session_durations.quick_skips_under_15s || 0),
+        short_chats_15s_1m: (snap?.engagement?.durationBuckets?.shortChats || 0) || (cachedHistoricalTelemetry.session_durations.short_chats_15s_1m || 0),
+        medium_chats_1m_3m: (snap?.engagement?.durationBuckets?.mediumChats || 0) || (cachedHistoricalTelemetry.session_durations.medium_chats_1m_3m || 0),
+        deep_chats_over_3m: (snap?.engagement?.durationBuckets?.deepConversations || 0) || (cachedHistoricalTelemetry.session_durations.deep_chats_over_3m || 0),
       },
       retention: { ...cachedHistoricalTelemetry.retention_metrics },
       behaviorStats: snap,
@@ -1309,18 +1322,18 @@ app.get("/api/admin/overview", verifyAdmin, ensureTelemetryHydrated, async (_req
   const totalSessionsPersistent = (histSummary.total_sessions_logged || 0) + (memoryBuffer.system_summary.total_sessions_logged || 0);
 
   const mergedSentiment = {
-    friendly_greetings: (snap?.engagement?.vibes?.friendlyGreetings ?? histSentiment.friendly_greetings ?? 0),
-    curious_questions: (snap?.engagement?.vibes?.curiousQuestions ?? histSentiment.curious_questions ?? 0),
-    casual_dialogue: (snap?.engagement?.vibes?.casualChat ?? histSentiment.casual_dialogue ?? 0),
-    playful_humor: (snap?.engagement?.vibes?.playfulHumor ?? histSentiment.playful_humor ?? 0),
-    toxic_messages: (snap?.engagement?.vibes?.hostileAbuse ?? histSentiment.toxic_messages ?? 0),
+    friendly_greetings: (snap?.engagement?.vibes?.friendlyGreetings || 0) || (histSentiment.friendly_greetings || 0),
+    curious_questions: (snap?.engagement?.vibes?.curiousQuestions || 0) || (histSentiment.curious_questions || 0),
+    casual_dialogue: (snap?.engagement?.vibes?.casualChat || 0) || (histSentiment.casual_dialogue || 0),
+    playful_humor: (snap?.engagement?.vibes?.playfulHumor || 0) || (histSentiment.playful_humor || 0),
+    toxic_messages: (snap?.engagement?.vibes?.hostileAbuse || 0) || (histSentiment.toxic_messages || 0),
   };
 
   const mergedDurations = {
-    quick_skips_under_15s: (snap?.engagement?.durationBuckets?.quickSkips ?? histDurations.quick_skips_under_15s ?? 0),
-    short_chats_15s_1m: (snap?.engagement?.durationBuckets?.shortChats ?? histDurations.short_chats_15s_1m ?? 0),
-    medium_chats_1m_3m: (snap?.engagement?.durationBuckets?.mediumChats ?? histDurations.medium_chats_1m_3m ?? 0),
-    deep_chats_over_3m: (snap?.engagement?.durationBuckets?.deepConversations ?? histDurations.deep_chats_over_3m ?? 0),
+    quick_skips_under_15s: (snap?.engagement?.durationBuckets?.quickSkips || 0) || (histDurations.quick_skips_under_15s || 0),
+    short_chats_15s_1m: (snap?.engagement?.durationBuckets?.shortChats || 0) || (histDurations.short_chats_15s_1m || 0),
+    medium_chats_1m_3m: (snap?.engagement?.durationBuckets?.mediumChats || 0) || (histDurations.medium_chats_1m_3m || 0),
+    deep_chats_over_3m: (snap?.engagement?.durationBuckets?.deepConversations || 0) || (histDurations.deep_chats_over_3m || 0),
   };
 
   const durTotal = mergedDurations.quick_skips_under_15s + mergedDurations.short_chats_15s_1m + mergedDurations.medium_chats_1m_3m + mergedDurations.deep_chats_over_3m;
@@ -1375,13 +1388,188 @@ app.get("/api/admin/overview", verifyAdmin, ensureTelemetryHydrated, async (_req
   });
 });
 
+// 2a. Live Telemetry & Historical Metrics Snapshot for Admin Dashboard
+app.get("/api/admin/telemetry-live", verifyAdmin, ensureTelemetryHydrated, async (_req, res) => {
+  try {
+    let liveDoc = null;
+    if (dbService.isFirebaseConfigured()) {
+      liveDoc = await dbService.getLiveTelemetryMetrics();
+    }
+    if (!liveDoc) {
+      const behaviorData = typeof getBehaviorAnalyticsForPersistence === "function" ? getBehaviorAnalyticsForPersistence() : {};
+      liveDoc = {
+        system_summary: cachedHistoricalTelemetry.system_summary,
+        sentiment_distribution: cachedHistoricalTelemetry.sentiment_distribution,
+        session_durations: cachedHistoricalTelemetry.session_durations,
+        retention_metrics: cachedHistoricalTelemetry.retention_metrics,
+        behavior_analytics: behaviorData,
+        telemetry_history: telemetryHistory.slice(-30),
+      };
+    }
+    res.json({ success: true, data: liveDoc });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err?.message || "Failed to fetch live telemetry" });
+  }
+});
+
 
 // 2b. Comprehensive Behavioral & Violation Analytics Feed
 app.get("/api/admin/behavior-analytics", verifyAdmin, ensureTelemetryHydrated, (_req, res) => {
-  const snapshot = typeof getBehaviorAnalyticsSnapshot === "function"
+  const memSnapshot = typeof getBehaviorAnalyticsSnapshot === "function"
     ? getBehaviorAnalyticsSnapshot()
-    : { overview: {}, slurDistribution: {}, contactExtraction: {}, engagement: {}, topTriggers: [], recentInterceptions: [] };
-  res.json({ success: true, ...snapshot });
+    : { overview: {}, slurDistribution: {}, contactExtraction: {}, engagement: {}, topTriggers: [], recentInterceptions: [], timeSeries: [] };
+
+  const hist = cachedHistoricalTelemetry || {};
+  const behData = hist.behavior_analytics || {};
+
+  // Merge overview counts with explicit key aliasing
+  const memOv = memSnapshot.overview || {};
+  const behOv = behData.overview || {};
+
+  const askedNumbers = Math.max(memOv.askedNumbers || 0, memOv.phoneNumbersAskedCount || 0, behOv.askedNumbers || 0, behOv.phoneNumbersAskedCount || 0);
+  const sharedNumbers = Math.max(memOv.sharedNumbers || 0, memOv.phoneNumbersSharedCount || 0, behOv.sharedNumbers || 0, behOv.phoneNumbersSharedCount || 0);
+  const slursBlocked = Math.max(memOv.slursBlocked || 0, memOv.slursInterceptedCount || 0, behOv.slursBlocked || 0, behOv.slursInterceptedCount || 0);
+  const socialHandles = Math.max(memOv.socialHandles || 0, memOv.socialHandlesCount || 0, behOv.socialHandles || 0, behOv.socialHandlesCount || 0);
+
+  const mergedOverview = {
+    ...behOv,
+    ...memOv,
+    totalMessagesProcessed: Math.max(memOv.totalMessagesProcessed || 0, behOv.totalMessagesProcessed || 0),
+    totalMessagesDelivered: Math.max(memOv.totalMessagesDelivered || 0, behOv.totalMessagesDelivered || 0),
+    totalMessagesBlocked: Math.max(memOv.totalMessagesBlocked || 0, behOv.totalMessagesBlocked || 0),
+    askedNumbers,
+    phoneNumbersAskedCount: askedNumbers,
+    sharedNumbers,
+    phoneNumbersSharedCount: sharedNumbers,
+    slursBlocked,
+    slursInterceptedCount: slursBlocked,
+    socialHandles,
+    socialHandlesCount: socialHandles,
+    cleanPassRate: memOv.cleanPassRate || behOv.cleanPassRate || 100,
+    cleanRatePct: memOv.cleanRatePct || behOv.cleanRatePct || 100,
+  };
+
+  // Merge slur distribution
+  const memSlur = memSnapshot.slurDistribution || {};
+  const behSlur = behData.slurDistribution || {};
+  const mergedSlur = {};
+  const allSlurKeys = new Set([
+    'racialAndEthnic', 'predatoryAndGrooming', 'homophobicTransphobic', 'misogynisticAbuse', 'cyberbullyingAndSelfHarm', 'regionalHinglish', 'otherProfanity',
+    ...Object.keys(memSlur), ...Object.keys(behSlur)
+  ]);
+  for (const k of allSlurKeys) {
+    mergedSlur[k] = Math.max(memSlur[k] || 0, behSlur[k] || 0);
+  }
+
+  // Merge contact extraction
+  const memContact = memSnapshot.contactExtraction || {};
+  const behContact = behData.contactExtraction || {};
+  const mergedContact = {
+    numbersAsked: Math.max(memContact.numbersAsked || 0, behContact.numbersAsked || 0, askedNumbers),
+    numbersShared: Math.max(memContact.numbersShared || 0, behContact.numbersShared || 0, sharedNumbers),
+    instagramHandles: Math.max(memContact.instagramHandles || 0, behContact.instagramHandles || 0),
+    snapchatHandles: Math.max(memContact.snapchatHandles || 0, behContact.snapchatHandles || 0),
+    telegramDiscord: Math.max(memContact.telegramDiscord || 0, behContact.telegramDiscord || 0),
+  };
+
+  // Merge time-series buckets by timestamp matching
+  const tsMap = new Map();
+  const histTs = Array.isArray(behData.timeSeries) ? behData.timeSeries : [];
+  const memTs = Array.isArray(memSnapshot.timeSeries) ? memSnapshot.timeSeries : [];
+
+  for (const pt of histTs) {
+    if (pt && (pt.timestamp || pt.t)) {
+      const k = pt.timestamp || pt.t;
+      tsMap.set(k, {
+        timestamp: k,
+        timeLabel: pt.timeLabel || new Date(k).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        cleanMsgs: Number(pt.cleanMsgs) || 0,
+        slurs: Number(pt.slurs) || 0,
+        askedNumbers: Number(pt.askedNumbers) || 0,
+        sharedNumbers: Number(pt.sharedNumbers) || 0,
+        socials: Number(pt.socials) || 0,
+        otherBlocked: Number(pt.otherBlocked) || 0,
+      });
+    }
+  }
+
+  for (const pt of memTs) {
+    if (pt && (pt.timestamp || pt.t)) {
+      const k = pt.timestamp || pt.t;
+      const existing = tsMap.get(k);
+      if (existing) {
+        existing.cleanMsgs = Math.max(existing.cleanMsgs, Number(pt.cleanMsgs) || 0);
+        existing.slurs = Math.max(existing.slurs, Number(pt.slurs) || 0);
+        existing.askedNumbers = Math.max(existing.askedNumbers, Number(pt.askedNumbers) || 0);
+        existing.sharedNumbers = Math.max(existing.sharedNumbers, Number(pt.sharedNumbers) || 0);
+        existing.socials = Math.max(existing.socials, Number(pt.socials) || 0);
+        existing.otherBlocked = Math.max(existing.otherBlocked, Number(pt.otherBlocked) || 0);
+      } else {
+        tsMap.set(k, {
+          timestamp: k,
+          timeLabel: pt.timeLabel || new Date(k).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          cleanMsgs: Number(pt.cleanMsgs) || 0,
+          slurs: Number(pt.slurs) || 0,
+          askedNumbers: Number(pt.askedNumbers) || 0,
+          sharedNumbers: Number(pt.sharedNumbers) || 0,
+          socials: Number(pt.socials) || 0,
+          otherBlocked: Number(pt.otherBlocked) || 0,
+        });
+      }
+    }
+  }
+
+  const mergedTimeSeries = Array.from(tsMap.values())
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .slice(-30);
+
+  // Merge repeat offenders
+  const offMap = new Map();
+  const histOff = Array.isArray(behData.topOffenders) ? behData.topOffenders : (Array.isArray(behData.repeatOffenders) ? behData.repeatOffenders : []);
+  const memOff = Array.isArray(memSnapshot.topOffenders) ? memSnapshot.topOffenders : [];
+
+  for (const off of histOff) {
+    const item = Array.isArray(off) ? off[1] : off;
+    if (item && (item.userId || item.deviceHash)) {
+      const id = item.userId || item.deviceHash;
+      offMap.set(id, { ...item });
+    }
+  }
+
+  for (const off of memOff) {
+    const item = Array.isArray(off) ? off[1] : off;
+    if (item && (item.userId || item.deviceHash)) {
+      const id = item.userId || item.deviceHash;
+      const existing = offMap.get(id);
+      if (existing) {
+        existing.violationCount = Math.max(existing.violationCount || 0, item.violationCount || 0);
+        existing.slursCount = Math.max(existing.slursCount || 0, item.slursCount || 0);
+        existing.askedNumbersCount = Math.max(existing.askedNumbersCount || 0, item.askedNumbersCount || 0);
+        existing.sharedNumbersCount = Math.max(existing.sharedNumbersCount || 0, item.sharedNumbersCount || 0);
+        existing.socialsCount = Math.max(existing.socialsCount || 0, item.socialsCount || 0);
+        existing.lastSnippet = item.lastSnippet || existing.lastSnippet;
+        existing.lastViolationTime = Math.max(existing.lastViolationTime || 0, item.lastViolationTime || 0);
+      } else {
+        offMap.set(id, { ...item });
+      }
+    }
+  }
+
+  const mergedOffenders = Array.from(offMap.values())
+    .sort((a, b) => b.violationCount - a.violationCount)
+    .slice(0, 20);
+
+  res.json({
+    success: true,
+    overview: mergedOverview,
+    slurDistribution: mergedSlur,
+    contactExtraction: mergedContact,
+    engagement: memSnapshot.engagement || behData.engagement || {},
+    timeSeries: mergedTimeSeries,
+    topTriggers: memSnapshot.topTriggers || behData.topTriggers || [],
+    topOffenders: mergedOffenders,
+    recentInterceptions: memSnapshot.recentInterceptions || behData.recentInterceptions || [],
+  });
 });
 
 // 2c. Reset / Clear User Behavior & Intelligence Analytics Data to 0
@@ -1584,18 +1772,24 @@ app.post("/api/admin/bans/add", verifyAdmin, (req, res) => {
   let resolvedHash = cleanTarget;
 
   // Resolve target if passed userId or socketId
+  let resolvedIp = null;
+  let resolvedUser = null;
   for (const socket of io.sockets.sockets.values()) {
     if (socket.id === cleanTarget || socket.data?.userId === cleanTarget) {
       if (socket.data?.deviceHash) resolvedHash = socket.data.deviceHash;
+      if (socket.data?.clientIp) resolvedIp = socket.data.clientIp;
+      if (socket.data?.userId) resolvedUser = socket.data.userId;
       socket.emit("banned", { minutes: Math.ceil(durationMs / 60000), reason: suspensionReason });
       socket.disconnect(true);
     } else if (socket.data?.deviceHash === cleanTarget || (resolvedHash && socket.data?.deviceHash === resolvedHash)) {
+      if (socket.data?.clientIp) resolvedIp = socket.data.clientIp;
+      if (socket.data?.userId) resolvedUser = socket.data.userId;
       socket.emit("banned", { minutes: Math.ceil(durationMs / 60000), reason: suspensionReason });
       socket.disconnect(true);
     }
   }
 
-  banDevice(resolvedHash, durationMs, suspensionReason);
+  banDevice(resolvedHash, durationMs, suspensionReason, resolvedIp, resolvedUser);
 
   recordAdminEvent("ban", "Device Suspended", `${resolvedHash} banned for ${durationMinutes || 15}m (${suspensionReason})`, "alert");
   log("admin_ban_device", { deviceHash: resolvedHash, durationMinutes, reason: suspensionReason });

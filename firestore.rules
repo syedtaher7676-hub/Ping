@@ -60,14 +60,21 @@ service cloud.firestore {
         data.status in ['pending', 'accepted', 'rejected'];
     }
 
+    function isValidChatRoom(data) {
+      return data.roomId is string && data.roomId.size() <= 128 &&
+        data.users is list && data.users.size() >= 1 &&
+        data.status in ['active', 'terminated', 'expired'];
+    }
+
     function isValidFriendChat(data) {
       return data.chatId is string && data.chatId.size() <= 128 &&
-        data.participants is list && data.participants.size() == 2;
+        (!('participants' in data) || (data.participants is list && data.participants.size() == 2));
     }
 
     function isValidChatMessage(data) {
       return data.messageId is string && data.messageId.size() <= 128 &&
-        data.chatId is string && data.chatId.size() <= 128 &&
+        (!('chatId' in data) || (data.chatId is string && data.chatId.size() <= 128)) &&
+        (!('roomId' in data) || (data.roomId is string && data.roomId.size() <= 128)) &&
         data.fromUserId is string && data.fromUserId.size() <= 128 &&
         data.message is string && data.message.size() > 0 && data.message.size() <= 2000;
     }
@@ -91,6 +98,20 @@ service cloud.firestore {
       allow list: if isSignedIn();
       allow create, update: if isValidId(userId) && isValidUser(incoming());
       allow delete: if isValidId(userId);
+    }
+
+    // ── CHAT ROOMS & STRANGER CHAT MESSAGES ─────────────────────
+    match /chat_rooms/{roomId} {
+      allow get: if isValidId(roomId) || true;
+      allow list: if true;
+      allow create, update: if isValidId(roomId) && isValidChatRoom(incoming());
+      allow delete: if isValidId(roomId);
+
+      match /messages/{messageId} {
+        allow get, list: if true;
+        allow create, update: if isValidId(messageId);
+        allow delete: if isValidId(messageId);
+      }
     }
 
     // ── BANS COLLECTION ─────────────────────────────────────────

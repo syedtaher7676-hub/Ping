@@ -168,6 +168,22 @@
         "valid": { "type": "boolean" }
       },
       "required": ["token", "expiresAt"]
+    },
+    "ChatRoom": {
+      "title": "ChatRoom",
+      "description": "Active or completed stranger chat sessions",
+      "type": "object",
+      "properties": {
+        "roomId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "maxLength": 32 },
+        "users": { "type": "array" },
+        "status": { "type": "string", "enum": ["active", "terminated", "expired"] },
+        "createdAt": { "type": "number" },
+        "endAt": { "type": "number" },
+        "lastMessage": { "type": "string", "maxLength": 2000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["roomId", "users", "status"]
     }
   },
   "firestore": {
@@ -194,6 +210,14 @@
     "/friend_requests/{requestId}": {
       "schema": "FriendRequest",
       "description": "Pending and resolved friend requests"
+    },
+    "/chat_rooms/{roomId}": {
+      "schema": "ChatRoom",
+      "description": "Active or completed stranger chat sessions"
+    },
+    "/chat_rooms/{roomId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Real-time messages sent within a chat room"
     },
     "/friend_chats/{chatId}": {
       "schema": "FriendChat",

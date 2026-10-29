@@ -56,11 +56,12 @@ function terminateSession(io, roomId, reason = "session_ended") {
       reason === "time_expired" ? "Time's up! The session has expired." :
         reason === "user_ended" ? "Stranger left the chat." :
           reason === "partner_left" ? "Stranger left the chat." :
-            reason === "server_shutdown" ? "Server is restarting for maintenance." : "Stranger left the chat.";
+            reason === "user_reported" ? "Chat ended: User reported." :
+              reason === "server_shutdown" ? "Server is restarting for maintenance." : "Stranger left the chat.";
 
   const endPayload = {
-    reason: "stranger_disconnected",
-    message: "Stranger left the chat.",
+    reason: reason === "user_reported" ? "user_reported" : "stranger_disconnected",
+    message: reason === "user_reported" ? "Chat ended: User reported." : "Stranger left the chat.",
     friendlyReason,
     rawReason: reason,
     roomId

@@ -97,15 +97,23 @@ function initializeFirebase() {
         clientEmail,
         privateKey: formatPrivateKey(privateKey),
       });
-    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS && fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
       credential = applicationDefault();
+    } else {
+      // Do not default to container applicationDefault() without service account credentials,
+      // as Cloud Run default credentials belong to ping-app-test and produce PERMISSION_DENIED.
+      credential = null;
     }
 
+    const appConfig = {};
     if (credential) {
-      const appConfig = { credential };
-      if (projectId) {
-        appConfig.projectId = projectId;
-      }
+      appConfig.credential = credential;
+    }
+    if (projectId) {
+      appConfig.projectId = projectId;
+    }
+
+    if (Object.keys(appConfig).length > 0) {
       const app = initializeApp(appConfig);
       isInitialized = true;
       console.log(`🔥 [Firebase] Admin SDK initialized successfully (Project: ${projectId || "default"}).`);
@@ -180,7 +188,7 @@ function disableDb() {
  * @returns {boolean}
  */
 function isFirebaseConfigured() {
-  return isInitialized && getDb() !== null;
+  return getDb() !== null;
 }
 
 module.exports = {

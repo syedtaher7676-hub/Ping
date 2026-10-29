@@ -908,6 +908,13 @@ async function deleteAdminSession(token) {
 }
 
 async function getLiveTelemetryMetrics() {
+  const db = getDb();
+  if (db) {
+    try {
+      const snap = await db.collection("telemetry").doc("live_metrics").get();
+      if (snap.exists) return snap.data();
+    } catch (_) {}
+  }
   const res = await firestoreRest("telemetry/live_metrics");
   return decodeFirestoreDoc(res);
 }
@@ -917,6 +924,22 @@ async function atomicSyncTelemetry(pending = {}) {
 }
 
 async function resetBehaviorTelemetry(persistenceData = {}) {
+  const db = getDb();
+  if (db) {
+    try {
+      await db.collection("telemetry").doc("live_metrics").set({
+        behavior_analytics: persistenceData,
+        "system_summary.last_updated": FieldValue.serverTimestamp ? FieldValue.serverTimestamp() : new Date().toISOString()
+      }, { merge: true });
+    } catch (_) {}
+  }
+  try {
+    await firestoreRest("telemetry/live_metrics", "PATCH", {
+      fields: {
+        behavior_analytics: encodeFirestoreValue(persistenceData)
+      }
+    });
+  } catch (_) {}
   return true;
 }
 

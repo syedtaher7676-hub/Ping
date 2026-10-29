@@ -283,7 +283,87 @@ function recordViolationEvent({
   let categoryName = 'Community Safety';
   const bucket = getOrCreateCurrentBucket();
 
-  switch (type) {
+  // Normalize incoming category / type / reason strings to standardized internal keys
+  const rawType = String(type || '').toLowerCase().trim();
+  const rawCategory = String(category || '').toLowerCase().trim();
+  const combined = `${rawType} ${rawCategory}`;
+
+  let normalizedType = 'other';
+
+  const snipLower = snippet.toLowerCase();
+  const isAskingPhrase =
+    snipLower.includes('give me') ||
+    snipLower.includes('what is ur') ||
+    snipLower.includes('what is your') ||
+    snipLower.includes('whats ur') ||
+    snipLower.includes('whats your') ||
+    snipLower.includes('send ur') ||
+    snipLower.includes('send your') ||
+    snipLower.includes('tell me') ||
+    snipLower.includes('can i get') ||
+    snipLower.includes('can i have') ||
+    snipLower.includes('number pls') ||
+    snipLower.includes('num pls') ||
+    snipLower.includes('phone num');
+
+  if (
+    combined.includes('asking') ||
+    combined.includes('asked') ||
+    combined.includes('phone_asking') ||
+    combined.includes('solicitation') ||
+    (combined.includes('phone') && isAskingPhrase)
+  ) {
+    normalizedType = 'phone_asked';
+  } else if (
+    combined.includes('privacy_phone_sharing') ||
+    combined.includes('phone_number_sharing') ||
+    combined.includes('phone_number_detected') ||
+    combined.includes('phone_shared') ||
+    combined.includes('digits') ||
+    combined.includes('phone')
+  ) {
+    normalizedType = 'phone_shared';
+  } else if (
+    combined.includes('social') ||
+    combined.includes('insta') ||
+    combined.includes('snap') ||
+    combined.includes('discord') ||
+    combined.includes('telegram')
+  ) {
+    normalizedType = 'social_handle';
+  } else if (
+    combined.includes('slur') ||
+    combined.includes('hate') ||
+    combined.includes('profanity') ||
+    combined.includes('vulgarity') ||
+    combined.includes('bad_word') ||
+    combined.includes('learned_violation')
+  ) {
+    normalizedType = 'slur_detected';
+  } else if (
+    combined.includes('threat') ||
+    combined.includes('coercion') ||
+    combined.includes('grooming') ||
+    combined.includes('blackmail') ||
+    combined.includes('harassment') ||
+    combined.includes('cyberbullying') ||
+    combined.includes('dox') ||
+    combined.includes('stalking')
+  ) {
+    normalizedType = 'threat_detected';
+  } else if (
+    combined.includes('link') ||
+    combined.includes('url')
+  ) {
+    normalizedType = 'link_blocked';
+  } else if (
+    combined.includes('symbol') ||
+    combined.includes('punctuation')
+  ) {
+    normalizedType = 'symbols_blocked';
+  }
+
+  switch (normalizedType) {
     case 'phone_shared':
       phoneNumbersSharedCount++;
       contactExtractionStats.numbersShared++;
@@ -359,7 +439,7 @@ function recordViolationEvent({
   }
 
   // Record offender profile
-  recordOffenderViolation(userId, type, country, deviceHash, snippet);
+  recordOffenderViolation(userId, normalizedType, country, deviceHash, snippet);
 
   // Safe sanitized snippet preview (never display full unmasked toxic text in raw logs)
   let safeSnippet = snippet || '';

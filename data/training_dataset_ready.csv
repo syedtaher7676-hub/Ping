@@ -15685,3 +15685,42 @@ n
 9
 7",1,"reported_user_dialogue_vertical"
 "h3y cr33py 3v@$10n 1793120207297",1,"reported_user_dialogue_leet"
+"hey creepy evasion 1793278551739",1,"reported_user_dialogue"
+"h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.2.7.8.5.5.1.7.3.9",1,"reported_user_dialogue_dotted"
+"h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...2...7...8...5...5...1...7...3...9",1,"reported_user_dialogue_multidot"
+"h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-2-7-8-5-5-1-7-3-9",1,"reported_user_dialogue_hyphenated"
+"h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*2*7*8*5*5*1*7*3*9",1,"reported_user_dialogue_starred"
+"h e y   c r e e p y   e v a s i o n   1 7 9 3 2 7 8 5 5 1 7 3 9",1,"reported_user_dialogue_spaced"
+"h
+e
+y
+
+c
+r
+e
+e
+p
+y
+
+e
+v
+a
+s
+i
+o
+n
+
+1
+7
+9
+3
+2
+7
+8
+5
+5
+1
+7
+3
+9",1,"reported_user_dialogue_vertical"
+"h3y cr33py 3v@$10n 1793278551739",1,"reported_user_dialogue_leet"

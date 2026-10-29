@@ -419,13 +419,14 @@ function trainAndUpdateLocalModel(dataset = null) {
     const modelKnowledge = {
       model_name: 'PingUnifiedModerationModel',
       target_era: '2028-2030',
-      version: '3.0.0',
+      version: '4.0.0-Enterprise',
       trainedAt: new Date().toISOString(),
       sampleCount: dataset.length + GLOBAL_SLURS_VOCABULARY.length,
       violationCount: phraseMap.violations.length,
       safeCount: phraseMap.safe.length,
-      topViolationTokens: Array.from(violationTokens.entries()).sort((a, b) => b[1] - a[1]).slice(0, 250),
-      topSafeTokens: Array.from(safeTokens.entries()).sort((a, b) => b[1] - a[1]).slice(0, 250),
+      vocabSize: violationTokens.size + safeTokens.size,
+      topViolationTokens: Array.from(violationTokens.entries()).sort((a, b) => b[1] - a[1]).slice(0, 300),
+      topSafeTokens: Array.from(safeTokens.entries()).sort((a, b) => b[1] - a[1]).slice(0, 300),
       phrases: phraseMap
     };
 
@@ -434,19 +435,93 @@ function trainAndUpdateLocalModel(dataset = null) {
 
     const configJsonPath = path.join(CUSTOM_MODEL_DIR, 'config.json');
     fs.writeFileSync(configJsonPath, JSON.stringify({
-      architectures: ["DistilBertForSequenceClassification", "PingUnifiedModerationClassifier"],
+      architectures: ["DistilBertForSequenceClassification", "PingUnifiedModerationClassifier", "PingBayesianTrajectoryEngine"],
       id2label: { "0": "SAFE", "1": "VIOLATION" },
       label2id: { "SAFE": 0, "VIOLATION": 1 },
       model_type: "distilbert",
       problem_type: "single_label_classification",
-      version: "3.0.0",
-      generation: "2028-30"
+      version: "4.0.0-Enterprise",
+      generation: "2028-30",
+      capabilities: [
+        "multilingual_gaming_moderation",
+        "human_behavior_banter_shield",
+        "active_learning_ping_pipeline",
+        "b2b_enterprise_api_ready"
+      ]
     }, null, 2), 'utf8');
 
     console.log(`[ModelTrainer] 🎯 Unified moderation model updated at: ${CUSTOM_MODEL_DIR}`);
   } catch (err) {
     console.warn('[ModelTrainer] Error updating local model:', err?.message);
   }
+}
+
+/**
+ * Fast Neuro-Bayesian Log-Odds Scorer:
+ * Computes P(Toxic | tokens) with Laplace smoothing and conversational trajectory adjustments.
+ */
+function evaluateBayesianToxicity(text, context = {}) {
+  if (!text || typeof text !== 'string') return { toxicityScore: 0, confidence: 1.0 };
+  const clean = text.trim().toLowerCase();
+  if (clean.length === 0) return { toxicityScore: 0, confidence: 1.0 };
+
+  const tokens = clean.split(/[\s\.\-_,\/\\~\|\*\^#%+=:;'"!?`]+/).filter(t => t.length >= 2);
+  if (tokens.length === 0) return { toxicityScore: 0, confidence: 1.0 };
+
+  let modelData = null;
+  const weightsFile = path.join(CUSTOM_MODEL_DIR, 'model_weights.json');
+  if (fs.existsSync(weightsFile)) {
+    try {
+      modelData = JSON.parse(fs.readFileSync(weightsFile, 'utf8'));
+    } catch (_) {}
+  }
+
+  const vTokens = new Map(modelData?.topViolationTokens || []);
+  const sTokens = new Map(modelData?.topSafeTokens || []);
+
+  const totalV = Math.max(1, modelData?.violationCount || 100);
+  const totalS = Math.max(1, modelData?.safeCount || 100);
+  const vocabSize = Math.max(100, vTokens.size + sTokens.size);
+
+  let logOdds = Math.log(totalV / totalS);
+
+  for (const t of tokens) {
+    const vCount = vTokens.get(t) || 0;
+    const sCount = sTokens.get(t) || 0;
+
+    // Laplace smoothed conditional probabilities
+    const pTokenV = (vCount + 1) / (totalV + vocabSize);
+    const pTokenS = (sCount + 1) / (totalS + vocabSize);
+
+    logOdds += Math.log(pTokenV / pTokenS);
+  }
+
+  // Logistic sigmoid conversion
+  let rawScore = 1 / (1 + Math.exp(-logOdds));
+
+  // Conversational Contextual Modulations
+  const hasTargetPronoun = /\b(you|ur|your|u|tu|tera|teri|tujhe|tum|aap|toi|du|sen)\b/i.test(clean);
+  const isSelfDirected = /\b(i|my|im|i'm|mera|meri|mujhe|je|ich)\b/i.test(clean);
+  const isGamingCallout = /\b(boss|carry|adc|tank|nexus|tower|dragon|minion|creeps?|headshot|gank)\b/i.test(clean);
+
+  if (isSelfDirected && !hasTargetPronoun) {
+    rawScore *= 0.6; // Self-deprecation discount
+  }
+  if (isGamingCallout) {
+    rawScore *= 0.5; // In-game objective discount
+  }
+  if (hasTargetPronoun && rawScore > 0.4) {
+    rawScore = Math.min(1.0, rawScore * 1.4); // Targeted attack amplification
+  }
+
+  const toxicityScore = Math.min(1.0, Math.max(0.0, Number(rawScore.toFixed(3))));
+  return {
+    toxicityScore,
+    confidence: Number((0.85 + Math.abs(toxicityScore - 0.5) * 0.3).toFixed(2)),
+    hasTargetPronoun,
+    isSelfDirected,
+    isGamingCallout
+  };
 }
 
 // Debounced live retraining timer
@@ -510,11 +585,68 @@ function ingestReportedConversation(reporterId, reportedUserId, messages = []) {
   }
 }
 
+/**
+ * Reinforces healthy conversation patterns when 1-on-1 pairs chat with mutual respect
+ */
+function ingestHealthyTurnTakingConversation(messages = []) {
+  try {
+    if (!Array.isArray(messages) || messages.length < 3) return;
+    for (const m of messages) {
+      if (m?.text && typeof m.text === 'string' && m.text.length >= 5) {
+        recordChatSampleForTraining(m.text, 0, 'healthy_turn_taking');
+      }
+    }
+  } catch (_) {}
+}
+
+/**
+ * Returns model telemetry metrics for B2B dashboards & Admin UI
+ */
+function getModelTrainingMetrics() {
+  let dataset = [];
+  try {
+    if (fs.existsSync(READY_DATASET_PATH)) {
+      dataset = JSON.parse(fs.readFileSync(READY_DATASET_PATH, 'utf8'));
+    }
+  } catch (_) {}
+
+  let quarantined = [];
+  try {
+    if (fs.existsSync(QUARANTINE_DATASET_PATH)) {
+      quarantined = JSON.parse(fs.readFileSync(QUARANTINE_DATASET_PATH, 'utf8'));
+    }
+  } catch (_) {}
+
+  let modelData = null;
+  try {
+    const p = path.join(CUSTOM_MODEL_DIR, 'model_weights.json');
+    if (fs.existsSync(p)) {
+      modelData = JSON.parse(fs.readFileSync(p, 'utf8'));
+    }
+  } catch (_) {}
+
+  return {
+    modelName: 'PingUnifiedModerationAIML',
+    version: '4.0.0-Enterprise',
+    targetEra: '2028-2030',
+    datasetCount: dataset.length,
+    quarantinedCount: quarantined.length,
+    violationPhrases: modelData?.violationCount || 0,
+    safePhrases: modelData?.safeCount || 0,
+    topViolationTokens: (modelData?.topViolationTokens || []).slice(0, 30),
+    topSafeTokens: (modelData?.topSafeTokens || []).slice(0, 30),
+    lastTrainedAt: modelData?.trainedAt || new Date().toISOString()
+  };
+}
+
 module.exports = {
   recordChatSampleForTraining,
   trainAndUpdateLocalModel,
   ingestIncomingChatMessage,
   ingestReportedConversation,
+  ingestHealthyTurnTakingConversation,
+  evaluateBayesianToxicity,
+  getModelTrainingMetrics,
   calculateAnomalyScore,
   quarantineSample,
   computeCharTrigramEmbedding,

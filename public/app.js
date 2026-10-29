@@ -3019,6 +3019,13 @@ function endCurrentChat() {
   AppState.explore.roomId = null;
   AppState.explore.timerEndMs = 0;
   
+  try {
+    sessionStorage.removeItem('ping_last_explore_room');
+    sessionStorage.removeItem('ping_is_in_chat');
+    sessionStorage.removeItem('ping_explore_timer_end');
+    localStorage.removeItem('ping_last_explore_room');
+  } catch (_) {}
+
   stopAutoSearch(); // Always kill the auto-search timer when ending any chat
   stopTimer();
   
@@ -4367,8 +4374,16 @@ socket.off('chat_end');
 socket.off('chat_ended');
 let lastEndChatHandledMs = 0;
 const handleGenericChatEnd = ({ reason, rawReason, message }) => {
-  if (AppState.activeTab !== 'EXPLORE') return;
   const endReason = reason || rawReason;
+
+  // Always purge explore room session tokens on any chat end to eliminate stale rooms
+  try {
+    sessionStorage.removeItem('ping_last_explore_room');
+    sessionStorage.removeItem('ping_is_in_chat');
+    sessionStorage.removeItem('ping_explore_timer_end');
+    localStorage.removeItem('ping_last_explore_room');
+  } catch (_) {}
+
   if (endReason === 'user_reported_warning' || rawReason === 'user_reported_warning' || String(endReason).includes('user_reported_warning')) {
     stopTimer();
     stopAutoSearch();
@@ -4383,10 +4398,13 @@ const handleGenericChatEnd = ({ reason, rawReason, message }) => {
     stopWaitingScreen();
     clearChat();
     syncButtons();
-    showView('prechat');
+    if (AppState.activeTab === 'EXPLORE') {
+      showView('prechat');
+    }
     showToast('⚠️ You were reported by your chat partner. Please follow community guidelines.', 'warn', 5000);
     return;
   }
+
   if (endReason === 'report_submitted' || endReason === 'user_reported' || rawReason === 'report_submitted' || rawReason === 'user_reported') {
     stopTimer();
     stopAutoSearch();
@@ -4401,10 +4419,13 @@ const handleGenericChatEnd = ({ reason, rawReason, message }) => {
     stopWaitingScreen();
     clearChat();
     syncButtons();
-    showView('prechat');
+    if (AppState.activeTab === 'EXPLORE') {
+      showView('prechat');
+    }
     showToast('User reported. Returned to home screen.', 'info', 3500);
     return;
   }
+
   if (endReason === 'left_queue' || rawReason === 'left_queue' || String(endReason).toLowerCase().includes('queue')) {
     stopTimer();
     stopAutoSearch();
@@ -4416,9 +4437,10 @@ const handleGenericChatEnd = ({ reason, rawReason, message }) => {
     AppState.explore.timerEndMs = 0;
     isWaiting = false;
     stopWaitingScreen();
-    showView('prechat');
+    if (AppState.activeTab === 'EXPLORE') {
+      showView('prechat');
+    }
     syncButtons();
-    // Do NOT show any toast or popup for leaving queue
     return;
   }
 
@@ -5396,20 +5418,47 @@ function handleUserLeftScreen() {
 }
 
 function handleUserReturnedToScreen() {
-  let currentRoom = activeRoomId || AppState.explore.roomId;
-  if (!currentRoom) {
+  // If the user was NOT actively in chat, ensure stale room tokens are wiped and do not switch to chat view
+  if (!inChat && !AppState.explore.inChat) {
     try {
-      currentRoom = sessionStorage.getItem('ping_last_explore_room');
+      sessionStorage.removeItem('ping_last_explore_room');
+      sessionStorage.removeItem('ping_is_in_chat');
+      sessionStorage.removeItem('ping_explore_timer_end');
     } catch (_) {}
+    return;
   }
-  if (!inChat && !AppState.explore.inChat && !currentRoom) return;
 
-  // Crucial: Take the person directly to the chat screen, NOT the main screen
+  const currentRoom = activeRoomId || AppState.explore.roomId;
+  if (!currentRoom) {
+    inChat = false;
+    AppState.explore.inChat = false;
+    showView('prechat');
+    return;
+  }
+
+  // Active chat session ongoing: bring user to chat view and sync with server
   goToChat();
   showView('chat');
 
-  if (currentRoom && socket && socket.connected) {
-    socket.emit('returned_to_screen', { roomId: currentRoom });
+  if (socket && socket.connected) {
+    socket.emit('returned_to_screen', { roomId: currentRoom }, (res) => {
+      if (res && res.ok === false) {
+        // Room already ended on server while user was away
+        inChat = false;
+        activeRoomId = null;
+        AppState.explore.inChat = false;
+        AppState.explore.roomId = null;
+        try {
+          sessionStorage.removeItem('ping_last_explore_room');
+          sessionStorage.removeItem('ping_is_in_chat');
+          sessionStorage.removeItem('ping_explore_timer_end');
+        } catch (_) {}
+        stopTimer();
+        clearChat();
+        showView('prechat');
+        showToast('Chat ended while away.', 'info', 3000);
+      }
+    });
   }
 }
 
@@ -7040,36 +7089,36 @@ function initAdminModule() {
     const ov = data.overview || {};
 
     // 1. Behavior Tab 8-Card Stat Grid
-    if (statBehaviorAskedNumbers) statBehaviorAskedNumbers.textContent = (ov.phoneNumbersAskedCount ?? ov.askedNumbers ?? 0).toLocaleString();
-    if (statBehaviorSharedNumbers) statBehaviorSharedNumbers.textContent = (ov.phoneNumbersSharedCount ?? ov.sharedNumbers ?? 0).toLocaleString();
-    if (statBehaviorSlursBlocked) statBehaviorSlursBlocked.textContent = (ov.slursInterceptedCount ?? ov.slursBlocked ?? 0).toLocaleString();
-    if (statBehaviorSocialHandles) statBehaviorSocialHandles.textContent = (ov.socialHandlesCount ?? ov.socialHandles ?? 0).toLocaleString();
-    if (statBehaviorCleanRate) statBehaviorCleanRate.textContent = `${ov.cleanRatePct ?? ov.cleanPassRate ?? 100}%`;
-    if (statBehaviorAvgDuration) statBehaviorAvgDuration.textContent = `${ov.avgDurationSec ?? ov.avgChatDurationSeconds ?? 0}s`;
-    if (statBehaviorAvgMsgLength) statBehaviorAvgMsgLength.textContent = `${ov.avgMsgLengthChars ?? ov.avgMsgLength ?? 0} chars`;
-    if (statBehaviorOffPlatformRate) statBehaviorOffPlatformRate.textContent = `${ov.offPlatformRatePct ?? ov.offPlatformAttemptRate ?? 0}%`;
+    if (statBehaviorAskedNumbers) statBehaviorAskedNumbers.textContent = (ov.phoneNumbersAskedCount || ov.askedNumbers || 0).toLocaleString();
+    if (statBehaviorSharedNumbers) statBehaviorSharedNumbers.textContent = (ov.phoneNumbersSharedCount || ov.sharedNumbers || 0).toLocaleString();
+    if (statBehaviorSlursBlocked) statBehaviorSlursBlocked.textContent = (ov.slursInterceptedCount || ov.slursBlocked || 0).toLocaleString();
+    if (statBehaviorSocialHandles) statBehaviorSocialHandles.textContent = (ov.socialHandlesCount || ov.socialHandles || 0).toLocaleString();
+    if (statBehaviorCleanRate) statBehaviorCleanRate.textContent = `${ov.cleanRatePct || ov.cleanPassRate || 100}%`;
+    if (statBehaviorAvgDuration) statBehaviorAvgDuration.textContent = `${ov.avgDurationSec || ov.avgChatDurationSeconds || 0}s`;
+    if (statBehaviorAvgMsgLength) statBehaviorAvgMsgLength.textContent = `${ov.avgMsgLengthChars || ov.avgMsgLength || 0} chars`;
+    if (statBehaviorOffPlatformRate) statBehaviorOffPlatformRate.textContent = `${ov.offPlatformRatePct || ov.offPlatformAttemptRate || 0}%`;
 
     // Overview Tab sync
-    if (statOverviewAskedNumbers) statOverviewAskedNumbers.textContent = (ov.phoneNumbersAskedCount ?? ov.askedNumbers ?? 0).toLocaleString();
-    if (statOverviewSharedNumbers) statOverviewSharedNumbers.textContent = (ov.phoneNumbersSharedCount ?? ov.sharedNumbers ?? 0).toLocaleString();
-    if (statOverviewSlursBlocked) statOverviewSlursBlocked.textContent = (ov.slursInterceptedCount ?? ov.slursBlocked ?? 0).toLocaleString();
-    if (statOverviewCleanRate) statOverviewCleanRate.textContent = `${ov.cleanRatePct ?? ov.cleanPassRate ?? 100}%`;
+    if (statOverviewAskedNumbers) statOverviewAskedNumbers.textContent = (ov.phoneNumbersAskedCount || ov.askedNumbers || 0).toLocaleString();
+    if (statOverviewSharedNumbers) statOverviewSharedNumbers.textContent = (ov.phoneNumbersSharedCount || ov.sharedNumbers || 0).toLocaleString();
+    if (statOverviewSlursBlocked) statOverviewSlursBlocked.textContent = (ov.slursInterceptedCount || ov.slursBlocked || 0).toLocaleString();
+    if (statOverviewCleanRate) statOverviewCleanRate.textContent = `${ov.cleanRatePct || ov.cleanPassRate || 100}%`;
     if (adminBehaviorBadge) adminBehaviorBadge.textContent = ov.totalMessagesBlocked || 0;
 
     // 2. Contact Extraction Breakdown
     const ce = data.contactExtraction || {};
-    if (countExtractAsked) countExtractAsked.textContent = (ce.numbersAsked ?? 0).toLocaleString();
-    if (countExtractShared) countExtractShared.textContent = (ce.numbersShared ?? 0).toLocaleString();
-    if (countExtractInstagram) countExtractInstagram.textContent = (ce.instagramHandles ?? 0).toLocaleString();
-    if (countExtractSnapchat) countExtractSnapchat.textContent = (ce.snapchatHandles ?? 0).toLocaleString();
-    if (countExtractTelegram) countExtractTelegram.textContent = (ce.telegramDiscord ?? 0).toLocaleString();
+    if (countExtractAsked) countExtractAsked.textContent = (ce.numbersAsked || ov.phoneNumbersAskedCount || ov.askedNumbers || 0).toLocaleString();
+    if (countExtractShared) countExtractShared.textContent = (ce.numbersShared || ov.phoneNumbersSharedCount || ov.sharedNumbers || 0).toLocaleString();
+    if (countExtractInstagram) countExtractInstagram.textContent = (ce.instagramHandles || 0).toLocaleString();
+    if (countExtractSnapchat) countExtractSnapchat.textContent = (ce.snapchatHandles || 0).toLocaleString();
+    if (countExtractTelegram) countExtractTelegram.textContent = (ce.telegramDiscord || 0).toLocaleString();
 
     // 3. Category Composition Ratio Bar & Legend
-    const asked = ov.phoneNumbersAskedCount ?? ov.askedNumbers ?? 0;
-    const shared = ov.phoneNumbersSharedCount ?? ov.sharedNumbers ?? 0;
-    const slurs = ov.slursInterceptedCount ?? ov.slursBlocked ?? 0;
-    const social = ov.socialHandlesCount ?? ov.socialHandles ?? 0;
-    const links = ov.linksBlockedCount ?? 0;
+    const asked = ov.phoneNumbersAskedCount || ov.askedNumbers || ce.numbersAsked || 0;
+    const shared = ov.phoneNumbersSharedCount || ov.sharedNumbers || ce.numbersShared || 0;
+    const slurs = ov.slursInterceptedCount || ov.slursBlocked || 0;
+    const social = ov.socialHandlesCount || ov.socialHandles || 0;
+    const links = ov.linksBlockedCount || 0;
     const totalViolations = asked + shared + slurs + social + links;
 
     if (totalViolations > 0) {
@@ -7113,12 +7162,12 @@ function initAdminModule() {
 
     // 4. Slur Category Taxonomy
     const sd = data.slurDistribution || {};
-    if (catRacialCount) catRacialCount.textContent = (sd.racialAndEthnic ?? 0).toLocaleString();
-    if (catPredatoryCount) catPredatoryCount.textContent = (sd.predatoryAndGrooming ?? 0).toLocaleString();
-    if (catHomophobicCount) catHomophobicCount.textContent = (sd.homophobicTransphobic ?? 0).toLocaleString();
-    if (catMisogynisticCount) catMisogynisticCount.textContent = (sd.misogynisticAbuse ?? 0).toLocaleString();
-    if (catCyberbullyingCount) catCyberbullyingCount.textContent = (sd.cyberbullyingAndSelfHarm ?? 0).toLocaleString();
-    if (catRegionalCount) catRegionalCount.textContent = (sd.regionalHinglish ?? 0).toLocaleString();
+    if (catRacialCount) catRacialCount.textContent = (sd.racialAndEthnic || 0).toLocaleString();
+    if (catPredatoryCount) catPredatoryCount.textContent = (sd.predatoryAndGrooming || 0).toLocaleString();
+    if (catHomophobicCount) catHomophobicCount.textContent = (sd.homophobicTransphobic || 0).toLocaleString();
+    if (catMisogynisticCount) catMisogynisticCount.textContent = (sd.misogynisticAbuse || 0).toLocaleString();
+    if (catCyberbullyingCount) catCyberbullyingCount.textContent = (sd.cyberbullyingAndSelfHarm || 0).toLocaleString();
+    if (catRegionalCount) catRegionalCount.textContent = (sd.regionalHinglish || 0).toLocaleString();
 
     // 5. Chat Session Depth Progress Bars
     const eng = data.engagement || {};
@@ -7171,7 +7220,7 @@ function initAdminModule() {
     if ($('hudBehaviorAsked')) $('hudBehaviorAsked').textContent = `${latestBucket.askedNumbers || 0}/min`;
     if ($('hudBehaviorSlurs')) $('hudBehaviorSlurs').textContent = `${latestBucket.slurs || 0}/min`;
     if ($('hudBehaviorSocials')) $('hudBehaviorSocials').textContent = `${latestBucket.socials || 0}/min`;
-    if ($('hudBehaviorClean')) $('hudBehaviorClean').textContent = `${ov.cleanRatePct ?? ov.cleanPassRate ?? 100}%`;
+    if ($('hudBehaviorClean')) $('hudBehaviorClean').textContent = `${ov.cleanRatePct || ov.cleanPassRate || 100}%`;
 
     // 8. Top Intercepted Trigger Terms & Patterns
     const triggers = data.topTriggers || [];

@@ -38143,5 +38143,45 @@
     "text": "h3y cr33py 3v@$10n 1793120207297",
     "label": 1,
     "category": "reported_user_dialogue_leet"
+  },
+  {
+    "text": "hey creepy evasion 1793278551739",
+    "label": 1,
+    "category": "reported_user_dialogue"
+  },
+  {
+    "text": "h.e.y c.r.e.e.p.y e.v.a.s.i.o.n 1.7.9.3.2.7.8.5.5.1.7.3.9",
+    "label": 1,
+    "category": "reported_user_dialogue_dotted"
+  },
+  {
+    "text": "h...e...y c...r...e...e...p...y e...v...a...s...i...o...n 1...7...9...3...2...7...8...5...5...1...7...3...9",
+    "label": 1,
+    "category": "reported_user_dialogue_multidot"
+  },
+  {
+    "text": "h-e-y c-r-e-e-p-y e-v-a-s-i-o-n 1-7-9-3-2-7-8-5-5-1-7-3-9",
+    "label": 1,
+    "category": "reported_user_dialogue_hyphenated"
+  },
+  {
+    "text": "h*e*y c*r*e*e*p*y e*v*a*s*i*o*n 1*7*9*3*2*7*8*5*5*1*7*3*9",
+    "label": 1,
+    "category": "reported_user_dialogue_starred"
+  },
+  {
+    "text": "h e y   c r e e p y   e v a s i o n   1 7 9 3 2 7 8 5 5 1 7 3 9",
+    "label": 1,
+    "category": "reported_user_dialogue_spaced"
+  },
+  {
+    "text": "h\ne\ny\n\nc\nr\ne\ne\np\ny\n\ne\nv\na\ns\ni\no\nn\n\n1\n7\n9\n3\n2\n7\n8\n5\n5\n1\n7\n3\n9",
+    "label": 1,
+    "category": "reported_user_dialogue_vertical"
+  },
+  {
+    "text": "h3y cr33py 3v@$10n 1793278551739",
+    "label": 1,
+    "category": "reported_user_dialogue_leet"
   }
 ]

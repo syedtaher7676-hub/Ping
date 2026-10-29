@@ -23,5 +23,30 @@
     ],
     "quarantinedAt": "2026-10-27T16:31:06.761Z",
     "metadata": {}
+  },
+  {
+    "text": "send pic",
+    "claimedLabel": 1,
+    "category": "low_effort_conversation",
+    "anomalyScore": 0.85,
+    "reasons": [
+      "adversarial_safe_idiom_poisoning"
+    ],
+    "quarantinedAt": "2026-10-29T12:55:50.367Z",
+    "metadata": {
+      "userId": "test_user_low_send pic",
+      "pattern": "low_effort_detected"
+    }
+  },
+  {
+    "text": "test_violation_sample_1793278551738",
+    "claimedLabel": 1,
+    "category": "active_learning_test",
+    "anomalyScore": 0.75,
+    "reasons": [
+      "clean_safe_vocabulary_falsely_labeled_toxic"
+    ],
+    "quarantinedAt": "2026-10-29T12:55:51.739Z",
+    "metadata": {}
   }
 ]

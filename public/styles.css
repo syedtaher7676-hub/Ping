@@ -11230,6 +11230,67 @@ html, body {
   }
 }
 
+/* ── VPN WARNING BANNER & FROZEN BUTTON STYLING ── */
+.vpn-warning-banner {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto 16px auto;
+  padding: 14px 18px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.2);
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.vpn-warning-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.vpn-warning-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.vpn-warning-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.vpn-warning-title {
+  color: #f87171;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.vpn-warning-desc {
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.prechat-start-btn.vpn-disabled,
+.prechat-start-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+}
+
+
 
 
 
