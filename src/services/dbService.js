@@ -141,7 +141,7 @@ async function firestoreRest(endpoint, method = "GET", body = null) {
       headers: {
         "Content-Type": "application/json",
       },
-      timeout: 3000,
+      timeout: 8000,
     };
 
     const req = https.request(reqOptions, (res) => {
@@ -169,6 +169,73 @@ async function firestoreRest(endpoint, method = "GET", body = null) {
     if (body) {
       req.write(JSON.stringify(body));
     }
+    req.end();
+  });
+}
+
+/**
+ * Resilient Cloud Firestore structured collection query using documents:runQuery
+ * Bypasses directory-listing REST restrictions and guarantees ordered results.
+ */
+async function firestoreRunQuery(collectionName, limit = 50, orderByField = "createdAt", direction = "DESCENDING") {
+  return new Promise((resolve) => {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${DATABASE_ID}/documents:runQuery?key=${API_KEY}`;
+    const parsedUrl = new URL(url);
+
+    const queryPayload = {
+      structuredQuery: {
+        from: [{ collectionId: collectionName }],
+        limit: Math.min(100, Math.max(1, limit)),
+      },
+    };
+
+    if (orderByField) {
+      queryPayload.structuredQuery.orderBy = [
+        {
+          field: { fieldPath: orderByField },
+          direction: direction || "DESCENDING",
+        },
+      ];
+    }
+
+    const reqOptions = {
+      hostname: parsedUrl.hostname,
+      path: parsedUrl.pathname + parsedUrl.search,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      timeout: 8000,
+    };
+
+    const req = https.request(reqOptions, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          if (Array.isArray(json)) {
+            const docs = [];
+            for (const item of json) {
+              if (item.document) {
+                const decoded = decodeFirestoreDoc(item.document);
+                if (decoded) docs.push(decoded);
+              }
+            }
+            return resolve(docs);
+          }
+          resolve([]);
+        } catch (_) {
+          resolve([]);
+        }
+      });
+    });
+
+    req.on("error", () => resolve([]));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve([]);
+    });
+
+    req.write(JSON.stringify(queryPayload));
     req.end();
   });
 }
@@ -413,11 +480,10 @@ async function getActiveBans() {
     } catch (_) {}
   }
 
-  // Fallback REST fetch
-  const res = await firestoreRest("bans");
-  if (res && res.documents) {
-    for (const doc of res.documents) {
-      const decoded = decodeFirestoreDoc(doc);
+  // Fallback REST fetch via structured query
+  const docs = await firestoreRunQuery(COLLECTIONS.BANS, 100, "expiresAt", "DESCENDING");
+  if (Array.isArray(docs)) {
+    for (const decoded of docs) {
       if (decoded && decoded.active !== false && Number(decoded.expiresAt) > now) {
         activeBans.push(decoded);
       }
@@ -495,12 +561,10 @@ async function getRecentReports(limitCount = 50) {
     } catch (_) {}
   }
 
-  const res = await firestoreRest(`reports?pageSize=${limitCount}`);
-  if (res && res.documents) {
-    for (const doc of res.documents) {
-      const decoded = decodeFirestoreDoc(doc);
-      if (decoded) reports.push(decoded);
-    }
+  // Fallback REST fetch via structured query
+  const docs = await firestoreRunQuery(COLLECTIONS.REPORTS, limitCount, "createdAt", "DESCENDING");
+  if (Array.isArray(docs) && docs.length > 0) {
+    return docs;
   }
 
   return reports;
@@ -597,12 +661,10 @@ async function getRecentModerationLogs(limitCount = 50) {
     } catch (_) {}
   }
 
-  const res = await firestoreRest(`moderation_logs?pageSize=${limitCount}`);
-  if (res && res.documents) {
-    for (const doc of res.documents) {
-      const decoded = decodeFirestoreDoc(doc);
-      if (decoded) logs.push(decoded);
-    }
+  // Fallback REST fetch via structured query
+  const docs = await firestoreRunQuery(COLLECTIONS.MODERATION_LOGS, limitCount, "createdAt", "DESCENDING");
+  if (Array.isArray(docs) && docs.length > 0) {
+    return docs;
   }
 
   return logs;
@@ -934,11 +996,22 @@ async function resetBehaviorTelemetry(persistenceData = {}) {
     } catch (_) {}
   }
   try {
-    await firestoreRest("telemetry/live_metrics", "PATCH", {
-      fields: {
-        behavior_analytics: encodeFirestoreValue(persistenceData)
+    await firestoreRest(
+      "telemetry/live_metrics?updateMask.fieldPaths=behavior_analytics&updateMask.fieldPaths=system_summary.last_updated",
+      "PATCH",
+      {
+        fields: {
+          behavior_analytics: encodeFirestoreValue(persistenceData),
+          system_summary: {
+            mapValue: {
+              fields: {
+                last_updated: { stringValue: new Date().toISOString() },
+              },
+            },
+          },
+        },
       }
-    });
+    );
   } catch (_) {}
   return true;
 }

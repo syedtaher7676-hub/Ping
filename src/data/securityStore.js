@@ -54,6 +54,24 @@ function addSecurityEvent(event) {
 
   saveSecurityEventsToFile();
 
+  // Persist critical security events to Firestore
+  if (event.severity && event.severity !== 'safe' && event.userId) {
+    try {
+      const dbService = require('../services/dbService');
+      if (typeof dbService.saveModerationLog === 'function') {
+        dbService.saveModerationLog({
+          logId: newEvent.id,
+          userId: event.userId,
+          type: event.type || 'security_event',
+          message: event.message || event.originalMessage || '',
+          action: event.action || 'warn',
+          violationCount: event.violationCount || 1,
+          severity: event.severity,
+        }).catch(() => {});
+      }
+    } catch (_) {}
+  }
+
   const msg = event.message || event.originalMessage;
   if (msg && typeof msg === 'string' && event.severity !== 'safe') {
     recordChatSampleForTraining(msg, 1, event.type || 'security_event', {

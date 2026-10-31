@@ -363,7 +363,7 @@
     // 2. Resilient API proxy fallback
     if (!remoteData) {
       try {
-        const res = await fetch('/api/admin/telemetry-live');
+        const res = await adminFetch('/api/admin/telemetry-live');
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
@@ -1694,25 +1694,24 @@
       } catch (_) {}
     });
 
-    $('adminManualRefreshBtn')?.addEventListener('click', () => {
-      hydrateTelemetryFromFirestore();
-      refreshAdminDashboardData();
+    $('adminManualRefreshBtn')?.addEventListener('click', async () => {
+      await refreshAdminDashboardData();
     });
 
     $('resetBehaviorDataBtn')?.addEventListener('click', async () => {
       if (!confirm('Are you sure you want to reset all user behavior and intelligence metrics to 0 in memory and Firestore?')) return;
       try {
+        resetAdminBehaviorState();
         const res = await adminFetch('/api/admin/behavior-analytics/reset', { method: 'POST' });
         if (res.ok) {
           resetAdminBehaviorState();
-          refreshAdminDashboardData();
+          await refreshAdminDashboardData();
         }
       } catch (_) {}
     });
 
-    $('refreshBehaviorBtn')?.addEventListener('click', () => {
-      hydrateTelemetryFromFirestore();
-      refreshAdminDashboardData();
+    $('refreshBehaviorBtn')?.addEventListener('click', async () => {
+      await refreshAdminDashboardData();
     });
 
     // Bind form submit and action handlers for words, shadowbans, bulk, and system controls
@@ -1928,10 +1927,9 @@
     }, 1000);
     setTimeout(() => clearInterval(socketCheckInterval), 15000);
 
-    // Periodic Firestore & Admin Data refresh (every 30s) ONLY when dashboard is open
+    // Periodic Admin Data refresh (every 30s) ONLY when dashboard is open
     setInterval(() => {
       if (isAdminDashboardVisible()) {
-        hydrateTelemetryFromFirestore();
         refreshAdminDashboardData();
       }
     }, 30000);
@@ -1939,7 +1937,6 @@
     // Re-sync on tab visibility change
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && isAdminDashboardVisible()) {
-        hydrateTelemetryFromFirestore();
         refreshAdminDashboardData();
       }
     });

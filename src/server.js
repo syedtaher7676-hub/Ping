@@ -1422,21 +1422,15 @@ app.get("/api/admin/behavior-analytics", verifyAdmin, ensureTelemetryHydrated, (
   const hist = cachedHistoricalTelemetry || {};
   const behData = hist.behavior_analytics || {};
 
-  // Merge overview counts with explicit key aliasing
+  // Use live in-memory behavioral intelligence as authoritative source of truth
   const memOv = memSnapshot.overview || {};
-  const behOv = behData.overview || {};
-
-  const askedNumbers = Math.max(memOv.askedNumbers || 0, memOv.phoneNumbersAskedCount || 0, behOv.askedNumbers || 0, behOv.phoneNumbersAskedCount || 0);
-  const sharedNumbers = Math.max(memOv.sharedNumbers || 0, memOv.phoneNumbersSharedCount || 0, behOv.sharedNumbers || 0, behOv.phoneNumbersSharedCount || 0);
-  const slursBlocked = Math.max(memOv.slursBlocked || 0, memOv.slursInterceptedCount || 0, behOv.slursBlocked || 0, behOv.slursInterceptedCount || 0);
-  const socialHandles = Math.max(memOv.socialHandles || 0, memOv.socialHandlesCount || 0, behOv.socialHandles || 0, behOv.socialHandlesCount || 0);
+  const askedNumbers = memOv.askedNumbers || memOv.phoneNumbersAskedCount || 0;
+  const sharedNumbers = memOv.sharedNumbers || memOv.phoneNumbersSharedCount || 0;
+  const slursBlocked = memOv.slursBlocked || memOv.slursInterceptedCount || 0;
+  const socialHandles = memOv.socialHandles || memOv.socialHandlesCount || 0;
 
   const mergedOverview = {
-    ...behOv,
     ...memOv,
-    totalMessagesProcessed: Math.max(memOv.totalMessagesProcessed || 0, behOv.totalMessagesProcessed || 0),
-    totalMessagesDelivered: Math.max(memOv.totalMessagesDelivered || 0, behOv.totalMessagesDelivered || 0),
-    totalMessagesBlocked: Math.max(memOv.totalMessagesBlocked || 0, behOv.totalMessagesBlocked || 0),
     askedNumbers,
     phoneNumbersAskedCount: askedNumbers,
     sharedNumbers,
@@ -1445,31 +1439,17 @@ app.get("/api/admin/behavior-analytics", verifyAdmin, ensureTelemetryHydrated, (
     slursInterceptedCount: slursBlocked,
     socialHandles,
     socialHandlesCount: socialHandles,
-    cleanPassRate: memOv.cleanPassRate || behOv.cleanPassRate || 100,
-    cleanRatePct: memOv.cleanRatePct || behOv.cleanRatePct || 100,
+    cleanPassRate: memOv.cleanPassRate ?? 100,
+    cleanRatePct: memOv.cleanRatePct ?? 100,
   };
 
-  // Merge slur distribution
-  const memSlur = memSnapshot.slurDistribution || {};
-  const behSlur = behData.slurDistribution || {};
-  const mergedSlur = {};
-  const allSlurKeys = new Set([
-    'racialAndEthnic', 'predatoryAndGrooming', 'homophobicTransphobic', 'misogynisticAbuse', 'cyberbullyingAndSelfHarm', 'regionalHinglish', 'otherProfanity',
-    ...Object.keys(memSlur), ...Object.keys(behSlur)
-  ]);
-  for (const k of allSlurKeys) {
-    mergedSlur[k] = Math.max(memSlur[k] || 0, behSlur[k] || 0);
-  }
-
-  // Merge contact extraction
-  const memContact = memSnapshot.contactExtraction || {};
-  const behContact = behData.contactExtraction || {};
+  const mergedSlur = memSnapshot.slurDistribution || {};
   const mergedContact = {
-    numbersAsked: Math.max(memContact.numbersAsked || 0, behContact.numbersAsked || 0, askedNumbers),
-    numbersShared: Math.max(memContact.numbersShared || 0, behContact.numbersShared || 0, sharedNumbers),
-    instagramHandles: Math.max(memContact.instagramHandles || 0, behContact.instagramHandles || 0),
-    snapchatHandles: Math.max(memContact.snapchatHandles || 0, behContact.snapchatHandles || 0),
-    telegramDiscord: Math.max(memContact.telegramDiscord || 0, behContact.telegramDiscord || 0),
+    numbersAsked: askedNumbers,
+    numbersShared: sharedNumbers,
+    instagramHandles: memSnapshot.contactExtraction?.instagramHandles || 0,
+    snapchatHandles: memSnapshot.contactExtraction?.snapchatHandles || 0,
+    telegramDiscord: memSnapshot.contactExtraction?.telegramDiscord || 0,
   };
 
   // Merge time-series buckets by timestamp matching
@@ -1597,8 +1577,18 @@ app.post("/api/admin/behavior-analytics/reset", verifyAdmin, async (_req, res) =
       patience_quotient_pct: 0,
     };
 
+    const cleanSummary = {
+      total_sessions_logged: 0,
+      total_matches: 0,
+      total_messages: 0,
+      total_violations: 0,
+      active_ccu_peak: 0,
+      last_updated: new Date().toISOString(),
+    };
+
     // 1. Reset in-memory buffers in server.js
     if (memoryBuffer) {
+      memoryBuffer.system_summary = { ...cleanSummary };
       memoryBuffer.sentiment_distribution = { ...cleanSentiment };
       memoryBuffer.session_durations = { ...cleanDurations };
       memoryBuffer.retention_metrics = { ...cleanRetention };
@@ -1606,11 +1596,13 @@ app.post("/api/admin/behavior-analytics/reset", verifyAdmin, async (_req, res) =
 
     // 2. Reset cached historical telemetry in server.js
     if (cachedHistoricalTelemetry) {
+      cachedHistoricalTelemetry.system_summary = { ...cleanSummary };
       cachedHistoricalTelemetry.sentiment_distribution = { ...cleanSentiment };
       cachedHistoricalTelemetry.session_durations = { ...cleanDurations };
       cachedHistoricalTelemetry.retention_metrics = { ...cleanRetention };
       cachedHistoricalTelemetry.behavior_analytics = persistenceData;
     }
+    telemetryHistory.length = 0;
 
     // 3. Persist clean 0 state to Firestore (telemetry/live_metrics)
     let firestoreResetOk = false;
@@ -1627,16 +1619,19 @@ app.post("/api/admin/behavior-analytics/reset", verifyAdmin, async (_req, res) =
       const config = loadAppletConfig();
       if (config && config.apiKey && config.projectId) {
         const docPath = `projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics`;
-        const patchUrl = `https://firestore.googleapis.com/v1/${docPath}?updateMask.fieldPaths=behavior_analytics&updateMask.fieldPaths=sentiment_distribution&updateMask.fieldPaths=session_durations&updateMask.fieldPaths=retention_metrics&key=${config.apiKey}`;
+        const mask = "updateMask.fieldPaths=system_summary&updateMask.fieldPaths=behavior_analytics&updateMask.fieldPaths=sentiment_distribution&updateMask.fieldPaths=session_durations&updateMask.fieldPaths=retention_metrics&updateMask.fieldPaths=telemetry_history";
+        const patchUrl = `https://firestore.googleapis.com/v1/${docPath}?${mask}&key=${config.apiKey}`;
         const restRes = await fetch(patchUrl, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             fields: {
+              system_summary: toFirestoreValue(cleanSummary),
               behavior_analytics: toFirestoreValue(persistenceData || {}),
               sentiment_distribution: toFirestoreValue(cleanSentiment),
               session_durations: toFirestoreValue(cleanDurations),
               retention_metrics: toFirestoreValue(cleanRetention),
+              telemetry_history: toFirestoreValue([]),
             },
           }),
         });
@@ -2572,53 +2567,6 @@ app.get("/api/admin/telemetry-history", verifyAdmin, ensureTelemetryHydrated, (_
   });
 });
 
-// 16q. Permanent Aggregated Telemetry Live Metrics (Direct Firestore Fetch)
-app.get("/api/admin/telemetry-live", ensureTelemetryHydrated, async (_req, res) => {
-  try {
-    let data = null;
-    const db = getDb();
-    if (db && isFirebaseConfigured()) {
-      const snap = await db.doc("telemetry/live_metrics").get();
-      if (snap.exists) data = snap.data();
-    }
-    if (!data) {
-      const config = loadAppletConfig();
-      if (config && config.apiKey && config.projectId) {
-        const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
-        const restRes = await fetch(url);
-        if (restRes.ok) {
-          const raw = await restRes.json();
-          if (raw.fields) {
-            data = parseFirestoreRestDoc(raw.fields);
-          }
-        }
-      }
-    }
-    const currentBehavior = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : {};
-    const fallbackData = {
-      system_summary: cachedHistoricalTelemetry.system_summary,
-      sentiment_distribution: cachedHistoricalTelemetry.sentiment_distribution,
-      session_durations: cachedHistoricalTelemetry.session_durations,
-      retention_metrics: cachedHistoricalTelemetry.retention_metrics,
-      behavior_analytics: currentBehavior,
-      telemetry_history: telemetryHistory.slice(-30),
-    };
-    res.json({ success: true, data: data || fallbackData });
-  } catch (e) {
-    const currentBehavior = typeof getBehaviorAnalyticsSnapshot === "function" ? getBehaviorAnalyticsSnapshot() : {};
-    res.json({
-      success: true,
-      data: {
-        system_summary: cachedHistoricalTelemetry.system_summary,
-        sentiment_distribution: cachedHistoricalTelemetry.sentiment_distribution,
-        session_durations: cachedHistoricalTelemetry.session_durations,
-        retention_metrics: cachedHistoricalTelemetry.retention_metrics,
-        behavior_analytics: currentBehavior,
-        telemetry_history: telemetryHistory.slice(-30),
-      },
-    });
-  }
-});
 
 // User Clear Data Endpoint (Settings View Action)
 app.post("/api/user/clear-data", async (req, res) => {
@@ -2709,7 +2657,8 @@ app.post("/api/admin/system/reset-behavior", verifyAdmin, async (_req, res) => {
       } else {
         const config = loadAppletConfig();
         if (config && config.apiKey && config.projectId) {
-          const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?key=${config.apiKey}`;
+          const mask = "updateMask.fieldPaths=system_summary&updateMask.fieldPaths=sentiment_distribution&updateMask.fieldPaths=session_durations&updateMask.fieldPaths=retention_metrics&updateMask.fieldPaths=behavior_analytics&updateMask.fieldPaths=telemetry_history";
+          const patchUrl = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/${config.firestoreDatabaseId || "(default)"}/documents/telemetry/live_metrics?${mask}&key=${config.apiKey}`;
           await fetch(patchUrl, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },

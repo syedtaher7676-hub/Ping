@@ -57,6 +57,24 @@ function addReport(report) {
 
   saveReportsToFile();
 
+  // Persist to Cloud Firestore
+  try {
+    const dbService = require('../services/dbService');
+    if (typeof dbService.saveReport === 'function') {
+      dbService.saveReport({
+        reportId: newReport.id,
+        reporterId: newReport.reporterId,
+        reporterCountry: newReport.reporterCountry || 'Unknown',
+        reportedUserId: newReport.reportedUserId,
+        reportedUserCountry: newReport.reportedUserCountry || 'Unknown',
+        roomId: newReport.roomId || '',
+        reason: newReport.reason || 'user_reported',
+        flags: newReport.flags || [],
+        status: newReport.status || 'pending_review',
+      }).catch(() => {});
+    }
+  } catch (_) {}
+
   // Ingest reported message content into model training dataset
   const reportedText = report.message || report.text || report.reason;
   if (reportedText && typeof reportedText === 'string') {
@@ -68,6 +86,28 @@ function addReport(report) {
 
   return newReport;
 }
+
+// Hydrate from Firestore if available
+(async () => {
+  try {
+    const dbService = require('../services/dbService');
+    if (typeof dbService.getRecentReports === 'function') {
+      const remoteReports = await dbService.getRecentReports(100);
+      if (Array.isArray(remoteReports) && remoteReports.length > 0) {
+        for (const r of remoteReports) {
+          const id = r.reportId || r.id;
+          if (id && !reports.some(existing => existing.id === id || existing.reportId === id)) {
+            reports.push({
+              id,
+              ...r,
+              createdAt: r.createdAt ? (typeof r.createdAt === 'string' ? new Date(r.createdAt).getTime() : r.createdAt) : Date.now(),
+            });
+          }
+        }
+      }
+    }
+  } catch (_) {}
+})();
 
 function getReports(limit = 100) {
   return reports.slice(-limit);

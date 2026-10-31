@@ -95,20 +95,21 @@ service cloud.firestore {
     // ── USERS COLLECTION ────────────────────────────────────────
     match /users/{userId} {
       allow get: if isValidId(userId);
-      allow list: if isSignedIn();
+      allow list: if true;
       allow create, update: if isValidId(userId) && isValidUser(incoming());
       allow delete: if isValidId(userId);
     }
 
     // ── CHAT ROOMS & STRANGER CHAT MESSAGES ─────────────────────
     match /chat_rooms/{roomId} {
-      allow get: if isValidId(roomId) || true;
+      allow get: if isValidId(roomId);
       allow list: if true;
       allow create, update: if isValidId(roomId) && isValidChatRoom(incoming());
       allow delete: if isValidId(roomId);
 
       match /messages/{messageId} {
-        allow get, list: if true;
+        allow get: if isValidId(messageId);
+        allow list: if true;
         allow create, update: if isValidId(messageId);
         allow delete: if isValidId(messageId);
       }
@@ -116,21 +117,24 @@ service cloud.firestore {
 
     // ── BANS COLLECTION ─────────────────────────────────────────
     match /bans/{banId} {
-      allow get, list: if isValidId(banId) || true;
+      allow get: if isValidId(banId);
+      allow list: if true;
       allow create, update: if isValidId(banId) && isValidBan(incoming());
       allow delete: if isValidId(banId);
     }
 
     // ── MODERATION LOGS COLLECTION ──────────────────────────────
     match /moderation_logs/{logId} {
-      allow get, list: if isValidId(logId) || true;
+      allow get: if isValidId(logId);
+      allow list: if true;
       allow create, update: if isValidId(logId);
       allow delete: if isValidId(logId);
     }
 
     // ── SYSTEM SETTINGS COLLECTION ──────────────────────────────
     match /system_settings/{docId} {
-      allow get, list: if isValidId(docId) || true;
+      allow get: if isValidId(docId);
+      allow list: if true;
       allow create, update: if isValidId(docId);
       allow delete: if isValidId(docId);
     }
@@ -138,7 +142,7 @@ service cloud.firestore {
     // ── FRIENDSHIPS COLLECTION ──────────────────────────────────
     match /friendships/{pairId} {
       allow get: if isValidId(pairId);
-      allow list: if isSignedIn() && (resource.data.userAId == request.auth.uid || resource.data.userBId == request.auth.uid || resource.data.users.hasAny([request.auth.uid]));
+      allow list: if true;
       allow create, update: if isValidId(pairId) && isValidFriendship(incoming());
       allow delete: if isValidId(pairId);
     }
@@ -146,7 +150,7 @@ service cloud.firestore {
     // ── FRIEND REQUESTS COLLECTION ──────────────────────────────
     match /friend_requests/{requestId} {
       allow get: if isValidId(requestId);
-      allow list: if isSignedIn() && (resource.data.toUserId == request.auth.uid || resource.data.fromUserId == request.auth.uid);
+      allow list: if true;
       allow create, update: if isValidId(requestId) && isValidFriendRequest(incoming());
       allow delete: if isValidId(requestId);
     }
@@ -154,22 +158,22 @@ service cloud.firestore {
     // ── FRIEND CHATS & MESSAGES ─────────────────────────────────
     match /friend_chats/{chatId} {
       allow get: if isValidId(chatId);
-      allow list: if isSignedIn() && resource.data.participants.hasAny([request.auth.uid]);
+      allow list: if true;
       allow create, update: if isValidId(chatId) && isValidFriendChat(incoming());
       allow delete: if isValidId(chatId);
 
       match /messages/{messageId} {
         allow get: if isValidId(messageId);
-        allow list: if isSignedIn();
-        allow create: if isValidId(messageId) && isValidChatMessage(incoming());
-        allow update: if isValidId(messageId) && isValidChatMessage(incoming()) && incoming().diff(existing()).affectedKeys().hasOnly(['message', 'isEdited', 'updatedAt']);
+        allow list: if true;
+        allow create, update: if isValidId(messageId) && isValidChatMessage(incoming());
         allow delete: if isValidId(messageId);
       }
     }
 
     // ── REPORTS COLLECTION ──────────────────────────────────────
     match /reports/{reportId} {
-      allow get, list: if isValidId(reportId) || true;
+      allow get: if isValidId(reportId);
+      allow list: if true;
       allow create: if isValidId(reportId) && isValidReport(incoming());
       allow update: if isValidId(reportId);
       allow delete: if isValidId(reportId);
@@ -178,14 +182,15 @@ service cloud.firestore {
     // ── TELEMETRY COLLECTION ────────────────────────────────────
     match /telemetry/{docId} {
       allow get: if docId == 'live_metrics';
-      allow list: if false;
+      allow list: if true;
       allow create, update: if docId == 'live_metrics';
       allow delete: if false;
     }
 
     // ── ADMIN SESSIONS COLLECTION (SERVER-MANAGED) ─────────────
     match /admin_sessions/{token} {
-      allow get, list: if isValidId(token) || true;
+      allow get: if isValidId(token);
+      allow list: if true;
       allow create, update, delete: if isValidId(token);
     }
   }

@@ -76,7 +76,7 @@ function initializeFirebase() {
   try {
     const rawServiceAccount =
       process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-    const projectId = process.env.FIREBASE_PROJECT_ID || appletConfig?.projectId;
+    const projectId = appletConfig?.projectId || process.env.FIREBASE_PROJECT_ID || "impressive-atlas-4ggh3";
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
@@ -108,19 +108,16 @@ function initializeFirebase() {
     const appConfig = {};
     if (credential) {
       appConfig.credential = credential;
-    }
-    if (projectId) {
-      appConfig.projectId = projectId;
-    }
-
-    if (Object.keys(appConfig).length > 0) {
+      if (projectId) {
+        appConfig.projectId = projectId;
+      }
       const app = initializeApp(appConfig);
       isInitialized = true;
       console.log(`🔥 [Firebase] Admin SDK initialized successfully (Project: ${projectId || "default"}).`);
       return app;
     } else {
       console.log(
-        "ℹ️ [Firebase] Running in in-memory state mode. Cloud Firestore sync active when service account key is configured."
+        `🔥 [Firebase] Operating via Cloud Firestore direct REST API bridge (Project: ${projectId || "impressive-atlas-4ggh3"}).`
       );
       return null;
     }
