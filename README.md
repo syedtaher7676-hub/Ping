@@ -341,16 +341,7 @@ Ping implements strict legal and operational boundaries designed for internation
 
 ### Environment Configuration
 
-Create a `.env` file in the application root directory:
-
-```env
-PORT=3000
-NODE_ENV=production
-ADMIN_PASSWORD=YourSecurePasswordHere
-REDIS_URL=redis://127.0.0.1:6379
-FIREBASE_PROJECT_ID=impressive-atlas-4ggh3
-FIREBASE_API_KEY=AIzaSy...
-```
+Configure the required runtime environment variables in your deployment platform before starting the application.
 
 ### Installation & Initialization
 
