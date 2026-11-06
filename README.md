@@ -339,44 +339,6 @@ Ping implements strict legal and operational boundaries designed for internation
 - Google Cloud Project with Cloud Firestore enabled
 - Redis v6.0+ (Optional, required for multi-node clustering)
 
-### Environment Configuration
-
-Create a `.env` file in the application root directory:
-
-```env
-PORT=3000
-NODE_ENV=production
-ADMIN_PASSWORD=YourSecurePasswordHere
-REDIS_URL=redis://127.0.0.1:6379
-FIREBASE_PROJECT_ID=impressive-atlas-4ggh3
-FIREBASE_API_KEY=AIzaSy...
-```
-
-### Installation & Initialization
-
-```bash
-# Clone the repository
-git clone https://github.com/syedtaher7676-hub/Pingit.git
-cd Pingit
-
-# Install dependencies
-npm install
-
-# Validate source code syntax and structure
-npm run lint
-```
-
-### Execution Modes
-
-```bash
-# Start development server with file watching
-npm run dev
-
-# Start production server
-npm start
-```
-
----
 
 ## Automated Test Suites
 
