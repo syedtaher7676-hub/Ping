@@ -1,6 +1,6 @@
 # Ping
 
-Ping is a high-concurrency, vibe-driven anonymous messaging platform engineered for ultra-low-latency pairing, on-device local AI moderation, and automated network threat defense. Architected on Node.js, Express, Socket.IO, and Google Cloud Firestore, Ping combines in-memory queue orchestration with multi-vector threat intelligence and automated content governance to deliver a secure, resilient real-time communication ecosystem.
+Ping is a realtime high-concurrency, vibe-driven anonymous messaging platform engineered for ultra-low-latency pairing, on-device local AI moderation, and automated network threat defense. Architected on Node.js, Express, Socket.IO, and Google Cloud Firestore, Ping combines in-memory queue orchestration with multi-vector threat intelligence and automated content governance to deliver a secure, resilient real-time communication ecosystem.
 
 ---
 
